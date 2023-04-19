@@ -1,0 +1,88 @@
+<div class="card mt-2 mb-3">
+
+    <%= link_to collaborators_backoffice_caixa_index_path, class:"card-header" do %>
+        <h4>Caixas</h4>
+    <% end %>
+
+    <div class="">
+        
+    </div>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          <div class="dataTable-container">
+            <table id="" class="dataTable-table">
+              <thead>
+                <tr>
+                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
+                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Abertura</a></th>
+                  <th data-sortable="" style="width: 25%;"><a href="#" class="dataTable-sorter">Colaborador Abriu</a></th>
+                  <th data-sortable="" style=""><a href="#" class="dataTable-sorter">Dt Fechamento</a></th>
+                  <th data-sortable="" style="width: 25%;"><a href="#" class="dataTable-sorter">Col Fechou</a></th>
+
+                  <th data-sortable="" style="width: 10%;" ><a href="#" class="dataTable-sorter">Vl Abertura</a></th>
+                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Vl Entradas</a></th>
+                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Vl Saidas</a></th>
+                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Vl Fechamento</a></th>
+                    
+                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                    <th data-sortable="" style="width: 9%;">
+                  <% else %>
+                    <th data-sortable="" style="width: 55px;">
+                  <% end %>
+
+                      <%= link_to new_collaborators_backoffice_caixa_path,
+                                  class:"btn btn-success btn-circle", data: {confirm: "Abrir Caixa?"} do %>
+                          <i class="fa fa-plus"></i>
+                      <% end %>
+                    </th>
+                </tr>
+              </thead>
+              
+              <tbody>
+                  <% @caixas.each do |caixa| %>
+                    <tr>
+                      <td><%= caixa .empresa.nome %> </td>
+                      <td><%= post_datetime caixa.dataabertura %> </td>
+                      <td><%= caixa.funcionario_abertura.usuario %> </td>
+                      <td><%= (caixa.datafechamento != nil ? (post_datetime caixa.datafechamento) : "") %> </td>
+                      <td><%= (caixa.funcionario_fechamento != nil ? caixa.funcionario_fechamento.usuario : "") %> </td>
+                      <td><%= number_to_currency( caixa.valorabertura ) %> </td>
+                      <td><%= number_to_currency( caixa.valorentradas ) %> </td>
+                      <td><%= number_to_currency( caixa.valorsaidas ) %> </td>
+                      <td><%= number_to_currency( caixa.fechamento ) %> </td>
+                      <td>
+                      <% if caixa.datafechamento.blank?  %>
+                        <%= link_to collaborators_backoffice_caixa_path(caixa), method: :put, 
+                                    class:"btn btn-danger btn-circle", data: {confirm: "Fechar o Caixa?"} do %>
+                            <i class="fa fa-minus"></i>
+                        <% end %>
+                      <% end %>
+
+                        <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                          <%= link_to collaborators_backoffice_caixa_path(caixa), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Caixa?"} do %>
+                              <i class="fa fa-trash-can"></i>
+                          <% end %>
+                        <% end %>
+
+                      </td>
+                    </tr>
+                  <% end %>
+              </tbody>
+            </table>
+        </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @caixas, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @caixas %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>
+ 
+
+<!-- Modal -->
+<%= render partial: 'collaborators_backoffice/caixa/shared/caixa_modal', locals: { action_message: 'Modal' } %>

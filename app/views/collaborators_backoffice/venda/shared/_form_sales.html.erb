@@ -1,0 +1,197 @@
+
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="card-body">
+
+            <div class="row justify-content-center">
+                <div class="">
+                    <div class="card mt-3">
+                    
+                        <% if @sale.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+                                <% @sale.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+                                            
+                        <div class="card-header">
+                            <%# <%= link_to '', collaborators_backoffice_report_sales_path, class:'btn btn-close btn-block'  % > %>
+                            <h4 class="text-center font-weight-light">
+                                <%= "#{action_message} Venda"%> 
+                            </h4>
+                        </div>
+                        <%# form_with(model: [:collaborators_backoffice, @sale],  local: true) do |form| %>
+                        <%= form_with(url: new_collaborators_backoffice_venda_path, local: true) do |form| %>
+                        <div class="row">
+                            <div class="col-md-10 ">
+                                <div class="form-floating mb-3 ">
+                                    <%= form.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                            :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
+                                                class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+                                    <%= form.label :pessoa, class:"" %>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="form-floating mb-3 ">
+                                    <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-info btn-circle" do %>
+                                        <i class="fa fa-info"></i>
+                                    <% end %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                    <%= form.label :data_venda, class:"" %>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                    <%= form.label :numero_nf, class:"" %>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :acrescimo,value: "0", class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                    <%= form.label :acrescimo, class:"" %>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :desconto, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                    <%= form.label :desconto, class:"" %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab panes -->
+                        <!-- Nav tabs -->
+                        <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                        
+                            <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                                <div class="card-body">
+                                    <div class="form-floating input-group mb-3 ">                
+                                        <%# link_to_add_association 'Adicionar', form, :itensvenda, 
+                                            partial: 'collaborators_backoffice/venda/shared/itens_fields', 
+                                            class: "btn input-group-text btn-success" %>
+
+                                            <%# link_to_add_association 'Adicionar', form, :itensvenda, 
+                                                render_options: {wrapper: 'bootstrap' }, 
+                                                class: "btn input-group-text btn-success" %>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                            <thead>
+                                                <tr>
+                                                    <th>Cod</th>
+                                                    <th>Nome</th>
+                                                    <th>Qtd</th>
+                                                    <th>valor</th>
+                                                    <th>Total</th>
+                                                    <th>Remover</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id = 'itens'>
+                                                <%= form.fields_for :itensvenda do |item| %>
+
+                                                    <%= render partial: "collaborators_backoffice/venda/shared/itens_fields", locals: { f: item } %> <!-- f é uma variavel opbjeto answer questoes -->
+                                                <% end %>
+                                                    <%= link_to_add_association 'Adicionar', form, :itensvenda, 
+                                                        partial: 'collaborators_backoffice/venda/shared/itens_fields', 
+                                                        class: "btn input-group-text btn-success" %>
+                                                
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                                <div class="card-body">
+                                    <div class="form-floating input-group mb-3">                
+                                        <%# link_to_add_association 'Calcular', form, :contas, 
+                                            partial: 'collaborators_backoffice/venda/shared/contas_fields', class: "btn input-group-text btn-success" %>
+                                    </div>
+                                    
+                                    <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                        <thead>
+                                            <tr>
+                                                <th class="">Numero</th>
+                                                <th class="">Dt Vencimento</th>
+                                                <th class="">valor Parcela</th>
+                                                <th class="">Remover</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id = 'contas'>
+                                            <%= form.fields_for :contas do |f| %>
+                                                <tr class= "nested-fields">
+                                                    <td class="">
+                                                        <%= f.text_field :nmParcela %>
+                                                    </td>
+                                                    <td class="">
+                                                        <%= f.text_field :dtvencimento %>
+                                                    </td>
+                                                    <td class="">
+                                                        <%= f.text_field :valorparcela %>
+                                                    </td>
+                                                    <td class="">
+                                                    <%# link_to_remove_association('Remover', f) %>
+                                                    </td>
+                                                </tr>
+                                            <% end %>
+                                        </tbody>
+                                    </table> 
+                                    </div>
+                            </div>
+
+                            <div class="form-floating mb-3 md-3 mt-0">  
+                                <%# <button type="submit" class="btn input-group-text btn-success">Salvar</button> %>
+                            </div>
+        <% end %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    var x = document.getElementById("vlItem");
+    var defaultVal = x.defaultValue;
+    var currentVal = x.value;
+
+
+    // keyPress Enter não faz o submit brands marcas
+    var list = document.getElementById('brands');
+    //console.log("List "+list)
+    
+    list.addEventListener("keypress", function () { 
+        console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+        if(event.keyCode == 13){ // 13 é o Enter
+            // event.preventDefault();
+            // quando precionar enter pega o texto da marca e passa como parametro para consulta
+            //list.innerHTML = getBrands("Tra%");
+
+            //console.log("Valor "+list.innerText);
+        }
+    });
+</script>
+  

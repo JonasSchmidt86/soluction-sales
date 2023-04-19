@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Moveis Rosa</title>
+    
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag    'application' %>
+    <%= javascript_include_tag 'application' %>
+  </head>
+
+  <body>
+
+  <h1>Layout Site</h1>
+    <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
+        Collaborators
+    <% end %>
+    <br>
+    <br>
+    <%= link_to users_backoffice_welcome_index_path, class:"nav-link" do %>
+        Users
+    <% end %>
+    <%= yield %>
+    
+  </body>
+</html>

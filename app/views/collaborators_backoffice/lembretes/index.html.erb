@@ -1,0 +1,78 @@
+<div class="card mt-2 mb-3">
+
+    <%= link_to collaborators_backoffice_lembretes_path, class:"card-header" do %>
+        <h4>Lembretes</h4>
+    <% end %>
+
+    <div class="">
+        
+    </div>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          <div class="dataTable-top">
+              <%= form_with(url: collaborators_backoffice_lembretes_path, local: true, method: :get, 
+                                    class:"dataTable-search col-md-3") do |form| %>
+                  <%= form.text_field :term, class:"dataTable-input", value:params[:term],placeholder:"Lembrete...", id:"text" %>
+              <% end %>
+          </div>
+            <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table">
+                <thead>
+                  <tr>
+                    <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Cadastro</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Descricao</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Emp Solicidata</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                    <th data-sortable="" style="width: 105px;">
+                    
+                    <button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
+                      data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
+                      <i class="fa fa-plus"></i>
+                    </button>
+                            
+                    </th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    <% @lembretes.each do |lembrete| %>
+                      <tr>
+                        <td><%= (lembrete.datacadastro? ? l(lembrete.datacadastro) : "") %> </td>
+                        <td><%= lembrete.empresa.nome %> </td>
+                        <td><%= lembrete.descricao %> </td>
+                        <td>
+                          <% unless !lembrete.empresaSol  %>
+                            <%= lembrete.empresaSol.nome %>
+                          <% end %>
+                        </td>
+                        <td><%= lembrete.funcionario.usuario %> </td>
+                        <td>
+                          <%= link_to collaborators_backoffice_lembrete_path(lembrete), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lembrete?"} do %>
+                              <i class="fa fa-minus"></i>
+                          <% end %>
+                          <%= link_to edit_collaborators_backoffice_lembrete_path(lembrete), method: :get, class:"btn btn-success btn-circle" do %>
+                            <i class="fa fa-edit"></i>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                </tbody>
+              </table>
+          </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @lembretes, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @lembretes %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Modal -->
+  <%= render partial: 'collaborators_backoffice/lembretes/shared/lembrete_modal', locals: { action_message: 'Modal' } %>

@@ -1,0 +1,2 @@
+      invoke  active_record
+    conflict    db/migrate/20221108190106_add_ativo_to_empresaproduto.rb

@@ -1,0 +1,2 @@
+class Entrega < ApplicationRecord
+end

@@ -1,0 +1,164 @@
+<br>
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    
+                        <% if @funcionario.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+    
+                                <% @funcionario.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+
+                        <div class="card-header">
+                            <h3 class="text-center font-weight-light my-4"><%= "#{action_message} Funcionario!"%> </h3>
+                        </div>
+                            
+                        <div class="card-body">
+                        
+                            <%= form_with(model: [ :collaborators_backoffice, @funcionario ], local: true) do |fun| %>
+
+                                <div class="form-floating mb-3 ">
+                                    <%= fun.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                            :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
+                                                class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+
+                                    <%= fun.label :pessoa, class:"" %>
+                                </div>  
+                                
+                                <%# model para localizar pessoa para adicionar ao funcionario  %>
+
+
+                                <div class="item form-group form-floating mb-3">
+                                    <div class="col-md-6 col-sm-6 " role="group">
+                                    <%# tira a marcaçao do radio btn-group-toggle %>
+                                        <div id="ativo" class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn <%= ativo_select(true) %>" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                                <%= fun.radio_button :ativo, 
+                                                    true,
+                                                "data-parsley-multiple":"ativo" %> &nbsp; Ativo &nbsp;
+                                            </label>
+                                            <label class="btn <%= ativo_select(false) %> " data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                                <%= fun.radio_button :ativo, 
+                                                    false,
+                                                        "data-parsley-multiple":"ativo" %> &nbsp; Inativo &nbsp;
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script>
+                                    var labels = document.querySelectorAll('div#ativo label');
+                                    labels.forEach((label) => {
+                                        label.addEventListener('click', () => {
+                                            label.classList.remove('btn-default');
+                                            label.classList.add('btn-primary'); 
+
+                                            labels.forEach((lbl) => {
+                                                if(lbl !== label){
+                                                    lbl.classList.remove('btn-primary');
+                                                    lbl.classList.add('btn-default');
+                                                };
+                                            });
+                                        });
+                                    });
+                                </script>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3 mb-md-0">
+                                            <div class="form-floating mb-3 ">
+                                                <%= fun.text_field :datacontrato, value: (l(@funcionario.datacontrato) unless @funcionario.datacontrato.blank?),
+                                                class: "form-control datepicker" %>
+                                                <%= fun.label :data_Contrato, class:"" %>
+                                            </div> 
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <div class="form-floating mb-3 ">
+                                                <%= fun.text_field :datademissao, value: (l(@funcionario.datademissao) unless @funcionario.datademissao.blank?),
+                                                    class: "form-control datepicker" %>
+                                                <%= fun.label :data_demissao, class:"" %>
+                                            </div> 
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-floating mb-3 ">
+                                    <%= fun.text_field :salario, class: "form-control", placeholder:"E-mail Colaborador", id:"valor", onkeyup:"formatarMoeda()" %>
+                                    <%= fun.label :salario, class:"" %>
+                                </div> 
+
+                                <div class="form-floating mb-3">
+                                    <%= fun.collection_select(:cod_permissao, Permissao.all , :cod_permissao, :descricao,
+                                            {:prompt => 'Selecione a permissão'}, class: "form-control") %>
+                                    <%=fun.label :permissao, class:"" %>
+                                </div> 
+
+                                <!-- comentado para não trazer os dados dos colaboradores  -->
+                                <%# <div id = 'collaborator'>
+                                    <%= fun.fields_for :collaborator do |collaborator| % >
+                                        <%= render partial: "collaborator_fields", locals: { c: collaborator } % > <!-- f é uma variavel opbjeto answer questoes -->
+                                    <% end % >
+                                </div> %>
+
+                                <div class="form-floating input-group mb-3 ">
+                                    
+                                    <%= link_to_add_association 'Adicionar', fun, :funcionariosempresa, 
+                                        partial: 'collaborators_backoffice/funcionarios/shared/empresa_fields', class: "btn input-group-text btn-success" %>
+                                    
+                                </div> 
+
+                                <table id="datatablesSimple" class="table table-striped table-hover ">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%" >Cod</th>
+                                            <th class="form-control-lg">Nome</th>
+                                            <th class="form-control-lg">Remover</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id = 'empresas'>
+                                        <%= fun.fields_for :funcionariosempresa do |emp| %>
+                                        
+                                            <tr class= "nested-fields">
+                                                <td class="align-middle fw-semibold">
+                                                    <%= emp.text_field :cod_empresa %>
+                                                </td>
+                                                <td class="align-middle fw-semibold">
+                                                    <%= emp.text_field :nome_empresa %>
+                                                </td>
+                                                <td class="align-middle fw-semibold">
+                                                   <%= link_to_remove_association('Remover', emp) %>
+                                                </td>
+                                            </tr>
+                                        <% end %>
+                                            
+                                    </tbody>
+                                </table>    
+
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <div class="col-md-9 col-sm-9  offset-md-3">
+                                            <button type="submit" class="btn btn-success btn-block">Salvar</button>
+                                            <%= link_to 'Cancelar', collaborators_backoffice_funcionarios_path, 
+                                                class:'btn btn-primary btn-block'  %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% end %>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</div>

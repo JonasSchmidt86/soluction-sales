@@ -1,0 +1,141 @@
+<br>
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card mb-3" style="max-width: 900px;">
+                    
+                        <% if @sale.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+                                <% @sale.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+                                            
+                        <div class="card-header">
+                            <%= link_to '', collaborators_backoffice_report_sales_path, class:'btn btn-close btn-block'  %>
+                            <h4 class="text-center font-weight-light">
+                                <%= "#{action_message} Venda"%> 
+                            </h4>
+                            
+                        </div>
+                            <!-- Tab panes -->
+                            <div class="tab-content">
+
+                                <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                                    <div class="card-body">
+                                        <%# form_with(url: new_collaborators_backoffice_sale_path, local: true) do |form| %>    
+                                        <%= form_with(model: [:collaborators_backoffice, @sale], local: true) do |form| %>
+                                            <div class="row">
+                                                <div class="col-md-10">
+                                                    <div class="form-floating mb-3">
+                                                        <%= form.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                                                :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
+                                                                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+                                                        <%= form.label :pessoa, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="form-floating mb-3">
+                                                        <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-info btn-circle" do %>
+                                                            <i class="fa fa-info"></i>
+                                                        <% end %>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-2">
+                                                <div class="col-md-5">
+                                                    <div class="form-floating mb-3">
+                                                        <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                                        <%= form.label :data_venda, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <div class="form-floating mb-3">
+                                                        <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                                        <%= form.label :numero_nf, class:"" %>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+<%# itens  --------- %>
+                                            <div class="form-floating input-group mb-3 ">                
+                                                <%= link_to_add_association 'Adicionar', form, :itensvenda, 
+                                                    partial: 'collaborators_backoffice/sales/shared/itens_fields', class: "btn input-group-text btn-success" %>
+                                            </div>
+                                            <table id="datatablesSimple" class="table table-striped table-hover ">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 10%" >Cod</th>
+                                                        <th class="form-control-lg">valor</th>
+                                                        <th class="form-control-lg">Remover</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id = 'itens'>
+                                                    <%= form.fields_for :itensvenda do |item| %>
+                                                    
+                                                        <tr class= "nested-fields">
+                                                            <td class="align-middle fw-semibold">
+                                                                <%= item.text_field :cod_produto %>
+                                                            </td>
+                                                            <td class="align-middle fw-semibold">
+                                                                <%= item.text_field :valor %>
+                                                            </td>
+                                                            <td class="align-middle fw-semibold">
+                                                            <%= link_to_remove_association('Remover', item) %>
+                                                            </td>
+                                                        </tr>
+                                                    <% end %>
+                                                        
+                                                </tbody>
+                                            </table> 
+<%# ---------------- %>
+
+                                            <div class="">
+                                                <div class="">
+                                                    <button type="submit" class="btn btn-success btn-block">Salvar</button>
+                                                </div>
+                                            </div>
+                                        <% end %>
+                                    </div>
+                                </div>
+
+                                <div class="mt-0 mb-3">
+                                    <div class="d-grid">
+                                        <div class="col-md-9 col-sm-9  offset-md-3">
+                                            <div id="setTime"></div
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+
+    // keyPress Enter não faz o submit brands marcas
+    var list = document.getElementById('cod_pessoa');
+    //console.log("List "+list)
+    
+    list.addEventListener("keypress", function () { 
+        console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+        if(event.keyCode == 13){ // 13 é o Enter
+            // event.preventDefault();
+            // quando precionar enter pega o texto da marca e passa como parametro para consulta
+            // list.innerHTML = "";
+
+            console.log("Valor "+list.innerText);
+        }
+    });
+</script>

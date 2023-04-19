@@ -1,0 +1,2 @@
+class Acertoestoque < ApplicationRecord
+end

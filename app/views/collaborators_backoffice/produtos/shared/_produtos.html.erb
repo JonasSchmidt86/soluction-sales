@@ -1,0 +1,78 @@
+
+<div class="card mt-4">
+
+        <%= link_to collaborators_backoffice_produtos_path, class:"card-header" do %>
+          <h4>Produtos</h4>
+      <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+            <div class="dataTable-top row">
+              <%= form_with(url: collaborators_backoffice_search_path, local: true, method: :get, 
+                                  class:"dataTable-search col-md-6  ") do |form| %>
+
+                  <div class="input-group">
+                    <%= form.text_field :term, value: params[:term], class:"dataTable-input upper", placeholder:"Nome produto...", id:"text" %>
+                    <button class="btn input-group-text btn-success" id="">Buscar</button>
+                  </div>
+              <% end %>
+
+            </div>
+
+              <div class="dataTable-container">
+              <table id="datatablesSimple" class="dataTable-table table-striped">
+                <thead>
+                  <tr>
+                    <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Nome</a></th>
+                    <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">NCm</a></th>
+
+
+                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                    <th data-sortable="" style="width: 105px;">
+                  <% else %>
+                    <th data-sortable="" style="width: 55px;">
+                  <% end %>
+                      <%= link_to new_collaborators_backoffice_produto_path(), class:"btn btn-success btn-circle" do %>
+                        <i class="fa fa-plus"></i>
+                      <% end %>
+                    </th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  <% @produtos.each do |produto| %>
+                    <tr>
+                      <td class="align-middle fw-semibold"><%= produto.cod_produto %> </td>
+                      <td class="align-middle fw-semibold"><%= produto.nome %> </td>
+                      <td class="align-middle fw-semibold"><%= produto.ncm %> </td>
+
+                      <td class="align-middle fw-semibold">
+                        <%= link_to edit_collaborators_backoffice_produto_path(produto), class:"btn btn-success btn-circle" do %>
+                          <i class="fa fa-edit"></i>
+                        <% end %>
+                        <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                          <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover produto?"} do %>
+                              <i class="fa fa-trash-can"></i>
+                          <% end %>
+                        <% end %>
+                      </td> 
+                    </tr>
+                  <% end %>
+                </tbody>
+
+
+              </table>
+        </div>
+        
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @produtos, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @produtos %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>

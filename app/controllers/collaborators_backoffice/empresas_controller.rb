@@ -1,0 +1,2 @@
+class CollaboratorsBackoffice::EmpresasController < CollaboratorsBackofficeController
+end

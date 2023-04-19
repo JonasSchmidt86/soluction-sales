@@ -1,0 +1,2 @@
+module CollaboratorsBackoffice::LembretesHelper
+end

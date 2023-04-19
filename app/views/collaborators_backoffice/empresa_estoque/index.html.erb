@@ -1,0 +1,85 @@
+
+<div class="card mt-4">
+
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header" do %>
+          <h4>Estoque</h4>
+      <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+                
+                <%= form_with(url: collaborators_backoffice_empresa_estoque_index_path, local: true, method: :get, 
+                                    class:"col dataTable-search col-md-6") do |form| %>
+
+                  <div class="d-flex mb-2 ">
+                    <div class="p-2 w-25 d-inline-block"><%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"dataTable-input", placeholder:"Codigo empresa..." %></div>
+                    <div class="p-2 w-25 d-inline-block"><%= form.text_field :cod_produto,value: params[:cod_produto], class:"dataTable-input", placeholder:"Codigo produto..." %></div>
+                    <div class="p-2 w-75 d-inline-block"><%= form.text_field :term, value: params[:term], class:"dataTable-input", placeholder:"Nome produto..." %></div>
+                    
+                    <div class="form-check form-switch">
+
+                      <label class="d-inline-block form-check-label">
+                        <%= form.check_box :contem, checked:(params[:contem] == '1' ? true : false ), class: "form-check-input", type:"checkbox"%>
+                          Com Estoque
+                      </label>
+                    </div>
+                    
+                    <div class="p-2 d-inline-block"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+                  </div>
+
+                <% end %>
+
+              <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table table-striped">
+                <thead>
+                  <tr>
+                    <th data-sortable="" style="width: 7%;">Codigo</th>
+                    <th data-sortable="">Nome</th>
+                    <th data-sortable="" style="width: 20%;">Cor</th>
+                    <th data-sortable="" style="width: 7%;">Qtd</th>
+                    <th data-sortable="" style="width: 7%;">Empresa</th>
+                    <th data-sortable="" style="width: 8%;">Vl Venda</th>
+
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                      <th data-sortable="" style="width: 8%;">Custo</th>
+                      <th data-sortable="" style="width: 55px;">Desativar</th>
+                      <% end %>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  <% @empresa_produtos.each do |estoque| %>
+                    <tr>
+                      <td class="align-middle fw-semibold"><%= estoque.full_codigo %> </td>
+                      <td class="align-middle fw-semibold"><%= estoque.produto.nome %> </td>
+                      <td class="align-middle fw-semibold"><%= estoque.cor.nmcor %> </td>
+                      <td class="align-middle fw-semibold"><%= estoque.quantidade.to_i %> </td>
+                      <td class="align-middle fw-semibold"><%= estoque.cod_empresa %> </td>
+                      <td class="align-middle fw-semibold"><%= number_to_currency estoque.valorvenda %> </td>
+
+                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                      <td class="align-middle fw-semibold"><%= number_to_currency estoque.ultimocusto %> </td>
+                        <td class="align-middle">
+                          <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover estoque empresa?"} do %>
+                            <i class="fa fa-minus"></i>
+                          <% end %>
+                        </td> 
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+        </div>
+        
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @empresa_produtos, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @empresa_produtos %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>

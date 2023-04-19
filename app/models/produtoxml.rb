@@ -1,0 +1,2 @@
+class Produtoxml < ApplicationRecord
+end

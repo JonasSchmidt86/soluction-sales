@@ -1,0 +1,2 @@
+class Assistencium < ApplicationRecord
+end

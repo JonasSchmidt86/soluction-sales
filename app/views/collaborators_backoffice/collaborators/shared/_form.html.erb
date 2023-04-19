@@ -1,0 +1,96 @@
+<br>
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    
+                        <% if @collaborator.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+                                <% @collaborator.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+
+                        <div class="card-header"><h3 class="text-center font-weight-light my-4"><%= "#{action_message} Colaborador"%> </h3></div>
+                        <div class="card-body">
+
+                        <%# <%= form_with(url: collaborators_backoffice_collaborator_path, model: @collaborator , local: true) do |form| % > %>
+                        <%= form_with(model: [:collaborators_backoffice, @collaborator], local: true) do |form| %>
+                                <div class="row mb-3">
+                                    <div class="form-floating mb-3">
+                                        <div class="form-floating">
+                                            <%= form.collection_select(:cod_funcionario, Funcionario.where("ativo = ? ", true), :cod_funcionario, :pessoa_nome, {:prompt => 'Selecione uma Pessoa'}, class: "form-control") %>
+                                            <%= form.label :pessoa, class:"" %>
+                                        </div>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <div class="form-floating">
+                                            <%= form.collection_select(:cod_empresa, Empresa.where("ativo = ? ", true), :cod_empresa, :nome, {:prompt => 'Selecione uma Empresa para Logar'}, class: "form-control") %>
+                                            <%= form.label :empresa, class:"" %>
+                                        </div>
+                                    </div>
+                                        
+                                    <%# <div class="col-md-2">
+                                        <div class="form-floating ">
+                                            <button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
+                                                data-bs-target="#funcionarioModal", data-bs-whatever= "<%form % > " >
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </div> 
+                                    </div> %>
+                                </div>
+
+                                <div class="form-floating mb-3 ">
+                                    <%= form.text_field :email, class: "form-control", placeholder:"E-mail Colaborador"%>
+                                    <%= form.label :email, class:"" %>
+                                </div>  
+
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :password, type:"password", class: "form-control", placeholder:"Senha Colaborador" %>
+                                    <%= form.label :password, class:"" %>
+                                </div>  
+                                
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :password_confirmation, type:"password", class: "form-control", placeholder:"Confirmação da Senha Colaborador" %>
+                                    <%= form.label :password_confirmation, class:"" %>
+                                </div> 
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <div class="col-md-9 col-sm-9  offset-md-3">
+                                            <button type="submit" class="btn btn-success btn-block">Salvar</button>
+                                            <%= link_to 'Cancelar', collaborators_backoffice_collaborators_path, class:'btn btn-primary btn-block'  %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% end %>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<%= render partial: 'collaborators_backoffice/collaborators/shared/funcionario_modal', locals: { action_message: 'Modal' } %>
+
+<%= javascript_tag do %>
+    var labels = document.querySelectorAll('div#ativo label');
+    labels.forEach((label) => {
+        label.addEventListener('click', () => {
+            label.classList.remove('btn-default');
+            label.classList.add('btn-primary'); 
+
+            labels.forEach((lbl) => {
+                if(lbl !== label){
+                    lbl.classList.remove('btn-primary');
+                    lbl.classList.add('btn-default');
+                };
+            });
+        });
+    });
+<% end %>

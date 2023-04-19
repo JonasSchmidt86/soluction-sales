@@ -1,0 +1,111 @@
+
+<div class="card mt-3">
+
+    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"card-header" do %>
+        <h4>Lançamentos de Caixa</h4>
+    <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          <div class="dataTable-top">
+              <%= form_with(url: collaborators_backoffice_report_put_box_index_path, local: true, method: :get, 
+                                    class:"dataTable-search col-md-3") do |form| %>
+
+                <div class="d-flex">
+                  <div class="col-md-8">
+                      <div class="mb-2">
+                          <%= form.text_field :cliente, class:"dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
+                      </div> 
+                  </div>
+
+                  <div class="col-md-5">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+                          class: "dataTable-input datepicker", placeholder:"Data Inicial" %>
+                    </div> 
+                  </div>
+                  <div class="col-md-5">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+                          class: "dataTable-input datepicker", placeholder:"Data Final" %>
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="mb-2 ">
+                      <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
+                                                  params[:cod_historico] ), include_blank: "Histórico", class: "form-control") %>
+
+                    </div>
+                  </div>
+
+                  <div class="col-md-5">
+                    <div class="mb-2 ">
+
+                      <%= select_tag(:cod_operacao, options_for_select(get_operacao(), 
+                                      params[:cod_operacao] ), include_blank: "Todos",
+                                      class:"form-control") %>
+                    </div>
+                  </div>
+
+                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div> 
+                </div>
+                
+              <% end %>
+          </div>
+          
+            <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table ">
+                <thead>
+                  <tr>
+<%# String columns[] = {"Tipo", "Empresa", "Operador", "Descricao", "Nr Parcela", "Cliente", "Dt Pagto", "Valor"}; %>
+                    <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Tp</a></th>
+                    <th data-sortable="" style="width: 2%;"><a href="#" class="dataTable-sorter">Emp</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                    <th data-sortable="" style="width: 18%;"><a href="#" class="dataTable-sorter">Historico</a></th>
+                    <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                    <th data-sortable=""  style="width: 11.5%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+                    <th data-sortable="" style="width: 110px;">Valor Total</th>
+                    <th data-sortable="" style="width: 70px;">Excluir?</th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    <% @lauches.each do |lauch| %>
+                    <% if lauch.tipo == 'S' %>
+                      <tr class="text-warning">
+                    <% else %>
+                      <tr class="">
+                    <% end %> 
+                        <td><%= lauch.tipo %> </td>
+                        <td><%= lauch.empresa.cod_empresa %> </td>
+                        <td><%= lauch.funcionario.usuario %> </td>
+                        <td><%= lauch.historico.descricao %></td> <%# historico%>
+                        <td><%= lauch.nmParcela %> </td>
+                        <td><%= lauch.nmPessoa %></td>
+                        <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
+                        <td><%= number_to_currency( lauch.valor, precision: 2)  %></td>
+                        <td>
+                          <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
+                              <i class="fa fa-minus"></i>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+
+                </tbody>
+              </table>
+          </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @lauches, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @lauches %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>
+ 

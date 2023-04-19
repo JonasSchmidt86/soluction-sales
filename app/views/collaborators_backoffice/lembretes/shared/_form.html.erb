@@ -1,0 +1,63 @@
+<br>
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    
+                        <% if @lembrete.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+        
+                                <%# <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button> %>
+                                <% @lembrete.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+
+                        <div class="card-header">
+                            <h3 class="text-center font-weight-light my-4"><%= "#{action_message} Lembrete"%> </h3>
+                        </div>
+                            
+                        <div class="card-body">
+                        
+                            <%= form_with(model: [ :collaborators_backoffice, @lembrete ], local: true) do |form| %>
+
+                                <div class="form-floating mb-3 ">
+                                    <%= form.text_field :descricao, class: "form-control", placeholder:"Descrição", id:"text"%>
+                                    <%= form.label :descricao, class:"" %>
+                                </div> 
+
+                                <div class="form-floating mb-3">
+                                    <%= form.collection_select(:cod_empresasolicitada, @empresas, :cod_empresa, :nome,
+                                            {:prompt => 'Selecione uma Empresa'}, class: "form-control") %>
+                                    <%= form.label :empresasolicitada, class:"" %>
+                                </div>   
+
+                                <div class="form-floating mb-3 ">
+                                    <%= form.text_field :datacadastro,value: l(@lembrete.datacadastro), class: "form-control datepicker", placeholder:"Data" %>
+                                    <%= form.label :dataCadastro, class:"" %>
+                                </div> 
+
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <div class="col-md-9 col-sm-9  offset-md-3">
+                                            <button type="submit" class="btn btn-success btn-block">Salvar</button>
+                                            <%= link_to 'Cancelar', collaborators_backoffice_lembretes_path, class:'btn btn-primary btn-block'  %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% end %>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
