@@ -1,0 +1,36 @@
+<html>
+  <body>
+      <div id="layoutAuthentication">
+          <div id="layoutAuthentication_content">
+              <main>
+                  <div class="container">
+                      <div class="row justify-content-center">
+                          <div class="col-lg-5">
+                              <div class="card shadow-lg border-0 rounded-lg mt-5">
+                                  <div class="card-header">
+                                    <h3 class="text-center font-weight-light my-4">Esqueceu a sua senha</h3>
+                                  </div>
+                                  <div class="card-body">
+
+                                        <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+
+                                          <div class="form-floating mb-3">
+                                            <%= f.email_field :email, autofocus: true, autocomplete: "email", class:"form-control", type:"email" %>                                            
+                                            <%= f.label :email, for:"inputEmail" %>
+                                          </div>
+
+                                          <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                                            <%= f.submit "Enviar instruções para o e-mail", class:"btn btn-primary" %>
+                                          </div>
+
+                                        <% end %>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </main>
+          </div>
+        </div>
+    </body>
+</html>

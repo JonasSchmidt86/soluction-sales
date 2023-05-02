@@ -1,0 +1,97 @@
+
+<div class="card mt-4">
+
+    <%= link_to collaborators_backoffice_report_sales_path, class:"card-header" do %>
+        <h4>Relatorio Vendas</h4>
+    <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          
+              <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
+                                    class:"col dataTable-search col-md-6") do |form| %>
+                <div class="d-flex">
+                  <div class="col-md-10">
+                      <div class="mb-2">
+                          <%= form.text_field :term, class:"dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
+                      </div> 
+                  </div>
+
+                  <div class="col-md-3">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+                          class: "dataTable-input datepicker", placeholder:"Data Inicial" %>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+                          class: "dataTable-input datepicker", placeholder:"Data Final" %>
+                    </div>
+                  </div>
+
+                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+                  
+                  <div class="mb-2">
+                    <%= link_to new_collaborators_backoffice_venda_path,
+                                class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
+                        <i class="fa fa-plus"></i>
+                    <% end %>
+                  </div>
+                </div>
+                
+              <% end %>
+
+            <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table">
+                <thead>
+                  <tr>
+                    <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                    <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NFe</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                    <th data-sortable="" style="width: 150px;">Valor Total</th>
+                    <th data-sortable="" style="">Info</th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    <% @sales.each do |sale| %>
+                      <% if sale.cancelada %>
+                        <tr class="text-warning">
+                      <% else %>
+                        <tr class="">
+                      <% end %> 
+                          <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
+                          <td><%= sale.empresa.nome %> </td>
+                          <td><%= sale.pessoa.nome %></td>
+                          <td><%= sale.numeronf %> </td>
+                          <td><%= sale.funcionario.usuario %> </td>
+                          <td><%= number_to_currency( sale.valortotal, precision: 2)  %></td>
+
+                          <td>
+                              <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"btn btn-info btn-circle" do %>
+                                  <i class="fa fa-info"></i>
+                              <% end %>
+                          </td>
+
+                        </tr>
+                    <% end %>
+
+                </tbody>
+              </table>
+          </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @sales %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>
+ 

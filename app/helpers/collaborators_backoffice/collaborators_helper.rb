@@ -1,0 +1,3 @@
+module CollaboratorsBackoffice::CollaboratorsHelper
+
+end

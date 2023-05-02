@@ -1,0 +1,2 @@
+class Lancamentosdiverso < ApplicationRecord
+end

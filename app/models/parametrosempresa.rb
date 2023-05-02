@@ -1,0 +1,2 @@
+class Parametrosempresa < ApplicationRecord
+end

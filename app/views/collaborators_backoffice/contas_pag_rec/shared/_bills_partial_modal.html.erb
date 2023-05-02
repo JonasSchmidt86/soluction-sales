@@ -1,0 +1,91 @@
+<button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal",
+  data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+  <i class="fa-regular fa-handshake fa-xs"></i>
+</button>
+                            
+<div class="modal fade" id="launchPartialModal<%= bill.cod_contaspagrec %>" data-tor-parent="show">
+  <div class="modal-dialog modal-dialog-top modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+    
+      <%= form_with(model: [ :collaborators_backoffice, Lancamentoscaixa.new ], method: :post, local: true) do |form| %>
+<%# -------------------------------------- %>
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Pagamento Parcial conta <%= bill.nmParcela %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+<%# -------------------------------------- %>
+      <div class="modal-body">
+        <form>
+          <div class="row g2">
+            <div class="col">
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="recipient-name" value= "<%= bill.nmPessoa %>" readonly>
+                <label for="recipient-name" class="col-form-label">Pessoa</label>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-floating mb-3 ">
+                <input type="text" class="form-control" id="recipient-name" value="<%= number_to_currency((bill.valorparcela - bill.valorPago)) %>" readonly>
+                <label for="recipient-name" class="col-form-label">Valor Devido:</label>
+              </div>
+            </div>
+          </div>
+        </form>
+<%# -------------------------------------- %>
+        <div class="row g-3">
+          <div class="col-md">
+            <div class="form-floating">
+              
+              <%= form.text_field :valor, value:"",placeholder: "Valor_pagar", class: "form-control money2", id:"valorpagar" %>
+              <label for="valorpagar">Valor Pagar</label> 
+
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="form-floating">
+
+              <div class="row">
+                <div class="col g-2">
+                  <div class="form-floating mb-3">
+
+                    <div class="d-grid">
+                      <div class=" dataTable-input form-check form-switch">
+                        <label id="lb_bill_status" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
+                        <%= form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
+                        <%= form.hidden_field :contaspagrec,  value: bill.cod_contaspagrec %>
+                        
+                        <%= form.hidden_field :tipo_conta,  value: tipe_bill_true(params[:tipo_conta]) %>
+                        <%= form.hidden_field :status_bill,  value: params[:status_bill] %>
+                        <%= form.hidden_field :nrVenda,  value: params[:nrVenda] %>
+                        <%= form.hidden_field :cliente,  value: params[:cliente] %>
+                        <%= form.hidden_field :dataInicial,  value: params[:dataInicial] %>
+                        <%= form.hidden_field :dataFinal,  value: params[:dataFinal] %>
+
+
+                        <%# form.hidden_field :params_bills,  value: request.query_parameters %>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="col-md g-2">
+                  <div class="form-floating mb-3">
+                    <div class="d-grid col-md">
+                      <button type="submit" class="btn btn-success" id="gravar">Salvar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+<%# -------------------------------------- %>
+      <% end %>
+    </div>
+    <div class="modal-footer">
+        <%# <button type="submit" class="btn btn-success btn-block">Salvar</button> %>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,40 @@
+<div class="modal fade" id="funcionarioModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Adicionando Colaborador</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table id="datatablesSimple" class="dataTable-table">
+          <thead>
+            <tr>
+              <th data-sortable=""  style=""><a href="#" class="dataTable-sorter">Dt Cad</a></th>
+              <th data-sortable="" style=""><a href="#" class="dataTable-sorter">Pessoa</a></th>
+              <th data-sortable="" style=""><a href="#" class="dataTable-sorter">CPF</a></th>
+              <th data-sortable="" style="width: 55px;">
+            </tr>
+          </thead>
+          
+          <tbody>
+              <% Funcionario.where("ativo = ? ", true).each do |fun| %>
+                <tr>
+                  <td><%= l(fun.datacontrato) %> </td>
+                  
+                  <td><%= (!fun.pessoa.blank? ? (fun.pessoa.nome) : "") %></td>
+                  <td><%= (!fun.pessoa.blank? ? (fun.pessoa.cpf_cnpj) : "") %></td>
+                  <td>
+                    <%= link_to edit_collaborators_backoffice_collaborator_path(fun), class:"btn btn-success btn-circle" do %>
+                      <i class="fa fa-plus"></i>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+          </tbody>
+
+        </table>
+
+      </div>
+    </div>
+  </div>
+</div>

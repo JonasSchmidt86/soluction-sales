@@ -1,0 +1,20 @@
+
+<div class= "fields">
+    <div class="form-floating mb-3 ">
+        <%= c.text_field :email, class: "form-control"%>
+        <%= c.label :email, class:"" %>
+    </div> 
+    <div class="form-floating mb-3">
+        <%= c.text_field :password, type:"password", class: "form-control" %>
+        <%= c.label :password, class:"" %>
+    </div>  
+    
+    <div class="form-floating mb-3">
+        <%= c.text_field :password_confirmation, type:"password", class: "form-control" %>
+        <%= c.label :password_confirmation, class:"" %>
+    </div>
+    <div class="form-floating mb-3">
+        <%= c.collection_select(:cod_empresa, Empresa.all.order(" cod_empresa "), :cod_empresa, :nome, {:prompt => 'Selecione uma empresa'}, class: "form-control") %>
+        <%= c.label :pessoa, class:"" %>
+    </div>  
+</div>

@@ -1,0 +1,64 @@
+<br>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Collaboradores
+    </div>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          <div class="dataTable-top">
+            <div class="dataTable-dropdown">
+              </div>
+                <div class="dataTable-search">
+                  <input class="dataTable-input" placeholder="Search..." type="text">
+                </div>
+              </div>
+              <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table">
+                <thead>
+                  <tr>
+                    <th data-sortable="" style="width: 80px;"><a href="#" class="dataTable-sorter">Codigo</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Nome</a></th>
+                    <th data-sortable="" style="width: 110px;">
+                      <%= link_to new_collaborators_backoffice_collaborator_path, class:"btn btn-success btn-circle" do %>
+                        <i class="fa fa-plus"></i>
+                      <% end %>
+                    </th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  <% @collaborators.each do |collaborator| %>
+                    <tr>
+                      <td><%= collaborator.id %> </td>
+                      <td><%= collaborator.email %> </td>
+
+                      <%# <td><%= link_to 'Show', lembrete % ></td> %>
+                      <td>
+                        <%= link_to edit_collaborators_backoffice_collaborator_path(collaborator), 
+                                    class:"btn btn-primary btn-circle" do %>
+                            <i class="fa fa-edit"></i>
+                        <% end %>
+                        <%= link_to collaborators_backoffice_collaborator_path(collaborator), method: :delete, 
+                                    class:"btn btn-danger btn-circle", data: {confirm: "Deseja excluit colaborador?"} do %>
+                            <i class="fa fa-minus"></i>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+
+              </table>
+        </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @collaborators, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @collaborators %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>

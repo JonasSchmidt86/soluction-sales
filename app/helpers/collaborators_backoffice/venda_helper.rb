@@ -1,0 +1,2 @@
+module CollaboratorsBackoffice::VendaHelper
+end

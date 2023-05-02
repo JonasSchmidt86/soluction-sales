@@ -1,0 +1,86 @@
+<div class="card mt-2 mb-3">
+
+    <%= link_to collaborators_backoffice_funcionarios_path, class:"card-header" do %>
+        <h4>Colaboradores</h4>
+    <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+
+            <div class="row g-2 mb-3">
+              <div class="col-md">
+                <div class="form-floating">
+                  <%= form_with(url: collaborators_backoffice_funcionarios_path, local: true, method: :get, 
+                                      class:"dataTable-search") do |form| %>
+                    <%= form.text_field :term, value: params[:term], class:"search dataTable-input", placeholder:"Colaborador...", id:"text" %>
+                </div>
+              </div>
+              <div class="col-md">
+                <div class="form-floating">
+                    <button type='submit', class="btn btn-success btn-circle">Buscar</button>
+                <% end %>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table">
+                <thead>
+                  <tr>
+                    <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Dt Contrato</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Usuario</a></th>
+                    <th data-sortable=""><a href="#" class="dataTable-sorter">Nome</a></th>
+                    <th data-sortable="" style="width: 105px;">
+
+
+                      <%= link_to new_collaborators_backoffice_funcionario_path, method: :get, 
+                                  class:"btn btn-success btn-circle" do %>  <%# , data: {confirm: "Deseja criar Colaborador?"} %>
+                          <i class="fa fa-plus"></i>
+                      <% end %>
+
+                    </th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    <% @funcionarios.each do |funcionario| %>
+                      <tr>
+                        <td><%= l(funcionario.datacontrato) %> </td>
+                        <td><%= funcionario.usuario %> </td>
+                        <td><%= funcionario.pessoa.nome %> </td>
+                        <td>
+                          <%= link_to collaborators_backoffice_funcionario_path(funcionario), method: :delete, 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Colaborador?"} do %>
+                              <i class="fa fa-minus"></i>
+                          <% end %>
+                          <%= link_to edit_collaborators_backoffice_funcionario_path(funcionario), class:"btn btn-success btn-circle" do %>
+                            <i class="fa fa-edit"></i>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                </tbody>
+              </table>
+              
+        </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @funcionarios, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @funcionarios %>
+              </div>
+          </div>
+        </div>
+        
+    </div>
+</div>
+<script>
+  <%# $('form').on('keypress', e => {
+      if (e.keyCode == 13) {
+          return false;
+      }
+  }); %>
+    
+
+</script>
