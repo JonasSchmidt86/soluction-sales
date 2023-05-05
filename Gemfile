@@ -21,7 +21,7 @@ gem 'rails-i18n', '~> 7.0.4'
 gem 'coffee-rails', '~> 4.2'
 
 # Use Uglifier as compressor for JavaScript assets
-# gem 'uglifier', '>= 1.3.0'
+gem 'uglifier', '>= 1.3.0'
 
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'mini_racer', platforms: :ruby
@@ -62,7 +62,6 @@ group :development do
   gem 'capistrano-rvm'
   gem 'capistrano-bundler', '~> 1.5'
   gem 'capistrano-rails', '~> 1.4'
-  
 end
 
 group :test do

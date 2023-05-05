@@ -1,4 +1,6 @@
 {
+  "engines" : { "node": "8.9.4" }
+  
   "name": "soluction_sales",
   "private": true,
   "dependencies": {
