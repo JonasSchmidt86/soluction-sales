@@ -7,7 +7,8 @@ ruby '3.0.4'
 gem 'rails', '~> 6.1', '>= 6.1.7.3'
 
 # pg postgres
-gem 'pg', '1.4.6'
+# gem 'pg', '1.4.0'
+gem 'pg', '~> 1.1.1'
 
 gem 'sassc'
 # Use Puma as the app server

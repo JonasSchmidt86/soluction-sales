@@ -17,7 +17,11 @@ class Itemvenda < ApplicationRecord
     paginates_per 20
     
     def nome_produto
-        self.produto.nome
+        if !self.produto.blank? 
+            self.produto.nome
+        else
+            "Produto não localizado"
+        end
     end
     
     def valor_total
