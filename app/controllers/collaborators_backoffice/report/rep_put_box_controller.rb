@@ -4,15 +4,15 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
 
     def index
         # pega o primeiro dia e o ultimo dia do mes
-        puts Time.now.strftime("%d/%m/%Y")
-        puts Date.today.end_of_month.strftime("%d/%m/%Y")
+        # puts Time.now.strftime("%d/%m/%Y")
+        # puts Date.today.end_of_month.strftime("%d/%m/%Y")
 
         consulta = " lancamentoscaixa.cod_empresa = ? 
-                     and lancamentoscaixa.caixa_id is not null
-                     and lancamentoscaixa.cod_bancoconta is null ";
+                     and lancamentoscaixa.caixa_id is not null ";
+                    #  and lancamentoscaixa.cod_bancoconta is null ";
         
         if (params[:dataInicial].blank? && params[:dataFinal].blank?)
-            consulta += " and date(lancamentoscaixa.datapagto) between TO_DATE('"+ Time.now.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and TO_DATE('"+ Date.today.end_of_month.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') ";
+            consulta += " and date(lancamentoscaixa.datapagto) between TO_DATE('"+ Time.current.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and TO_DATE('"+ Date.today.end_of_month.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') ";
         else
             consulta += " and date(lancamentoscaixa.datapagto) between TO_DATE('"+ params[:dataInicial] +"', 'DD/MM/YYYY') and TO_DATE('"+ params[:dataFinal] +"', 'DD/MM/YYYY') ";
 
@@ -55,16 +55,24 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
     end
 
     def destroy
-        @bill = @launch.contaspagrec
-        @bill.quitada = false
-        if @bill.save
+        if @launch.contaspagrec.nil?
             if @launch.destroy
-                redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso! E conta Ativada com sucesso!"
+                redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso!"
             else
                 redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Erro ao excluir Lancamento!"
             end
         else
-            redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Não foi possivel reativar a conta!"
+            @bill = @launch.contaspagrec
+            @bill.quitada = false
+            if @bill.save
+                if @launch.destroy
+                    redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso! E conta Ativada com sucesso!"
+                else
+                    redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Erro ao excluir Lancamento!"
+                end
+            else
+                redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Não foi possivel reativar a conta!"
+            end
         end
 
     end

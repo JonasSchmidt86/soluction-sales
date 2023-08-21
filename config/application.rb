@@ -25,11 +25,13 @@ require "sprockets/railtie"
 Bundler.require(*Rails.groups)
 
 module SoluctionSales
+
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 6.1
     
-    config.time_zone = 'Brasilia' 
+    config.time_zone = 'Brasilia'
+    config.active_record.default_timezone = :utc
     
     config.i18n.default_locale = :"pt-BR"
 
@@ -39,6 +41,7 @@ module SoluctionSales
     # the framework and any gems in your application.
 
     config.generators.system_tests = nil
+
   end
 
 end

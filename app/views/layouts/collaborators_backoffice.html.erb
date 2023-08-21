@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -19,15 +19,24 @@
 
         <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-light hstack gap-3 ">
             
+            <!-- Navbar Brand-->
             <div class="p-2 d-flex justify-content-start">
                 <%= link_to (current_collaborator.empresa.nome unless current_collaborator.empresa.blank? ) , 
                     collaborators_backoffice_welcome_index_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 "%>
             </div>
-            <div class="p-2 d-flex justify-content-center">
-                <a id="myId" class="text-black hstack fs-5 ">Hora</a>
-            </div>
 
-            <div class="p-2 d-flex justify-content-end">
+            <!-- Sidebar Toggle -->
+            <button class="btn btn-link btn-sm order-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            
+            <!-- sidebar hora -->
+            <div class="text-center">
+                <a id="myId" class=" text-black hstack fs-5 ">Hora</a>
+                <a> </a>
+            </div>
+                
+
+            <!-- Navbar Menu -->
+            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
                 <button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
                     data-bs-target="#empresaModal", data-bs-whatever="passa para o modal" >
 
@@ -37,8 +46,11 @@
                     <% end %>
                     </i>
                 </button>
+            </form>
 
-                <li class="hstack dropdown ">
+            <!-- Navbar-->
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+                <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user fa-fw"></i>
                         <%= current_collaborator.funcionario.pessoa.nome %>
@@ -57,7 +69,7 @@
                         </li>
                     </ul>
                 </li>
-        </div>
+            </ul>
             
         </nav>
         
@@ -210,7 +222,7 @@
 
             // Adicionando ouvinte de clique
             div.addEventListener("click", function () {
-                // div.innerHTML = "Clicou =)";
+                 div.innerHTML = "Boas Vendas =)";
             });
 
             // Criando um intervalo

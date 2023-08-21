@@ -45,73 +45,7 @@
                             <div class="tab-content">
 
                                 <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                                    <div class="card-body">
-                                        <%= form_with(model: [ :collaborators_backoffice, @produto ], local: true) do |form| %>
-                                            
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <div class="form-floating mb-3 mb-md-0">
-                                                        <%= form.text_field :cod_produto, disabled: true, class: "form-control", placeholder:"Codigo", id:"text" %>
-                                                        <%= form.label :cod_produto, class:"" %>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-floating">
-                                                        <%= form.text_field :cfop, class: "form-control", placeholder:"Produto", id:"text" %>
-                                                        <%= form.label :cfop, class:"" %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-floating mb-3">
-                                                <%= form.text_field :nome, class: "form-control", placeholder:"Produto", id:"text" %>
-                                                <%= form.label :name, class:"" %>
-                                            </div>  
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <div class="form-floating mb-3 mb-md-0">
-                                                        <%= form.text_field :ncm, class: "form-control", placeholder:"NCM", id:"text" %>
-                                                        <%= form.label :ncm, class:"" %>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-floating">
-                                                        <%= form.text_field :cest, class: "form-control", placeholder:"CEST", id:"text" %>
-                                                        <%= form.label :cest, class:"" %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-floating mb-3">
-                                                <%= form.collection_select(:cod_marca, getBrands("%"), :cod_marca, :nome, 
-                                                    {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"brands") %>
-                                                <%= form.label :brands, class:"" %>
-                                            </div>
-                                            
-                                            <div class="row mb-0">
-                                                <div class="col-md-6">
-                                                    <div class="form-floating mb-3 mb-md-0">
-                                                        <%= form.collection_select(:cod_grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo, 
-                                                            {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
-                                                        <%= form.label :group, class:"" %>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-floating">
-                                                        <%= form.collection_select(:cod_margem, Parametro.all.order(:descricao), :cod_parametro, :descricao,
-                                                            {:prompt => 'Selecione uma Margem'}, class: "form-control") %>
-                                                        <%= form.label :margin, class:"" %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3 mb-3">
-                                                <div class="d-grid text-center">
-                                                    <div class="col-md-9 col-sm-9  offset-md-3">
-                                                        <button type="submit" class="btn btn-success btn-block">Salvar</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <% end %>
-                                    </div>
+                                    <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto } %>
                                 </div>
 
                                 <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
@@ -150,8 +84,6 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <p>Quantidade vendida desse produto foi: <%= @produto.itensvenda.size %></p>
-
                                             <% @produto.itensvenda.where("cod_empresa = ? ", current_collaborator.cod_empresa).order("cod_item desc").page(params[:page]).each do |item| %>
                                                 <tr>
                                                     <td><%= item.cod_empresa %></td>
@@ -177,6 +109,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            
                                             <% @produto.itenscompra.where("cod_empresa = ? ", current_collaborator.cod_empresa).order("cod_item desc").limit(10).each do |item| %>
                                                 <tr>
                                                     <td><%= post_date item.compra.datacompra %></td>

@@ -8,9 +8,6 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
         @array =  ['Abertos', 'Liquidados', 'Todos']
 
-        # pega o primeiro dia e o ultimo dia do mes
-        puts Time.now.strftime("%d/%m/%Y")
-        puts Date.today.end_of_month.strftime("%d/%m/%Y")
         consulta = "";      
         if !params[:nrVenda].blank?
             consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
@@ -43,7 +40,7 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         consulta += " and cod_empresa = ? ";
 
         @bills = Contaspagrec.where(consulta, current_collaborator.empresa.cod_empresa)
-                    .order(dtvencimento: :asc).includes(:lancamentos).page(params[:page])
+                    .order(dtvencimento: :asc, quitada: :asc, cod_contaspagrec: :desc ).includes(:lancamentos).page(params[:page])
 
     end
     
@@ -85,7 +82,9 @@ private
         # puts "bill _------------- >>>>>>>>>>  nm Pessoa: " +  @bill.nmPessoa.to_s
     end
 
+
     def partion(param_valor, historic)
+        
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
         
         if @caixa.nil?
@@ -97,6 +96,7 @@ private
             @launch.funcionario = current_collaborator.funcionario
             @launch.valor = param_valor # verificar como fazer
             @launch.empresa = Empresa.find(current_collaborator.cod_empresa)
+            @launch.cancelada = false
 
             # se for venda entrada e se for compra ou frete saida
             if !@bill.venda.nil?
@@ -113,7 +113,13 @@ private
 
             @launch.caixa = @caixa
 
-            if @launch.save
+            @launch.dataabertura = @caixa.dataabertura
+            
+            @launch.datamodificacao = DateTime.now
+
+            @bill.lancamentos << @launch
+
+            if @bill.save
                 redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                 { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
                 :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]

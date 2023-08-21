@@ -8,5 +8,10 @@
     "jquery": "^3.6.1",
     "jquery-mask-plugin": "^1.14.16",
     "jquery-ui": "^1.13.2"
-  }
+  },
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/JonasSchmidt86/soluction-sales.git",
+  "author": "JonasSchmidt86 <122678522+JonasSchmidt86@users.noreply.github.com>",
+  "license": "MIT"
 }

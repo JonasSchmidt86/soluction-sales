@@ -14,6 +14,11 @@ class Contaspagrec < ApplicationRecord
     
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :contas, optional: true
 
+    def dt_vencimento
+        if !self.dtvencimento.nil?
+            return post_date self.dtvencimento
+        end
+    end
 
     def nmParcela
         if !self.venda.nil?

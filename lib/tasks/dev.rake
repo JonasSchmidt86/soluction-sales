@@ -12,8 +12,9 @@ namespace :dev do
       if Rails.env.development?
         # show_spinner("Apagando BD...") { %x(rails db:drop) } 
         # show_spinner("Criando BD...") { %x(rails db:create) } 
-        show_spinner("Migrando BD...") { %x(rails db:migrate) } 
+        # show_spinner("Migrando BD...") { %x(rails db:migrate) } 
         show_spinner("Cadastrando o colaborador padrão...") { %x(rails dev:add_default_collaborator) } 
+        
         # show_spinner("Cadastrando o usuário padrão...") { %x(rails dev:add_default_user) }
       else
         puts "Você não está em ambiente de desenvolvimento!"

@@ -76,9 +76,20 @@
                     <% if lauch.tipo == 'S' %>
                       <tr class="text-warning">
                     <% else %>
-                      <tr class="">
+                      <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
+                        <tr class="text-info">
+                      <% else %>
+                        <tr class="">
+                      <% end %>
                     <% end %> 
-                        <td><%= lauch.tipo %> </td>
+                    
+                        <td><%# NORMALMENTE RETIRADA QUE SAI COMO ENTRADA NA CONTA %>
+                          <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
+                            S
+                          <% else %>
+                            <%= lauch.tipo %>
+                          <% end %>
+                        </td>
                         <td><%= lauch.empresa.cod_empresa %> </td>
                         <td><%= lauch.funcionario.usuario %> </td>
                         <td><%= lauch.historico.descricao %></td> <%# historico%>

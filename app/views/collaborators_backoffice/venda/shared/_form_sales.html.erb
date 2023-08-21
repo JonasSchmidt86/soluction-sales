@@ -87,37 +87,26 @@
                         
                             <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
                                 <div class="card-body">
-                                    <div class="form-floating input-group mb-3 ">                
-                                        <%# link_to_add_association 'Adicionar', form, :itensvenda, 
-                                            partial: 'collaborators_backoffice/venda/shared/itens_fields', 
-                                            class: "btn input-group-text btn-success" %>
 
-                                            <%# link_to_add_association 'Adicionar', form, :itensvenda, 
-                                                render_options: {wrapper: 'bootstrap' }, 
-                                                class: "btn input-group-text btn-success" %>
-                                    </div>
                                     <div class="table-responsive">
-                                        <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                        
+                                        <div class="row">
+                                            
+                                        </div>
+
+                                        <button type="button" onclick="adicionaLinha('tbl')" >Adicionar</button>
+
+                                        <table id="tbl" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                             <thead>
                                                 <tr>
-                                                    <th>Cod</th>
+                                                    <th style="width: 10%;">Cod</th>
                                                     <th>Nome</th>
-                                                    <th>Qtd</th>
-                                                    <th>valor</th>
-                                                    <th>Total</th>
-                                                    <th>Remover</th>
+                                                    <th style="width: 10%;">Qtd</th>
+                                                    <th style="width: 10%;">valor</th>
+                                                    <th style="width: 10%;">Total</th>
+                                                    <th style="width: 5%;">Remover?</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id = 'itens'>
-                                                <%= form.fields_for :itensvenda do |item| %>
-
-                                                    <%= render partial: "collaborators_backoffice/venda/shared/itens_fields", locals: { f: item } %> <!-- f é uma variavel opbjeto answer questoes -->
-                                                <% end %>
-                                                    <%= link_to_add_association 'Adicionar', form, :itensvenda, 
-                                                        partial: 'collaborators_backoffice/venda/shared/itens_fields', 
-                                                        class: "btn input-group-text btn-success" %>
-                                                
-                                            </tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -174,6 +163,35 @@
 </div>
 
 <script>
+
+
+//Funcao adiciona uma nova linha na tabela
+    function adicionaLinha(idTabela) {
+
+        var tabela = document.getElementById(idTabela);
+        var numeroLinhas = tabela.rows.length;
+        var linha = tabela.insertRow(numeroLinhas);
+        var celula1 = linha.insertCell(0);
+        var celula2 = linha.insertCell(1);   
+        var celula3 = linha.insertCell(2); 
+        var celula4 = linha.insertCell(3); 
+        var celula5 = linha.insertCell(4); 
+        var celula6 = linha.insertCell(5); 
+        celula1.innerHTML = 'produto '+ Math.floor((Math.random() * 100) + 1); 
+        celula2.innerHTML =  Math.floor((Math.random() * 100) + 1); 
+        celula3.innerHTML =  ''
+        celula4.innerHTML =  '';
+        celula5.innerHTML =  '';
+        celula6.innerHTML =  "<button onclick='removeLinha(this)'>Remover</button>";
+    }
+    
+    // funcao remove uma linha da tabela
+    function removeLinha(linha) {
+        var i=linha.parentNode.parentNode.rowIndex;
+        document.getElementById('tbl').deleteRow(i);
+    } 
+
+    // ots
     var x = document.getElementById("vlItem");
     var defaultVal = x.defaultValue;
     var currentVal = x.value;
@@ -185,13 +203,13 @@
     
     list.addEventListener("keypress", function () { 
         console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-        if(event.keyCode == 13){ // 13 é o Enter
+        // if(event.keyCode == 13){ // 13 é o Enter
             // event.preventDefault();
             // quando precionar enter pega o texto da marca e passa como parametro para consulta
             //list.innerHTML = getBrands("Tra%");
 
             //console.log("Valor "+list.innerText);
-        }
+        // }
     });
 </script>
   

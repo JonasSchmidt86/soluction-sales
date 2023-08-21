@@ -53,11 +53,10 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
             @launch.contaspagrec = @bill
 
             @launch.caixa = @caixa
+
+            @launch.dataabertura = @caixa.dataabertura
             
-            puts "----------------------------"
-            puts the_params[:tipo_conta]
-            puts !the_params[:tipo_conta]
-            puts "----------------------------"
+            @launch.datamodificacao = DateTime.now
 
             if @launch.save
                 redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
@@ -72,8 +71,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                 }  ), notice: "ERRO AO SALVAR CONTA!"
             end
         end
-
-
+        
         # redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "CREATE"
     end
 
@@ -88,7 +86,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
     private 
 
     def params_launchs
-        params.require(:lancamentoscaixa).permit(:valor, :quitada, contaspagrec_attributes:[:contaspagrec] )
+        params.require(:lancamentoscaixa).permit(:valor, :dataabertura, :quitada, contaspagrec_attributes:[:contaspagrec] )
     end
 
     def set_lembrete

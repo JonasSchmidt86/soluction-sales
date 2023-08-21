@@ -86,20 +86,23 @@
                         
                             <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
                                 <div class="card-body">
+                                
                                     <div class="form-floating input-group mb-3 ">                
                                         <%= link_to_add_association 'Adicionar', form, :itensvenda, 
-                                            partial: 'collaborators_backoffice/venda/shared/itens_fields', class: "btn input-group-text btn-success" %>
+                                            partial: 'collaborators_backoffice/venda/shared/itens_fields', 
+                                            class: "btn input-group-text btn-success" %>
                                     </div>
+                        
                                     <div class="table-responsive">
-                                        <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                    
+                                        <table  id="tbl" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                             <thead>
                                                 <tr>
-                                                    <th>Cod</th>
+                                                    <th style="width: 10%;" >Cod</th>
                                                     <th>Nome</th>
                                                     <th>Qtd</th>
                                                     <th>valor</th>
                                                     <th>Total</th>
-                                                    <th>Remover</th>
                                                 </tr>
                                             </thead>
                                             <tbody id = 'itens'>
@@ -123,9 +126,6 @@
                                                         <td class="">
                                                             <%= number_to_currency item.valor_total %>
                                                         </td>
-                                                        <td class="">
-                                                            <%# link_to_remove_association('Remover', item) %>
-                                                        </td>
                                                     </tr>
                                                 <% end %>    
                                             </tbody>
@@ -136,35 +136,27 @@
 
                             <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
                                 <div class="card-body">
-                                    <div class="form-floating input-group mb-3">                
-                                        <%= link_to_add_association 'Calcular', form, :contas, 
-                                            partial: 'collaborators_backoffice/venda/shared/contas_fields', class: "btn input-group-text btn-success" %>
-                                    </div>
-                                    
                                     <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                         <thead>
                                             <tr>
                                                 <th class="">Numero</th>
                                                 <th class="">Dt Vencimento</th>
                                                 <th class="">valor Parcela</th>
-                                                <th class="">Remover</th>
                                             </tr>
                                         </thead>
                                         <tbody id = 'contas'>
-                                            <%= form.fields_for :contas do |f| %>
+                                            <% @sale.contas.each do |contas| %>
                                                 <tr class= "nested-fields">
                                                     <td class="">
-                                                        <%= f.text_field :nmParcela %>
+                                                        <%= contas.nmParcela %>
                                                     </td>
                                                     <td class="">
-                                                        <%= f.text_field :dtvencimento %>
+                                                        <%= post_date(contas.dtvencimento) %>
                                                     </td>
-                                                    <td class="">
-                                                        <%= f.number_field :valorparcela %>
+                                                    <td class="table-success" >
+                                                        <%= number_to_currency contas.valorparcela %>
                                                     </td>
-                                                    <td class="">
-                                                    <%= link_to_remove_association('Remover', f) %>
-                                                    </td>
+                                                    
                                                 </tr>
                                             <% end %>
                                                 
@@ -186,6 +178,8 @@
 </div>
 
 <script>
+
+// ots
     var x = document.getElementById("vlItem");
     var defaultVal = x.defaultValue;
     var currentVal = x.value;

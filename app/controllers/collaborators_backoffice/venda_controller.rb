@@ -2,12 +2,14 @@ class CollaboratorsBackoffice::VendaController < CollaboratorsBackofficeControll
   
     def index
       # @sale = Venda.where("cod_empresa = ? an tipo = 'V'", current_collaborator.cod_empresa).order(:cod_venda)
-      @sale = Venda.new
+      @sale = Venda.new(params_venda)
       # @codigo = Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
     end
   
     def new
-      @sale = Venda.new
+      @sale = Venda.new #(params_venda)
+      @sale.itensvenda.build
+      @sale.contas.build
     end
   
     def create
@@ -40,13 +42,14 @@ class CollaboratorsBackoffice::VendaController < CollaboratorsBackofficeControll
         :tipo, :cod_empresa, :cancelada, :datanf, :datavenda, :numeronf, :valortotal, :cod_frete, :cod_funcionario, 
         :cod_empresa_transferida, :cod_vendaempresa, :acrescimo, :desconto, :aceita, :cod_pessoa,
   
-        itensvenda_attributes: [:cod_empresa, :cod_produto, :cod_venda, :numeronf, :quantidade,
-        :valorunitario, :cod_cor, :cancelado, :aceita, :cod_funcionario, :_destroy],
+        itensvenda_attributes: [:cod_produto, :quantidade,
+        :valorunitario, :cod_cor, :_destroy],
         
-        contas_attributes: [:cod_empresa, :ativo, :cod_venda, :dtvencimento, :numeroparcela, 
-        :quitada, :valorparcela, :cod_tppagamento, :_destroy] )
+        contas_attributes: [ :cod_venda, :dtvencimento, :numeroparcela, 
+        :valorparcela, :_destroy] )
   
       end
+      
       # # parcelas
       # cod_contaspagrec bigint NOT NULL,
       # cod_empresa bigint NOT NULL,

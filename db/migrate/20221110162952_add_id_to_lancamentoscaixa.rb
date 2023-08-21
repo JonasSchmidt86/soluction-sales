@@ -2,39 +2,39 @@ class AddIdToLancamentoscaixa < ActiveRecord::Migration[5.2]
   def change
     add_column :lancamentoscaixa, :caixa_id, :bigint;
 
-  #  update lancamentoscaixa as l
-  #     set caixa_id = x.id
-  #   from caixa as x
-  # where l.dataabertura = x.dataabertura
-  #   and l.cod_empresa = x.cod_empresa;
+#    update lancamentoscaixa as l
+#       set caixa_id = x.id
+#     from caixa as x
+#   where l.dataabertura = x.dataabertura
+#     and l.cod_empresa = x.cod_empresa;
   
   
-  # ALTER TABLE IF EXISTS public.lancamentoscaixa DROP CONSTRAINT IF EXISTS fk_caixa;
+#   ALTER TABLE IF EXISTS public.lancamentoscaixa DROP CONSTRAINT IF EXISTS fk_caixa;
   
-  # ALTER TABLE IF EXISTS public.caixa DROP CONSTRAINT IF EXISTS caixa_pkey;
+#   ALTER TABLE IF EXISTS public.caixa DROP CONSTRAINT IF EXISTS caixa_pkey;
 
-  # ALTER TABLE IF EXISTS public.caixa ADD CONSTRAINT caixa_pkey PRIMARY KEY (id);
-
-
-  # ALTER TABLE IF EXISTS public.lancamentoscaixa
-  #   ADD CONSTRAINT fk_caixa FOREIGN KEY (caixa_id)
-  #   REFERENCES public.caixa (id) MATCH SIMPLE
-  #   ON UPDATE NO ACTION
-  #   ON DELETE NO ACTION;
-
-  # update lancamentoscaixa
-  #     set caixa_id = c.id
-  #   from caixa as c
-  # where lancamentoscaixa.dataabertura = c.dataabertura;
+#   ALTER TABLE IF EXISTS public.caixa ADD CONSTRAINT caixa_pkey PRIMARY KEY (id);
 
 
-  # alter table lembretes alter column codigo set default nextval('lembretes_sequence'::regclass);
-  # alter table funcionarioempresa alter column cod_funcionarioempresa set default nextval('funcionario_codigo_seq'::regclass);
-  # alter table funcionario alter column cod_funcionario set default nextval('funcionario_codigo_seq'::regclass);
-  # ALTER TABLE Lancamentoscaixa ALTER COLUMN cod_lancamentocaixa SET DEFAULT nextval('lancamentocaixa_sequence'::regclass);
+#   ALTER TABLE IF EXISTS public.lancamentoscaixa
+#     ADD CONSTRAINT fk_caixa FOREIGN KEY (caixa_id)
+#     REFERENCES public.caixa (id) MATCH SIMPLE
+#     ON UPDATE NO ACTION
+#     ON DELETE NO ACTION;
+
+#   update lancamentoscaixa
+#       set caixa_id = c.id
+#     from caixa as c
+#   where lancamentoscaixa.dataabertura = c.dataabertura;
 
 
-  ## Alteração necessario para por o codigo do caixa no lugar da dataabertura
+#   alter table lembretes alter column codigo set default nextval('lembretes_sequence'::regclass);
+#   alter table funcionarioempresa alter column cod_funcionarioempresa set default nextval('funcionario_codigo_seq'::regclass);
+#   alter table funcionario alter column cod_funcionario set default nextval('funcionario_codigo_seq'::regclass);
+#   ALTER TABLE Lancamentoscaixa ALTER COLUMN cod_lancamentocaixa SET DEFAULT nextval('lancamentocaixa_sequence'::regclass);
+
+
+#   # Alteração necessario para por o codigo do caixa no lugar da dataabertura
 
 #   CREATE OR REPLACE FUNCTION public.tgrf_updatecaixa()
 #     RETURNS trigger

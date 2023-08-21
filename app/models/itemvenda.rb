@@ -17,7 +17,9 @@ class Itemvenda < ApplicationRecord
     paginates_per 20
     
     def nome_produto
-        self.produto.nome
+        if !self.produto.nil?
+            self.produto.nome
+        end
     end
     
     def valor_total
