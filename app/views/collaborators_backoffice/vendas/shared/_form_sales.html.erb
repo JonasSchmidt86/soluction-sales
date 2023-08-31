@@ -1,0 +1,259 @@
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="card-body">
+
+            <div class="row justify-content-center">
+                <div class="">
+                    <div class="card mt-3">
+                    
+                        <% if @sale.errors.any? %>
+                            <div class="alert alert-danger alert-dismissible " role="alert">
+                                <% @sale.errors.full_messages.each do |message| %>
+                                    <ul>
+                                        <li><%= message %></li>
+                                    </ul>
+                                <% end %>
+                            </div>
+                        <% end %> 
+                                            
+                        <div class="card-header bg-primary" >
+                            <h4 class="text-center font-weight-light">
+                                <%= "#{action_message} Venda"%> 
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <%# form_with(model: [:collaborators_backoffice, @sale],  local: true) do |form| %>
+                            <%# form_with(url: new_collaborators_backoffice_venda_path, local: true) do |form| %>
+                            <%= form_with(model: [ :collaborators_backoffice, @sale ], local: true) do |form| %>
+
+                            <div class="row g-2 d-flex align-items-center">
+                                <div class="col-md-9 ">
+                                    <div class="form-floating mb-3 ">
+                                        <%= form.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                                :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
+                                                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+                                        <%= form.label :pessoa, class:"" %>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="d-grid gap-2 d-md-block">
+                                        <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle btn-outline-dark" do %>
+                                            <i class="fa fa-info"></i>
+                                        <% end %>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-5">
+                                    <div class="form-floating mb-3 mb-md-0">
+                                        <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                        <%= form.label :data_venda, class:"" %>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                        <%= form.label :numero_nf, class:"" %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-3">
+                                    <div class="form-floating mb-3 mb-md-0">
+                                        <%= form.text_field :acrescimo, value: 0, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                        <%= form.label :acrescimo, class:"" %>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating mb-3">
+                                        <%= form.text_field :desconto, value: 0, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                        <%= form.label :desconto, class:"" %>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating mb-3">
+                                        <%= form.text_field :total, value: 0, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+                                        <%= form.label :total, class:"" %>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab panes -->
+                            <!-- Nav tabs -->
+                            <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+                            
+                                <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                                    <div class="card-body">
+
+                                        <div class="table-responsive">
+
+                                            <table id="tbl" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 10%;">Cod</th>
+                                                        <th>Nome</th>
+                                                        <th style="width: 10%;">Cor</th>
+                                                        <th style="width: 10%;">Qtd</th>
+                                                        <th style="width: 10%;">valor</th>
+                                                        <th style="width: 10%;">Total</th>
+                                                        <th style="width: 5%;">Remover?</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class='sales' id="item_field">
+                                                    <%= form.fields_for :itensvenda do |itens| %>
+                                                        <%= render partial: "itensvenda_fields", locals: { f: itens } %>    
+                                                    <% end %>
+                                                </tbody>
+                                            </table>
+                                            <div class="form-actions">
+                                                <%= link_to_add_association 'Adiciona Item', form, :itensvenda, 
+                                                    class: 'btn btn-primary', data: { association_insertion_node: '.sales', association_insertion_method: :append } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+<%# 
+                                            <div class="row g-2">
+                                                <div class="col-md-5">
+                                                    <div class="form-floating mb-3">
+                                                        <%= form.collection_select(:cod_produto, Produto.all.order(:cod_produto), 
+                                                                :cod_produto, :nome, {:prompt => 'Selecione uma Produto'}, 
+                                                                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") % >
+                                                        <%= form.label :produto, class:"" % >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <div class="form-floating mb-3">
+                                                        <div class="row g-2">
+                                                            <div class="col-md-5">
+                                                                <div class="form-floating mb-3">
+                                                                    <%= form.text_field :quantidade, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" % >
+                                                                    <%= form.label :a_quantidade % >
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-5">
+                                                                <div class="form-floating mb-3">
+                                                                    <%= form.text_field :valor, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" % >
+                                                                    <%= form.label :o_valor % >
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="adicionaLinha('tbl')" >Adicionar</button> %>
+
+                                <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                                    <div class="card-body">
+                                        <div class="form-floating input-group mb-3">                
+                                            <%# link_to_add_association 'Calcular', form, :contas, 
+                                                partial: 'collaborators_backoffice/venda/shared/contas_fields', class: "btn input-group-text btn-success" %>
+                                        </div>
+                                        
+                                        <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                            <thead>
+                                                <tr>
+                                                    <th class="">Numero</th>
+                                                    <th class="">Dt Vencimento</th>
+                                                    <th class="">valor Parcela</th>
+                                                    <th class="">Remover</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id = 'contas' class = "task">
+                                                <%= form.fields_for :contas do |f| %>
+                                                    <tr class= "nested-fields">
+                                                        <td class="">
+                                                            <%= f.text_field :nmParcela %>
+                                                        </td>
+                                                        <td class="">
+                                                            <%= f.text_field :dtvencimento %>
+                                                        </td>
+                                                        <td class="">
+                                                            <%= f.text_field :valorparcela %>
+                                                        </td>
+                                                        <td class="">
+                                                        <%# link_to_remove_association('Remover', f) %>
+                                                        </td>
+                                                    </tr>
+                                                <% end %>
+                                                
+                                            </tbody>
+                                        </table> 
+                                    </div>
+                                </div>
+
+                                <div class="form-floating mb-3 md-3 mt-0">  
+                                    <button type="submit" class="btn input-group-text btn-success">Salvar</button>
+                                </div>
+            <% end %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+
+//Funcao adiciona uma nova linha na tabela
+    function adicionaLinha(idTabela) {
+        
+        if(document.getElementById("cod_produto").value == 0){
+            alert("Informe o produto!");
+        } else if(document.getElementById("quantidade").value == 0) {
+            alert("Informe a quantidade!");
+        } else if (document.getElementById("valor").value == 0){   
+            alert("Informe o valor!");
+        } else {
+
+            var tabela = document.getElementById(idTabela);
+            var numeroLinhas = tabela.rows.length;
+            var linha = tabela.insertRow(numeroLinhas);
+            var celula1 = linha.insertCell(0);
+            var celula2 = linha.insertCell(1);   
+            var celula3 = linha.insertCell(2); 
+            var celula4 = linha.insertCell(3); 
+            var celula5 = linha.insertCell(4); 
+            var celula6 = linha.insertCell(5); 
+
+        
+            celula1.innerHTML = document.getElementById("cod_produto").value; 
+            celula2.innerHTML =  document.getElementById("nome").value; 
+            celula3.innerHTML =  document.getElementById("quantidade").value; 
+            celula4.innerHTML =  document.getElementById("valor").value;
+            celula5.innerHTML =  document.getElementById("quantidade").value * document.getElementById("valor").value;
+            celula6.innerHTML =  "<button onclick='removeLinha(this)'>Remover</button>";
+        }
+    };
+    
+    // funcao remove uma linha da tabela
+    function removeLinha(linha) {
+        var i = linha.parentNode.parentNode.rowIndex;
+        document.getElementById('tbl').deleteRow(i);
+    };
+
+
+    // Adicionando ouvinte de clique
+    
+    var div = document.getElementById("item_field");
+
+    div.addEventListener(".product_lay", function () {
+            console.log("PASSOU");
+            document.getElementById("valor_total").value = "200";
+    });
+
+</script>
+  

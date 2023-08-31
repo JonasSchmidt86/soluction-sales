@@ -86,12 +86,12 @@
                         
                             <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
                                 <div class="card-body">
-                                
-                                    <div class="form-floating input-group mb-3 ">                
+                                <%# Lista de vendas não vai o botao de adicionar + itens %>
+                                    <%# <div class="form-floating input-group mb-3 ">                
                                         <%= link_to_add_association 'Adicionar', form, :itensvenda, 
-                                            partial: 'collaborators_backoffice/venda/shared/itens_fields', 
-                                            class: "btn input-group-text btn-success" %>
-                                    </div>
+                                            partial: 'collaborators_backoffice/vendas/shared/itens_fields', 
+                                            class: "btn input-group-text btn-success" % >
+                                    </div> %>
                         
                                     <div class="table-responsive">
                                     
@@ -111,7 +111,7 @@
                                                 <% @sale.itensvenda.each do |item| %>
 
                                                     <tr class= "nested-fields">
-                                                        <td class="", size = "10px;" >
+                                                        <td class="" >
                                                             <%= item.full_codigo %>
                                                         </td>
                                                         <td class="">
@@ -156,7 +156,6 @@
                                                     <td class="table-success" >
                                                         <%= number_to_currency contas.valorparcela %>
                                                     </td>
-                                                    
                                                 </tr>
                                             <% end %>
                                                 

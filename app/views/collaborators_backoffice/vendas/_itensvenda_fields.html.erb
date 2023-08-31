@@ -1,0 +1,28 @@
+<tr class= "nested-fields">
+    <td class="">
+        <%= f.text_field :cod_produto, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    </td>
+    <td class="">
+        <%= f.collection_select(:cod_produto, Produto.all.order(:cod_produto), 
+                :cod_produto, :nome, {:prompt => 'Selecione uma Produto'}, 
+                    class: "product_lay form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+    </td>
+    <td class="">
+        <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:cod_cor), 
+                :cod_cor, :nmcor, {:prompt => 'Selecione uma Cor'}, 
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+    </td>
+    <td class="">
+        <%= f.text_field :quantidade, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    </td>
+    <td class="">
+        <%= f.text_field :valorunitario, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    </td>
+    <td class="">
+        <%= f.text_field :valor_total, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+    </td>
+    <td class="align-middle fw-semibold">
+        <%= link_to_remove_association "Remover", f, class: 'btn btn-primary btn-xs' %>
+    </td>
+    <%= f.hidden_field :cod_empresa,  value: @sale.cod_empresa %>
+</tr>

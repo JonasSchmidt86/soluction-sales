@@ -1,8 +1,8 @@
 
-<div class="card mt-4">
+<div class="card mt-4 ">
 
-    <%= link_to collaborators_backoffice_report_sales_path, class:"card-header" do %>
-        <h4>Relatorio Vendas</h4>
+    <%= link_to collaborators_backoffice_report_sales_path, class:"card-header bg-primary" do %>
+        <h4 >Relatorio Vendas</h4>
     <% end %>
     
     <div class="card-body">
@@ -79,6 +79,16 @@
                               <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"btn btn-info btn-circle" do %>
 <i class="fa-brands fa-hire-a-helper"></i>
                               <% end %>
+
+                              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+
+                                <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, 
+                                            class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover a Venda?"} do %>
+                                    <i class="fa fa-trash-can"></i>
+                                <% end %>
+                                
+                            <% end %>
+
                           </td>
 
                         </tr>

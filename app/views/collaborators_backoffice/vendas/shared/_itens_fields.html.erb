@@ -11,8 +11,10 @@
     <td class="">
         <%= f.text_field :valorunitario %>
     </td>
+    <td class="">
+        <%= f.text_field :valor_total %>
+    </td>
     <td class="align-middle fw-semibold">
-        <%# = link_to_remove_association('Remover', f) %>
+        <%= link_to_remove_association "Remover", f, class: 'btn btn-primary btn-xs' %>
     </td>
 </tr>
-

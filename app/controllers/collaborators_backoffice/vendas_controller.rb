@@ -1,5 +1,7 @@
-class CollaboratorsBackoffice::VendaController < CollaboratorsBackofficeController
-  
+class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeController
+
+    before_action :set_venda, only: [:destroy]
+
     def index
       # @sale = Venda.where("cod_empresa = ? an tipo = 'V'", current_collaborator.cod_empresa).order(:cod_venda)
       @sale = Venda.new(params_venda)
@@ -8,22 +10,30 @@ class CollaboratorsBackoffice::VendaController < CollaboratorsBackofficeControll
   
     def new
       @sale = Venda.new #(params_venda)
+      puts "NEW SALE ----------"
+      @sale.cod_vendaempresa = Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
+      @sale.cod_empresa = current_collaborator.cod_empresa
       @sale.itensvenda.build
-      @sale.contas.build
+      # @sale.contas.build
     end
   
     def create
       @sale = Venda.new(params_venda)
-  
+
       @sale.cod_vendaempresa = Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
       @sale.cod_empresa = current_collaborator.cod_empresa
       @sale.cod_funcionario = current_collaborator.cod_funcionario
-  
-      # if @venda.save
-      #     redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
-      # else 
-      #     render :index
-      # end
+      @sale.tipo = 'V'
+      @sale.cancelada = false
+      @sale.datanf = nil
+
+      puts @sale.itensvenda.size
+
+      if @sale.save
+          redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
+      else 
+          render :index
+      end
     end
 
     def edit
@@ -35,18 +45,24 @@ class CollaboratorsBackoffice::VendaController < CollaboratorsBackofficeControll
       # end
     end
   
+    def destroy
+      if @sale.destroy
+          redirect_to collaborators_backoffice_report_sales_path , notice: "Venda Apagada!"
+      end
+    end
+
     private 
-  
+    
+    def set_venda
+      @sale = Venda.find(params[:id])
+    end
+
     def params_venda
       params.require(:venda).permit(
         :tipo, :cod_empresa, :cancelada, :datanf, :datavenda, :numeronf, :valortotal, :cod_frete, :cod_funcionario, 
         :cod_empresa_transferida, :cod_vendaempresa, :acrescimo, :desconto, :aceita, :cod_pessoa,
-  
-        itensvenda_attributes: [:cod_produto, :quantidade,
-        :valorunitario, :cod_cor, :_destroy],
-        
-        contas_attributes: [ :cod_venda, :dtvencimento, :numeroparcela, 
-        :valorparcela, :_destroy] )
+        itensvenda_attributes: [:cod_produto, :quantidade, :valorunitario, :cod_cor, :cod_empresa, :_destroy],
+        contas_attributes: [ :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, :_destroy] )
   
       end
       

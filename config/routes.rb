@@ -28,7 +28,7 @@ Rails.application.routes.draw do
     resources :caixa, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
-    resources :venda #, only: [:index, :edit, :update, :new, :create, :destroy]
+    resources :vendas, only: [:index, :edit, :new, :create, :destroy]
 
     get 'report_sales', to: 'report/rep_sales#index'
     get 'report_sales/index:id', to: 'report/rep_sales#index', as: 'report_sales_historic'
