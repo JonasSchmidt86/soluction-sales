@@ -4,17 +4,25 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
     def index
       # @sale = Venda.where("cod_empresa = ? an tipo = 'V'", current_collaborator.cod_empresa).order(:cod_venda)
-      @sale = Venda.new(params_venda)
+      # @sale = Venda.new(params_venda)
       # @codigo = Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
     end
   
+    def consulta_estoque
+      # puts "CONSULTA ESTOQUE #{params} "x
+      @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade).joins(:empresaprodutos).where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa ).order(:nmcor, :cod_cor);
+      respond_to do |format|
+        format.json { render json: @cores }
+      end
+    end
+
     def new
       @sale = Venda.new #(params_venda)
-      puts "NEW SALE ----------"
+      # puts "NEW SALE ----------"
       @sale.cod_vendaempresa = Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
       @sale.cod_empresa = current_collaborator.cod_empresa
       @sale.itensvenda.build
-      # @sale.contas.build
+      #@sale.contas.build
     end
   
     def create
@@ -27,11 +35,21 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       @sale.cancelada = false
       @sale.datanf = nil
 
-      puts @sale.itensvenda.size
+      # puts @sale.itensvenda.size
+
+      @sale.contas.each do |conta|
+
+        conta.cod_empresa = @sale.cod_empresa;
+        conta.ativo = true;
+        conta.quitada = false;
+        conta.cod_tppagamento = 1;
+
+      end
 
       if @sale.save
           redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
       else 
+        puts @sale
           render :index
       end
     end
@@ -44,11 +62,15 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       #   redirect_to collaborators_backoffice_venda_path(@sale), notice: "Venda"
       # end
     end
-  
+
     def destroy
       if @sale.destroy
-          redirect_to collaborators_backoffice_report_sales_path , notice: "Venda Apagada!"
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Excluida com sucesso!"
+      else
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Não foi possivel excluir venda!"
       end
+    rescue => e
+      redirect_to collaborators_backoffice_report_sales_path, notice: "Erro ao excluir a venda!"
     end
 
     private 
@@ -58,7 +80,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def params_venda
-      params.require(:venda).permit(
+      params.require(:vendas).permit(
         :tipo, :cod_empresa, :cancelada, :datanf, :datavenda, :numeronf, :valortotal, :cod_frete, :cod_funcionario, 
         :cod_empresa_transferida, :cod_vendaempresa, :acrescimo, :desconto, :aceita, :cod_pessoa,
         itensvenda_attributes: [:cod_produto, :quantidade, :valorunitario, :cod_cor, :cod_empresa, :_destroy],
@@ -110,7 +132,6 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       # acrescimo numeric(18,3) DEFAULT 0.000,
       # desconto numeric(18,3) DEFAULT 0.000,
       # aceita boolean DEFAULT false,
-  
       
   
   end

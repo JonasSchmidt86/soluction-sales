@@ -43,7 +43,7 @@
                   </div>
                   <div class="col-md-5">
                     <div class="">
-                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y") )),
+                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Time.current.end_of_month.strftime("%d/%m/%Y") )),
                           class: "dataTable-input datepicker", placeholder:"Data Final", id: "dtFinal" %>
                     </div>
                   </div>
@@ -141,6 +141,7 @@
 
   var check_status = document.getElementById("quitada");
   check_status.onclick = function () {
+    console.log("CLICOU ")
     var label1 = document.getElementById("lb_bill_status");
     if (check_status.checked) {
         label1.innerHTML  = "Total";

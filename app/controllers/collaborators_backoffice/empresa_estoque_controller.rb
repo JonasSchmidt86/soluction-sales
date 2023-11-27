@@ -9,7 +9,7 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
             if params[:contem] == '0'
                 consulta += " and quantidade is not null "
             else 
-                consulta += " and quantidade > 0 "
+                consulta += " and quantidade != 0 "
             end
         end
 

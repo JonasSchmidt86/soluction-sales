@@ -56,17 +56,23 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row g-2">
-                            <div class="col-md-5">
-                                <div class="form-floating mb-3">
-                                    <%= form.text_field :acrescimo,value: "0", class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                        <div class="row mb-2">
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3 mb-md-0">
+                                    <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
                                     <%= form.label :acrescimo, class:"" %>
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-3">
                                 <div class="form-floating mb-3">
-                                    <%= form.text_field :desconto, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                    <%= form.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
                                     <%= form.label :desconto, class:"" %>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating mb-3">
+                                    <%= form.text_field :valortotal, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                                    <%= form.label :valortotal, class:"" %>
                                 </div>
                             </div>
                         </div>
@@ -146,17 +152,23 @@
                                         </thead>
                                         <tbody id = 'contas'>
                                             <% @sale.contas.each do |contas| %>
-                                                <tr class= "nested-fields">
+
+                                                <% if contas.quitada %>
+                                                <tr class= "nested-fields table-primary">   
+                                                <% else %>
+                                                <tr class= "nested-fields"> 
+                                                <% end %>
                                                     <td class="">
                                                         <%= contas.nmParcela %>
                                                     </td>
                                                     <td class="">
                                                         <%= post_date(contas.dtvencimento) %>
                                                     </td>
-                                                    <td class="table-success" >
+                                                    <td class="" >
                                                         <%= number_to_currency contas.valorparcela %>
                                                     </td>
                                                 </tr>
+
                                             <% end %>
                                                 
                                         </tbody>
@@ -177,6 +189,7 @@
 </div>
 
 <script>
+
 
 // ots
     var x = document.getElementById("vlItem");

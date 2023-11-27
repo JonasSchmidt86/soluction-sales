@@ -22,6 +22,10 @@ class Produto < ApplicationRecord
              inverse_of: :produto
 
 
+    def cod_nome
+        return [self.nome, self.cod_produto].join(' - ');
+    end
+
     paginates_per 10
     
 end

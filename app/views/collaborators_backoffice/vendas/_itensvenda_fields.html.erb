@@ -1,28 +1,43 @@
 <tr class= "nested-fields">
+
     <td class="">
-        <%= f.text_field :cod_produto, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+        <%= f.text_field :cod_produto, 
+            class: "campo-texto form-control border-top-0 border-start-0 border-end-0 border-dark", 
+            onchange: "atualizarCommentIndex(this)",
+            onkeypress:"selectProduto(event, this)" %>
     </td>
     <td class="">
-        <%= f.collection_select(:cod_produto, Produto.all.order(:cod_produto), 
-                :cod_produto, :nome, {:prompt => 'Selecione uma Produto'}, 
-                    class: "product_lay form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+        <%= f.collection_select(
+            :produto, 
+            Produto.where("nome <> '' AND ativo = ?", true).order(:nome, :cod_produto), 
+            :cod_produto, 
+            :cod_nome, 
+            {:prompt => 'Selecione uma Produto'},
+            class: "product_lay form-control border-top-0 border-start-0 border-end-0 border-dark", 
+            onchange: "atualizarCommentIndex(this)"
+        ) %>
+    </td>
+
+    <td class="">
+
+        <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
+                :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'},
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>
     </td>
     <td class="">
-        <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:cod_cor), 
-                :cod_cor, :nmcor, {:prompt => 'Selecione uma Cor'}, 
-                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+        <%= f.text_field :quantidade, type: "number", step: "1", class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
     </td>
     <td class="">
-        <%= f.text_field :quantidade, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+        <%= f.text_field :valorunitario, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
     </td>
     <td class="">
-        <%= f.text_field :valorunitario, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-    </td>
-    <td class="">
-        <%= f.text_field :valor_total, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+        <%= f.text_field :valor_total, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" , disabled: true %>
     </td>
     <td class="align-middle fw-semibold">
-        <%= link_to_remove_association "Remover", f, class: 'btn btn-primary btn-xs' %>
+        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', data: { confirm: 'Tem certeza?' }, title: 'Remover', onchange: "setValorTotal(this)" do %>
+        <i class="fa fa-trash-can"></i>
+        <% end %>
     </td>
+    
     <%= f.hidden_field :cod_empresa,  value: @sale.cod_empresa %>
 </tr>

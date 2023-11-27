@@ -30,6 +30,9 @@ Rails.application.routes.draw do
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
 
+    post 'vendas/consulta_estoque', to: 'vendas#consulta_estoque'
+
+
     get 'report_sales', to: 'report/rep_sales#index'
     get 'report_sales/index:id', to: 'report/rep_sales#index', as: 'report_sales_historic'
     

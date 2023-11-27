@@ -20,14 +20,14 @@
                   <div class="col-md-3">
                     <div class="mb-2 ">
                       <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Inicial" %>
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
                     </div>
                   </div>
                   
                   <div class="col-md-3">
                     <div class="mb-2 ">
                       <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Final" %>
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
                     </div>
                   </div>
 

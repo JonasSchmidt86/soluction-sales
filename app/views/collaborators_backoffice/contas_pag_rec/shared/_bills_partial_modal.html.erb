@@ -51,9 +51,12 @@
                     <div class="d-grid">
                       <div class=" dataTable-input form-check form-switch">
                         <label id="lb_bill_status" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
-                        <%= form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
+                        <%# form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
+
+                        <%= form.check_box :quitada, { checked: params[:quitada] || false, class: "col-md-3 form-check-input", type: "checkbox", id: "quitada" } %>
+
+                        <%# filtros da pesquisa, para retornar na mesma pg %>
                         <%= form.hidden_field :contaspagrec,  value: bill.cod_contaspagrec %>
-                        
                         <%= form.hidden_field :tipo_conta,  value: tipe_bill_true(params[:tipo_conta]) %>
                         <%= form.hidden_field :status_bill,  value: params[:status_bill] %>
                         <%= form.hidden_field :nrVenda,  value: params[:nrVenda] %>

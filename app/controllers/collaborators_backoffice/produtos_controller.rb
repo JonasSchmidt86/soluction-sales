@@ -4,6 +4,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     before_action :set_produto, only: [:edit, :update, :destroy]
     #before_action :get_produto, only: [:new, :edit, :update,]
 
+    
 
     def index
         @produtos = Produto.order('cod_produto').all.page(params[:page])
@@ -18,6 +19,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         end
     end
 
+    # editar para desativar o item para não aparecer mais 
     def edit
     end
 

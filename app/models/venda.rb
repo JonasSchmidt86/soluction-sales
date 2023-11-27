@@ -16,6 +16,9 @@ class Venda < ApplicationRecord
     
     belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', inverse_of: :vendas
 
+    validates :itensvenda, :contas, :funcionario, :empresa, :contas, presence: true
+
     paginates_per 20
+
 
 end

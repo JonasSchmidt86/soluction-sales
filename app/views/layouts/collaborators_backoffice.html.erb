@@ -214,10 +214,31 @@
         <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
         <!-- Modal -->
         <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
+        <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
 
-        
+<script>
 
-        <script>
+            function alertModal(mensagem) {
+                var modal = document.getElementById('customModal');
+                var alertMessage = document.getElementById('alertMessage');
+                alertMessage.textContent = mensagem; // Define a mensagem personalizada no alerta
+                $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modals)
+            }
+
+            <% if notice %>
+                //alertModal('<%= notice %>');
+                $.bootstrapGrowl('<%= notice %>', {
+                    ele: 'body', // which element to append to
+                    type: 'success', // (null, 'info', 'danger', 'success')
+                    offset: {from: 'top', amount: 55}, // 'top', or 'bottom'
+                    align: 'center', // ('left', 'right', or 'center')
+                    width: 250, // (integer, or 'auto')
+                    delay: 4000, // Time while the message will be displayed. It's not equivalent to the *demo* timeOut!
+                    allow_dismiss: false, // If true then will display a cross to close the popup.
+                    stackup_spacing: 10 // spacing between consecutively stacked growls.
+                });
+            <% end %>
+            
             var div = document.getElementById("myId");
 
             // Adicionando ouvinte de clique
@@ -230,21 +251,6 @@
                 var date = new Date();
                 div.innerHTML = date.toLocaleTimeString();
             }, 1000/* 1s */);
-
-
-            <% if notice %>
-                $.bootstrapGrowl('<%= notice %>', {
-                    // ele: 'body', // which element to append to
-                    type: 'success', // (null, 'info', 'danger', 'success')
-                    offset: {from: 'top', amount: 55}, // 'top', or 'bottom'
-                    align: 'center', // ('left', 'right', or 'center')
-                    // width: 250, // (integer, or 'auto')
-                    // delay: 4000, // Time while the message will be displayed. It's not equivalent to the *demo* timeOut!
-                    allow_dismiss: false, // If true then will display a cross to close the popup.
-                    stackup_spacing: 10 // spacing between consecutively stacked growls.
-                });
-            <% end %>
-
 
             document.addEventListener("keypress", function () { 
                 console.log(event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
@@ -301,7 +307,7 @@
                 $('.cpf').mask('000.000.000-00', {reverse: true});
                 $('.cnpj').mask('00.000.000/0000-00', {reverse: true});
                 $('.money').mask('000.000.000.000.000,00', {reverse: true});
-                $('.money2').mask("#.##0,##", {reverse: true});
+                $('.money2').mask("000000000,00", {reverse: true});
                 $('.ip_address').mask('0ZZ.0ZZ.0ZZ.0ZZ', {
                     translation: {
                     'Z': {

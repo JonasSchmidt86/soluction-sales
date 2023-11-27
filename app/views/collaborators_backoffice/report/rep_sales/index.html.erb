@@ -20,14 +20,14 @@
                   <div class="col-md-3">
                     <div class="mb-2 ">
                       <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Inicial" %>
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
                     </div>
                   </div>
                   
                   <div class="col-md-3">
                     <div class="mb-2 ">
                       <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Final" %>
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
                     </div>
                   </div>
 
@@ -70,22 +70,53 @@
                           <td><%= sale.pessoa.nome %></td>
                           <td><%= sale.numeronf %> </td>
                           <td><%= sale.funcionario.usuario %> </td>
-                          <td><%= number_to_currency( sale.valortotal, precision: 2)  %></td>
+                          <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
 
                           <td>
                               <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"btn btn-info btn-circle" do %>
                                   <i class="fa fa-info"></i>
                               <% end %>
                               <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"btn btn-info btn-circle" do %>
-<i class="fa-brands fa-hire-a-helper"></i>
+                              <i class="fa-brands fa-hire-a-helper"></i>
                               <% end %>
 
                               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+      
+                                <!-- Certifique-se de adicionar o link para o jQuery -->
+  <%# script src="https://code.jquery.com/jquery-3.6.0.min.js"></script %>
 
-                                <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, 
-                                            class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover a Venda?"} do %>
-                                    <i class="fa fa-trash-can"></i>
+                                <!-- Seu link de exclusão -->
+                                <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, class: "btn btn-danger btn-circle", 
+                                    data: { confirm: "Deseja remover a Venda?" } do %>
+                                  <i class="fa fa-trash-can"></i>
                                 <% end %>
+
+ <script>
+//  //var recargaUrl = window.location.href; carrega a pagina que esta na barra de pesquisa do navegador
+//  
+//  $(document).ready(function() {
+//  $('a.btn-danger').on('click', function(e) {
+//  //e.preventDefault();
+//  
+//  //var deleteUrl = $(this).attr('href');
+//  var deleteUrl = window.location.href;
+//  console.log(deleteUrl);
+//  
+//  $.ajax({
+//  type: 'DELETE',
+//  //url: deleteUrl,
+//  success: function(response) {
+//  console.log("SUCCESS");
+//  alertModal(response.notice+" - AQUI");
+//  },
+//  error: function(xhr) {
+//  alertModal("Não é possivel apagar essa venda!");
+//  }
+//  });
+//  });
+//  });
+  </script>
+
                                 
                             <% end %>
 

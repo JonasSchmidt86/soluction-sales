@@ -5,5 +5,8 @@ class Core < ApplicationRecord
 
     has_many :empresaprodutos, :class_name => 'Empresaproduto', :foreign_key => 'cod_cor', inverse_of: :cor
 
+    def nmcor_cod
+        return [self.nmcor, self.cod_cor].join(' - ')
+    end
     
 end

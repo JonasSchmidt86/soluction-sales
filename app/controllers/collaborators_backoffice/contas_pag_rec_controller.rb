@@ -8,38 +8,7 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
         @array =  ['Abertos', 'Liquidados', 'Todos']
 
-        consulta = "";      
-        if !params[:nrVenda].blank?
-            consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
-        else
-            
-            if !params[:tipo_conta].nil? && params[:tipo_conta]
-                consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "
-            else
-                consulta += "  cod_venda is not null and cod_frete is null "
-            end
-            
-            if !params[:dataInicial].blank? && !params[:dataFinal].blank?
-                consulta += " and date(dtvencimento) between to_date('" + params[:dataInicial] +"', 'DD/MM/YYYY') and to_date('" + params[:dataFinal] + "', 'DD/MM/YYYY') "
-            else
-                consulta += " and date(dtvencimento) between to_date('" + Time.now.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
-            end
-
-            if !params[:cliente].blank?
-                consulta += "and cod_venda in (select cod_venda from venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(nome) like upper('"+ params[:cliente] +"%')))"
-            end
-            
-            if params[:status_bill] == "Abertos"
-                consulta += "  and contaspagrec.quitada = false "
-            elsif params[:status_bill] == "Liquidados"
-                consulta += "  and contaspagrec.quitada = true "
-            end
-
-        end
-
-        consulta += " and cod_empresa = ? ";
-
-        @bills = Contaspagrec.where(consulta, current_collaborator.empresa.cod_empresa)
+        @bills = Contaspagrec.where(consulta_index, current_collaborator.empresa.cod_empresa)
                     .order(dtvencimento: :asc, quitada: :asc, cod_contaspagrec: :desc ).includes(:lancamentos).page(params[:page])
 
     end
@@ -71,6 +40,42 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
 private 
 
+    def consulta_index
+        consulta = "";      
+        if !params[:nrVenda].blank?
+            consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
+        else
+            puts " - - - -- - - - - - - -- - - - ";
+            puts params[:tipo_conta]
+            puts " - - - -- - - - - - - -- - - - ";
+
+            if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
+                consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "
+            else
+                consulta += "  cod_venda is not null and cod_frete is null "
+            end
+            
+            if !params[:dataInicial].blank? && !params[:dataFinal].blank?
+                consulta += " and date(dtvencimento) between to_date('" + params[:dataInicial] +"', 'DD/MM/YYYY') and to_date('" + params[:dataFinal] + "', 'DD/MM/YYYY') "
+            else
+                consulta += " and date(dtvencimento) between to_date('" + Time.now.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
+            end
+
+            if !params[:cliente].blank?
+                consulta += "and cod_venda in (select cod_venda from venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
+            end
+            
+            if params[:status_bill] == "Abertos"
+                consulta += "  and contaspagrec.quitada = false "
+            elsif params[:status_bill] == "Liquidados"
+                consulta += "  and contaspagrec.quitada = true "
+            end
+
+        end
+
+        return consulta += " and cod_empresa = ? ";
+    end
+
     def params_bill
         params.require(:contaspagrec).permit(:quitada, :ativo)
         # params.require(:lancamento).permit(:quitada, lancamentos_attributes: [:cod_lancamentocaixa, :_destroy])
@@ -81,7 +86,6 @@ private
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa).limit(1)
         # puts "bill _------------- >>>>>>>>>>  nm Pessoa: " +  @bill.nmPessoa.to_s
     end
-
 
     def partion(param_valor, historic)
         

@@ -21,13 +21,13 @@
                   <div class="col-md-5">
                     <div class="mb-2 ">
                       <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Inicial" %>
+                          class: "dataTable-input datepicker fallback", placeholder:"Data Inicial" %>
                     </div> 
                   </div>
                   <div class="col-md-5">
                     <div class="mb-2 ">
                       <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Final" %>
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
                     </div>
                   </div>
                   <div class="col-md-8">
@@ -96,8 +96,8 @@
                         <td><%= lauch.nmParcela %> </td>
                         <td><%= lauch.nmPessoa %></td>
                         <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
-                        <td><%= number_to_currency( lauch.valor, precision: 2)  %></td>
-                        <td>
+                        <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "")  %></td>
+                         <td>
                           <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
                               <i class="fa fa-minus"></i>

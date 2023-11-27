@@ -3,8 +3,10 @@ class Contaspagrec < ApplicationRecord
     self.table_name = "contaspagrec"
     self.primary_key = "cod_contaspagrec"
         
-    has_many :lancamentos, :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_contaspagrec', 
+    has_many :lancamentos, :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_contaspagrec', dependent: :delete_all, 
             inverse_of: :contaspagrec, dependent: :destroy
+
+    has_many :tpHLancamento, :class_name => 'tiposlancamento', :foreign_key => 'cod_tppagamento'
 
     accepts_nested_attributes_for :lancamentos, reject_if: :all_blank, allow_destroy: true #cocoon gem
 
