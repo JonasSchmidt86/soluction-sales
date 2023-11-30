@@ -24,7 +24,7 @@
 /node_modules
 /yarn-error.log
 
-/public/assets
+#/public/assets
 /public/templetes
 .byebug_history
 

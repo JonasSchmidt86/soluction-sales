@@ -96,7 +96,7 @@
                         <td><%= lauch.nmParcela %> </td>
                         <td><%= lauch.nmPessoa %></td>
                         <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
-                        <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "")  %></td>
+                        <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
                          <td>
                           <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
