@@ -1,12 +1,12 @@
 
-<div class="card mt-4 ">
+<div class="card mt-4">
 
     <%= link_to collaborators_backoffice_report_sales_path, class:"card-header bg-primary" do %>
         <h4 >Relatorio Vendas</h4>
     <% end %>
     
     <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+        <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
           
               <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
                                     class:"col dataTable-search col-md-6") do |form| %>
@@ -43,7 +43,7 @@
                 
               <% end %>
 
-            <div class="dataTable-container">
+            <div class="">
 
               <table id="datatablesSimple" class="dataTable-table">
                 <thead>
@@ -54,7 +54,7 @@
                     <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NFe</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
                     <th data-sortable="" style="width: 150px;">Valor Total</th>
-                    <th data-sortable="" style="">Info</th>
+                    <th data-sortable="" style="width: 45px"></th>
                   </tr>
                 </thead>
                 
@@ -73,53 +73,37 @@
                           <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
 
                           <td>
-                              <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"btn btn-info btn-circle" do %>
-                                  <i class="fa fa-info"></i>
-                              <% end %>
-                              <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"btn btn-info btn-circle" do %>
-                              <i class="fa-brands fa-hire-a-helper"></i>
-                              <% end %>
+                            <div class="dropdown" >
+                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px;">
+                                  <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                </button>
 
-                              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-      
-                                <!-- Certifique-se de adicionar o link para o jQuery -->
-  <%# script src="https://code.jquery.com/jquery-3.6.0.min.js"></script %>
-
-                                <!-- Seu link de exclusão -->
-                                <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, class: "btn btn-danger btn-circle", 
-                                    data: { confirm: "Deseja remover a Venda?" } do %>
-                                  <i class="fa fa-trash-can"></i>
-                                <% end %>
-
- <script>
-//  //var recargaUrl = window.location.href; carrega a pagina que esta na barra de pesquisa do navegador
-//  
-//  $(document).ready(function() {
-//  $('a.btn-danger').on('click', function(e) {
-//  //e.preventDefault();
-//  
-//  //var deleteUrl = $(this).attr('href');
-//  var deleteUrl = window.location.href;
-//  console.log(deleteUrl);
-//  
-//  $.ajax({
-//  type: 'DELETE',
-//  //url: deleteUrl,
-//  success: function(response) {
-//  console.log("SUCCESS");
-//  alertModal(response.notice+" - AQUI");
-//  },
-//  error: function(xhr) {
-//  alertModal("Não é possivel apagar essa venda!");
-//  }
-//  });
-//  });
-//  });
-  </script>
-
+                                <ul class="dropdown-menu" style="width: 50px;">
                                 
-                            <% end %>
+                                  <li>
+                                    <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
+                                      <i class="fa fa-info",  style="width: 35px;"></i>Informações
+                                    <% end %>
+                                  </li>
 
+                                  <li>
+                                    <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
+                                      <i class="fa-brands fa-hire-a-helper",  style="width: 35px;"></i> Histórico
+                                    <% end %>
+                                  </li>
+
+                                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                                   <span class="visually-hidden">Toggle Dropdown</span>
+                                    <li>
+                                      <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                                          data: { confirm: "Deseja remover a Venda?" } do %>
+                                        <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
+                                      <% end %> 
+                                    </li>
+
+                                  <% end %>
+                                </ul>
+                              </div>
                           </td>
 
                         </tr>
@@ -138,4 +122,3 @@
         
     </div>
 </div>
- 
