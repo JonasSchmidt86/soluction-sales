@@ -73,15 +73,15 @@
                 
                 <tbody>
                     <% @lauches.each do |lauch| %>
-                    <% if lauch.tipo == 'S' %>
-                      <tr class="text-warning">
-                    <% else %>
-                      <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
-                        <tr class="text-info">
+                      <% if lauch.tipo == 'S' %>
+                        <tr class="text-warning">
                       <% else %>
-                        <tr class="">
-                      <% end %>
-                    <% end %> 
+                        <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
+                          <tr class="text-info">
+                        <% else %>
+                          <tr class="">
+                        <% end %>
+                      <% end %> 
                     
                         <td><%# NORMALMENTE RETIRADA QUE SAI COMO ENTRADA NA CONTA %>
                           <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>

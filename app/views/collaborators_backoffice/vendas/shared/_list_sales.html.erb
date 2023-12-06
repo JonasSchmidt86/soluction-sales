@@ -152,11 +152,12 @@
                                         </thead>
                                         <tbody id = 'contas'>
                                             <% @sale.contas.each do |contas| %>
-
-                                                <% if contas.quitada %>
-                                                <tr class= "nested-fields table-primary">   
+                                                <% if (!contas.ativo) %>
+                                                    <tr class="nested-fields text-danger table-danger">
+                                                <% elsif contas.quitada %>
+                                                    <tr class= "nested-fields table-primary">   
                                                 <% else %>
-                                                <tr class= "nested-fields"> 
+                                                    <tr class= "nested-fields"> 
                                                 <% end %>
                                                     <td class="">
                                                         <%= contas.nmParcela %>

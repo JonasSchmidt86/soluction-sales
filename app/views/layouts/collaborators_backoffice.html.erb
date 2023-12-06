@@ -115,48 +115,46 @@
 
                                     </nav>
                                 </div>
+                                <!-- Navbar principal -->
                                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
                                     <div class="sb-nav-link-icon">
-                                        <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;" ></i>
+                                        <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
                                     </div>
-                                        Cadastros
-                                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                    Cadastros
+                                    <div class="sb-sidenav-collapse-arrow">
+                                        <i class="fas fa-angle-down"></i>
+                                    </div>
                                 </a>
+
+                                <!-- Conteúdo colapsável -->
                                 <div class="collapse" id="collapseOts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                                     <nav class="sb-sidenav-menu-nested nav">
+                                        <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                                            Vendas
+                                        <% end %>
 
-                                        <a>
-                                            <%= link_to new_collaborators_backoffice_venda_path, class:"nav-link" do %>
-                                                Vendas
-                                            <% end %>
-                                        </a>
-                                        <a>
-                                            <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"nav-link" do %>
-                                                Estoque
-                                            <% end %>
-                                        </a>
-                                        <a>
-                                            <%= link_to collaborators_backoffice_produtos_path, class:"nav-link" do %>
-                                                Produtos
-                                            <% end %>
-                                        </a>
-                                        <a>
-                                            <%= link_to collaborators_backoffice_lembretes_path, class:"nav-link" do %>
-                                                Lembretes
-                                            <% end %>
-                                        </a>
-                                        <a>
-                                            <%= link_to collaborators_backoffice_funcionarios_path, class:"nav-link" do %>
-                                                Funcionario
-                                            <% end %>
-                                        </a>
-                                        <a>
-                                            <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class:"nav-link" do %>
-                                                Contas pagar/Receber
-                                            <% end %>
-                                        </a>
+                                        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                                            Estoque
+                                        <% end %>
+
+                                        <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
+                                            Produtos
+                                        <% end %>
+
+                                        <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
+                                            Lembretes
+                                        <% end %>
+
+                                        <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
+                                            Funcionário
+                                        <% end %>
+
+                                        <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                                            Contas pagar/Receber
+                                        <% end %>
                                     </nav>
                                 </div>
+                                
 
                                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
                                     <div class="sb-nav-link-icon">
@@ -205,17 +203,6 @@
 
         
         </div>
-
-
-        <%= javascript_include_tag 'application'%>
-        <%= javascript_include_tag 'collaborators_backoffice' %>
-
-
-
-        <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
-        <!-- Modal -->
-        <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
-        <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
 
 <script>
 
@@ -331,9 +318,16 @@
                     });
                 $('.selectonfocus').mask("00/00/0000", {selectOnFocus: true});
             });
-
             
         </script>
+
+            <%= javascript_include_tag 'application'%>
+            <%= javascript_include_tag 'collaborators_backoffice' %>
+
+            <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
+            <!-- Modal -->
+            <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
+            <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
 
             <%= javascript_tag do %>
                 $(function() {

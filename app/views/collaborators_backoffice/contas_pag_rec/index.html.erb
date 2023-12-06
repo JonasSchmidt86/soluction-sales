@@ -71,11 +71,15 @@
                 
                 <tbody>
                     <% @bills.each do |bill| %>
-                      <% if (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
+
+                      <% if (!bill.ativo) %>
+                        <tr class="text-danger">
+                      <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
                           <tr class="text-warning">
                       <% else %>
                           <tr class="">
                       <% end %> 
+
                       <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
                       <td><%= bill.nmCollaborator %> </td>
                       <td><%= bill.nmParcela %> </td>
