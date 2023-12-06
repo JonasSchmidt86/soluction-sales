@@ -334,19 +334,17 @@ function formatDate(date) {
         var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
         var proQtd = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
 
-        //  const apiUrl = process.env.NODE_ENV === 'development'
-        //     ? 'https://mrstore-09d04ec9e74b.herokuapp.com'
-        //     : 'http://localhost:3000';
+        const apiUrl = process.env.NODE_ENV === 'production'
+            ? 'https://mrstore-09d04ec9e74b.herokuapp.com'
+            : 'http://localhost:3000';
 
-        //console.log("ID SELECR - "+corSelect.id);
-        //console.log(apiUrl);
-
-        fetch('https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/vendas/consulta_estoque', {
+        // Use a variável global para construir a URL completa
+        fetch(`${apiUrl}/collaborators_backoffice/vendas/consulta_estoque`, {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id_produto: field.value }) // Converte os dados em JSON
+            body: JSON.stringify({ id_produto: field.value })
         })
         .then(response => {
             if (!response.ok) {
