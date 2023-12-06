@@ -334,17 +334,33 @@ function formatDate(date) {
         var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
         var proQtd = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
 
-        const apiUrl = process.env.NODE_ENV === 'production'
-            ? 'https://mrstore-09d04ec9e74b.herokuapp.com'
-            : 'http://localhost:3000';
+        // Não use const ou let aqui
+        const isLocalhost = () => {
+        // Verifica se o host inclui "localhost" ou "127.0.0.1"
+        return (
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1'
+        );
+        };
 
-        // Use a variável global para construir a URL completa
-        fetch(`${apiUrl}/collaborators_backoffice/vendas/consulta_estoque`, {
+        let apiUrl = ""; // Atribuição inicial, mas não precisa ser const ou let
+
+        // Exemplo de uso
+        if (isLocalhost()) {
+        apiUrl = 'http://localhost:3000/collaborators_backoffice/vendas/consulta_estoque';
+        } else {
+        apiUrl = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/vendas/consulta_estoque';
+        }
+
+        console.log(apiUrl);
+
+
+        fetch(apiUrl, {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id_produto: field.value })
+            body: JSON.stringify({ id_produto: field.value }) // Converte os dados em JSON
         })
         .then(response => {
             if (!response.ok) {
