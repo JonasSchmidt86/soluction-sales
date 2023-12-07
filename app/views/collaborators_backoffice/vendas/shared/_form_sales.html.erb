@@ -87,8 +87,7 @@
                                 </li>
                             </ul>
 
-                            <div class="tab-content">
-                            
+                            <div class="tab-content">        
                                 <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
                                     <div class="card-body">
 
@@ -182,8 +181,8 @@
                                 <div class="form-floating mb-3 md-3 mt-0">  
                                     <button type="submit" class="btn input-group-text btn-success">Salvar</button>
                                 </div>
-                        <% end %>
                             </div>
+                            <% end %>
                         </div>
                     </div>
                 </div>
@@ -196,12 +195,31 @@
 <%= render partial: 'layouts/shared/modal_alert' %>
 
 <script>
+    $(document).ready(function() {
+        // Quando o usuário digita no campo de texto
+        $('#search_nome_pessoa').on('input', function() {
+        var searchTerm = $(this).val().toLowerCase();
 
+        // Filtra as opções no dropdown com base no que foi digitado
+        $('#pessoas_dropdown option').each(function() {
+            var optionText = $(this).text().toLowerCase();
+            var optionValue = $(this).val();
+            var optionVisible = optionText.includes(searchTerm);
+
+            // Exibe ou oculta a opção com base no termo de pesquisa
+            $(this).toggle(optionVisible);
+
+            // Se a opção está visível e é uma correspondência perfeita, seleciona-a automaticamente
+            if (optionVisible && optionText === searchTerm) {
+            $('#pessoas_dropdown').val(optionValue);
+            }
+        });
+        });
+    });
 // pegar o campo de quantidade de parcelas, e o campo valor total da venda
 
-let data = []; // Array para armazenar os objetos
-
 function createBills() {
+    let data = []; // Array para armazenar os objetos
 
     const nBills = parseInt(document.getElementById('venda_nmParcela').value);
     const firstDate = document.getElementById('venda_first_date').value;
@@ -274,8 +292,6 @@ function formatDate(date) {
     return `${day}/${month}/${year}`;
 }
 
-
-
 // -----------------------------------------------------------------
 // ------------ para baixo da tabela Produto -----------------------
 // -----------------------------------------------------------------
@@ -334,26 +350,21 @@ function formatDate(date) {
         var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
         var proQtd = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
 
-        // Não use const ou let aqui
         const isLocalhost = () => {
-        // Verifica se o host inclui "localhost" ou "127.0.0.1"
         return (
-            window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1'
-        );
+                window.location.hostname === 'localhost' ||
+                window.location.hostname === '127.0.0.1'
+            );
         };
 
         let apiUrl = ""; // Atribuição inicial, mas não precisa ser const ou let
 
         // Exemplo de uso
         if (isLocalhost()) {
-        apiUrl = 'http://localhost:3000/collaborators_backoffice/vendas/consulta_estoque';
+            apiUrl = 'http://localhost:3000/collaborators_backoffice/vendas/consulta_estoque';
         } else {
-        apiUrl = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/vendas/consulta_estoque';
+            apiUrl = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/vendas/consulta_estoque';
         }
-
-        console.log(apiUrl);
-
 
         fetch(apiUrl, {
             method: 'post',

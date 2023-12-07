@@ -24,12 +24,13 @@
                             </h4>
                         </div>
                         <%= form_with(model: [:collaborators_backoffice, @sale], local: true) do |form| %>
+
                         <div class="row">
                             <div class="col-md-10 ">
                                 <div class="form-floating mb-3 ">
-                                    <%= form.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                    <%= form.collection_select(:cod_pessoa, Pessoa.where("cod_pessoa = ? ", @sale.cod_pessoa), 
                                             :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
-                                                class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+                                                class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true) %>
                                     <%= form.label :pessoa, class:"" %>
                                 </div>
                             </div>
@@ -45,13 +46,13 @@
                         <div class="row g-2">
                             <div class="col-md-5">
                                 <div class="form-floating mb-3">
-                                    <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                    <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker", readonly: true %>
                                     <%= form.label :data_venda, class:"" %>
                                 </div>
                             </div>
                             <div class="col-md-5">
                                 <div class="form-floating mb-3">
-                                    <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                    <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                                     <%= form.label :numero_nf, class:"" %>
                                 </div>
                             </div>
@@ -59,13 +60,13 @@
                         <div class="row mb-2">
                             <div class="col-md-3">
                                 <div class="form-floating mb-3 mb-md-0">
-                                    <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+                                    <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                                     <%= form.label :acrescimo, class:"" %>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-floating mb-3">
-                                    <%= form.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+                                    <%= form.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                                     <%= form.label :desconto, class:"" %>
                                 </div>
                             </div>

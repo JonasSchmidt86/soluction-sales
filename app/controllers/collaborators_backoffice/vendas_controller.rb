@@ -38,12 +38,10 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       # puts @sale.itensvenda.size
 
       @sale.contas.each do |conta|
-
         conta.cod_empresa = @sale.cod_empresa;
         conta.ativo = true;
         conta.quitada = false;
         conta.cod_tppagamento = 1;
-
       end
 
       if @sale.save
@@ -80,7 +78,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def params_venda
-      params.require(:vendas).permit(
+      params.require(:venda).permit(
         :tipo, :cod_empresa, :cancelada, :datanf, :datavenda, :numeronf, :valortotal, :cod_frete, :cod_funcionario, 
         :cod_empresa_transferida, :cod_vendaempresa, :acrescimo, :desconto, :aceita, :cod_pessoa,
         itensvenda_attributes: [:cod_produto, :quantidade, :valorunitario, :cod_cor, :cod_empresa, :_destroy],
