@@ -80,7 +80,7 @@
                           <tr class="">
                       <% end %> 
 
-                      <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
+                      <td><%= (bill.quitada_ext) %> </td>
                       <td><%= bill.nmCollaborator %> </td>
                       <td><%= bill.nmParcela %> </td>
                       <td><%= bill.nmPessoa %> </td>
@@ -89,28 +89,29 @@
                       <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
                       <td>
                           <% if !bill.quitada || bill.lancamentos.size == 0 %>
-
-                            <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                                { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
-                                  :status_bill => params[:status_bill], 
-                                  :nrVenda => params[:nrVenda], 
-                                  :cliente => params[:cliente], 
-                                  :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                                   method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do %>
-                                <i class="fa fa-check"></i>
-                            <% end %>
-<%# ---------------------- %>
-                            <%# Pagar Pacial a conta  %>
-                             <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
-<%# ---------------------- %>
-                          <% end %>
-<%# ---------------------- %>
-                          <% if !bill.lancamentos.blank? %>
-                            <%# lancamentos da parcela %>
-                            <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                          <% end %>
-<%# ---------------------- %>
-
+                            <% if bill.ativo %>
+                              <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
+                                  { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
+                                    :status_bill => params[:status_bill], 
+                                    :nrVenda => params[:nrVenda], 
+                                    :cliente => params[:cliente], 
+                                    :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
+                                    method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do %>
+                                  <i class="fa fa-check"></i>
+                              <% end %>
+                              
+  <%# ---------------------- %>
+                              <%# Pagar Pacial a conta  %>
+                              <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+  <%# ---------------------- %>
+                              <% end %>
+  <%# ---------------------- %>
+                              <% if !bill.lancamentos.blank? %>
+                                <%# lancamentos da parcela %>
+                                <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                              <% end %>
+  <%# ---------------------- %>
+                          <% end %> 
                         </td>
                       </tr>
 

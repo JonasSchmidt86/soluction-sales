@@ -334,3 +334,8 @@
 #       AND EMPRESAPRODUTO.COD_COR = ITEMVENDA.COD_COR
 # 	  AND EMPRESAPRODUTO.COD_EMPRESA = ITEMVENDA.COD_EMPRESA
 # );
+
+# -- fazer para adicionar o proximo id 
+# -- select max(cod_lancamentocaixa) from lancamentoscaixa
+# -- SELECT setval('lancamentocaixa_sequence', 329096);
+

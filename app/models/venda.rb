@@ -21,7 +21,11 @@ class Venda < ApplicationRecord
     paginates_per 20
 
     def venda_nfe
-        [self.cod_vendaempresa, self.numeronf].join(' / ')
+        if self.cancelada
+            return ["CANCELADA", (self.numeronf.blank? ? "0" : self.numeronf)].join(' / ')
+        else
+            return [self.cod_vendaempresa, (self.numeronf.blank? ? "0" : self.numeronf)].join(' / ')
+        end
     end
     
 end

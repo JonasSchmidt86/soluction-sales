@@ -16,6 +16,14 @@ class Contaspagrec < ApplicationRecord
     
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :contas, optional: true
 
+    def quitada_ext
+        if self.ativo
+            self.quitada? ? "Liquidada" : "Aberto"
+        else
+            "Cancelada"
+        end
+    end
+
     def dt_vencimento
         if !self.dtvencimento.nil?
             return post_date self.dtvencimento

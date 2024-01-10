@@ -36,7 +36,7 @@
                             </div>
                             <div class="col-md-1">
                                 <div class="form-floating mb-3 ">
-                                    <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-info btn-circle" do %>
+                                    <%= link_to collaborators_backoffice_report_sales_client_path(@sale.cod_pessoa), class:"btn btn-info btn-circle" do %>
                                         <i class="fa fa-info"></i>
                                     <% end %>
                                 </div>
@@ -46,7 +46,7 @@
                         <div class="row g-2">
                             <div class="col-md-5">
                                 <div class="form-floating mb-3">
-                                    <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker", readonly: true %>
+                                    <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                                     <%= form.label :data_venda, class:"" %>
                                 </div>
                             </div>
@@ -117,7 +117,12 @@
                                                 <%# form.fields_for :itensvenda do |item| %>
                                                 <% @sale.itensvenda.each do |item| %>
 
-                                                    <tr class= "nested-fields">
+                                                    <% if (!@sale.cancelada) %>
+                                                        <tr class="nested-fields text-danger">
+                                                    <% else %>
+                                                        <tr class="nested-fields">
+                                                    <% end %> 
+
                                                         <td class="" >
                                                             <%= item.full_codigo %>
                                                         </td>

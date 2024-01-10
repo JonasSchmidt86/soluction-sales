@@ -51,7 +51,7 @@
                     <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
                     <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NFe</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NFe</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
                     <th data-sortable="" style="width: 150px;">Valor Total</th>
                     <th data-sortable="" style="">Info</th>
@@ -61,14 +61,14 @@
                 <tbody>
                     <% @sales.each do |sale| %>
                       <% if sale.cancelada %>
-                        <tr class="text-warning  opacity-50">
+                        <tr class="" style="background-color: #FA625E;">
                       <% else %>
                         <tr class="">
-                      <% end %> 
+                      <% end %>
                           <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
                           <td><%= sale.empresa.nome %> </td>
                           <td><%= sale.pessoa.nome %></td>
-                          <td><%= sale.numeronf %> </td>
+                          <td><%= sale.venda_nfe %> </td>
                           <td><%= sale.funcionario.usuario %> </td>
                           <td><%= number_to_currency( sale.valortotal, precision: 2)  %></td>
 
@@ -97,12 +97,17 @@
                                 
                                 <tbody>
                                   <% sale.contas.order("numeroparcela").each do |bill| %>
-                                    <% if (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
-                                          <tr class="text-warning">
+                                      <% if (!bill.ativo) %>
+                                          <tr class="nested-fields text-danger">
+                                          <td><%= ("Cancelada") %> </td>
+                                      <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
+                                          <tr class="nested-fields ext-warning">
+                                          <td><%= ("Vencida") %> </td>
                                       <% else %>
-                                          <tr class="">
+                                          <tr class="nested-fields">
+                                          <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
                                       <% end %> 
-                                      <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
+                                      
                                       <td><%= bill.nmCollaborator %> </td>
                                       <td><%= bill.nmParcela %> </td>
                                       <td><%= bill.nmPessoa %> </td>
