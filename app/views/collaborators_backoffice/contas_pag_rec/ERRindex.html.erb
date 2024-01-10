@@ -65,7 +65,7 @@
                     <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
                     <th data-sortable="" style="width: 110px;">Valor Total</th>
                     <th data-sortable="" style="width: 110px;">Valor Pago</th>
-                    <th data-sortable="" style="width: 105px;">Pagar?</th>
+                    <th data-sortable="" style="width: 85px;">Pagar?</th>
                   </tr>
                 </thead>
                 
@@ -88,31 +88,41 @@
                       <td><%= number_to_currency( bill.valorparcela, precision: 2)  %></td>
                       <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
                       <td>
-                          <% if !bill.quitada || bill.lancamentos.size == 0 %>
 
-                            <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                                { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
-                                  :status_bill => params[:status_bill], 
-                                  :nrVenda => params[:nrVenda], 
-                                  :cliente => params[:cliente], 
-                                  :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                                   method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do %>
-                                <i class="fa fa-check"></i>
-                            <% end %>
-<%# ---------------------- %>
-                            <%# Pagar Pacial a conta  %>
-                             <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
-<%# ---------------------- %>
-                          <% end %>
-<%# ---------------------- %>
-                          <% if !bill.lancamentos.blank? %>
-                            <%# lancamentos da parcela %>
-                            <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                          <% end %>
-<%# ---------------------- %>
+                        <div class="dropdown" >
+                          <button type="button" class="btn btn-success btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px;">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                          </button>
+                          <ul class="dropdown-menu" style="width: 10px;">
 
-                        </td>
-                      </tr>
+
+                              <% if !bill.quitada || bill.lancamentos.size == 0 %>
+                                <li>
+                                  <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
+                                      { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
+                                        :status_bill => params[:status_bill], 
+                                        :nrVenda => params[:nrVenda], 
+                                        :cliente => params[:cliente], 
+                                        :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
+                                        method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do %>
+                                      <i class="fa fa-check"></i>
+                                  <% end %>
+      <%# ---------------------- %>
+                                  <%# Pagar Pacial a conta  %>
+                                  <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+      <%# ---------------------- %>
+                                </li>
+                              <% end %>
+                            <li>
+                              <% if !bill.lancamentos.blank? %>
+                                <%# lancamentos da parcela %>
+                                <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                              <% end %>
+                            </li>
+                          </ul>
+                        </div>                      
+                      </td>
+                    </tr>
 
                     <% end %>
 

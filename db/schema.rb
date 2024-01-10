@@ -192,7 +192,7 @@ ActiveRecord::Schema.define(version: 2023_03_29_144607) do
     t.index ["cod_pessoa"], name: "fke_pessoa"
   end
 
-  create_table "empresaproduto", id: false, force: :cascade do |t|
+  create_table "empresaproduto", primary_key: ["cod_cor", "cod_empresa", "cod_produto"], force: :cascade do |t|
     t.bigint "cod_cor", null: false
     t.bigint "cod_empresa", null: false
     t.bigint "cod_produto", null: false

@@ -1,25 +1,17 @@
-<h1>CollaboratorsBackoffice::Welcome#index</h1>
-<p>Find me in app/views/collaborators_backoffice/welcome/index.html.erb</p>
 
-
-<button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
-    data-bs-target="#produtoModal", href="collaborators_backoffice/produtos/shared" data-bs-whatever="passa para o modal" >
-    <i class="fa fa-plus">  Produto</i>
-</button>
-
+<div class="d-flex p-2">
+    <button type="button", class="btn btn-success btn-circle px-4", data-bs-toggle="modal",
+        data-bs-target="#produtoModal", href="collaborators_backoffice/produtos/shared" 
+            data-bs-whatever="passa para o modal" >
+        <i class="fa fa-plus">  Produto</i>
+    </button>
+</div>
 <%# <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { produto: @produto } % > %>
 
 <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Modal' } %>
-
-<p><%= button_to 'Fazer logoff? [Colaborador]', destroy_collaborator_session_path, method: :delete %></p>
-   
-   
-   
+      
     <br>
-        <input type="text" maxlength="9" id="valor" onkeyup="formatarMoeda()">
-    <br>
-    <br>
-    <%= number_to_currency 1234567890.50 %>
+    <%#= number_to_currency 1234567890.50 %>
     <br>
 
     

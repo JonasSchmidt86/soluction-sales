@@ -24,15 +24,14 @@
                             <%= form_with(model: [ :collaborators_backoffice, @sale ], local: true) do |form| %>
 
                             <div class="row g-2 d-flex align-items-center">
-
-                                <div class="col-md-9">
-                                    <div class="form-floating mb-3">
-                                        <input type="text" id="pessoa_search" placeholder="Digite para buscar" class="text form-control">
-                                        <div id="results_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
-                                        <%= form.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                                <div class="col-md-9 ">
+                                    <div class="form-floating mb-3 ">
+                                        <%= form.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
+                                                :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
+                                                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+                                        <%= form.label :pessoa, class:"" %>
                                     </div>
                                 </div>
-
                                 <div class="col-md-1">
                                     <div class="d-grid gap-2 d-md-block">
                                         <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle btn-outline-dark" do %>
@@ -93,10 +92,12 @@
                                     <div class="card-body">
 
                                         <div class="table-responsive">
+
                                             <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width: 50%;">Nome</th>
+                                                        <th style="width: 8%;">Cod</th>
+                                                        <th>Nome</th>
                                                         <th style="">Cor</th>
                                                         <th style="width: 7%;">Qtd</th>
                                                         <th style="width: 10%;">valor</th>
@@ -112,9 +113,8 @@
                                                 </tbody>
                                             </table>
                                             <div class="form-actions">
-                                                <%= link_to_add_association 'Adiciona Item', form, :itensvenda,
-                                                        class: 'btn btn-primary', data: { association_insertion_node: '.sales', 
-                                                            association_insertion_method: :append } %> <%# append para adicionar no fim da lista prepend para adicionar no inicio da lista%>
+                                                <%= link_to_add_association 'Adiciona Item', form, :itensvenda, 
+                                                    class: 'btn btn-primary', data: { association_insertion_node: '.sales', association_insertion_method: :append } %>
                                             </div>
                                         </div>
                                     </div>
@@ -172,9 +172,7 @@
 
                                         <div class="form-actions">
                                             <%= link_to_add_association 'Adiciona Conta', form, :contas, id:"conta", hidden: true,
-                                                    class: 'btn btn-primary bills', 
-                                                        display: "none", data: { association_insertion_node: '.contas', 
-                                                            association_insertion_method: :append } %>
+                                                class: 'btn btn-primary bills', display: "none", data: { association_insertion_node: '.contas', association_insertion_method: :append } %>
                                         </div>
 
                                     </div>
@@ -196,17 +194,29 @@
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>
 <%= render partial: 'layouts/shared/modal_alert' %>
 
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
+    $(document).ready(function() {
+        // Quando o usuário digita no campo de texto
+        $('#search_nome_pessoa').on('input', function() {
+        var searchTerm = $(this).val().toLowerCase();
 
-// -----------------------------------------------------------------
-// ------------ inserir index no nested-field ----------------------
-// -----------------------------------------------------------------
-    
+        // Filtra as opções no dropdown com base no que foi digitado
+        $('#pessoas_dropdown option').each(function() {
+            var optionText = $(this).text().toLowerCase();
+            var optionValue = $(this).val();
+            var optionVisible = optionText.includes(searchTerm);
 
-// -----------------------------------------------------------------
-// ------------ para baixo da tabela contas  -----------------------
-// -----------------------------------------------------------------
+            // Exibe ou oculta a opção com base no termo de pesquisa
+            $(this).toggle(optionVisible);
+
+            // Se a opção está visível e é uma correspondência perfeita, seleciona-a automaticamente
+            if (optionVisible && optionText === searchTerm) {
+            $('#pessoas_dropdown').val(optionValue);
+            }
+        });
+        });
+    });
+// pegar o campo de quantidade de parcelas, e o campo valor total da venda
 
 function createBills() {
     let data = []; // Array para armazenar os objetos
@@ -274,13 +284,24 @@ function createBills() {
     data = [];
 }
 
-    // Função para formatar a data no formato 'dd/mm/yyyy'
-    function formatDate(date) {
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    }
+// Função para formatar a data no formato 'dd/mm/yyyy'
+function formatDate(date) {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+// -----------------------------------------------------------------
+// ------------ para baixo da tabela Produto -----------------------
+// -----------------------------------------------------------------
+    function selectProduto(event, field) {
+        console.log(field.value);
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            // Chame a função que você deseja executar
+            atualizarCommentIndex(field);
+        }
+    };
 
     function thisIndex(field) {
         var name = field.name;
@@ -294,101 +315,6 @@ function createBills() {
         }
     }
 
-    const isLocalhost = () => {
-        return (
-            window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1'
-        );
-    };
-
-    let url = "";
-
-    if (isLocalhost()) {
-        url = 'http://localhost:3000/collaborators_backoffice/';
-    } else {
-        url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
-    }
-    
-    function abrirModal() {
-        var modal = document.getElementById('coresModal');
-        $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modais)
-        $(modal).on('shown.bs.modal', function () {
-            $('#cor_id').focus(); // Define o foco no select
-        });
-    }
-
-    $(document).ready(function() {
-        var categorySearch = $('#pessoa_search'); // 
-        var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
-        var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
-        
-        let apiUrl = url+ "buscas/buscar_pessoas";
-
-        // console.log(apiUrl);
-
-        <%# categorySearch.on('input', function() {
-            filterOptions();
-        }); %>
-        // Adiciona um evento de keypress para a tecla Enter
-        categorySearch.on('keydown', function(event) {
-           // console.log(event.key);
-            if (event.key === 'Enter') {
-                filterOptions();
-            } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
-                // Código 27 corresponde à tecla "ESC"
-                categorySearch.val(''); // Limpa o campo de busca
-                resultsList.empty();
-                resultsList.hide();
-                selectedPersonIdField.val("");
-            }
-        });
-        
-        // Adiciona um evento de clique aos itens da lista
-        resultsList.on('click', 'div.list-group-item', function() {
-            var selectedPerson = $(this).text();
-            var selectedPersonId = $(this).data('cod_pessoa');
-
-            // Preenche o campo escondido com o ID da pessoa selecionada
-            selectedPersonIdField.val(selectedPersonId);
-
-            // Atualiza o campo de busca com o nome da pessoa selecionada
-            categorySearch.val(selectedPerson);
-
-            // Limpa a lista de resultados
-            resultsList.empty();
-            resultsList.hide();
-        });
-
-        function filterOptions() {
-            var query = categorySearch.val().trim().toLowerCase();
-            resultsList.empty();
-
-            $.ajax({
-                url: apiUrl,
-                method: 'GET',
-                data: { entidade: 'Pessoa', query: query },
-                success: function(data) {
-                    data.forEach(function(person) {
-                        var listItem = $('<div>').text(person.nome);
-                        listItem.addClass('list-group-item');
-                        listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
-                        resultsList.append(listItem);
-                    });
-
-                    // Exibe a lista de resultados
-                    resultsList.show();
-                },
-                error: function(err) {
-                    console.error('Erro na requisição AJAX:', err);
-                }
-            });
-        }
-    });
-
-// -----------------------------------------------------------------
-// ------------ para baixo da tabela Produto -----------------------
-// -----------------------------------------------------------------
-
     function atualizarCommentIndex(inputField) {
         if (inputField.value !== null && inputField.value.trim() !== '') {
             
@@ -399,7 +325,7 @@ function createBills() {
                 var selector = "";
 
                 if (inputField.type == "text"){
-                    //selector = `venda_itensvenda_attributes_${index}_produto`;
+                    selector = `venda_itensvenda_attributes_${index}_produto`;
                 }else {
                     selector = `venda_itensvenda_attributes_${index}_cod_produto`
                 }
@@ -411,20 +337,34 @@ function createBills() {
                 }
                 console.log("AQUI");
                 selectColorProduct(inputField)
-                inputField = "";
             }
         }
     };
-    
+
     function selectColorProduct(field) {
         field.value = field.value.replace(/\s/g, '');
 
         var index = thisIndex(field);
-        const corSelect = document.getElementById(`venda_itensvenda_attributes_${index}_cod_cor`);
+
+        var corSelect = document.getElementById(`venda_itensvenda_attributes_${index}_cod_cor`);
         var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
         var proQtd = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
 
-        let apiUrl = url + 'vendas/consulta_estoque';
+        const isLocalhost = () => {
+        return (
+                window.location.hostname === 'localhost' ||
+                window.location.hostname === '127.0.0.1'
+            );
+        };
+
+        let apiUrl = ""; // Atribuição inicial, mas não precisa ser const ou let
+
+        // Exemplo de uso
+        if (isLocalhost()) {
+            apiUrl = 'http://localhost:3000/collaborators_backoffice/vendas/consulta_estoque';
+        } else {
+            apiUrl = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/vendas/consulta_estoque';
+        }
 
         fetch(apiUrl, {
             method: 'post',
@@ -445,7 +385,6 @@ function createBills() {
 
             var option = document.createElement("option");
             option.text = "Selecione uma Cor!";
-            option.value = 0;
             x.add(option)
 
             if ( data.length === 0 ){
@@ -468,59 +407,52 @@ function createBills() {
             console.error('Ocorreu um erro:', error);
         });
 
-// --------------------------- SELECIONA COR NO MODAL ---------------------- //
-        var selectCor = document.querySelector("#cor_id");
-// passa todos os campos cor
-        selectCor.addEventListener("change", (event) => {
 
-            let element = document.getElementById('cor_id');
-            let valor;
-            let quantidade;
+        const selectCor = document.querySelector("#cor_id");
+        selectCor.addEventListener("change", (event) => {
+            var element = document.getElementById('cor_id');
+            
+            var valor;
+            var quantidade;
             
             for (var i = 0; i < element.options.length; i++) {
+                if (element.options[i].value === element.value) {
+                    // Defina a opção como selecionada
+                    valor = element.options[i].getAttribute("data-valor-attribute");
+                    quantidade = element.options[i].getAttribute("data-quantidade-attribute");
 
-                // verificar se o campo selecionado ja tem valor se tiver pula
-                if (corSelect.value === null || corSelect.value === undefined || corSelect.value === ''){
-                    
-                    if (element.options[i].value === element.value) {
-                        
-                        if (index == thisIndex(corSelect)) {
-                            // Defina a opção como selecionada
-                            valor = element.options[i].getAttribute(`data-valor-attribute`);
-                            quantidade = element.options[i].getAttribute(`data-quantidade-attribute`);
-
-                            if (quantidade <= 0){
-                                //alert("Quantidade insuficiente para venda!");
-                                alertModal("Possui " + parseFloat(quantidade).toFixed(0) + " no estoque. Quantidade insuficiente.");
-                            }
-                            
-                            corSelect.value = element.value;
-                            proValor.value = parseFloat(valor).toFixed(2).replace(".",",");
-                            proQtd.value = '1';//parseFloat(1).toFixed(0);
-                            setValorTotal(field);
-                            break;
-                        }
+                    if (quantidade <= 0){
+                        //alert("Quantidade insuficiente para venda!");
+                        alertModal("Possui " + parseFloat(quantidade).toFixed(0) + " no estoque. Quantidade insuficiente.");
                     }
-                    $('#coresModal').modal('hide');
+                    
+                    corSelect.value = element.value;
+                    proValor.value = parseFloat(valor).toFixed(2).replace(".",",");
+                    proQtd.value = '1';//parseFloat(1).toFixed(0);
+                    setValorTotal(field);
+
+                    break;
                 }
-            }   
+            }
+            $('#coresModal').modal('hide');
+            corSelect = "";
+            proValor = "";
+            proQtd = "";
         });
-
-// --------------------------- FIM COR ---------------------- //
     }
-
+    
 // ------------- calculas os valores da tela ---------------
 
     function setValorTotal(field) {
-        let index = thisIndex(field);
-        let proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
-        let proQtd   = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
-        let proTotal = document.getElementById(`venda_itensvenda_attributes_${index}_valor_total`);
-        let venTotal = document.getElementById("valor_total");
+        var index = thisIndex(field);
+        var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
+        var proQtd   = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
+        var proTotal = document.getElementById(`venda_itensvenda_attributes_${index}_valor_total`);
+        var venTotal = document.getElementById("valor_total");
 
         let valUnit = parseFloat(proValor.value) * 100;
 
-//console.log("PRODUTO = "+valUnit);
+console.log("PRODUTO = "+valUnit);
         //var ttProd = (parseFloat( proValor.value ) * parseFloat(proQtd.value)).toFixed(2);
 
         proTotal.value = ((parseFloat( valUnit) * parseFloat(proQtd.value)) / 100 );
@@ -531,7 +463,7 @@ function createBills() {
         proQtd   = "";
         proTotal = "";
         venTotal = "";
-        index = "";
+
     }
 
     function setTotalVenda(){
@@ -563,86 +495,12 @@ function createBills() {
         // Exiba o resultado da soma
     }
 
-
-    $(document).on('keydown', '.produto_search', function(event) {
-        if (event.key === 'Enter') {
-            selectProduct(this);
-        } else if (event.key === 'Escape') {
-            // Verifique se o elemento é um input (por exemplo, <input>)
-            if (this.tagName.toLowerCase() === 'input') {
-                this.value = "";
-            } else {
-                // Se for um elemento de texto (por exemplo, <div>)
-                this.innerText = "";
-            }
-        }
-    });
-
-
-    function selectProduct(field) {
-        
-        var index = thisIndex(field);
-
-        // Obtém a referência da div pelo id atual
-        var productsListDiv = document.getElementById("products_list");
-
-        // Verifica se a div com id "products_list" existe
-        if (productsListDiv) {
-            // Define o novo id
-            productsListDiv.id = `products_list_${index}`;
-        }
-        
-        var selectedProductIdField = document.getElementById(`venda_itensvenda_attributes_${index}_cod_produto`);
-        
-        let productsList = $(`#products_list_${index}`);
-
-        let apiUrl = url+ "buscas/buscar_produtos";
-
-        productOptions();
-        
-        // Adiciona um evento de clique aos itens da lista
-        productsList.on('click', `div.list-group-item`, function() {
-            let selectedProduct = $(this).data('produto');
-            let selectedProductId = $(this).data('cod_produto');
-            selectedProductIdField.value = ( selectedProductId );
-            field.value =  selectedProduct ;
-
-//--------------------------------------------------------------------------------------------------------------------------
-            atualizarCommentIndex(selectedProductIdField);
-//--------------------------------------------------------------------------------------------------------------------------
-            // Limpa a lista de resultados
-            productsList.hide();
-
+    function abrirModal() {
+        var modal = document.getElementById('coresModal');
+        $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modais)
+        $(modal).on('shown.bs.modal', function () {
+            $('#cor_id').focus(); // Define o foco no select
         });
-
-        function productOptions() {
-            var query = field.value.trim().toLowerCase();
-            productsList.empty();
-            
-            console.log("productOptions --- ")
-            
-            $.ajax({
-                url: apiUrl,
-                method: 'GET',
-                data: { entidade: 'Produto', query: query },
-                success: function(data) {
-                    productsList.empty();
-                    data.forEach(function(product) {
-                        var listItem = $('<div>').text(product.produto);
-                        listItem.addClass('list-group-item');
-                        listItem.data('cod_produto', product.cod_produto); // Armazena o ID do produto nos dados do item
-                        listItem.data('produto', product.produto); 
-                        productsList.append(listItem);
-                    });
-
-                    // Exibe a lista de resultados
-                    productsList.show();
-                },
-                error: function(err) {
-                    console.error('Erro na requisição AJAX:', err);
-                }
-            });
-        }
-    };
-
+    }
 </script>
+

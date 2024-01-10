@@ -1,25 +1,18 @@
 <tr class= "nested-fields">
+    
+    <%= f.hidden_field :cod_produto %>
 
     <td class="">
-        <%= f.text_field :cod_produto, 
-            class: "campo-texto form-control border-top-0 border-start-0 border-end-0 border-dark", 
-            onchange: "atualizarCommentIndex(this)",
-            onkeypress:"selectProduto(event, this)" %>
-    </td>
-    <td class="">
-        <%= f.collection_select(
-            :produto, 
-            Produto.where("nome <> '' AND ativo = ?", true).order(:nome, :cod_produto), 
-            :cod_produto, 
-            :cod_nome, 
-            {:prompt => 'Selecione uma Produto'},
-            class: "product_lay form-control border-top-0 border-start-0 border-end-0 border-dark", 
-            onchange: "atualizarCommentIndex(this)"
-        ) %>
+        <%= f.text_field :produto, 
+            class:"text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
+            placeholder:"Precione Enter para buscar!"
+        %>
+        <%# f.index() %>
+
+        <div id="products_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
     </td>
 
-    <td class="">
-
+    <td class="col-auto">
         <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
                 :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'},
                     class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>

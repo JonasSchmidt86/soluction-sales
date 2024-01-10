@@ -51,8 +51,8 @@
                     <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
                     <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NFe</a></th>
-                    <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                    <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
+                    <th data-sortable="" style="width: 150px;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
                     <th data-sortable="" style="width: 150px;">Valor Total</th>
                     <th data-sortable="" style="width: 45px"></th>
                   </tr>
@@ -61,37 +61,34 @@
                 <tbody>
                     <% @sales.each do |sale| %>
                       <% if sale.cancelada %>
-                        <tr class="text-danger">
+                        <tr class="" style="background-color: #FA625E;">
                       <% else %>
                         <tr class="">
                       <% end %> 
                           <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
-                          <td><%= sale.empresa.nome %> </td>
+                          <td><div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div> </td>
                           <td><%= sale.pessoa.nome %></td>
-                          <td><%= sale.numeronf %> </td>
-                          <td><%= sale.funcionario.usuario %> </td>
+                          <td><%= sale.venda_nfe %> </td>
+                          <td><div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div> </td>
                           <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
 
                           <td>
                             <div class="dropdown" >
-                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px;">
+                                <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
                                   <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                                 </button>
 
-                                <ul class="dropdown-menu" style="width: 50px;">
-                                
+                                <ul class="dropdown-menu" style="width: 50px;">                                
                                   <li>
                                     <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
                                       <i class="fa fa-info",  style="width: 35px;"></i>Informações
                                     <% end %>
                                   </li>
-
                                   <li>
                                     <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
                                       <i class="fa-brands fa-hire-a-helper",  style="width: 35px;"></i> Histórico
                                     <% end %>
                                   </li>
-
                                   <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                                    <span class="visually-hidden">Toggle Dropdown</span>
                                     <li>
@@ -100,9 +97,9 @@
                                         <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                                       <% end %> 
                                     </li>
-
                                   <% end %>
                                 </ul>
+
                               </div>
                           </td>
 
@@ -119,6 +116,5 @@
               </div>
           </div>
         </div>
-        
     </div>
 </div>

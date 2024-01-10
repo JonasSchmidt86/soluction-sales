@@ -28,11 +28,12 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
             :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
             }  ), notice: "Caixa não esta aberto!"
         else
-            @launch = Lancamentoscaixa.new
-            @launch.datapagto = DateTime.now
-            @launch.funcionario = current_collaborator.funcionario
-            @launch.valor = params[:lancamentoscaixa][:valor] # verificar como fazer
-            @launch.empresa = Empresa.find(current_collaborator.cod_empresa)
+            @launch = Lancamentoscaixa.new;
+            @launch.datapagto = DateTime.now;
+            @launch.funcionario = current_collaborator.funcionario;
+            @launch.valor = params[:lancamentoscaixa][:valor]; # verificar como fazer
+            @launch.empresa = Empresa.find(current_collaborator.cod_empresa);
+            @launch.cancelada = false;
 
             # se for venda entrada e se for compra ou frete saida
             if !@bill.venda.nil?

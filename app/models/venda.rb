@@ -20,5 +20,8 @@ class Venda < ApplicationRecord
 
     paginates_per 20
 
-
+    def venda_nfe
+        [self.cod_vendaempresa, self.numeronf].join(' / ')
+    end
+    
 end

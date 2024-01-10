@@ -21,9 +21,9 @@
         <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-primary hstack gap-3 ">
             
             <!-- Navbar Brand-->
-            <div class="p-2 d-flex justify-content-start">
+            <div class="p-2 d-flex justify-content-start text-truncate">
                 <%= link_to (current_collaborator.empresa.nome unless current_collaborator.empresa.blank? ) , 
-                    collaborators_backoffice_welcome_index_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 "%>
+                    collaborators_backoffice_welcome_index_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 text-truncate   "%>
             </div>
 
             <!-- Sidebar Toggle -->
@@ -37,11 +37,11 @@
                 
 
             <!-- Navbar Menu -->
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0  text-truncate">
                 <button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
-                    data-bs-target="#empresaModal", data-bs-whatever="passa para o modal" >
+                    data-bs-target="#empresaModal", data-bs-whatever="passa para o modal", style="max-width: 150px;" >
 
-                    <i class="me-lg-5">
+                    <i class="me-lg-6">
                     <% if !current_collaborator.empresa.nome.blank? %>
                         <%= current_collaborator.empresa.nome %>
                     <% end %>
@@ -52,7 +52,7 @@
             <!-- Navbar-->
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle  text-truncate" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user fa-fw"></i>
                         <%= current_collaborator.funcionario.pessoa.nome %>
                     </a>
@@ -79,7 +79,7 @@
                 <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
 
                     <!-- Side bar right -->
-                    <div class="sb-sidenav-menu bg-light">
+                    <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
                         <div class="nav">
 
                             <div class="profile clearfix d-flex justify-content-center">
@@ -187,15 +187,13 @@
                         <div class="small">Quem esta Logado:</div>
                         <%= current_collaborator.funcionario.usuario %>
                     </div>
-                
-                
 
                 </nav>
             </div>
 
             <div id="layoutSidenav_content">
                 <main>
-                    <div class="container-fluid px-4 ">
+                    <div class="container-fluid px-4">
                         <%= yield %>
                     </div>
                 </main>
@@ -226,7 +224,7 @@
                     stackup_spacing: 10 // spacing between consecutively stacked growls.
                 });
             <% end %>
-            
+// ----------- Horas da PG -------            
             var div = document.getElementById("myId");
 
             // Adicionando ouvinte de clique
@@ -239,29 +237,27 @@
                 var date = new Date();
                 div.innerHTML = date.toLocaleTimeString();
             }, 1000/* 1s */);
+// --------------------------------
+
+            // deixa Maiuscula o input com class text
+            $(document).ready(function() {
+                // Quando o usuário digita no campo de texto
+                $('.text').on('input', function() {
+                    $(this).val($(this).val().toUpperCase());
+                    console.log("TEXT");
+                });
+            });
+
+// ---------------------------------
 
             document.addEventListener("keypress", function () { 
-                console.log(event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
                 if(event.keyCode == 13){ // 13 é o Enter
                     event.preventDefault();
                 }
             });
 
-            if( document.getElementById('text') != null ){
-                // console.log("event.key")
-                document.getElementById('text').addEventListener('keyup', (ev) => {
-                    const input = ev.target;
-                    input.value = input.value.toUpperCase();
-
-                });
-            // keyPress Enter não faz o submit
-                document.getElementById('text').addEventListener("keypress", function () { 
-                    // console.log(event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-                    if(event.keyCode == 13){ // 13 é o Enter
-                        event.preventDefault();
-                    }
-                });
-            }
+// ----------------------------------
 
             function formatarMoeda() {
                 var elemento = document.getElementById('valor');

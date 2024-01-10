@@ -41,7 +41,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         conta.cod_empresa = @sale.cod_empresa;
         conta.ativo = true;
         conta.quitada = false;
-        conta.cod_tppagamento = 1;
+        conta.cod_tppagamento = 1; # 1 é parcela de venda
       end
 
       if @sale.save
