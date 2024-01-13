@@ -17,7 +17,9 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
     end
 
     def update
-        if @funcionario.update( params_funcionario )
+        @funcionario.assign_attributes(params_funcionario)
+
+        if @funcionario.save
             # bypass_sign_in(@funcionario.collaborator) # quando troca a senha não precisa refazer o login
             if !params_funcionario[:avatar]
                 redirect_to collaborators_backoffice_funcionarios_path, notice: "Usuario atualizado com sucesso!"
@@ -27,9 +29,12 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
         else 
             render :edit
         end
+
     end
+      
 
     def edit
+        @funcionario.funcionariosempresa.build if @funcionario.funcionariosempresa.blank?
     end
 
     def new
@@ -39,6 +44,7 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
     def create
 
         @funcionario = Funcionario.new(params_funcionario)
+        @funcionario.funcionariosempresa.build
 
         for i in @funcionario.funcionariosempresa do
             i.funcionario = @funcionario
@@ -50,6 +56,7 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
         else 
             render :new
         end
+
     end
 
     def destroy
@@ -64,7 +71,7 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
     def params_funcionario
         params.require(:funcionario).permit(:ativo, :datacontrato, :datademissao, :salario,
                                             :usuario, :cod_permissao, :cod_pessoa, :avatar,
-                                            funcionariosempresa_attributes: [:cod_empresa, :cod_funcionario, :_destroy],
+                                            funcionariosempresa_attributes: [:cod_funcionarioempresa, :cod_empresa, :cod_funcionario, :_destroy],
                                             collaborator_attributes: [:email, :password, :password_confirmation, :cod_empresa, :_destroy] )
       end
 

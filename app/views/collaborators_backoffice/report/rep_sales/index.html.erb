@@ -81,12 +81,12 @@
                                 <ul class="dropdown-menu" style="width: 50px;">                                
                                   <li>
                                     <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
-                                      <i class="fa fa-info",  style="width: 35px;"></i>Informações
+                                      <i class="fa fa-info", style="width: 35px;"></i>Informações
                                     <% end %>
                                   </li>
                                   <li>
                                     <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
-                                      <i class="fa-brands fa-hire-a-helper",  style="width: 35px;"></i> Histórico
+                                      <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Histórico
                                     <% end %>
                                   </li>
                                   <% if current_collaborator.funcionario.permissao.nivel == 1 %>

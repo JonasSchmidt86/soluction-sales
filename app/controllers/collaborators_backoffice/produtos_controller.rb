@@ -49,7 +49,12 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
             end
         else
             puts params[:page]
-            redirect_to collaborators_backoffice_produtos_path(params[:page]), notice: "Produto não pode ser removido!"
+            @produto.ativo = false;
+            if @produto.save
+                redirect_to collaborators_backoffice_produtos_path(params[:page]), notice: "Produto foi desativado!"
+            else 
+                redirect_to collaborators_backoffice_produtos_path(params[:page]), notice: "Produto não pode ser removido!"
+            end
         end
     end
 

@@ -9,7 +9,8 @@ class Funcionarioempresa < ApplicationRecord
     belongs_to :funcionario, :class_name => 'Funcionario', 
                 :foreign_key => 'cod_funcionario', inverse_of: :funcionariosempresa
 
-
+    validates_uniqueness_of :cod_empresa, scope: :cod_funcionario
+    
     def nome_empresa
         if !empresa.blank?
             empresa.nome

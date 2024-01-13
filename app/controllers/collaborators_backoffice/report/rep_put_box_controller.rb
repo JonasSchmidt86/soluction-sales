@@ -3,6 +3,7 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
     before_action :set_launch, only: [:destroy]
 
     def index
+        @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
         # pega o primeiro dia e o ultimo dia do mes
         # puts Time.now.strftime("%d/%m/%Y")
         # puts Date.today.end_of_month.strftime("%d/%m/%Y")

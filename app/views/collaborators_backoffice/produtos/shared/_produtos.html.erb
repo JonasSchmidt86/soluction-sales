@@ -42,8 +42,12 @@
                 
                 <tbody>
                   <% @produtos.each do |produto| %>
+                    <% if (!produto.ativo) %>
+                      <tr class="" style="background-color: #FA625E;">
+                    <% else %>
+                        <tr class="">
+                    <% end %> 
 
-                    <tr>
                       <td class="align-middle fw-semibold"><%= produto.cod_produto %> </td>
                       <td class="align-middle fw-semibold"><%= produto.nome %> </td>
                       <td class="align-middle fw-semibold"><%= produto.ncm %> </td>

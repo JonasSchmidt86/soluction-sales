@@ -1,7 +1,7 @@
 
 <div class="card mt-4">
 
-        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header" do %>
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path(:contem == false), class:"card-header" do %>
           <h4>Estoque</h4>
       <% end %>
     
@@ -12,19 +12,56 @@
                                     class:"col dataTable-search col-md-6") do |form| %>
 
                   <div class="d-flex mb-2 ">
-                    <div class="p-2 w-25 d-inline-block"><%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"dataTable-input", placeholder:"Codigo empresa..." %></div>
-                    <div class="p-2 w-25 d-inline-block"><%= form.text_field :cod_produto,value: params[:cod_produto], class:"dataTable-input", placeholder:"Codigo produto..." %></div>
-                    <div class="p-2 w-75 d-inline-block"><%= form.text_field :term, value: params[:term], class:"dataTable-input", placeholder:"Nome produto..." %></div>
-                    
-                    <div class="form-check form-switch">
-
-                      <label class="d-inline-block form-check-label">
-                        <%= form.check_box :contem, checked:(params[:contem] == '1' ? true : false ), class: "form-check-input", type:"checkbox"%>
-                          Com Estoque
-                      </label>
+                  
+                    <div class="w-25 d-inline-block">
+                      <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"dataTable-input", placeholder:"Codigo empresa..." %>
                     </div>
-                    
-                    <div class="p-2 d-inline-block"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+
+                    <div class="d-inline-block">
+                      <%= form.text_field :cod_produto,value: params[:cod_produto], class:"dataTable-input", placeholder:"Codigo produto...", id:"text" %>
+                    </div>
+
+                    <div class="w-75 d-inline-block">
+                      <%= form.text_field :term, value: params[:term], class:"dataTable-input", placeholder:"Nome produto..." %>
+                    </div>
+
+
+<div class="w-75 d-inline-block">
+  <% checked = params[:contem] == '1' ? true : false %>
+  <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
+  <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      var contemCheckbox = $('#contem-checkbox');
+      var estoqueLabel = $('.estoque-label');
+
+      // Restaurar o estado do checkbox ao recarregar a página
+      var storedState = localStorage.getItem('contemCheckboxChecked');
+      if (storedState !== null) {
+        contemCheckbox.prop('checked', storedState === 'true');
+        updateLabel();
+      }
+
+      contemCheckbox.change(function() {
+        updateLabel();
+
+        // Salvar o estado do checkbox no armazenamento local
+        localStorage.setItem('contemCheckboxChecked', $(this).prop('checked'));
+      });
+
+      function updateLabel() {
+        var novoTexto = contemCheckbox.prop('checked') ? 'Com Estoque' : 'Sem Estoque';
+        estoqueLabel.text(novoTexto);
+      }
+    });
+  </script>
+
+  <button type="submit" class="btn btn-success btn-circle">Buscar</button>
+</div>
+
+
                   </div>
 
                 <% end %>

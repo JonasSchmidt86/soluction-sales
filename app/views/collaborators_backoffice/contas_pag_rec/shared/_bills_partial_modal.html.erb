@@ -1,7 +1,9 @@
-<button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal",
-  data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-  <i class="fa-regular fa-handshake fa-xs"></i>
-</button>
+<div class="d-flex justify-content-end">
+  <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;",
+    data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+    <i class="fa-regular fa-handshake"></i>
+  </button>
+</div>
                             
 <div class="modal fade" id="launchPartialModal<%= bill.cod_contaspagrec %>" data-tor-parent="show">
   <div class="modal-dialog modal-dialog-top modal-lg modal-dialog-scrollable">

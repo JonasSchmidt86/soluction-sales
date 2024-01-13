@@ -11,11 +11,6 @@ class Funcionario < ApplicationRecord
 
     belongs_to :permissao, :class_name => 'Permissao', :foreign_key => 'cod_permissao'
 
-
-    has_many :funcionariosempresa, :class_name => 'Funcionarioempresa', :foreign_key => 'cod_funcionario'
-    has_many :empresas, :through => :funcionariosempresa
-
-
     # verificar para fazer só com Funcionario caixa ligacao
     has_many :funcionario_aberturas, :class_name => 'Caixa', :foreign_key => 'cod_funcionarioabertura', inverse_of: :funcionario_abertura
     has_many :funcionario_fechamentos, :class_name => 'Caixa', :foreign_key => 'cod_funcionariofechamento', inverse_of: :funcionario_fechamento
@@ -29,7 +24,10 @@ class Funcionario < ApplicationRecord
     has_one :collaborator, :class_name => 'Collaborator', :foreign_key => 'id'
 
     accepts_nested_attributes_for :collaborator, reject_if: :all_blank, allow_destroy: true #cocoon gem
-    accepts_nested_attributes_for :funcionariosempresa, reject_if: :all_blank, allow_destroy: true #cocoon gem
+    
+    has_many :funcionariosempresa, :class_name => 'Funcionarioempresa', :foreign_key => 'cod_funcionario', dependent: :destroy
+    has_many :empresas, :through => :funcionariosempresa
+    accepts_nested_attributes_for :funcionariosempresa, reject_if: :all_blank, allow_destroy: true, update_only: false #cocoon gem
 
     def pessoa_nome
       if !pessoa.blank?
@@ -37,6 +35,6 @@ class Funcionario < ApplicationRecord
       end
     end
 
-    paginates_per 10
+    paginates_per 30
 
 end

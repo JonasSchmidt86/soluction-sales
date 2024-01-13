@@ -1,7 +1,6 @@
 class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeController
     
     def buscar_pessoas
-      puts(" BUSCA ENTIDADE " + params[:entidade]);
       entidade = params[:entidade]
       query = params[:query].downcase
       puts params[:query].downcase
@@ -14,8 +13,6 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
 
     def buscar_produtos
 
-      puts(" BUSCA PRODUTOS " + params[:entidade]);
-
       entidade = params[:entidade]
       query = params[:query]
       puts params[:query].downcase
@@ -26,6 +23,7 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
         .order(:nome)
         .limit(30)
       render json: result
+
     end
 
   end

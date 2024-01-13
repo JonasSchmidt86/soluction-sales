@@ -13,35 +13,35 @@
 
                 <div class="d-flex"> 
 
-                  <div id= "venda" class="dataTable-input col-md-5 form-check form-switch">
+                  <div id= "venda" class="dataTable-input col-md-4 form-check form-switch">
                     <label id="lb_pag_rec" for= "tipo_conta" class="label-check d-inline-block form-check-label"><%= tipe_bill(params[:tipo_conta])%></label>
                       <%= form.check_box :tipo_conta, { checked: tipe_bill_true(params[:tipo_conta]),
                         class: "form-check-input", type:"checkbox" }, true, false %>
                   </div>
                   
-                  <div class="col-md-8">
+                  <div class="col-md-4">
                     <%= form.collection_select(:status_bill, @array, :to_s, :to_s,
                         {selected: params[:status_bill], prompt: false}, class: "form-control") %>
                   </div> 
 
-                  <div class="col-md-8">
+                  <div class="col-md-5">
                       <div class="">
                           <%= form.text_field :nrVenda, class:"dataTable-input", value:params[:nrVenda],placeholder:"Cod Venda", id:"numeric" %>
                       </div> 
                   </div>
-                  <div class="col-md-8">
+                  <div class="col-md-10">
                       <div class="">
                           <%= form.text_field :cliente, class:"dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
                       </div> 
                   </div>
 
-                  <div class="col-md-5">
+                  <div class="col-md-4">
                     <div class="">
                       <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")  )),
                           class: "dataTable-input datepicker", placeholder:"Data Inicial", id: "dtInicial" %>
                     </div> 
                   </div>
-                  <div class="col-md-5">
+                  <div class="col-md-4">
                     <div class="">
                       <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Time.current.end_of_month.strftime("%d/%m/%Y") )),
                           class: "dataTable-input datepicker", placeholder:"Data Final", id: "dtFinal" %>
@@ -52,83 +52,84 @@
               <% end %>
           </div>
           
-            <div class="dataTable-container">
+          <div class="dataTable-container">
 
-              <table id="datatablesSimple" class="dataTable-table ">
-                <thead>
-                  <tr>
-<%# String columns[] = {"Tipo", "Empresa", "Operador", "Descricao", "Nr Parcela", "Cliente", "Dt Pagto", "Valor"}; %>
-                    <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
-                    <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                    <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
-                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
-                    <th data-sortable="" style="width: 110px;">Valor Total</th>
-                    <th data-sortable="" style="width: 110px;">Valor Pago</th>
-                    <th data-sortable="" style="width: 105px;">Pagar?</th>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                    <% @bills.each do |bill| %>
+            <table id="datatablesSimple" class="dataTable-table ">
+              <thead>
+                <tr>
+                  <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
+                  <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                  <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+                  <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                  <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
+                  <th data-sortable="" style="width: 110px;">Valor Total</th>
+                  <th data-sortable="" style="width: 110px;">Valor Pago</th>
+                  <th data-sortable="" style="width: 85px;">Pagar?</th>
+                </tr>
+              </thead>
+              
+              <tbody>
+              <% @bills.each do |bill| %>
 
-                      <% if (!bill.ativo) %>
-                        <tr class="text-danger">
-                      <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
-                          <tr class="text-warning">
-                      <% else %>
-                          <tr class="">
+                <% if (!bill.ativo) %>
+                  <tr class="text-danger">
+                <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
+                    <tr class="text-warning">
+                <% else %>
+                    <tr class="">
+                <% end %> 
+
+                  <td><%= (bill.quitada_ext) %> </td>
+                  <td><%= bill.nmCollaborator %> </td>
+                  <td><%= bill.nmParcela %> </td>
+                  <td><%= bill.nmPessoa %> </td>
+                  <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
+                  <td><%= number_to_currency( bill.valorparcela, precision: 2)  %></td>
+                  <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
+                  <td>
+
+                    <div class="d-flex justify-content-start">
+                      <% if !bill.quitada || bill.lancamentos.size == 0 %>
+                        <% if bill.ativo %>
+                          <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
+                              { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
+                                :status_bill => params[:status_bill], 
+                                :nrVenda => params[:nrVenda], 
+                                :cliente => params[:cliente], 
+                                :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
+                                method: :put, 
+                                class:"btn btn-success btn-circle", 
+                                style:"width: 35px; height: 35px;",
+                                data: {confirm: "Deseja Liquidar a conta?"} do %>
+                          <i class="fa fa-check" ></i>
+                          <% end %>
+                        <% end %>
                       <% end %> 
 
-                      <td><%= (bill.quitada_ext) %> </td>
-                      <td><%= bill.nmCollaborator %> </td>
-                      <td><%= bill.nmParcela %> </td>
-                      <td><%= bill.nmPessoa %> </td>
-                      <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                      <td><%= number_to_currency( bill.valorparcela, precision: 2)  %></td>
-                      <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
-                      <td>
-                          <% if !bill.quitada || bill.lancamentos.size == 0 %>
-                            <% if bill.ativo %>
-                              <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                                  { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
-                                    :status_bill => params[:status_bill], 
-                                    :nrVenda => params[:nrVenda], 
-                                    :cliente => params[:cliente], 
-                                    :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                                    method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do %>
-                                  <i class="fa fa-check"></i>
-                              <% end %>
-                              
-  <%# ---------------------- %>
-                              <%# Pagar Pacial a conta  %>
-                              <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
-  <%# ---------------------- %>
-                              <% end %>
-  <%# ---------------------- %>
-                              <% if !bill.lancamentos.blank? %>
-                                <%# lancamentos da parcela %>
-                                <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                              <% end %>
-  <%# ---------------------- %>
-                          <% end %> 
-                        </td>
-                      </tr>
+                      <% unless bill.quitada  %>
+                        <% if (bill.ativo) %>
+                          <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+                        <% end %>
+                      <% end %>
 
-                    <% end %>
-
-                </tbody>
-              </table>
+                      <% if !bill.lancamentos.blank? %>
+                        <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+              </tbody>
+            </table>
           </div>
         <div class="dataTable-bottom">
           <div class="dataTable-info"><%= page_entries_info @bills, entry_name: 'conta' %></div>
-              <div class = "text-center">
-                <%= paginate @bills %>
-              </div>
-          </div>
+            <div class = "text-center">
+              <%= paginate @bills %>
         </div>
-        
+      </div>
     </div>
+  </div>
 </div>
 
 <script>

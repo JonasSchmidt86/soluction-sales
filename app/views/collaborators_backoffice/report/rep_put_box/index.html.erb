@@ -63,9 +63,9 @@
                     <th data-sortable="" style="width: 2%;"><a href="#" class="dataTable-sorter">Emp</a></th>
                     <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
                     <th data-sortable="" style="width: 18%;"><a href="#" class="dataTable-sorter">Historico</a></th>
-                    <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Parcela</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable=""  style="width: 11.5%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+                    <th data-sortable=""  style="width: 11.5%;"><a href="#" class="dataTable-sorter">Data Pagto</a></th>
                     <th data-sortable="" style="width: 110px;">Valor Total</th>
                     <th data-sortable="" style="width: 70px;">Excluir?</th>
                   </tr>
@@ -98,10 +98,15 @@
                         <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
                         <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
                          <td>
-                          <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
-                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
-                              <i class="fa fa-minus"></i>
+                         <%# somente pode excluir o lançamento se for do mesmo caixa que esta aberto %>
+                         <% if ((!lauch.caixa.nil? && !@caixa.nil? ) && (lauch.caixa.id === @caixa.id) ) %>
+                            <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
+                                        class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
+                                <i class="fa fa-minus"></i>
+                            <% end %>
                           <% end %>
+
+
                         </td>
                       </tr>
                     <% end %>

@@ -5,10 +5,15 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
     def index
         
         consulta = " ativo = true ";
+
+        unless params.present? && params.key?(:contem) && params.key?(:cod_empresa) && params.key?(:term) && params.key?(:cod_produto)
+            consulta += " and quantidade != 0 "
+        end
+
         if !params[:contem].blank?
-            if params[:contem] == '0'
-                consulta += " and quantidade is not null "
-            else 
+            if params[:contem] == '1'
+            #     consulta += " and quantidade is not null "
+            # else 
                 consulta += " and quantidade != 0 "
             end
         end
@@ -27,7 +32,6 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         end
 
         # puts "Consulta ======>>>>>  "+ consulta
-
         @empresa_produtos = Empresaproduto.where(consulta).page(params[:page])
 
     end

@@ -15,6 +15,8 @@ class Lancamentoscaixa < ApplicationRecord
     
     belongs_to :pessoa,      :class_name => 'Pessoa',               :foreign_key => 'cod_pessoa', inverse_of: :lancamentos, optional: :true
 
+    belongs_to :bancoconta,  :class_name => 'Bancoconta',           :foreign_key => 'cod_bancoconta', inverse_of: :lancamentos, optional: :true
+
     def nmPessoa 
         if self.pessoa.nil?
             if !self.contaspagrec.nil?
@@ -29,7 +31,11 @@ class Lancamentoscaixa < ApplicationRecord
 
     def nmParcela
         if self.contaspagrec.nil?
-            "LC"
+            unless self.bancoconta.nil?
+                self.bancoconta.bancos.nomebanco
+            else
+                "LC"
+            end
         else
             self.contaspagrec.nmParcela
         end
@@ -43,6 +49,6 @@ class Lancamentoscaixa < ApplicationRecord
         end
     end
 
-    paginates_per 15
+    paginates_per 30
 
 end

@@ -5,16 +5,12 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     # before_action :params_bill, only: [:update]
 
     def index
-
         @array =  ['Abertos', 'Liquidados', 'Todos']
-
         @bills = Contaspagrec.where(consulta_index, current_collaborator.empresa.cod_empresa)
-                    .order(dtvencimento: :asc, quitada: :asc, cod_contaspagrec: :desc ).includes(:lancamentos).page(params[:page])
-
+                    .order(dtvencimento: :asc, cod_contaspagrec: :desc ).includes(:lancamentos).page(params[:page])
     end
     
     def edit
-        puts "Dentro do EDIT  "
         redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "Conta já esta Baixada"
     end
 
@@ -22,20 +18,10 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     end
 
     def update
-
         if !@bill.nil?
             @bill.quitada = true
             partion((@bill.valorparcela - @bill.valorPago), nil)
-
-            # if @bill.save
-            #     redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "Conta Baixada com sucesso!"
-            # else
-            #     :index
-            #     # redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "Erro ao Baixada Conta!"
-            # end
         end 
-        puts "Dentro do UPDATE  "
-        
     end
 
 private 
@@ -45,14 +31,12 @@ private
         if !params[:nrVenda].blank?
             consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
         else
-            puts " - - - -- - - - - - - -- - - - ";
-            puts params[:tipo_conta]
-            puts " - - - -- - - - - - - -- - - - ";
 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
                 consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "
             else
                 consulta += "  cod_venda is not null and cod_frete is null "
+                consulta += "  and cod_venda not in (select cod_venda from venda where tipo = 'T' and cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + ") "
             end
             
             if !params[:dataInicial].blank? && !params[:dataFinal].blank?
@@ -72,7 +56,7 @@ private
             end
 
         end
-
+        puts consulta;
         return consulta += " and cod_empresa = ? ";
     end
 
@@ -84,7 +68,6 @@ private
     def set_bill 
         @bill = Contaspagrec.find(params[:id])
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa).limit(1)
-        # puts "bill _------------- >>>>>>>>>>  nm Pessoa: " +  @bill.nmPessoa.to_s
     end
 
     def partion(param_valor, historic)
