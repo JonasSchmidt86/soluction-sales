@@ -141,7 +141,16 @@
 </div>
 
 <script>
+// ---------------------------------
 
+            document.addEventListener("keypress", function () { 
+                console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                if(event.keyCode == 13){ // 13 é o Enter
+                    event.preventDefault();
+                }
+            });
+
+// ----------------------------------
     // keyPress Enter não faz o submit brands marcas
     var list = document.getElementById('brands');
     //console.log("List "+list)

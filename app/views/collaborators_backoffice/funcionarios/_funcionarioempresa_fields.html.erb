@@ -1,0 +1,33 @@
+
+  <tr class="nested-fields">
+    <td class="">
+      <% if f.object.cod_empresa == nil %>
+        <%= f.collection_select(:cod_empresa, Empresa.all, 
+                :cod_empresa, :nome, {:prompt => 'Selecione uma Empresa'},
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>
+      <% else %>
+        <% if f.object.ativo %>
+          <%= f.collection_select(:cod_empresa, Empresa.where(cod_empresa: f.object.cod_empresa), 
+                :cod_empresa, :nome, {:prompt => 'Selecione uma Empresa'},
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>
+        <% else %>
+          <%= f.collection_select(:cod_empresa, Empresa.where(cod_empresa: f.object.cod_empresa), 
+                :cod_empresa, :nome, {:prompt => 'Selecione uma Empresa'},
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark", style:"background-color: #FA625E;") %>
+        <% end %>
+      <% end %>
+    </td>
+    <td>
+        <%= f.check_box :ativo, checked: f.object.ativo? ? true : false, class: "", type: "checkbox" %>
+    </td>
+    <td class="align-middle fw-semibold">
+        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs' do %>
+                
+            <i class="fa fa-trash-can"></i>
+        <% end %>
+        
+    </td>
+    <%# f.hidden_field :cod_funcionario %>
+    <%# f.hidden_field :cod_funcionarioempresa %>
+</tr>
+

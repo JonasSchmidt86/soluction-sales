@@ -117,7 +117,7 @@
                                                 <%# form.fields_for :itensvenda do |item| %>
                                                 <% @sale.itensvenda.each do |item| %>
 
-                                                    <% if (!@sale.cancelada) %>
+                                                    <% if (@sale.cancelada) %>
                                                         <tr class="nested-fields text-danger">
                                                     <% else %>
                                                         <tr class="nested-fields">

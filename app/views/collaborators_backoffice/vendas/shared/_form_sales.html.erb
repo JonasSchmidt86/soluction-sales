@@ -193,7 +193,16 @@
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
+// ---------------------------------
 
+            document.addEventListener("keypress", function () { 
+                console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                if(event.keyCode == 13){ // 13 é o Enter
+                    event.preventDefault();
+                }
+            });
+
+// ----------------------------------
 // -----------------------------------------------------------------
 // ------------ para baixo da tabela contas  -----------------------
 // -----------------------------------------------------------------

@@ -111,19 +111,20 @@
                                 <table id="tblContas" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                     <thead>
                                         <tr>
-                                            <th>Empresa</th>
+                                            <th >Empresa</th>
+                                            <th style="width: 50px;" >Ativo</th>
+                                            <th style="width: 50px;" ></th>
                                         </tr>
                                     </thead>
-                                    <tbody id = 'funcionariosempresa_field' class = "empresas">
-                                        <%= fun.fields_for :funcionariosempresa do |emp| %>
-                                            <%= render partial: "collaborators_backoffice/funcionarios/funcionariosempresa_fields", 
-                                                    locals: { f: emp } %> 
+                                    <tbody id = 'funcionarioempresas_field' class = "empresas">
+                                        <%= fun.fields_for :funcionarioempresas do |emp| %>
+                                            <%= render partial: "funcionarioempresa_fields", locals: { f: emp } %> 
                                         <% end %>
                                     </tbody>
                                 </table>    
 
                                 <div class="form-actions">
-                                    <%= link_to_add_association 'Adiciona Empresa', fun, :funcionariosempresa,
+                                    <%= link_to_add_association 'Adiciona Empresa', fun, :funcionarioempresas,
                                             force_non_association_create: true,
                                              class: 'btn btn-primary',
                                              data: { association_insertion_node: '.empresas', 
@@ -150,3 +151,16 @@
     </main>
 
 </div>
+
+<script>
+// ---------------------------------
+
+            document.addEventListener("keypress", function () { 
+                console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                if(event.keyCode == 13){ // 13 é o Enter
+                    event.preventDefault();
+                }
+            });
+
+// ----------------------------------
+</script>

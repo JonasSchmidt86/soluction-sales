@@ -33,3 +33,10 @@
 /config/database.yml
 ajudas.txt
 Gemfile.lock.bkp
+
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity

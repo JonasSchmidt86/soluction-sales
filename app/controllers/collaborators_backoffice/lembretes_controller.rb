@@ -5,7 +5,7 @@ class CollaboratorsBackoffice::LembretesController < CollaboratorsBackofficeCont
 
     def index
         if !params[:term].blank?
-            @lembretes = Lembrete.where(" upper(descricao) like ? ", "#{params[:term].upcase}%" )
+            @lembretes = Lembrete.where(" upper(descricao) ilike ? ", "#{params[:term].upcase}%" )
                                  .order(:datacadastro).page(params[:page])
         else
             @lembretes = Lembrete.where(ativo: true).order(:datacadastro).page(params[:page])
@@ -13,6 +13,12 @@ class CollaboratorsBackoffice::LembretesController < CollaboratorsBackofficeCont
     end
 
     def update
+        if @lembrete.update!(params_lembrete)
+            redirect_to collaborators_backoffice_lembretes_path, notice: "Lembrete atualizado com sucesso!"
+        else 
+            render :edit
+        end
+            
     end
 
     def edit
