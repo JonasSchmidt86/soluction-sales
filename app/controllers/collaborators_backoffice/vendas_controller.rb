@@ -34,14 +34,18 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       @sale.cancelada = false
       @sale.datanf = nil
 
-      # puts @sale.itensvenda.size
+      # Crie uma nova coleção contendo apenas os itens desejados
+      itens_a_manter = @sale.itensvenda.reject { |item_venda| item_venda.cod_produto.nil? }
 
-      @sale.contas.each do |conta|
-        conta.cod_empresa = @sale.cod_empresa;
-        conta.ativo = true;
-        conta.quitada = false;
-        conta.cod_tppagamento = 1; # 1 é parcela de venda
-      end
+      # Atribua a nova coleção à associação
+      @sale.itensvenda = itens_a_manter
+
+      # @sale.contas.each do |conta|
+      #   conta.cod_empresa = @sale.cod_empresa;
+      #   conta.ativo = true;
+      #   conta.quitada = false;
+      #   conta.cod_tppagamento = 1; # 1 é parcela de venda
+      # end
 
       if @sale.save
           redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
@@ -60,6 +64,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
       @sale.contas.each do |conta|
         if !conta.lancamentos.blank?
+          # ver como vai cancelar a venda o que fazer com os lançamentos
           redirect_to collaborators_backoffice_report_sales_path, notice: "Venda possui lançamentos de caixa!"
           return
         end
@@ -86,7 +91,8 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         :tipo, :cod_empresa, :cancelada, :datanf, :datavenda, :numeronf, :valortotal, :cod_frete, :cod_funcionario, 
         :cod_empresa_transferida, :cod_vendaempresa, :acrescimo, :desconto, :aceita, :cod_pessoa,
         itensvenda_attributes: [:cod_produto, :quantidade, :valorunitario, :cod_cor, :cod_empresa, :_destroy],
-        contas_attributes: [ :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, :_destroy] )
+        contas_attributes: [ :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, :_destroy, :cod_empresa, 
+                                :ativo, :quitada, :cod_tppagamento] )
   
       end
   end

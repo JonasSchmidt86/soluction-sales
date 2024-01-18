@@ -12,19 +12,19 @@
                                     class:"dataTable-search col-md-3") do |form| %>
 
                 <div class="d-flex">
-                  <div class="col-md-8">
+                  <div class="col-md-12">
                       <div class="mb-2">
-                          <%= form.text_field :cliente, class:"dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
+                          <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
                       </div> 
                   </div>
 
-                  <div class="col-md-5">
+                  <div class="col-md-4">
                     <div class="mb-2 ">
                       <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
                           class: "dataTable-input datepicker fallback", placeholder:"Data Inicial" %>
                     </div> 
                   </div>
-                  <div class="col-md-5">
+                  <div class="col-md-4">
                     <div class="mb-2 ">
                       <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
                           class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>

@@ -17,6 +17,8 @@ class Lancamentoscaixa < ApplicationRecord
 
     belongs_to :bancoconta,  :class_name => 'Bancoconta',           :foreign_key => 'cod_bancoconta', inverse_of: :lancamentos, optional: :true
 
+    validates :valor,numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" }
+
     def nmPessoa 
         if self.pessoa.nil?
             if !self.contaspagrec.nil?

@@ -71,7 +71,6 @@ private
     end
 
     def partion(param_valor, historic)
-        
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
         
         if @caixa.nil?

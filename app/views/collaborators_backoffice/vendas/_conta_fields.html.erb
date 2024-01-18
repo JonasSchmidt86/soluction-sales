@@ -8,6 +8,13 @@
     <td class="">
         <%= f.text_field :valorparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
     </td>
+        
+        <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
+
+        <%= f.hidden_field :ativo,  value: params[:ativo] || true%>
+        <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
+        <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 1 %>c
+
     <%# <td class="align-middle fw-semibold"> %>
         <%# link_to_remove_association f, class: 'btn btn-primary btn-xs', data: { confirm: 'Tem certeza?' }, title: 'Remover' do %>
         <%# <i class="fa fa-trash-can"></i> %>

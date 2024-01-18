@@ -94,8 +94,8 @@
                                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                                 </a>
                                 <div class="collapse" id="collapseCads" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
-
+                                    
+                                    <nav class="sb-sidenav-menu-nested nav nav-dinamica">
                                         <li>
                                             <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
                                                 <i class="fa fa-dashboard fa-fw"></i> Dashboard
@@ -112,8 +112,8 @@
                                                 <i class="fa fa-users fa-fw"></i> Colaboradores
                                             <% end %>
                                         </li>
-
                                     </nav>
+
                                 </div>
                                 <!-- Navbar principal -->
                                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
@@ -128,7 +128,7 @@
 
                                 <!-- Conteúdo colapsável -->
                                 <div class="collapse" id="collapseOts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
+                                    <nav class="sb-sidenav-menu-nested nav nav-dinamica">
                                         <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
                                             Vendas
                                         <% end %>
@@ -163,7 +163,7 @@
                                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                                 </a>
                                 <div class="collapse" id="collapseRels" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
+                                    <nav class="sb-sidenav-menu-nested nav nav-dinamica">
                                         <a>
                                             <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
                                                 Relatório de Vendas
@@ -190,10 +190,10 @@
 
                 </nav>
             </div>
-
+<%# ver uma forma de atualizar sempre apenas essa div para não precisar recarregar toda a pagina %>
             <div id="layoutSidenav_content">
                 <main>
-                    <div class="container-fluid px-4">
+                    <div id="conteudo-dinamico" class="container-fluid px-4">
                         <%= yield %>
                     </div>
                 </main>
@@ -209,16 +209,13 @@
 
         <%= javascript_include_tag 'application'%>
         <%= javascript_include_tag 'collaborators_backoffice' %>
-        <%= javascript_tag do %>
-            $(function() {
-            $('.datepicker').datepicker();
-            });
-        <% end %>
-
-
-
 
         <script>
+    
+            $(document).ready(function () {
+                $('.datepicker').datepicker();
+            });
+
             function alertModal(mensagem) {
                 var modal = document.getElementById('customModal');
                 var alertMessage = document.getElementById('alertMessage');
@@ -261,7 +258,6 @@
                 // Quando o usuário digita no campo de texto
                 $('.text').on('input', function() {
                     $(this).val($(this).val().toUpperCase());
-                    console.log("TEXT");
                 });
             });
 

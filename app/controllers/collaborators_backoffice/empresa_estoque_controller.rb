@@ -23,14 +23,11 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         end
 
         if !params[:term].blank?
-            consulta += " and cod_produto in (select cod_produto 
-                                                from produto where upper(nome) like upper('"+ params[:term] +"%')) "
+            consulta += " and cod_produto in (select cod_produto from produto where 
+            cod_produto::varchar = REPLACE(TRIM('"+ params[:term] +"%'), \'%\', \'\') OR nome ILIKE '"+ params[:term] +"%')";
+            # consulta += " and cod_produto in (select cod_produto 
+            #                                     from produto where upper(nome) ilike upper('"+ params[:term] +"%')) "
         end
-
-        if !params[:cod_produto].blank?
-            consulta += " and cod_produto = "+ params[:cod_produto] +" ";
-        end
-
         # puts "Consulta ======>>>>>  "+ consulta
         @empresa_produtos = Empresaproduto.where(consulta).page(params[:page])
 

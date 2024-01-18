@@ -26,7 +26,7 @@ class Funcionario < ApplicationRecord
 
     accepts_nested_attributes_for :collaborator, reject_if: :all_blank, allow_destroy: true #cocoon gem
     
-    has_many :funcionarioempresas, foreign_key: 'cod_funcionario', inverse_of: :funcionario
+    has_many :funcionarioempresas, foreign_key: 'cod_funcionario', inverse_of: :funcionario, autosave: true
     has_many :empresas, through: :funcionarioempresas
     
     accepts_nested_attributes_for :funcionarioempresas, reject_if: :all_blank, allow_destroy: true #cocoon gem

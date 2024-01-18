@@ -14,7 +14,6 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
     end
 
     def create
-        # Parameters: {"utf8"=>"✓", "status_bill"=>"Abertos", "nrVenda"=>"13191", "cliente"=>"", "dataInicial"=>"01/03/2023", "dataFinal"=>"31/03/2023"}
         the_params = params[:lancamentoscaixa]
         @launch = Lancamentoscaixa.new
 
@@ -31,7 +30,16 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
             @launch = Lancamentoscaixa.new;
             @launch.datapagto = DateTime.now;
             @launch.funcionario = current_collaborator.funcionario;
-            @launch.valor = params[:lancamentoscaixa][:valor]; # verificar como fazer
+
+            valor_com_ponto_e_virgula = params[:lancamentoscaixa][:valor]
+
+            # Substituir vírgula por ponto e remover ponto de milhar
+            valor_com_ponto = valor_com_ponto_e_virgula.gsub(".", "").sub(",", ".")
+
+            # Convertendo para float
+            valor_float = valor_com_ponto.to_f
+            @launch.valor = valor_float
+
             @launch.empresa = Empresa.find(current_collaborator.cod_empresa);
             @launch.cancelada = false;
 
@@ -64,23 +72,25 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                 { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
                 :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
                 
-                }  ), notice: "Conta Baixada com sucesso!"
+                }  ), notice: "Parcial de conta baixada."
             else
-                redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
-                { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
-                :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
-                }  ), notice: "ERRO AO SALVAR CONTA!"
+                messsage = "Erro ao salvar a conta!"
+
+                if @launch.errors[:valor]
+                    message = @launch.errors[:valor].first.to_s.gsub(/[\[\]]/, '');
+                end
+                    redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
+                    { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
+                    :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
+                    }  ), notice: message;
             end
         end
-        
-        # redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "CREATE"
     end
 
     def destroy
     end
 
     def update
-        puts "UPDATE"
         redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "UPDATE"
     end
 

@@ -12,7 +12,7 @@
                 <div class="form-floating">
                   <%= form_with(url: collaborators_backoffice_funcionarios_path, local: true, method: :get, 
                                       class:"dataTable-search") do |form| %>
-                    <%= form.text_field :term, value: params[:term], class:"search dataTable-input", placeholder:"Colaborador...", id:"text" %>
+                    <%= form.text_field :term, value: params[:term], class:"text search dataTable-input", placeholder:"Colaborador...", id:"text" %>
                 </div>
               </div>
               <div class="col-md">

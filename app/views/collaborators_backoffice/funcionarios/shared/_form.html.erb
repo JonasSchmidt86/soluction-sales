@@ -24,15 +24,22 @@
                         <div class="card-body">
                         
                             <%= form_with(model: [ :collaborators_backoffice, @funcionario ], local: true) do |fun| %>
+                            
+                                <div class="col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <%= fun.text_field :pessoa_nome, id:"pessoa_search", class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                        <%= fun.label :pessoa, class:"" %>
+                                        <div id="results_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
+                                        <%= fun.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <%= fun.text_field :usuario, class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                        <%= fun.label :usuario, class:"" %>
+                                    </div>
+                                </div>
 
-                                <div class="form-floating mb-3 ">
-                                    <%= fun.collection_select(:cod_pessoa, Pessoa.all.order(:nome), 
-                                            :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
-                                                class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
-
-                                    <%= fun.label :pessoa, class:"" %>
-                                </div>  
-                                
                                 <%# model para localizar pessoa para adicionar ao funcionario  %>
 
 
@@ -152,6 +159,7 @@
 
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
 // ---------------------------------
 
@@ -163,4 +171,82 @@
             });
 
 // ----------------------------------
+    const isLocalhost = () => {
+        return (
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1'
+        );
+    };
+
+    let url = "";
+
+    if (isLocalhost()) {
+        url = 'http://localhost:3000/collaborators_backoffice/';
+    } else {
+        url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
+    }
+// ----------------------------------
+    $(document).ready(function() {
+        var categorySearch = $('#pessoa_search'); // 
+        var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
+        var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
+        
+        let apiUrl = url+ "buscas/buscar_pessoas";
+
+        // Adiciona um evento de keypress para a tecla Enter
+        categorySearch.on('keydown', function(event) {
+           // console.log(event.key);
+            if (event.key === 'Enter') {
+                filterOptions();
+            } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+                // Código 27 corresponde à tecla "ESC"
+                categorySearch.val(''); // Limpa o campo de busca
+                resultsList.empty();
+                resultsList.hide();
+                selectedPersonIdField.val("");
+            }
+        });
+        
+        // Adiciona um evento de clique aos itens da lista
+        resultsList.on('click', 'div.list-group-item', function() {
+            var selectedPerson = $(this).text();
+            var selectedPersonId = $(this).data('cod_pessoa');
+
+            // Preenche o campo escondido com o ID da pessoa selecionada
+            selectedPersonIdField.val(selectedPersonId);
+
+            // Atualiza o campo de busca com o nome da pessoa selecionada
+            categorySearch.val(selectedPerson);
+
+            // Limpa a lista de resultados
+            resultsList.empty();
+            resultsList.hide();
+        });
+
+        function filterOptions() {
+            var query = categorySearch.val().trim().toLowerCase();
+            resultsList.empty();
+
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                data: { entidade: 'Pessoa', query: query },
+                success: function(data) {
+                    data.forEach(function(person) {
+                        var listItem = $('<div>').text(person.nome);
+                        listItem.addClass('list-group-item');
+                        listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                        resultsList.append(listItem);
+                    });
+
+                    // Exibe a lista de resultados
+                    resultsList.show();
+                },
+                error: function(err) {
+                    console.error('Erro na requisição AJAX:', err);
+                }
+            });
+        }
+    });
+
 </script>
