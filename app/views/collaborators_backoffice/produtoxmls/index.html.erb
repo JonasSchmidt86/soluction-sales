@@ -1,0 +1,22 @@
+<!-- app/views/nfe_documents/index.html.erb -->
+
+<h1>Documentos NFe</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Dados do XML</th>
+      <%= link_to '', collaborators_backoffice_produtoxmls_new_path, class:'btn btn-close btn-block'  %>
+      
+    </tr>
+  </thead>
+  <tbody>
+    <% @nfe_documents.each do |document| %>
+      <tr>
+        <td><%= document.cod_produto %></td>
+        <td><%= document.nome %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

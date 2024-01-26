@@ -1,0 +1,2 @@
+module CollaboratorsBackoffice::XmlFilesHelper
+end

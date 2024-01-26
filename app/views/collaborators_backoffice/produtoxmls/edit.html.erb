@@ -1,0 +1,11 @@
+<h1>CollaboratorsBackoffice::Produtoxmls#edit</h1>
+<p>Find me in app/views/collaborators_backoffice/produtoxmls/edit.html.erb</p>
+
+<%= @xml_nfe %>
+<br>
+<% @xml_prod.each do |obj| %>
+  <p>Nome: <%= obj[:nome] %>, Id: <%= obj[:id] %>, Valor: <%= obj[:valor] %></p>
+<% end %>
+
+<br>
+<%= @xml_dup %>

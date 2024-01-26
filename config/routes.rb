@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
 
   namespace :collaborators_backoffice do
+    get 'produtoxmls/index'
+    get 'produtoxmls/edit'
+    get 'produtoxmls/new'
+  end
+  namespace :collaborators_backoffice do
     get 'sales/index'
   end
   devise_for :collaborators, skip: [:registrations]
@@ -29,7 +34,14 @@ Rails.application.routes.draw do
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
+    resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
+    resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
+      post 'import/:id', on: :member, to: 'xml_files#import', as: :import
+    end
 
+    resources :notas_fiscais, only: :index
+    root to: 'notas_fiscais#index'
+    
     # rotas do javascript - ajax
     post 'vendas/consulta_estoque', to: 'vendas#consulta_estoque'
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'

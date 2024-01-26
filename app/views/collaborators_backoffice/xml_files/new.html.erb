@@ -1,0 +1,13 @@
+<h1>Enviar Novo Arquivo XML</h1>
+
+
+<%# form_for(collaborators_backoffice_xml_files_path, html: { multipart: true }) do |form| %>
+<%= form_with(model: [ :collaborators_backoffice, @xml_file ], html: { multipart: true }) do |form| %>
+
+  <%= form.file_field :file %>
+  <%= form.submit 'Enviar' %>
+
+<% end %>
+
+
+<%= link_to 'Voltar para a lista', collaborators_backoffice_xml_files_path %>

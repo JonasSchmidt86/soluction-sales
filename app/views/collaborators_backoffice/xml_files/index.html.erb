@@ -1,0 +1,115 @@
+
+<div class="card mt-4">
+
+    <%= link_to collaborators_backoffice_xml_files_path, class:"card-header bg-primary" do %>
+        <h4 >XML Importados</h4>
+    <% end %>
+    
+    <div class="card-body">
+        <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
+              <%= form_with(url: collaborators_backoffice_xml_files_path, local: true, method: :get, 
+                                    class:"col dataTable-search col-md-6") do |form| %>
+                <div class="d-flex">
+                  <div class="col-md-10">
+                      <div class="mb-2">
+                          <%= form.text_field :term, class:"dataTable-input text", value:params[:term],placeholder:"Fornecedor...", id:"text" %>
+                      </div> 
+                  </div>
+
+                  <div class="col-md-3">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <div class="mb-2 ">
+                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
+                    </div>
+                  </div>
+
+                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+
+                </div>
+                
+              <% end %>
+
+            <div class="">
+
+              <table id="datatablesSimple" class="dataTable-table">
+                <thead>
+                  <tr>
+                    <th data-sortable=""  style="width: 30%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+                    <th data-sortable="" style=""><a href="#" class="dataTable-sorter">Arquivo</a></th>
+
+                    <th data-sortable="" style="width: 45px"></th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                    <% @xml_files.each do |xml_file| %>
+                        <tr class="">
+                            <td> <%= xml_file.name %> </td>
+                            <td> <%= xml_file.file.filename %> </td>
+
+                            <td>
+                                <div class="dropdown" >
+                                    <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                    </button>
+
+                                    <ul class="dropdown-menu" style="width: 50px;">                                
+                                    <li>
+                                        <% if xml_file.file.attached? %>
+                                            <%= link_to rails_blob_path(xml_file.file, disposition: 'attachment'), 
+                                                    class:"dropdown-item btn btn-info btn-circle" do %>
+                                        
+                                                <i class="fa fa-info", style="width: 35px;"></i>Download
+                                            <% end %>
+                                        <% end %>
+                                    </li>
+                                    <li>
+                                        <%= link_to import_collaborators_backoffice_xml_file_path(xml_file), method: :post, 
+                                                class:"dropdown-item btn btn-info btn-circle" do %>
+                                        <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Importar
+                                        <% end %>
+                                    </li>
+                                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                        <li>
+                                        <%= link_to collaborators_backoffice_xml_file_path(xml_file), method: :delete, 
+                                                class: "dropdown-item btn btn-danger btn-circle", 
+                                                data: { confirm: "Deseja remover o arquivo?" } do %>
+                                            <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
+                                        <% end %> 
+                                        </li>
+                                    <% end %>
+                                    </ul>
+
+                                </div>
+                            </td>
+                        </tr>
+                    <% end %>
+
+
+                </tbody>
+              </table>
+                <%= form_with(model: [ :collaborators_backoffice, XmlFile.new ], local: true, method: :post, 
+                                    class:"col dataTable-search col-md-6") do |form| %>
+
+                    <%= form.file_field :file, class:"btn btn-success btn-circle" %>
+                    <%= form.submit 'Enviar', class:"btn btn-success btn-circle" %>
+
+                <% end %>
+          </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @xml_files, entry_name: 'arquivos' %></div>
+              <div class = "text-center">
+                <%= paginate @xml_files %>
+              </div>
+          </div>
+        </div>
+    </div>
+</div>

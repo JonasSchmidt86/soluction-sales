@@ -5,6 +5,14 @@ ruby '3.0.4'
 
 gem 'webpacker'
 
+#xml nfe ------
+gem 'nokogiri'
+gem 'nfe-io'
+# --------------
+# -- upload ----
+# gem 'carrierwave'
+# --------------
+
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1', '>= 6.1.7.3'
 

@@ -18,7 +18,7 @@ class Venda < ApplicationRecord
 
     validates :itensvenda, :contas, :funcionario, :empresa, :contas, presence: true
 
-    paginates_per 20
+    paginates_per 30
 
     def venda_nfe
         if self.cancelada

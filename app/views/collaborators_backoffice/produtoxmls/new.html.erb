@@ -1,0 +1,7 @@
+
+<h1>Importar XML</h1>
+
+<%= form_with(url: collaborators_backoffice_produtoxmls_path, method: :post, local: true, multipart: true) do |form| %>
+  <%= form.file_field :file %>
+  <%= form.submit 'Importar' %>
+<% end %>
