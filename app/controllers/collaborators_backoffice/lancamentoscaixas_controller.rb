@@ -65,7 +65,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
             puts the_params[:cod_bancoconta]
             puts "---------------------------"
             
-            if the_params[:cod_bancoconta]
+            if the_params[:cod_bancoconta].present? && the_params[:cod_bancoconta].to_i > 0
                 @launch.cod_bancoconta = the_params[:cod_bancoconta].to_i
             else
                 @launch.caixa = @caixa
