@@ -30,8 +30,7 @@ private
         consulta = "";      
         if !params[:nrVenda].blank?
             consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
-        else
-
+        else 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
                 consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "
             else
@@ -56,8 +55,8 @@ private
             end
 
         end
-        puts consulta;
-        return consulta += " and cod_empresa = ? ";
+        # puts consulta;
+        return consulta += " and cod_empresa = ? and ativo = true ";
     end
 
     def params_bill
@@ -77,12 +76,20 @@ private
             flash[:alert] = "Caixa não esta aberto!"
             :index
         else
+
             @launch = Lancamentoscaixa.new
             @launch.datapagto = DateTime.now
             @launch.funcionario = current_collaborator.funcionario
             @launch.valor = param_valor # verificar como fazer
             @launch.empresa = Empresa.find(current_collaborator.cod_empresa)
             @launch.cancelada = false
+            @launch.cod_bancoconta = params[:cod_bancoconta]
+            puts "--------------------------"
+            puts params[:cod_bancoconta]
+            puts "--------------------------"
+            unless params[:cod_bancoconta]
+                @launch.caixa = @caixa    
+            end
 
             # se for venda entrada e se for compra ou frete saida
             if !@bill.venda.nil?
@@ -97,7 +104,6 @@ private
             end
             @launch.contaspagrec = @bill
 
-            @launch.caixa = @caixa
 
             @launch.dataabertura = @caixa.dataabertura
             

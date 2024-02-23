@@ -1,0 +1,75 @@
+<div class= "card-body">
+  <main>
+    <div class="row justify-content-center">
+      <div class="">
+        <div class="card mt-2">
+          <%= link_to collaborators_backoffice_xml_files_path, class:"card-header bg-primary" do %>
+            <h4 >XML</h4>
+          <% end %>
+        </div>
+        <div>
+          <div>
+            <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
+              <div class="">
+                <%= form_tag collaborators_backoffice_produtoxmls_path, method: :post do %>
+
+                    <table id="datatablesSimple" class="dataTable-table">
+                      <thead>
+                        <tr>
+                          <th data-sortable="" style="width: 9%;"><a class="dataTable-sorter">Cod Emissor</a></th>
+                          <th data-sortable="" style="width: 25%;"><a class="dataTable-sorter">Nome</a></th>
+                          <th data-sortable="" style=""><a class="dataTable-sorter">Ind Adicionais</a></th>
+
+                          <th data-sortable="" style="width: 7%;"><a class="dataTable-sorter">Cod</a></th>
+                          <th data-sortable="" style="width: 25%;"><a class="dataTable-sorter">Nome Sis</a></th>
+                          <th data-sortable="" style="width: 5%;"><a class="dataTable-sorter">cod Cor</a></th>
+                          <th data-sortable="" style="width: 15%;"><a class="dataTable-sorter">Cor</a></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      <% @produtos_xml.each do |produto| %>
+                        <tr>
+                          <td class="align-middle"><%= produto.codproemissor %></td>
+                          <td class="align-middle"><%= (produto.nome).truncate( 35 ) %></td>
+                          <td class="align-middle"><%= (produto.infadicionais).truncate( 35 ) if produto.infadicionais %></td>
+                          
+                
+                          <td class="align-middle"><%= text_field_tag "produtos[#{produto.id}][cod_produto]", produto.cod_produto, class: "form-control", placeholder: "CodProduto" %></td>
+                          <% if produto.cod_produto %>
+                            <td class="align-middle"><%= text_field_tag "produtos[#{produto.id}][nome]", produto.produto.nome, class: "form-control", placeholder: "Produto", disabled: true %></td>
+                          <% else %>  
+                            <td class="align-middle"><%= text_field_tag "produtos[#{produto.id}][nome]", (produto.cod_produto.nil? ? produto.nome : produto.produto.nome) , class: "form-control", placeholder: "Produto" %></td>
+                          <% end %>
+                          <td class="align-middle">
+                          <%# text_field_tag "produtos[#{produto.id}][cod_cor]", (produto.cod_cor.nil? ? 1 : produto.cod_cor), class: "form-control", placeholder: "CodCor" %>
+                          <%= select_tag "produtos[#{produto.id}][cod_cor]", options_for_select(Core.pluck(:nmcor, :cod_cor), selected: (produto.cod_cor.nil? ? 1 : produto.cod_cor)), class: "form-control", prompt: "Selecione uma cor" %>
+
+                          </td>
+                          <td class="align-middle"><%= text_field_tag "produtos[#{produto.id}][nmcor]", Core.select(:nmcor).find_by(cod_cor: (produto.cod_cor.nil? ? 1 : produto.cod_cor)).nmcor, class: "form-control", placeholder: "Cor", disabled: true %></td></td>
+
+                          <%= hidden_field_tag "produtos[#{produto.id}][produto_xml]", produto.to_json %>
+
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                  <%= submit_tag "Salvar" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// remove a ação padrao do enter que é salvar
+document.addEventListener("keypress", function () { 
+      console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+      if(event.keyCode == 13){ // 13 é o Enter
+          event.preventDefault();
+      }
+  });
+</script>

@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
 
-  namespace :collaborators_backoffice do
-    get 'produtoxmls/index'
-    get 'produtoxmls/edit'
-    get 'produtoxmls/new'
-  end
+  # namespace :collaborators_backoffice do
+  #   get 'produtoxmls/index'
+  #   get 'produtoxmls/edit'
+  #   get 'produtoxmls/new'
+  # end
   namespace :collaborators_backoffice do
     get 'sales/index'
   end
@@ -48,10 +48,7 @@ Rails.application.routes.draw do
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
 
     get 'report_sales', to: 'report/rep_sales#index'
-    get 'report_sales/index:id', to: 'report/rep_sales#index', as: 'report_sales_historic'
-    
-    # get 'report_sales_client', to: 'report/rep_sales#hist_client'
-    get 'report_sales/hist_client:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'
+    get 'report/report_sales/hist_client/:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'
 
     get 'report_put_box', to: 'report/rep_put_box#index', as: 'report_put_box_index'
     delete '/report_put_box/:id', to: 'report/rep_put_box#destroy', as: 'report_put_box_destroy'

@@ -61,9 +61,16 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
             @launch.contaspagrec = @bill
 
-            @launch.caixa = @caixa
-
-            @launch.dataabertura = @caixa.dataabertura
+            puts "---------------------------"
+            puts the_params[:cod_bancoconta]
+            puts "---------------------------"
+            
+            if the_params[:cod_bancoconta]
+                @launch.cod_bancoconta = the_params[:cod_bancoconta].to_i
+            else
+                @launch.caixa = @caixa
+                @launch.dataabertura = @caixa.dataabertura
+            end
             
             @launch.datamodificacao = DateTime.now
 
@@ -74,15 +81,19 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                 
                 }  ), notice: "Parcial de conta baixada."
             else
-                messsage = "Erro ao salvar a conta!"
+                messsage = ""
 
                 if @launch.errors[:valor]
-                    message = @launch.errors[:valor].first.to_s.gsub(/[\[\]]/, '');
+                    message =+ @launch.errors[:valor].first.to_s.gsub(/[\[\]]/, '');
+                else 
+                    if @launch.errors
+                        message = @launch.errors
+                    end
                 end
                     redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                     { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
                     :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
-                    }  ), notice: message;
+                    }  ), notice: "Erro ao salvar a conta!" + message;
             end
         end
     end
@@ -97,7 +108,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
     private 
 
     def params_launchs
-        params.require(:lancamentoscaixa).permit(:valor, :dataabertura, :quitada, contaspagrec_attributes:[:contaspagrec] )
+        params.require(:lancamentoscaixa).permit(:valor, :dataabertura, :quitada, :cod_tphitorico, :cod_bancoconta, contaspagrec_attributes:[:contaspagrec] )
     end
 
     def set_lembrete

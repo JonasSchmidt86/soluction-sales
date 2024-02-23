@@ -138,7 +138,7 @@
                                             
                                         <% end %>
 
-                                        <%= link_to collaborators_backoffice_produtoxmls_index_path, class: "nav-link" do %>
+                                        <%= link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do %>
                                             Importar
                                         <% end %>
 
@@ -202,12 +202,15 @@
 <%# ver uma forma de atualizar sempre apenas essa div para não precisar recarregar toda a pagina %>
             <div id="layoutSidenav_content">
                 <main>
-                    <div id="conteudo-dinamico" class="container-fluid px-4">
+                    <div id="conteudo-dinamico" class="position-relative container-fluid px-4">
                         <%= yield %>
+                        
+                        <button type="button" class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-4 p-3">
+                            <i class="fa fa-check fa-2x"></i>
+                        </button>
                     </div>
                 </main>
             </div>
-
         
         </div>
 

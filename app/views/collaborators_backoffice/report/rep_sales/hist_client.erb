@@ -2,7 +2,7 @@
 <div class="card mt-4 ">
 
     <%= link_to collaborators_backoffice_report_sales_path, class:"card-header" do %>
-        <h4>Relatorio Vendas</h4>
+        <h4>Histórico de vendas cliente</h4>
     <% end %>
     
     <div class="card-body">
@@ -51,7 +51,7 @@
                     <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
                     <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NFe</a></th>
+                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
                     <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
                     <th data-sortable="" style="width: 150px;">Valor Total</th>
                     <th data-sortable="" style="">Info</th>
@@ -116,22 +116,6 @@
                                       <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
                                       <td>
                                       
-                                        <%# <% if !bill.quitada || bill.lancamentos.size == 0 % >
-
-                                          <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                                              { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
-                                                :status_bill => params[:status_bill], 
-                                                :nrVenda => params[:nrVenda], 
-                                                :cliente => params[:cliente], 
-                                                :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                                                method: :put, class:"btn btn-success btn-circle", data: {confirm: "Deseja Liquidar a conta?"} do % >
-                                              <i class="fa fa-check"></i>
-                                          <% end %>
-                                          <%# Pagar Pacial a conta  % >
-                                          <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } % >
-
-                                        <% end % > %>
-
                                         <% if !bill.lancamentos.blank? %>
                                           <%# lancamentos da parcela %>
                                           <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>

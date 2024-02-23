@@ -35,7 +35,7 @@
 
                                 <div class="col-md-1">
                                     <div class="d-grid gap-2 d-md-block">
-                                        <%= link_to collaborators_backoffice_report_sales_historic_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle btn-outline-dark" do %>
+                                        <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle btn-outline-dark" do %>
                                             <i class="fa fa-info"></i>
                                         <% end %>
                                     </div>
@@ -320,7 +320,7 @@ function createBills() {
         var categorySearch = $('#pessoa_search'); // 
         var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
         var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
-        
+        console.log($(this).data('cod_pessoa'))
         let apiUrl = url+ "buscas/buscar_pessoas";
 
         // console.log(apiUrl);

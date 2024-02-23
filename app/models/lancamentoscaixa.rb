@@ -3,7 +3,7 @@ class Lancamentoscaixa < ApplicationRecord
     self.table_name = "lancamentoscaixa"
     self.primary_key = "cod_lancamentocaixa"
 
-    belongs_to :caixa,       :class_name => 'Caixa',                :foreign_key => 'caixa_id', inverse_of: :lancamentoscaixa
+    belongs_to :caixa,       :class_name => 'Caixa',                :foreign_key => 'caixa_id', inverse_of: :lancamentoscaixa, optional: :true
 
     belongs_to :empresa,     :class_name => 'Empresa',              :foreign_key => 'cod_empresa' #, inverse_of: :lancamentos
     

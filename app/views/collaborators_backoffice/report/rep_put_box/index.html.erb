@@ -40,12 +40,22 @@
 
                   <div class="col-md-5">
                     <div class="mb-2 ">
-
                       <%= select_tag(:cod_operacao, options_for_select(get_operacao(), 
                                       params[:cod_operacao] ), include_blank: "Todos",
                                       class:"form-control") %>
                     </div>
                   </div>
+                  
+                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                    <div class="col-md-5">
+                      <div class="mb-2">
+                        <%= form.collection_select(:cod_bancoconta, 
+                                (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa)), 
+                                  :cod_bancoconta, :nome_banco, {:include_blank => 'Selecione um Destino', selected: params[:cod_bancoconta]}, 
+                                  class: "text form-control", readonly: false) %>
+                      </div>
+                    </div>
+                  <% end %>
 
                   <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div> 
                 </div>
@@ -98,14 +108,22 @@
                         <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
                         <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
                          <td>
+
                          <%# somente pode excluir o lançamento se for do mesmo caixa que esta aberto %>
                          <% if ((!lauch.caixa.nil? && !@caixa.nil? ) && (lauch.caixa.id === @caixa.id) ) %>
                             <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
                                         class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
                                 <i class="fa fa-minus"></i>
                             <% end %>
+                          <% else %>
+                            <%# Se for funcionario nivel 1 liberado para remover porem se for de caixa diferente ele gera novo lancamento contra o primeiro %>
+                            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                              <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
+                                          class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
+                                  <i class="fa fa-minus"></i>
+                              <% end %>
+                            <% end %>
                           <% end %>
-
 
                         </td>
                       </tr>

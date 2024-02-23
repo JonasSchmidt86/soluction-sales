@@ -8,17 +8,15 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
         # puts Time.now.strftime("%d/%m/%Y")
         # puts Date.today.end_of_month.strftime("%d/%m/%Y")
 
-        consulta = " lancamentoscaixa.cod_empresa = ? 
-                     and lancamentoscaixa.caixa_id is not null ";
+        consulta = " lancamentoscaixa.cod_empresa = ? ";
                     #  and lancamentoscaixa.cod_bancoconta is null ";
         
         if (params[:dataInicial].blank? && params[:dataFinal].blank?)
             consulta += " and date(lancamentoscaixa.datapagto) between TO_DATE('"+ Time.current.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and TO_DATE('"+ Date.today.end_of_month.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') ";
         else
             consulta += " and date(lancamentoscaixa.datapagto) between TO_DATE('"+ params[:dataInicial] +"', 'DD/MM/YYYY') and TO_DATE('"+ params[:dataFinal] +"', 'DD/MM/YYYY') ";
-
         end
-        
+
         unless params[:cod_historico].blank?
             consulta += " and lancamentoscaixa.cod_tphitorico = " + params[:cod_historico];
         end
@@ -33,8 +31,14 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
             end
         end
 
+        if params[:cod_bancoconta].present? && !params[:cod_bancoconta].nil? && params[:cod_bancoconta]
+            consulta += " and lancamentoscaixa.cod_bancoconta = " + params[:cod_bancoconta].to_s + " and lancamentoscaixa.caixa_id is null "
+        else
+            consulta += " and caixa_id is not null "
+        end
         unless (params[:cliente].blank?)
             consulta += "
+            and lancamentoscaixa.caixa_id is not null 
             and case when lancamentoscaixa.cod_contaspagrec is not null
                     then
                         case when (select n.cod_venda from Contaspagrec as n where n.cod_contaspagrec = lancamentoscaixa.cod_contaspagrec) is not null 
@@ -56,6 +60,7 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
     end
 
     def destroy
+# se o caixa for diferente do caixa aberto gerar um lancamento de caixa de saida desse lancamento para zerar  
         if @launch.contaspagrec.nil?
             if @launch.destroy
                 redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso!"

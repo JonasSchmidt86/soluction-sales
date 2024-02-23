@@ -11,7 +11,7 @@
               <%= form_with(url: collaborators_backoffice_contas_pag_rec_index_path, local: true, method: :get, 
                                     class:"dataTable-search col-md-3") do |form| %>
 
-                <div class="d-flex"> 
+                <div class="d-flex flex-row"> 
 
                   <div id= "venda" class="dataTable-input col-md-4 form-check form-switch">
                     <label id="lb_pag_rec" for= "tipo_conta" class="label-check d-inline-block form-check-label"><%= tipe_bill(params[:tipo_conta])%></label>
@@ -52,9 +52,9 @@
               <% end %>
           </div>
           
-          <div class="dataTable-container">
+          <div class="dataTable-container"  style="width: 100%; min-height:150px;">
 
-            <table id="datatablesSimple" class="dataTable-table ">
+            <table id="datatablesSimple" class="dataTable-table">
               <thead>
                 <tr>
                   <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
@@ -92,7 +92,7 @@
                       <% if !bill.quitada || bill.lancamentos.size == 0 %>
                         <% if bill.ativo %>
                           <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                              { :tipo_conta => tipe_bill_true(params[:tipo_conta]) , 
+                              { :x => tipe_bill_true(params[:tipo_conta]) , 
                                 :status_bill => params[:status_bill], 
                                 :nrVenda => params[:nrVenda], 
                                 :cliente => params[:cliente], 
@@ -105,16 +105,59 @@
                           <% end %>
                         <% end %>
                       <% end %> 
+                      <% if !bill.lancamentos.blank? && !bill.quitada%>
+                        <div class="dropdown" >
+                          <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                          </button>
 
-                      <% unless bill.quitada  %>
-                        <% if (bill.ativo) %>
-                          <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+                          <ul class="dropdown-menu position-absolute" style="width: 50px;">                                
+                            <li>
+                              <% unless bill.quitada  %>
+                                <% if (bill.ativo) %>
+                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal",
+                                      data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                      <i class="fa-regular fa-handshake", style="width: 35px;"></i>Pagamento
+                                  </button>
+                                <% end %>
+                              <% end %>
+                            </li>
+                            <li>
+                              <% if !bill.lancamentos.blank? %>
+                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal"
+                                    data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                    <i class="fa fa-info", style="width: 35px;"></i>Informações
+                                  </button>
+                              <% end %>
+                            </li>
+                          </ul>
+                        <div>
+                        <% else %>
+                          <% unless bill.quitada  %>
+                            <% if (bill.ativo) %>
+                              <div class="d-flex justify-content-end">
+                                <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;",
+                                  data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                  <i class="fa-regular fa-handshake"></i>
+                                </button>
+                              </div>
+                            <% end %>
+                          <% end %>
+
+                          <% if !bill.lancamentos.blank? %>
+                              <div class="d-flex justify-content-end">
+                                <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;"
+                                  data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                  <i class="fa fa-info"></i>
+                                </button>
+                              </div>
+                          <% end %>
+
                         <% end %>
-                      <% end %>
+<%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                      <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+                      
 
-                      <% if !bill.lancamentos.blank? %>
-                        <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                      <% end %>
                     </div>
                   </td>
                 </tr>
