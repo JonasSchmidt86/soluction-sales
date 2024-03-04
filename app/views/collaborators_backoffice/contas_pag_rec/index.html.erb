@@ -6,172 +6,208 @@
     <% end %>
     
     <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
-          <div class="dataTable-top">
-              <%= form_with(url: collaborators_backoffice_contas_pag_rec_index_path, local: true, method: :get, 
-                                    class:"dataTable-search col-md-3") do |form| %>
+      <div class="dataTable-wrapper">
 
-                <div class="d-flex flex-row"> 
+        <%= form_with(url: collaborators_backoffice_contas_pag_rec_index_path, local: true, method: :get, 
+                              class:"dataTable-search") do |form| %>
 
-                  <div id= "venda" class="dataTable-input col-md-4 form-check form-switch">
-                    <label id="lb_pag_rec" for= "tipo_conta" class="label-check d-inline-block form-check-label"><%= tipe_bill(params[:tipo_conta])%></label>
-                      <%= form.check_box :tipo_conta, { checked: tipe_bill_true(params[:tipo_conta]),
-                        class: "form-check-input", type:"checkbox" }, true, false %>
-                  </div>
-                  
-                  <div class="col-md-4">
-                    <%= form.collection_select(:status_bill, @array, :to_s, :to_s,
-                        {selected: params[:status_bill], prompt: false}, class: "form-control") %>
-                  </div> 
+            <div class="d-flex mb-2 col-md-3">
 
-                  <div class="col-md-5">
-                      <div class="">
-                          <%= form.text_field :nrVenda, class:"dataTable-input", value:params[:nrVenda],placeholder:"Cod Venda", id:"numeric" %>
-                      </div> 
-                  </div>
-                  <div class="col-md-10">
-                      <div class="">
-                          <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
-                      </div> 
-                  </div>
+              <div class="col-md-2">
+                <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+              </div>
 
-                  <div class="col-md-4">
-                    <div class="">
-                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")  )),
-                          class: "dataTable-input datepicker", placeholder:"Data Inicial", id: "dtInicial" %>
-                    </div> 
-                  </div>
-                  <div class="col-md-4">
-                    <div class="">
-                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Time.current.end_of_month.strftime("%d/%m/%Y") )),
-                          class: "dataTable-input datepicker", placeholder:"Data Final", id: "dtFinal" %>
-                    </div>
-                  </div>
-                  <div class=""><button type='submit', class="btn btn-success btn-circle">Buscar</button></div> 
-                </div>
-              <% end %>
-          </div>
-          
-          <div class="dataTable-container"  style="width: 100%; min-height:150px;">
-
-            <table id="datatablesSimple" class="dataTable-table">
-              <thead>
-                <tr>
-                  <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
-                  <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                  <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
-                  <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                  <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
-                  <th data-sortable="" style="width: 110px;">Valor Total</th>
-                  <th data-sortable="" style="width: 110px;">Valor Pago</th>
-                  <th data-sortable="" style="width: 85px;">Pagar?</th>
-                </tr>
-              </thead>
+              <div id= "venda" class="dataTable-input col-md-4 form-check form-switch">
+                <label id="lb_pag_rec" for= "tipo_conta" class="label-check d-inline-block form-check-label"><%= tipe_bill(params[:tipo_conta])%></label>
+                  <%= form.check_box :tipo_conta, { checked: tipe_bill_true(params[:tipo_conta]),
+                    class: "form-check-input", type:"checkbox" }, true, false %>
+              </div>
               
-              <tbody>
-              <% @bills.each do |bill| %>
+              <div class="col-md-4">
+                <%= form.collection_select(:status_bill, @array, :to_s, :to_s,
+                    {selected: params[:status_bill], prompt: false}, class: "form-control") %>
+              </div> 
 
-                <% if (!bill.ativo) %>
-                  <tr class="text-danger">
-                <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
-                    <tr class="text-warning">
-                <% else %>
-                    <tr class="">
-                <% end %> 
+              <div class="col-md-5">
+                  <div class="">
+                      <%= form.text_field :nrVenda, class:"dataTable-input", value:params[:nrVenda],placeholder:"Cod Venda", id:"numeric" %>
+                  </div> 
+              </div>
 
-                  <td><%= (bill.quitada_ext) %> </td>
-                  <td><%= bill.nmCollaborator %> </td>
-                  <td><%= bill.nmParcela %> </td>
-                  <td><%= bill.nmPessoa %> </td>
-                  <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                  <td><%= number_to_currency( bill.valorparcela, precision: 2)  %></td>
-                  <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
-                  <td>
+              <div class="col-md-10">
+                  <div class="">
+                      <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
+                  </div> 
+              </div>
 
-                    <div class="d-flex justify-content-start">
-                      <% if !bill.quitada || bill.lancamentos.size == 0 %>
-                        <% if bill.ativo %>
-                          <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                              { :x => tipe_bill_true(params[:tipo_conta]) , 
-                                :status_bill => params[:status_bill], 
-                                :nrVenda => params[:nrVenda], 
-                                :cliente => params[:cliente], 
-                                :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                                method: :put, 
-                                class:"btn btn-success btn-circle", 
-                                style:"width: 35px; height: 35px;",
-                                data: {confirm: "Deseja Liquidar a conta?"} do %>
-                          <i class="fa fa-check" ></i>
-                          <% end %>
+              <div class="col-md-4">
+                <div class="">
+                  <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")  )),
+                      class: "dataTable-input datepicker", placeholder:"Data Inicial", id: "dtInicial" %>
+                </div> 
+              </div>
+
+              <div class="col-md-4">
+                <div class="">
+                  <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Time.current.end_of_month.strftime("%d/%m/%Y") )),
+                      class: "dataTable-input datepicker", placeholder:"Data Final", id: "dtFinal" %>
+                </div>
+              </div>
+
+              <div class="ms-auto col-md-5">
+                <button type='submit', class="ms-1 btn btn-success btn-circle">Buscar</button>
+              </div> 
+
+              <%# if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <div class="col-md-5 ml-auto ">
+                  <%= form.text_field :valorReceber, class: "text-bg-warning form-control ", readonly: true %>
+                </div>
+                <div class="col-md-5 ml-auto order-last">
+                  <%= form.text_field :valorRecebido, class: "text-bg-info form-control ", readonly: true %>
+                </div>
+              <%# end %>
+
+            </div>
+
+        <% end %>
+        
+        <div class="dataTable-container"  style="width: 100%; min-height:150px;">
+
+          <table id="datatablesSimple" class="dataTable-table">
+            <thead>
+              <tr>
+                <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
+                <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+                <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
+                <th data-sortable="" style="width: 110px;">Valor Total</th>
+                <th data-sortable="" style="width: 110px;">Valor Pago</th>
+                <th data-sortable="" style="width: 85px;">Pagar?</th>
+              </tr>
+            </thead>
+            
+            <tbody>
+            <% somaReceber = 0; %>
+            <% somaRecebido = 0; %>
+
+            <% @bills.each do |bill| %>
+
+              <% if (!bill.ativo) %>
+                <tr class="text-danger">
+              <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
+                  <tr class="text-warning">
+              <% else %>
+                  <tr class="">
+              <% end %> 
+
+                <td><%= (bill.quitada_ext) %> </td>
+                <td><%= bill.nmCollaborator %> </td>
+                <td><%= bill.nmParcela %> </td>
+                <td><%= bill.nmPessoa %> </td>
+                <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
+                <td><%= "R$ #{number_to_currency(bill.valorparcela, separator: ",", delimiter: "", unit:"")}" %></td>
+                <td><%= "R$ #{number_to_currency(bill.valorPago, separator: ",", delimiter: "", unit:"")}" %></td>
+                <td>
+                <% if bill.ativo %>
+                  <% somaReceber += (bill.valorparcela) %>
+                  <% somaRecebido += bill.valorPago; %>
+                <% end %>
+
+                  <div class="d-flex justify-content-start">
+                    <% if !bill.quitada || bill.lancamentos.size == 0 %>
+                      <% if bill.ativo %>
+                        <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
+                            { :x => tipe_bill_true(params[:tipo_conta]) , 
+                              :status_bill => params[:status_bill], 
+                              :nrVenda => params[:nrVenda], 
+                              :cliente => params[:cliente], 
+                              :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
+                              method: :put, 
+                              class:"btn btn-success btn-circle", 
+                              style:"width: 35px; height: 35px;",
+                              data: {confirm: "Deseja Liquidar a conta?"} do %>
+                        <i class="fa fa-check" ></i>
                         <% end %>
-                      <% end %> 
-                      <% if !bill.lancamentos.blank? && !bill.quitada%>
-                        <div class="dropdown" >
-                          <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                          </button>
+                      <% end %>
+                    <% end %> 
+                    <% if !bill.lancamentos.blank? && !bill.quitada%>
+                      <div class="dropdown" >
+                        <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                          <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
 
-                          <ul class="dropdown-menu position-absolute" style="width: 50px;">                                
-                            <li>
-                              <% unless bill.quitada  %>
-                                <% if (bill.ativo) %>
-                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal",
-                                      data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                      <i class="fa-regular fa-handshake", style="width: 35px;"></i>Pagamento
-                                  </button>
-                                <% end %>
-                              <% end %>
-                            </li>
-                            <li>
-                              <% if !bill.lancamentos.blank? %>
-                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal"
-                                    data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                    <i class="fa fa-info", style="width: 35px;"></i>Informações
-                                  </button>
-                              <% end %>
-                            </li>
-                          </ul>
-                        <div>
-                        <% else %>
-                          <% unless bill.quitada  %>
-                            <% if (bill.ativo) %>
-                              <div class="d-flex justify-content-end">
-                                <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;",
-                                  data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                  <i class="fa-regular fa-handshake"></i>
+                        <ul class="dropdown-menu position-absolute" style="width: 50px;">                                
+                          <li>
+                            <% unless bill.quitada  %>
+                              <% if (bill.ativo) %>
+                                <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal",
+                                    data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                    <i class="fa-regular fa-handshake", style="width: 35px;"></i>Pagamento
                                 </button>
-                              </div>
+                              <% end %>
                             <% end %>
-                          <% end %>
-
-                          <% if !bill.lancamentos.blank? %>
-                              <div class="d-flex justify-content-end">
-                                <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;"
+                          </li>
+                          <li>
+                            <% if !bill.lancamentos.blank? %>
+                                <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal"
                                   data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                  <i class="fa fa-info"></i>
+                                  <i class="fa fa-info", style="width: 35px;"></i>Informações
                                 </button>
-                              </div>
+                            <% end %>
+                          </li>
+                        </ul>
+                      <div>
+                      <% else %>
+                        <% unless bill.quitada  %>
+                          <% if (bill.ativo) %>
+                            <div class="d-flex justify-content-end">
+                              <button type="button", class="ms-1 btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;",
+                                data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                <i class="fa-regular fa-handshake"></i>
+                              </button>
+                            </div>
                           <% end %>
-
                         <% end %>
-<%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                      <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
-                      
 
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
-              </tbody>
-            </table>
-          </div>
-        <div class="dataTable-bottom">
-          <div class="dataTable-info"><%= page_entries_info @bills, entry_name: 'conta' %></div>
-            <div class = "text-center">
-              <%= paginate @bills %>
+                        <% if !bill.lancamentos.blank? %>
+                            <div class="d-flex justify-content-end">
+                              <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;"
+                                data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                <i class="fa fa-info"></i>
+                              </button>
+                            </div>
+                        <% end %>
+
+                      <% end %>
+                    
+                    <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                    <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+                    
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
         </div>
+        <% if @bills.respond_to?(:total_pages) %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info"><%= page_entries_info @bills, entry_name: 'conta' %></div>
+              <div class = "text-center">
+                <%= paginate @bills %>
+              </div>
+            </div>
+        <% else %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info">
+            <h5>Exibindo <%= @bills.size %> registros</h5>
+            </div>
+              <div class = "text-center">
+              </div>
+          </div>
+        <% end %>
       </div>
-    </div>
   </div>
 </div>
 
@@ -200,4 +236,10 @@
     }
   };
 
+  function formatarReal(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+  document.getElementById("valorRecebido").value = formatarReal(<%= somaRecebido %>);
+  document.getElementById("valorReceber").value = formatarReal(<%= somaReceber %>);
 </script>

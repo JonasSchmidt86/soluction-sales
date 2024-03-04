@@ -20,6 +20,7 @@
   "author": "JonasSchmidt86 <122678522+JonasSchmidt86@users.noreply.github.com>",
   "license": "MIT",
   "devDependencies": {
+    "@babel/plugin-proposal-private-methods": "^7.18.6",
     "webpack-dev-server": "^3"
   }
 }

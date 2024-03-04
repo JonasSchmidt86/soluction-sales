@@ -6,8 +6,16 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
     def index
         @array =  ['Abertos', 'Liquidados', 'Todos']
-        @bills = Contaspagrec.where(consulta_index, current_collaborator.empresa.cod_empresa)
-                    .order(dtvencimento: :asc, cod_contaspagrec: :desc ).includes(:lancamentos).page(params[:page])
+        
+        per_page = params[:per_page].present? ? params[:per_page].to_i : 30
+        if params[:per_page].present? && params[:per_page].to_i === 0
+            @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
+                    .order(dtvencimento: :asc, cod_contaspagrec: :desc );
+        else
+            @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
+                    .order(dtvencimento: :asc, cod_contaspagrec: :desc ).page(params[:page]).per(per_page);
+        end
+
     end
     
     def edit

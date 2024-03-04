@@ -36,7 +36,11 @@ class Contaspagrec < ApplicationRecord
         elsif !self.compra.nil?
             [self.compra.cod_compra, self.numeroparcela].join('-')
         elsif !self.frete.nil?
-            [self.frete.nrromaneio, "F"].join('-')
+            if self.frete.compra.numeronf.blank?
+                [self.frete.nrromaneio.to_i , "F"].join('-')
+            else
+                [self.frete.compra.numeronf , "F"].join('-')
+            end
         end
     end
 
@@ -46,7 +50,7 @@ class Contaspagrec < ApplicationRecord
         elsif !self.compra.nil?
             self.compra.pessoa.nome
         elsif !self.frete.nil?
-            self.frete.pessoa.nome
+            [self.frete.pessoa.nome[0,40], self.frete.compra.pessoa.nome[0,15]].join(' - ')
         end 
     end
 
@@ -56,7 +60,9 @@ class Contaspagrec < ApplicationRecord
         elsif !self.compra.nil?
             self.compra.collaborator.usuario
         elsif !self.frete.nil?
-            self.frete.pessoa.nome
+            unless self.frete.compra.blank?
+                self.frete.compra.collaborator.usuario
+            end
         end 
     end
 
@@ -89,7 +95,8 @@ class Contaspagrec < ApplicationRecord
                 end
             end
         end
-        valor
+        return valor
     end
+    paginates_per 30;
 end
 

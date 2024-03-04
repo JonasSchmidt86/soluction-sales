@@ -7,19 +7,25 @@
     
     <div class="card-body">
         <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
-                
-                <%= form_with(url: collaborators_backoffice_empresa_estoque_index_path, local: true, method: :get, 
-                                    class:"col dataTable-search col-md-6") do |form| %>
+                <% somaCusto = 0 %>
+                <% somaVenda = 0 %>
 
-                  <div class="d-flex mb-2 ">
+                <%= form_with(url: collaborators_backoffice_empresa_estoque_index_path, local: true, method: :get, 
+                                    class:"col dataTable-search") do |form| %>
+
+                  <div class="d-flex mb-2 col-md-6">
 
                     <div class="col-md-1">
+                      <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+                    </div>
+
+                    <div class="col-md-2">
                       <div class="mb-2">
-                          <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Codigo empresa..." %>
+                          <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Empresa..." %>
                       </div> 
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-7">
                       <div class="mb-2">
                           <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto..." %>
                       </div> 
@@ -27,41 +33,21 @@
 
                     <div class="col-md-8">
                       <div class="mb-2">
-
                         <% checked = params[:contem] == '1' ? true : false %>
                         <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
                         <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
 
-                        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-                        <script>
-                          $(document).ready(function() {
-                            var contemCheckbox = $('#contem-checkbox');
-                            var estoqueLabel = $('.estoque-label');
-
-                            // Restaurar o estado do checkbox ao recarregar a página
-                            var storedState = localStorage.getItem('contemCheckboxChecked');
-                            if (storedState !== null) {
-                              contemCheckbox.prop('checked', storedState === 'true');
-                              updateLabel();
-                            }
-
-                            contemCheckbox.change(function() {
-                              updateLabel();
-
-                              // Salvar o estado do checkbox no armazenamento local
-                              localStorage.setItem('contemCheckboxChecked', $(this).prop('checked'));
-                            });
-
-                            function updateLabel() {
-                              var novoTexto = contemCheckbox.prop('checked') ? 'Com Estoque' : 'Sem Estoque';
-                              estoqueLabel.text(novoTexto);
-                            }
-                          });
-                        </script>
-
                         <button type="submit" class="btn btn-success btn-circle">Buscar</button>
                       </div>
                     </div>
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>  
+                      <div class="col-md-3 ml-auto">
+                        <%= form.text_field :valorVenda, class: "text-bg-info form-control ", readonly: true %>
+                      </div>
+                      <div class="col-md-3 ml-auto  order-last">
+                        <%= form.text_field :valorCusto, class: "text-bg-warning form-control ", readonly: true %>
+                      </div>
+                    <% end %>
                   </div>
 
                 <% end %>
@@ -95,6 +81,11 @@
                       <td class="align-middle fw-semibold"><%= estoque.cod_empresa %> </td>
                       <td class="align-middle fw-semibold"><%= number_to_currency estoque.valorvenda %> </td>
 
+                      <% if estoque.quantidade > 0 %>
+                        <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
+                        <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
+                      <% end %>
+
                       <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                       <td class="align-middle fw-semibold"><%= number_to_currency estoque.ultimocusto %> </td>
                         <td class="align-middle">
@@ -110,13 +101,55 @@
               </table>
         </div>
         
-        <div class="dataTable-bottom">
-          <div class="dataTable-info"><%= page_entries_info @empresa_produtos, entry_name: 'item' %></div>
+        <% if @empresa_produtos.respond_to?(:total_pages) %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info"><%= page_entries_info @empresa_produtos, entry_name: 'item' %></div>
               <div class = "text-center">
                 <%= paginate @empresa_produtos %>
               </div>
+            </div>
+        <% else %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info">
+            <h5>Exibindo <%= @empresa_produtos.size %> registros</h5>
+            </div>
+              <div class = "text-center">
+              </div>
           </div>
-        </div>
-        
+        <% end %>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  $(document).ready(function() {
+    var contemCheckbox = $('#contem-checkbox');
+    var estoqueLabel = $('.estoque-label');
+
+    // Restaurar o estado do checkbox ao recarregar a página
+    var storedState = localStorage.getItem('contemCheckboxChecked');
+    if (storedState !== null) {
+      contemCheckbox.prop('checked', storedState === 'true');
+      updateLabel();
+    }
+
+    contemCheckbox.change(function() {
+      updateLabel();
+
+      // Salvar o estado do checkbox no armazenamento local
+      localStorage.setItem('contemCheckboxChecked', $(this).prop('checked'));
+    });
+
+    function updateLabel() {
+      var novoTexto = contemCheckbox.prop('checked') ? 'Com Estoque' : 'Sem Estoque';
+      estoqueLabel.text(novoTexto);
+    }
+  });
+
+  function formatarReal(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
+  document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
+</script>

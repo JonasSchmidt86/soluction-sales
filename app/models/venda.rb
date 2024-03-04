@@ -27,5 +27,23 @@ class Venda < ApplicationRecord
             return [self.cod_vendaempresa, (self.numeronf.blank? ? "0" : self.numeronf)].join(' / ')
         end
     end
+
+    def valorRecebido
+        valor = 0
+        unless self.cancelada
+            for conta in self.contas do
+                unless conta.lancamentos.blank?
+                    for launch in conta.lancamentos do
+                        valor += launch.valor
+                    end
+                end
+            end
+        end
+        return valor
+    end
+    
+    def valorDevido
+        return self.valortotal - self.valorRecebido
+    end
     
 end

@@ -205,9 +205,13 @@
                     <div id="conteudo-dinamico" class="position-relative container-fluid px-4">
                         <%= yield %>
                         
+                        <%# 
+                        Botao de salvar fixo na lateral direita da pg
                         <button type="button" class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-4 p-3">
                             <i class="fa fa-check fa-2x"></i>
-                        </button>
+                        </button> 
+                        
+                        %>
                     </div>
                 </main>
             </div>
@@ -223,7 +227,6 @@
         <%= javascript_include_tag 'collaborators_backoffice' %>
 
         <script>
-    
             $(document).ready(function () {
                 $('.datepicker').datepicker();
             });

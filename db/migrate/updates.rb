@@ -373,5 +373,5 @@
 
 # -- fazer para adicionar o proximo id 
 # -- select max(cod_lancamentocaixa) from lancamentoscaixa
-# SSELECT setval('lancamentocaixa_sequence', (select max(cod_lancamentocaixa)+1 from lancamentoscaixa));
+# SELECT setval('lancamentocaixa_sequence', (select max(cod_lancamentocaixa)+1 from lancamentoscaixa));
 

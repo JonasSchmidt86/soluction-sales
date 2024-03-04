@@ -9,36 +9,43 @@
         <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
           
               <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
-                                    class:"col dataTable-search col-md-6") do |form| %>
-                <div class="d-flex">
-                  <div class="col-md-10">
-                      <div class="mb-2">
-                          <%= form.text_field :term, class:"text dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
-                      </div> 
+                                    class:"col dataTable-search  col-md-6") do |form| %>
+                                    
+                <div class="d-flex mb-2">
+          
+                  <div class="col-md-1">
+                    <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+                  </div> 
+                  
+                  <div class="col-md-7">
+                    <%= form.text_field :term, class:"text dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
                   </div>
 
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
-                    </div>
+                  <div class="col-md-2">
+                    <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+                        class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
                   </div>
                   
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-                    </div>
+                  <div class="col-md-2">
+                    <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+                        class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
                   </div>
 
-                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+                  <div class="me-1 mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
                   
-                  <div class="mb-2">
+                  <div class="mb-2 col-md-4 order-5 ">
                     <%= link_to new_collaborators_backoffice_venda_path,
                                 class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
                         <i class="fa fa-plus"></i>
                     <% end %>
                   </div>
+                  <div class="ms-auto col-md-3 order-last ">
+                    <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+                  </div>
+                  <div class="ms-auto col-md-3 order-last ">
+                    <%= form.text_field :valorDevido, class: "text-bg-warning form-control ", readonly: true %>
+                  </div>
+
                 </div>
                 
               <% end %>
@@ -59,11 +66,17 @@
                 </thead>
                 
                 <tbody>
+                <% somaTotal = 0 %>
+                <% somaDevido = 0 %>
+
                     <% @sales.each do |sale| %>
                       <% if sale.cancelada %>
                         <tr class="" style="background-color: #FA625E;">
                       <% else %>
                         <tr class="">
+                        
+                        <% somaTotal += sale.valortotal %>
+                        <% somaDevido += sale.valorDevido %>
                       <% end %>
                           <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
                           <td><%= sale.empresa.nome %> </td>
@@ -154,4 +167,10 @@
       else
           document.getElementById(el).style.display = 'none';
   }
+  function formatarReal(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+  document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
+  document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
 </script>

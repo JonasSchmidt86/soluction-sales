@@ -7,8 +7,10 @@ class Frete < ApplicationRecord
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :fretes
 
-    has_many :contas, :class_name => 'contaspagrec', :foreign_key => 'cod_lfrete' #, inverse_of: :frete
+    has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_frete' #, inverse_of: :frete
+    
+    has_one :compra, :class_name => 'Compra', foreign_key: "cod_frete", inverse_of: :frete
 
-    paginates_per 10    
+    paginates_per 30   
 
 end

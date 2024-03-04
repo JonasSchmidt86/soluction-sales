@@ -1,120 +1,166 @@
-
-<div class="card mt-4">
+<div class="card mt-3">
 
     <%= link_to collaborators_backoffice_report_sales_path, class:"card-header bg-primary" do %>
         <h4 >Relatorio Vendas</h4>
     <% end %>
     
     <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
+      <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+
+        <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
+                              class:"col dataTable-search") do |form| %>
           
-              <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
-                                    class:"col dataTable-search col-md-6") do |form| %>
-                <div class="d-flex">
-                  <div class="col-md-10">
-                      <div class="mb-2">
-                          <%= form.text_field :term, class:"dataTable-input text", value:params[:term],placeholder:"Pessoa...", id:"text" %>
-                      </div> 
-                  </div>
+          <div class="d-flex mb-2 col-md-6">
+          
+            <div class="col-md-1">
+              <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+            </div>  
 
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
-                    </div>
-                  </div>
-                  
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-                    </div>
-                  </div>
+            <div class="col-md-5">
+                    <%= form.text_field :term, class:"dataTable-input text", value:params[:term],placeholder:"Pessoa...", id:"text" %>
+            </div>
 
-                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
-                  
-                  <div class="mb-2">
-                    <%= link_to new_collaborators_backoffice_venda_path,
-                                class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
-                        <i class="fa fa-plus"></i>
-                    <% end %>
-                  </div>
+            <div class="col-md-2">
+                <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+                    class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
+            </div>
+            
+            <div class="col-md-2">
+                <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+                    class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
+            </div>
+
+            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <div class="col-md-3 me-1">
+                <div class="mb-2">
+                  <%= form.collection_select(:cod_funcionario, 
+                          (Funcionario.select(:cod_funcionario, :usuario).where("cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null ", current_collaborator.cod_empresa)), 
+                            :cod_funcionario, :usuario, {:include_blank => 'Selecione um colaborador', selected: params[:cod_funcionario]}, 
+                            class: "text form-control", readonly: false) %>
                 </div>
-                
-              <% end %>
-
-            <div class="">
-
-              <table id="datatablesSimple" class="dataTable-table">
-                <thead>
-                  <tr>
-                    <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
-                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
-                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
-                    <th data-sortable="" style="width: 150px;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                    <th data-sortable="" style="width: 150px;">Valor Total</th>
-                    <th data-sortable="" style="width: 45px"></th>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                    <% @sales.each do |sale| %>
-                      <% if sale.cancelada %>
-                        <tr class="" style="background-color: #FA625E;">
-                      <% else %>
-                        <tr class="">
-                      <% end %> 
-                          <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
-                          <td><div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div> </td>
-                          <td><%= sale.pessoa.nome %></td>
-                          <td><%= sale.venda_nfe %> </td>
-                          <td><div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div> </td>
-                          <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
-
-                          <td>
-                            <div class="dropdown" >
-                                <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
-                                  <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                                </button>
-
-                                <ul class="dropdown-menu" style="width: 50px;">                                
-                                  <li>
-                                    <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
-                                      <i class="fa fa-info", style="width: 35px;"></i>Informações
-                                    <% end %>
-                                  </li>
-                                  <li>
-                                    <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
-                                      <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Histórico
-                                    <% end %>
-                                  </li>
-                                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                                   <span class="visually-hidden">Toggle Dropdown</span>
-                                    <li>
-                                      <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
-                                          data: { confirm: "Deseja remover a Venda?" } do %>
-                                        <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
-                                      <% end %> 
-                                    </li>
-                                  <% end %>
-                                </ul>
-
-                              </div>
-                          </td>
-
-                        </tr>
-                    <% end %>
-
-                </tbody>
-              </table>
-          </div>
-        <div class="dataTable-bottom">
-          <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
-              <div class = "text-center">
-                <%= paginate @sales %>
               </div>
+            <% end %>
+
+            <div class="me-4 col-md-1">
+              <button type='submit', class="btn btn-success btn-circle">Buscar</button>
+            </div>
+            
+            <div class="me-3 col-md-3">
+              <%= link_to new_collaborators_backoffice_venda_path,
+                          class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
+                  <i class="fa fa-plus"></i>
+              <% end %>
+            </div>
+            
+            <div class="me-1 ms-auto col-md-3 ">
+              <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
+            </div>
+            <div class="ms-auto col-md-3 order-last ">
+              <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+            </div>
+
           </div>
-        </div>
+        <% end %>
+
+        <div class="dataTable-loading sortable searchable fixed-columns">
+
+          <table id="datatablesSimple" class="dataTable-table">
+            <thead>
+              <tr>
+                <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+                <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
+                <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
+                <th data-sortable="" style="width: 150px;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                <th data-sortable="" style="width: 150px;">Valor Total</th>
+                <th data-sortable="" style="width: 45px"></th>
+              </tr>
+            </thead>
+            
+            <tbody>
+                <% somaVendas = 0; %>
+                <% somaRecebida = 0; %>
+                <% @sales.each do |sale| %>
+                  <% if sale.cancelada %>
+                    <tr class="" style="background-color: #FA625E;">
+                  <% else %>
+                    <tr class="">
+                  <% end %> 
+                      <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
+                      <td><div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div> </td>
+                      <td><%= sale.pessoa.nome %></td>
+                      <td><%= sale.venda_nfe %> </td>
+                      <td><div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div> </td>
+                      <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                      <% unless sale.cancelada %>
+                        <% somaVendas += sale.valortotal; %>
+                        <% somaRecebida += sale.valorRecebido; %>
+                        
+                      <% end %>
+                      <td>
+                        <div class="dropdown" >
+                            <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                            </button>
+
+                            <ul class="dropdown-menu" style="width: 50px;">                                
+                              <li>
+                                <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
+                                  <i class="fa fa-info", style="width: 35px;"></i>Informações
+                                <% end %>
+                              </li>
+                              <li>
+                                <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
+                                  <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Histórico
+                                <% end %>
+                              </li>
+                              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                                <li>
+                                  <%= link_to collaborators_backoffice_venda_path(sale), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                                      data: { confirm: "Deseja remover a Venda?" } do %>
+                                    <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
+                                  <% end %> 
+                                </li>
+                              <% end %>
+                            </ul>
+
+                          </div>
+                      </td>
+                    </tr>
+                <% end %>
+
+            </tbody>
+          </table>
+
+          <% if @sales.respond_to?(:total_pages) %>
+            <div class="dataTable-bottom">
+              <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
+                  <div class = "text-center">
+                    <%= paginate @sales %>
+                  </div>
+              </div>
+            </div>
+          <% else %>
+            <div class="dataTable-bottom">
+              <div class="dataTable-info">
+              <h5>Exibindo <%= @sales.size %> registros</h5>
+              </div>
+                <div class = "text-center">
+                </div>
+            </div>
+          <% end %>
+
+      </div>
     </div>
 </div>
+
+    
+<script>
+function formatarReal(valor) {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+  document.getElementById("valortotal").value = formatarReal(<%= somaVendas %>);
+  document.getElementById("valorPago").value = formatarReal(<%= somaRecebida %>);
+</script>
