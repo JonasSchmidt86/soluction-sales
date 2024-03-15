@@ -134,8 +134,7 @@
                                         <% end %>
 
                                         <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                                            XML
-                                            
+                                            XML    
                                         <% end %>
 
                                         <%= link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do %>
@@ -144,6 +143,10 @@
 
                                         <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
                                             Estoque
+                                        <% end %>
+
+                                        <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
+                                            Pessoas
                                         <% end %>
 
                                         <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
@@ -205,13 +208,12 @@
                     <div id="conteudo-dinamico" class="position-relative container-fluid px-4">
                         <%= yield %>
                         
-                        <%# 
-                        Botao de salvar fixo na lateral direita da pg
-                        <button type="button" class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-4 p-3">
+                        <%# Botao de salvar fixo na lateral direita da pg %     >
+                        <button id="saveButton" type="submit" class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-4 p-3">
                             <i class="fa fa-check fa-2x"></i>
-                        </button> 
+                        </button> %>
                         
-                        %>
+                        
                     </div>
                 </main>
             </div>
@@ -227,6 +229,7 @@
         <%= javascript_include_tag 'collaborators_backoffice' %>
 
         <script>
+
             $(document).ready(function () {
                 $('.datepicker').datepicker();
             });
@@ -308,11 +311,12 @@
             // para mascaras gem jquery-mask-pluguin
             $(document).ready(function(){
                 $('.date').mask('00/00/0000');
+                $('.numero').mask('00000000');
                 $('.time').mask('00:00:00');
                 $('.date_time').mask('00/00/0000 00:00:00');
                 $('.cep').mask('00000-000');
-                $('.phone').mask('0000-0000');
-                $('.phone_with_ddd').mask('(00) 0000-0000');
+                $('.phone').mask('(00) 0000-0000');
+                $('.phone_with_ddd').mask('(00) 0 0000-0000');
                 $('.phone_us').mask('(000) 000-0000');
                 $('.mixed').mask('AAA 000-S0S');
                 $('.cpf').mask('000.000.000-00', {reverse: true});

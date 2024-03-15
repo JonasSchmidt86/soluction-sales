@@ -13,6 +13,9 @@ gem 'nfe-io'
 # gem 'carrierwave'
 # --------------
 
+# Gem para buscar endereço e cidade por cep
+gem 'httparty'
+
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1', '>= 6.1.7.3'
 

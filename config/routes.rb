@@ -35,6 +35,7 @@ Rails.application.routes.draw do
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
+    resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
       post 'import/:id', on: :member, to: 'xml_files#import', as: :import
     end
@@ -46,6 +47,7 @@ Rails.application.routes.draw do
     post 'vendas/consulta_estoque', to: 'vendas#consulta_estoque'
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
+    get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'
 
     get 'report_sales', to: 'report/rep_sales#index'
     get 'report/report_sales/hist_client/:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'

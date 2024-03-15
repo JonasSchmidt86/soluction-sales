@@ -133,10 +133,10 @@
                                                             <%= item.quantidade.to_i %>
                                                         </td>
                                                         <td class="table-success" >
-                                                            <%= number_to_currency item.valorunitario %>
+                                                            <%= number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"") %>
                                                         </td>
                                                         <td class="">
-                                                            <%= number_to_currency item.valor_total %>
+                                                            <%= number_to_currency(item.valor_total, separator: ",", delimiter: "", unit:"" ) %>
                                                         </td>
                                                     </tr>
                                                 <% end %>    
@@ -172,7 +172,7 @@
                                                         <%= post_date(contas.dtvencimento) %>
                                                     </td>
                                                     <td class="" >
-                                                        <%= number_to_currency contas.valorparcela %>
+                                                        <%= number_to_currency(contas.valorparcela, separator: ",", delimiter: "", unit:"") %>
                                                     </td>
                                                 </tr>
 

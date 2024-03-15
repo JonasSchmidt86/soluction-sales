@@ -1,0 +1,104 @@
+
+<div id="layoutAuthentication_content">
+    <main>
+        <div class="card my-4">
+            <%= link_to collaborators_backoffice_pessoas_path, class:"card-header" do %>
+                <h4>Pessoas</h4>
+            <% end %>
+        
+            <div class="card-body">
+            
+
+                <%= form_with(url: collaborators_backoffice_pessoas_path, local: true, method: :get, 
+                                            class:"dataTable-search") do |form| %>
+
+                    <div class="d-flex col-md-6 align-items-center">
+
+                        <div class="col-md-1">
+                            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+                        </div>
+
+                        <div class="col-md-2 form-check form-check-inline d-flex justify-content-around">
+                            <%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (params[:tipo].blank? ? 'F' : params[:tipo].to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %>
+                        </div>
+
+                        <div class="input-group col-md-2 form-check ">
+                            <%= form.text_field :name, value: params[:name], class:"text dataTable-input", placeholder:"Nome Pessoa...", id:"text" %>
+                            <button class="btn input-group-text btn-success" id="">Buscar</button>
+                        </div>
+                        <%= link_to new_collaborators_backoffice_pessoa_path(), class:"btn btn-success btn-circle" do %>
+                            <i class="fa fa-plus"></i>
+                        <% end %>
+
+                    </div>
+
+                <% end %>
+
+                <div class="table-responsive">
+                    <table id="tblPessoas" class="table table-sm align-middle table-black table-striped table-hover table-borderless">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">Nome</th>
+                                <th style="">Pessoa</th>
+                                <th style="width: 10%;">Data Nascimento</th>
+                                <th style="width: 10%;">Celular</th>
+                                <th style="width: 10%;">Total Venda</th>
+                                <th style="width: 3%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody class='pessoas' id="pessoa">
+                            <% @pessoas.each do |pessoa| %>
+                                <tr>
+                                    <td class="col-auto"><%= pessoa.cod_pessoa %></td>
+                                    <td class="col-auto"><%= pessoa.nome %></td>
+                                    <% if pessoa.dtnascimento.present? %>
+                                        <td class="col-auto"><h5><%= pessoa.dtnascimento.strftime('%d/%m/%Y') %></h5></td>
+                                    <% else %>
+                                        <td class="col-auto"><p></p></td>
+                                    <% end %>
+                                    <td class="col-auto"><%= pessoa.celular %></td>
+                                    <td class="col-auto"><%= pessoa.vendas.size %></td>
+                                    <td class="align-middle fw-semibold">
+                                        <%= link_to edit_collaborators_backoffice_pessoa_path(pessoa), class:"btn btn-success btn-circle" do %>
+                                        <i class="fa fa-edit"></i>
+                                        <% end %>
+                                        
+                                    
+                                    </td>
+                                </tr>
+                                
+                            <% end %>
+                            
+                        </tbody>
+                    </table>
+                    <div class="position-fixed bottom-0 end-0 m-4">
+                        <div class="d-block my-3 mx-3">
+                            <%= link_to new_collaborators_backoffice_pessoa_path, class:"btn btn-primary rounded-circle p-3" do %>
+                            <i class="fa fa-plus fa-2x"></i>
+                            <% end %>
+                        </div>
+                    </div>  
+                    
+                        <% if @pessoas.respond_to?(:total_pages) %>
+                            <div class="dataTable-bottom">
+                                <div class="dataTable-info"><%= page_entries_info @pessoas, entry_name: 'conta' %></div>
+                                <div class = "text-center">
+                                    <%= paginate @pessoas %>
+                                </div>
+                                </div>
+                            <% else %>
+                            <div class="dataTable-bottom">
+                                <div class="dataTable-info">
+                                <h5>Exibindo <%= @pessoas.size %> registros</h5>
+                                </div>
+                                <div class = "text-center">
+                                </div>
+                            </div>
+                        <% end %>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+

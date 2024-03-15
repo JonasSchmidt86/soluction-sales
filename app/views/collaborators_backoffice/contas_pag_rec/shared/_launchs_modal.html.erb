@@ -7,30 +7,31 @@
         <h5 class="modal-title" id="exampleModalLabel">Lançamentos</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
-      <table id="datatablesSimple" class="dataTable-table ">
-        <thead>
-          <tr>
-            <th><a href="#" class="dataTable-sorter">Colaborador</a></th>
-            <th><a href="#" class="dataTable-sorter">Descrição</a></th>
-            <th><a href="#" class="dataTable-sorter">Parcela</a></th>
-            <th><a href="#" class="dataTable-sorter">Dt Pagto</a></th>
-            <th><a href="#" class="dataTable-sorter">Valor</a></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% bill.lancamentos.each do |launch| %>
+      <div class="container-fluid bd-example-row me-2 ">
+        <table id="datatablesSimple" class="table table-hover table-striped table-responsive  ">
+          <thead class="table-light">
             <tr>
-                <td><%= launch.funcionario.usuario %></td>
-                <td><%= launch.historico_descricao %> </td>
-                <td><%= bill.nmParcela %> </td>
-                <td><%= post_datetime launch.datapagto %> </td>
-                <td><%= number_to_currency( launch.valor ) %> </td>
+              <th><a href="#" class="">Colaborador</a></th>
+              <th><a href="#" class="">Descrição</a></th>
+              <th><a href="#" class="">Parcela</a></th>
+              <th><a href="#" class="">Dt Pagto</a></th>
+              <th><a href="#" class="">Valor</a></th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
-
+          </thead>
+          <tbody>
+            <% sorted_lancamentos = bill.lancamentos.sort_by { |lancamento| lancamento.datapagto } %>
+            <% sorted_lancamentos.each do |launch| %>
+              <tr>
+                  <td><%= launch.funcionario.usuario %></td>
+                  <td><%= launch.historico_descricao %> </td>
+                  <td><%= bill.nmParcela %> </td>
+                  <td><%= post_datetime launch.datapagto %> </td>
+                  <td><%= number_to_currency( launch.valor, separator: ",", delimiter: "", unit: "" ) %> </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

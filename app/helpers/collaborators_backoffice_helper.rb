@@ -16,4 +16,16 @@ module CollaboratorsBackofficeHelper
         end
     end
 
+    def registro_scpc( parametros )
+        puts "------------------>>>>ESSE Paramentro ---->> " + parametros.to_s
+        if parametros.nil?
+            "Não consultado" 
+        else
+            if parametros.to_s == "false"
+                "Sem Registro"
+            else
+                "Com Registro"
+            end
+        end
+    end
 end

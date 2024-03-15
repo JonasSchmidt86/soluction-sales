@@ -1,0 +1,2 @@
+module CollaboratorsBackoffice::PessoaHelper
+end

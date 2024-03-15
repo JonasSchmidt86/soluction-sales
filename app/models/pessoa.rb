@@ -10,5 +10,16 @@ class Pessoa < ApplicationRecord
     # has_one :funcionario, :inverse_of :pessoa
             
     has_many :lancamentos, :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_lancamentocaixa', inverse_of: :pessoa
+    
+    paginates_per 30;
+
+    validates :cpf_cnpj, cpf_cnpj: true, uniqueness: true, presence: true
+    validates :nome, :rg_ie, :celular, :cep, :endereco,  presence: true
+
+    # :tipo, :cpf_cnpj, :apelido, :bairro , :celular, :cep, :complemento, 
+    # :datacadastro, :endereco, :nome, :numero, :rg_ie, :telefone, :civil, :cpfconj, 
+    # :dtnascimento, :dtnascimentoconj, :emprego, :nomeconj, :rgconjuge, :salario, 
+    # :pessoacontato, :telefonecontato, :cod_cidade, :credito, :nrcadpro, :dtconsulta, 
+    # :registradoscpc, :email
 
 end
