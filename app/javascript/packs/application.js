@@ -26,3 +26,6 @@ function formatarReal(valor) {
       useGrouping: false
   });
 }
+
+require("jquery")
+// require("@nathanvda/cocoon")

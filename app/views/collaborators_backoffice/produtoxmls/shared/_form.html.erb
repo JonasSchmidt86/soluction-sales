@@ -1,138 +1,492 @@
-<br>
 <div id="layoutAuthentication_content">
     <main>
-        <div class="container">
+        <div class="card-body">
             <div class="row justify-content-center">
-                <div class="col-lg-7">
-                    <div class="card mb-3" style="max-width: 800px;">
-                    
-                        <% if @produto_xml.errors.any? %>
+                <div class="">
+                    <div class="card mt-3">
+                        <% if @xml_file.compra.errors.any? %>
                             <div class="alert alert-danger alert-dismissible " role="alert">
-                                <% @produto.errors.full_messages.each do |message| %>
+                                <% @xml_file.compra.errors.full_messages.each do |message| %>
                                     <ul>
                                         <li><%= message %></li>
                                     </ul>
                                 <% end %>
+                                <% @xml_file.errors.clear %>
+                                <% @xml_file.compra.errors.clear %>
                             </div>
                         <% end %> 
                                             
-                        <div class="card-header">
-                            <%= link_to '', collaborators_backoffice_produtos_path, class:'btn btn-close btn-block'  %>
-
-                            <h4 class="text-center font-weight-light my-2">
-                                <%= "#{action_message} Produto"%> 
+                        <div class="card-header bg-primary" >
+                            <h4 class="text-center font-weight-light">
+                                <%= "#{action_message} Importação"%> 
                             </h4>
-                            
                         </div>
-                            
+                        <div class="card-body">
                             <!-- Nav tabs -->
                             <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Produto</button>
+                                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Fornecedor</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Estoque</button>
+                                    <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Produtos</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">Vendas</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Compras</button>
+                                    <button class="nav-link" id="pagto-tab" data-bs-toggle="tab" data-bs-target="#pagto" type="button" role="tab" aria-controls="pagto" aria-selected="false">Pagamentos</button>
                                 </li>
                             </ul>
 
-                            <!-- Tab panes -->
-                            <div class="tab-content">
+<div id="notice"></div>
+                            <%= form_with(model: [ :collaborators_backoffice,  @xml_file.compra ], local: true, id:"xml_compra") do |form_buy| %>
 
-                                <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                                    <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto } %>
-                                </div>
+                                <% if @xml_file.file.attached? %>
 
-                                <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                                    <table id="datatablesSimple" class="dataTable-table">
-                                        <thead>
-                                            <tr>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Cor</a></th>
-                                                <th data-sortable=""><a href="#" class="dataTable-sorter">Nome Cor</a></th>
-                                                <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% @produto.empresaprodutos.where("cod_empresa = ? ", current_collaborator.cod_empresa).each do |produto| %>
-                                                <tr>
-                                                <td><%= produto.cod_empresa %></td>
-                                                <td><%= produto.cod_cor %></td>
-                                                <td><%= produto.cor.nmcor %></td>
-                                                <td><%= produto.quantidade.to_i %></td>
-                                                </tr>
-                                            <% end %>
-                                        </tbody>
-                                    </table>
-                                </div>
 
-                                <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">                        
-                                    <table id="datatablesSimple" class="dataTable-table">
-                                        <thead>
-                                            <tr>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter"></a></th>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Cor</a></th>
-                                                <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                                                <th data-sortable="" style="width: 15.886288%;"><a href="#" class="dataTable-sorter">Dt Venda</a></th>
-                                                <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
-                                                <th data-sortable="" style="width: 110px;"><a href="#" class="dataTable-sorter">Valor</a></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% @produto.itensvenda.where("cod_empresa = ? ", current_collaborator.cod_empresa).order("cod_item desc").page(params[:page]).each do |item| %>
-                                                <tr>
-                                                    <td><%= item.cod_empresa %></td>
-                                                    <td><%= item.cod_cor %></td>
-                                                    <td><%= item.venda.pessoa.nome %></td>
-                                                    <td class=""><%= post_date item.venda.datavenda %></td>
-                                                    <td class=""><%= item.quantidade.to_i %></td>
-                                                    <td class=""><%= number_to_currency item.valorunitario %></td>
-                                                </tr>
-                                            <% end %>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="tab-pane" id="settings" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
-                                    <table id="datatablesSimple" class="dataTable-table">
-                                        <thead>
-                                            <tr>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Dt Compra</a></th>
-                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Cor</a></th>
-                                                <th data-sortable=""><a href="#" class="dataTable-sorter">Fornecedor</a></th>
-                                                <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
-                                                <th data-sortable="" style="width: 110px;"><a href="#" class="dataTable-sorter">Valor</a></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                    <%= form_buy.hidden_field :arquivoxml, value: form_buy.object.arquivoxml %>
+                                    <%= form_buy.hidden_field :valortotal, value: form_buy.object.valortotal %>
+                                    <%= form_buy.hidden_field :outrasdespesas, value: form_buy.object.outrasdespesas %>
+                                    <%= form_buy.hidden_field :desconto, value: form_buy.object.desconto %>
+                                    <%= form_buy.hidden_field :valorfrete, value: form_buy.object.valorfrete %>
+                                    <%= form_buy.hidden_field :xml_file, value: @xml_file.id %>
+
+
+                                    <div class="tab-content">
+
+                                        <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                                            <%#  agora aqui podemos manipular os dados do fornecedor para efetuar a compra %>
+                                            <%# dados do xml %>
+                                            <div class="row g-2 my-2">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating mb-3 mb-md-0">
+                                                        <%= form_buy.text_field :arquivoxml, disabled: true, class: "text form-control", placeholder:"arquivo" %>
+                                                        <%= form_buy.label :arquivoxml, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-floating">
+                                                        <%= form_buy.text_field :numeronf, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
+                                                        <%= form_buy.label :numeroNf, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-floating">
+                                                        <%= form_buy.text_field :serienf, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                                                        <%= form_buy.label :serie, class:"" %>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-2 my-2">
+                                                <div class="col-md-3">
+                                                    <div class="form-floating mb-3 mb-md-0">
+                                                        <%= form_buy.text_field :dataemissao, class: "form-control fallback datepicker", placeholder:"dt emissao", value: form_buy.object.dataemissao.strftime("%d/%m/%Y") %>
+                                                        <%= form_buy.label :data_emissao, class:"" %>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-floating">
+                                                        <%= form_buy.text_field :datacompra, class: "fallback datepicker text form-control", placeholder:"Dt Cadastro", value: form_buy.object.datacompra.strftime("%d/%m/%Y") %>
+                                                        <%= form_buy.label :data_cadastro, class:"" %>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             
-                                            <% @produto.itenscompra.where("cod_empresa = ? ", current_collaborator.cod_empresa).order("cod_item desc").limit(10).each do |item| %>
-                                                <tr>
-                                                    <td><%= post_date item.compra.datacompra %></td>
-                                                    <td><%= item.cod_cor %></td>
-                                                    <td><%= item.compra.pessoa.nome %></td>
-                                                    <td class=""><%= item.quantidade.to_i %></td>
-                                                    <td class=""><%= number_to_currency item.valorunitario%></td>
-                                                </tr>
-                                            <% end %>
-                                        </tbody>
-                                    </table>
-                                </div>
 
-                                <div class="mt-0 mb-3">
-                                    <div class="d-grid">
-                                        <div class="col-md-9 col-sm-9  offset-md-3">
-                                            <div id="setTime"></div
+                                            <hr class="my-2">
+                                            <%# dados fornecedor %>
+                                            <h5 class="my-2">Dados do Fornecedor</h5>
+                                            
+                                            <%= form_buy.fields_for :pessoa do |form_pessoa| %>
+
+                                                <div class="row g-2 my-2">
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-3 mb-md-0">
+                                                            <%= form_pessoa.text_field :nome, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                                                            <%= form_pessoa.label :nome, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                        <div class="col-md-3">
+                                                            <div class="form-floating">
+                                                                <%= form_pessoa.text_field :cpf_cnpj, class: "cnpj form-control", placeholder:"numero-Nf", id:"text" %>
+                                                                <%= form_pessoa.label :cnpj, class:"" %>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="form-floating">
+                                                                <%= form_pessoa.text_field :rg_ie, class: "form-control ", placeholder:"numero-Nf" %>
+                                                                <%= form_pessoa.label :inscricao_estadual, class:"" %>
+                                                            </div>
+                                                        </div>
+                                                </div>
+                                                <div class="row g-2 my-2">
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating">
+                                                            <%= form_pessoa.text_field :cidade, class: "form-control ", placeholder:"numero-Nf" %>
+                                                            <%= form_pessoa.label :cidade, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating">
+                                                            <%= form_pessoa.text_field :endereco, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
+                                                            <%= form_pessoa.label :endereco, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <hr class="my-2">
+                                                <h5 class="my-2">Contato Representante</h5>
+
+                                                <div class="row g-2 my-2">
+                                                    <div class="col-md-6">
+                                                        <div class="form-floating mb-3 mb-md-0">
+                                                            <%= form_pessoa.text_field :pessoacontato, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                                                            <%= form_pessoa.label :pessoacontato, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_pessoa.text_field :telefonecontato, class: "phone_with_ddd form-control ", placeholder:"numero-Nf" %>
+                                                            <%= form_pessoa.label :telefonecontato, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_pessoa.text_field :email, class: "form-control ", placeholder:"numero-Nf", type:"email" %>
+                                                            <%= form_pessoa.label :email, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <% end %>
+                                        </div>
+
+                                        <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
+                                        <div class="tab-pane" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="1">
+                                            
+                                            <table id="datatablesSimple" class="dataTable-table my-3" style="height: 100px;" >
+                                                <thead>
+                                                    <tr>
+                                                        <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Fornecedor</a></th>
+                                                        <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Sistema</a></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                
+                                                    <% index = 0 %>
+                                                        <%= form_buy.fields_for :itensCompra do |form_itens| %>
+                                                        
+                                                            <tr>
+                                                                <td class="align-middle">
+                                                                    <%# form_itens.text_field :pro_xml_temp %>
+
+                                                                    <p class="text-start text-uppercase"> 
+                                                                        Cod emissor: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:codproemissor] %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Nome: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:nome] %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Unidade Medida: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ucom] %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Quantidade: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object[:quantidade] %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Unitario: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( (form_itens.object[:valorunitario] ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        IPI/Tt: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:ipi], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Vl Frete: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:valor_frete], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Desconto Total:
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        Valor Total: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((form_itens.object[:valorunitario] * form_itens.object[:quantidade]) + ((form_itens.object[:ipi] + form_itens.object[:valor_frete].to_d) - form_itens.object.pro_xml_temp.desconto) ), precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        NCM: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ncm] %></span></p>
+                                                                    <p class="text-start text-uppercase">
+                                                                        CFOP: 
+                                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:cfop] %></span></p>
+                                                                
+                                                                </td>
+                                                                <td class="align-middle">
+                                                                    
+                                                                    <%= form_itens.hidden_field :pro_xml_temp, value: form_itens.object.pro_xml_temp.to_json %>
+
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-12">
+                                                                            <div class="form-floating mb-3 mb-md-0">
+                                                                                <%= form_itens.hidden_field :cod_produto %>
+                                                                                <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo" %>
+                                                                                <%# form_itens.label :produto, class:"" %>
+                                                                                <div id="products_list_<%= index %>" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                                                                                <% index += 1 %> 
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-10">
+                                                                            <div class="form-floating mb-3 mb-md-0">
+                                                                            <%= form_itens.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
+                                                                                    :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'},
+                                                                                        class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>                                                                                <%# form_itens.text_field :cor, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.number_field :quantidade, step: 1, class: "form-control ", onchange: "setValorTotal(this)" %>
+                                                                                <%= form_itens.label :quantidade, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                                                                <%= form_itens.label :valorunitario, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.text_field :ipi, disabled: false, value: (form_itens.object.ipi? ? number_to_currency(form_itens.object.ipi, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                                                                <%= form_itens.label :valor_ipi, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                                                                <%= form_itens.label :Icms_10_ST, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.text_field :valor_frete, disabled: false, value: number_to_currency(form_itens.object.valor_frete, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                                                                <%= form_itens.label :valor_frete, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <%= form_itens.text_field :desconto, disabled: false, value: number_to_currency(form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                                                                <%= form_itens.label :desconto, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 my-2">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d ) %>
+                                                                                <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                                                                                <%= form_itens.text_field :custoFinal, disabled: true, value: number_to_currency((valorTotal/form_itens.object.quantidade), precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                                                                <%= form_itens.label :Custo_Un_Final, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-floating">
+                                                                                <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
+                                                                                <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                                                                                <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                                                                <%= form_itens.label :valor_total, class:"" %>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        <% end %>
+                                                </tbody>
+                                            </table>
+                                            
+                                        </div>
+
+                                        <div class="tab-pane" id="pagto" role="tabpanel" aria-labelledby="pagto-tab" tabindex="2">
+
+                                            <div class="bg-primary" >
+                                                <h2 class="text-center font-weight-light">
+                                                    Dados NF
+                                                </h4>
+                                            </div>
+                                            <% xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
+                                            xml_doc = Nokogiri::XML(xml_content) 
+                                            tot_element = xml_doc.xpath('//*[local-name()="ICMSTot"]') 
+                                            fat_element = xml_doc.xpath('//*[local-name()="cobr"]') %>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p class="text-start text-uppercase">
+                                                        Total Prod: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vProd")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <p class="text-start text-uppercase">
+                                                        Desconto: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vDesc")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <p class="text-start text-uppercase">
+                                                        Seguro: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vSeg")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <p class="text-start text-uppercase">
+                                                        Icms 10 ST: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vST")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <hr class="my-2">
+                                                    <p class="text-start text-uppercase">
+                                                        Numero Fatura: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= (fat_element.at("nFat")&.text).to_i || 0 %></span>
+                                                    </p>
+                                                    <p class="text-start text-uppercase">
+                                                        Valor NF: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((fat_element.at("vLiq")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+                                                </div>
+
+                                                <%# 
+                                                    select * from itemcompra where cod_compra = ( select max(cod_compra) from compra );
+                                                    delete from itemcompra where cod_compra = ( select max(cod_compra) from compra );
+                                                    delete from contaspagrec where cod_compra = ( select max(cod_compra) from compra );
+                                                    delete from compra where cod_compra = ( select max(cod_compra) from compra );
+                                                %>
+                                                
+                                                <div class="col-md-6">
+                                                    <p class="text-start text-uppercase">
+                                                        Frete: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vFrete")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <p class="text-start text-uppercase">
+                                                        Outros: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vOutro")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+
+                                                    <p class="text-start text-uppercase">
+                                                        Total IPI: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vIPI")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+                                                    <p class="text-start text-uppercase">
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;">
+                                                            <br>
+                                                        </span>
+                                                    </p>
+                                                    <hr class="my-2">
+                                                    <p class="text-start text-uppercase">
+                                                        Valor Origem: 
+                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((fat_element.at("vOrig")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <br>
+                                            <div class="bg-primary" >
+                                                <h2 class="text-center font-weight-light">
+                                                    Frete
+                                                </h4>
+                                            </div>
+
+                                            <%= form_buy.fields_for :frete do |form_ff|  %>    
+                                                
+                                                <div class="row g-2 my-2">
+                                                    <div class="col-md-9">
+                                                        <div class="form-floating mb-3 mb-md-0">
+                                                            <%= form_ff.text_field :pessoa, class: "form-control border-top-0 border-start-0 border-end-0 border-dark ", placeholder:"Transportadora", readonly: false  %>
+                                                            <%= form_ff.label :transportadora, class:"" %>
+                                                            
+                                                            <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                                                            <%= form_ff.hidden_field :cod_pessoa, id: 'selected_frete_person_id' %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_ff.text_field :datacadastro,
+                                                                    value: (form_ff.object.try(:datacadastro).nil? ? post_date(DateTime.now) : form_ff.object.datacadastro),
+                                                                    class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark",
+                                                                    placeholder: "Dt",
+                                                                readonly: false %>
+                                                            <%= form_ff.label :dt_cadastro, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-2 my-2">
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_ff.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false  %>
+                                                            <%= form_ff.label :nr_romaneio, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_ff.text_field :datavencimento, class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false   %>
+                                                            <%= form_ff.label :dt_vencimento, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-floating">
+                                                            <%= form_ff.text_field :valor, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", placeholder:"", readonly: false  %>
+                                                            <%= form_ff.label :valor, class:"" %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                
+                                                <%= form_ff.hidden_field :empresa  %>
+                                                <%= form_ff.hidden_field :ativo %>
+                                                
+                                            <% end %>
+
+                                            <br>
+
+                                            <div class="bg-primary" >
+                                                <h2 class="text-center font-weight-light">
+                                                    Contas
+                                                </h4>
+                                            </div>
+
+                                            <table id="tblContas" class="dataTable-table my-3">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="">Numero</th>
+                                                        <th class="">Dt Vencimento</th>
+                                                        <th class="">valor Parcela</th>
+                                                        <th style="width: 3%;"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id = 'conta_field' class = "contas">
+                                                    <%= form_buy.fields_for :contas do |bill| %>
+                                                        <%= render partial: "conta_fields", locals: { f: bill } %> 
+                                                    <% end %>
+                                                </tbody>
+                                            </table> 
+
+                                            <div class="form-actions">
+                                                <%= link_to_add_association 'Adiciona Conta', form_buy, :contas, 
+                                                        force_non_association_create: true, id:"addConta",
+                                                        class: 'btn btn-primary bills', 
+                                                        data: { association_insertion_node: '.contas',
+                                                                association_insertion_method: :append } %>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            
-                        </div>
+                                <% end %>
+
+                                <div class="position-fixed bottom-0 end-0 m-4">
+                                    <div class="d-block my-3 mx-3">
+                                        <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+                                            <i class="fa fa-check fa-2x"></i>
+                                        </button>
+                                    </div>
+                                </div>  
+                            <% end %>
+                        </div> <%# car body %>
                     </div>
                 </div>
             </div>
@@ -140,29 +494,257 @@
     </main>
 </div>
 
+<%= render partial: 'layouts/shared/modal_alert' %>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
-// ---------------------------------
+
+    const isLocalhost = () => {
+        return (
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1'
+        );
+    };
+
+    let url = "";
+    if (isLocalhost()) {
+        url = 'http://localhost:3000/collaborators_backoffice/';
+    } else {
+        url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
+    }
+
+
+    $(document).ready(function() {
+    $('#xml_compra').submit(function(event) {
+        event.preventDefault(); // Impede o envio padrão do formulário
+        
+        var formData = $(this).serialize(); // Serializa os dados do formulário
+        
+        $.ajax({
+            url: url+'compras',
+            type: 'POST',
+            dataType: 'json',
+            data: formData,
+            success: function(response) {
+                // Manipular a resposta JSON em caso de sucesso
+                if (response.message) {
+                    // Se a resposta contém uma mensagem de sucesso
+                    alertModal(response.message)
+                    setTimeout(function() {
+                        window.location.href = '<%= collaborators_backoffice_xml_files_path %>';
+                    }, 3000); // Redireciona após 3 segundos (opcional)
+                    
+                } else if (response.error) {
+                    // Se a resposta contém uma mensagem de erro
+                    alertModal(response.error);
+                } else {
+                    // Se a resposta não contém nem mensagem de sucesso nem de erro
+                    alertModal("Ocorreu um erro inesperado ao processar sua solicitação.");
+                }
+                $('#xml_compra').html(response);
+            },
+            error: function(xhr, status, error) {
+                // Manipular a resposta de erro do AJAX
+                var errorMessage = "Ocorreu um erro ao processar sua solicitação.";
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                alertModal(errorMessage);
+            }
+        });
+    });
+});
+
 
     document.addEventListener("keypress", function () { 
-        console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+        //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
         if(event.keyCode == 13){ // 13 é o Enter
             event.preventDefault();
         }
     });
 
-// ----------------------------------
-    // keyPress Enter não faz o submit brands marcas
-    var list = document.getElementById('brands');
-    //console.log("List "+list)
-    
-    list.addEventListener("keypress", function () { 
-        console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-        if(event.keyCode == 13){ // 13 é o Enter
-            // event.preventDefault();
-            // quando precionar enter pega o texto da marca e passa como parametro para consulta
-            //list.innerHTML = getBrands("Tra%");
+    function thisIndex(field) {
+        var name = field.name;
+        var regex = /\[(\d+)\]/;
+        var matches = name.match(regex);
 
-            //console.log("Valor "+list.innerText);
+        if (matches && matches.length > 1) {
+            return parseInt(matches[1], 10);
+        } else {
+            return null;
+        }
+    }
+
+    $(document).on('keydown', '.produto_search', function(event) {
+        
+        let productsList = $(`#products_list_${thisIndex(this)}`);
+        if (event.key === 'Enter') {
+            selectProduct(this);
+        } else if (event.key === 'Escape') {
+            productsList.empty();
+            productsList.hide();
         }
     });
+
+    function selectProduct(field) {
+        
+        var index = thisIndex(field);
+
+        // Obtém a referência da div pelo id atual
+        var productsListDiv = document.getElementById(`products_list_$(index)`);
+
+        // Verifica se a div com id "products_list" existe
+        if (productsListDiv) {
+            // Define o novo id
+            productsListDiv.id = `products_list_${index}`;
+        }
+        
+        var selectedProductIdField = document.getElementById(`compra_itensCompra_attributes_${index}_cod_produto`);
+
+        let productsList = $(`#products_list_${index}`);
+
+        let apiUrl = url+ "buscas/buscar_produtos";
+
+        productOptions();
+        
+        // Adiciona um evento de clique aos itens da lista
+        productsList.on('click', `div.list-group-item`, function() {
+            let selectedProduct = $(this).data('produto');
+            let selectedProductId = $(this).data('cod_produto');
+            console.log(index)
+            field.value =  selectedProduct ;
+            selectedProductIdField.value = selectedProductId;
+            // Limpa a lista de resultados
+            productsList.hide();
+
+        });
+
+        function productOptions() {
+            var query = field.value.trim().toLowerCase();
+            productsList.empty();
+            
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                data: { entidade: 'Produto', query: query },
+                success: function(data) {
+                    productsList.empty();
+                    data.forEach(function(product) {
+                        var listItem = $('<div>').text(product.produto);
+                        listItem.addClass('list-group-item');
+                        listItem.data('cod_produto', product.cod_produto); // Armazena o ID do produto nos dados do item
+                        listItem.data('produto', product.produto); 
+                        productsList.append(listItem);
+                    });
+
+                    // Exibe a lista de resultados
+                    productsList.show();
+                },
+                error: function(err) {
+                    console.error('Erro na requisição AJAX:', err);
+                }
+            });
+        }
+    };
+//  ---------------- valor total dos itens quando alterado a quantidade ou o valor unitario  ----
+    function setValorTotal(field) {
+
+        let index = thisIndex(field);
+        let proValor = document.getElementById(`compra_itensCompra_attributes_${index}_valorunitario`);
+        let proQtd   = document.getElementById(`compra_itensCompra_attributes_${index}_quantidade`);
+        
+        let valorst = document.getElementById(`compra_itensCompra_attributes_${index}_icms`);
+
+        let proIpi = document.getElementById(`compra_itensCompra_attributes_${index}_ipi`);
+        let proFrete = document.getElementById(`compra_itensCompra_attributes_${index}_valor_frete`);
+        let proDesconto = document.getElementById(`compra_itensCompra_attributes_${index}_desconto`);
+        let proTotal = document.getElementById(`compra_itensCompra_attributes_${index}_valorTotal`);
+
+        proIpi = proIpi.value ? parseFloat(proIpi.value.replace(",", ".")) : 0;
+        proFrete = proFrete.value ? parseFloat(proFrete.value.replace(",", ".")) : 0;
+        proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
+        proTotal = proTotal.value ? parseFloat(proTotal.value.replace(",", ".")) : 0;
+        valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
+
+        // vlUni = ((parseFloat( proValor.value ? parseFloat(proValor.value.replace(",",".")) : 0) * (proQtd.value ? (parseFloat(proQtd.value.replace(",","."))) : 0 )));
+        vlUni = (proIpi + proFrete + proTotal + valorst - proDesconto)
+        proTotal.value = vlUni + proIpi + proDesconto.value 
+        proTotal.value = parseFloat(proTotal.value).toFixed(2).replace(".",",");
+
+        proValor = "";
+        proQtd   = "";
+        proTotal = "";
+        index = "";
+
+    }
+    // fim valor total item \
+    // ------------ BUSCA PESSOAS ------------- //
+
+    $(document).ready(function() {
+        var categorySearch = $('#compra_frete_pessoa'); //document.getElementById('venda_pessoa'); // 
+        var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
+        var selectedPersonIdField = $('#selected_frete_person_id'); // insere o codigo da pessoa no campo hiden
+        
+        let apiUrl = url+ "buscas/buscar_pessoas";
+
+        // Adiciona um evento de keypress para a tecla Enter
+        categorySearch.on('keydown', function(event) {
+           // console.log(event.key);
+            if (event.key === 'Enter') {
+                filterOptions();
+            } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+                // Código 27 corresponde à tecla "ESC"
+                categorySearch.val(''); // Limpa o campo de busca
+                selectedPersonIdField.val("");
+                resultsList.empty();
+                resultsList.hide();
+                
+            }
+        });
+        
+        // Adiciona um evento de clique aos itens da lista
+        resultsList.on('click', 'div.list-group-item', function() {
+            var selectedPerson = $(this).text();
+            var selectedPersonId = $(this).data('cod_pessoa');
+            
+            // Preenche o campo escondido com o ID da pessoa selecionada
+            selectedPersonIdField.val(selectedPersonId);
+
+            // Atualiza o campo de busca com o nome da pessoa selecionada
+            categorySearch.val(selectedPerson);
+
+            // Limpa a lista de resultados
+            resultsList.empty();
+            resultsList.hide();
+        });
+
+        function filterOptions() {
+            var query = categorySearch.val().trim().toLowerCase();
+            resultsList.empty();
+
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                data: { entidade: 'Pessoa', query: query },
+                success: function(data) {
+                    data.forEach(function(person) {
+                        var listItem = $('<div>').text(person.nome);
+                        listItem.addClass('list-group-item');
+                        listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                        listItem.data('cpf_cnpj',   person.cpf_cnpj); 
+                        resultsList.append(listItem);
+                        //console.log(person.email);
+                        var data = person;
+                    });
+
+                    // Exibe a lista de resultados
+                    resultsList.show();
+                },
+                error: function(err) {
+                    console.error('Erro na requisição AJAX:', err);
+                }
+            });
+        }
+    });
+    // -------- Fim Busca pessoas ---------//
 </script>

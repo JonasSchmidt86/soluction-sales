@@ -9,4 +9,7 @@ class Core < ApplicationRecord
         return [self.nmcor, self.cod_cor].join(' - ')
     end
     
+    def to_s
+        nmcor;
+    end
 end

@@ -34,6 +34,7 @@ Rails.application.routes.draw do
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
+    resources :compras, only: [:index, :edit, :new, :create, :destroy]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
@@ -48,8 +49,10 @@ Rails.application.routes.draw do
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'
+    get 'vendas/check_cpf_cnpj_venda', to: 'vendas#check_cpf_cnpj_venda'
 
     get 'report_sales', to: 'report/rep_sales#index'
+    get 'report_buy', to: 'report/rep_buy#index'
     get 'report/report_sales/hist_client/:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'
 
     get 'report_put_box', to: 'report/rep_put_box#index', as: 'report_put_box_index'

@@ -1,9 +1,10 @@
 <tr class= "nested-fields">
     <td class="">
-        <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+        <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: false %>
     </td>
     <td class="">
-        <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+        <%# f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: params[:dtvencimento].strftime("%d/%m/%Y")  %>
+        <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: f.object.dtvencimento.present? ? f.object.dtvencimento.strftime("%d/%m/%Y") : "" %>
     </td>
     <td class="">
         <%= f.text_field :valorparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
@@ -13,7 +14,7 @@
 
     <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
     <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
-    <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 1 %>
+    <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 2 %>
 
     <td class="align-middle fw-semibold">
         <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
@@ -21,9 +22,3 @@
         <% end %>
     </td>
 </tr>
-
-<script>
-    $(document).ready(function () {
-        $('.datepicker').datepicker();
-    });
-</script>

@@ -10,68 +10,63 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
   def new
 
     puts "-------- NEW PRODUTO XML -----" + params.to_s
-    
+
     @xml_file = XmlFile.find_by(id: params[:format]);
+    # gera o xml_file cria a compra
+    puts "--------------------------"
+    puts @xml_file.name.to_s.upcase
 
-    # xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
-    # xml_doc = Nokogiri::XML(xml_content)
-    return @xml_file
-
-    # det_elements = xml_doc.xpath('//*[local-name()="det"]')
-    # @produtos_xml = [];
-    
-    # det_elements.each do |pr|
-    #   codEmissor = pr.at("cProd")&.text if pr.at("cProd")&.text || 0
+    if @xml_file.compra.nil?
+      compra = Compra.new;
+      puts "------------ nil compra ---------- "
       
-    #   xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).order(:codigo)
-    #   xmlProd = nil
+      xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
+      xml_doc = Nokogiri::XML(xml_content)
 
-    #   # pode trazer mais de 1 item aqui ele vai verificar se o nome do item é igual
-    #   #tbm vai ter o caso do nome ser igual e a cor vem em info adicionais tbm tem que validar
-    #   if xmlProds
-    #     xmlProds.each do |item|
-    #       if item.nome.downcase.gsub(/\s+/, '') == pr.at("xProd")&.text.downcase.gsub(/\s+/, '')
-    #         xmlProd = item;
-    #         break
-    #       end
-    #     end
-    #   end
+      ide_element = xml_doc.xpath('//*[local-name()="ide"]')
+      emit_elements = xml_doc.xpath('//*[local-name()="emit"]')
+      det_elements = xml_doc.xpath('//*[local-name()="det"]')
+      fat_elements = xml_doc.xpath('//*[local-name()="fat"]')
+      dup_elements = xml_doc.xpath('//*[local-name()="dup"]')
+      icmsTotal_elements = xml_doc.xpath('//*[local-name()="ICMSTot"]')
+      
+      emitCnpj = emit_elements.at("CNPJ")&.text if emit_elements.at("CNPJ")&.text
 
-    #   if xmlProd.nil?
-    #     puts "-------- NEW PRODUTO XML -----"
-    #     produto_xml = Produtoxml.new 
-    #     produto_xml.pessoa = @xml_file.pessoa
-    #     produto_xml.codproemissor = codEmissor
+      compra.pessoa =  @xml_file.pessoa
+      compra.cod_empresa = @xml_file.empresa_id
+      compra.cancelada = false;
+    #cod_frete bigint,
 
-    #   else # atualiza dados
-    #     puts "-------- ELSE não é nil PRODUTO XML -----"
+      compra.datacompra = DateTime.now
+      compra.dataemissao = DateTime.iso8601(ide_element.at("dhEmi")&.text) || DateTime.now;
+      compra.numeronf = (ide_element.at("nNF")&.text).to_i || 0;
+      compra.serienf = (ide_element.at("serie")&.text).to_i || 0;
 
-    #     if pr.at("xProd")&.text
-    #       unless xmlProd.nome.downcase.gsub(/\s+/, '') == pr.at("xProd")&.text.downcase.gsub(/\s+/, '')
-    #         puts "-------- ELSE UNLESS  PRODUTO XML -----"
-    #         produto_xml = Produtoxml.new 
-    #         produto_xml.pessoa = @xml_file.pessoa
-    #         produto_xml.codproemissor = codEmissor
-    #       else 
-    #         produto_xml = xmlProd;
-    #       end
-    #     end
-        
-    #   end
+      # totais
+      compra.valorfrete = ((icmsTotal_elements.at("vFrete")&.text).to_f || 0) ;  # vFrete -  Valor do frete que vem na NF
+      compra.outrasdespesas = (icmsTotal_elements.at("vOutro")&.text.to_f || 0 ); # vOutro - Outras despesas 
+      compra.desconto = (icmsTotal_elements.at("vDesc")&.text.to_f || 0 ); # Desconto da NF
+      #compra.tt_prod = (icmsTotal_elements.at("vProd")&.text.to_f || 0 );  # total de produtos
+      ######
 
-    #   produto_xml.nome = pr.at("xProd")&.text.upcase if pr.at("xProd")
-    #   produto_xml.infadicionais = pr.at("infAdProd")&.text.upcase if pr.at("infAdProd")&.text || nil
-    #   produto_xml.ncm = pr.at("NCM")&.text if pr.at("NCM")&.text || 0
-    #   produto_xml.ucom = pr.at("uCom")&.text if pr.at("uCom")&.text || 0
-    #   produto_xml.cfop = pr.at("CFOP")&.text if pr.at("CFOP")&.text || 0
-    #   produto_xml.cest = pr.at("CEST")&.text if pr.at("CEST")&.text || 0
+      compra.valortotal = (fat_elements.at("vLiq")&.text).to_f || 0;
+      
+      compra.cod_funcionario = current_collaborator.cod_funcionario
 
-    #   puts produto_xml
+      #apenas na hora de gravar
+      #compra.cod_compraempresa = (Compra.select(:cod_compraempresa).where("cod_empresa = 2").last).cod_compraempresa + 1;
+      
+      compra.arquivoxml = @xml_file.file.key.upcase # se eu salvar a key posso encontrar o arquivo novamente - nome do arquivo = @xml_file.file.filename.to_s
 
-    #   @produtos_xml << produto_xml
-    # end
-    
-    # return @produtos_xml
+      @xml_file.compra = compra;
+
+      compra.itensCompra = det_itens(det_elements)
+      compra.contas = dup_contas(dup_elements)
+
+      @xml_file.compra = compra;
+    end
+
+    return @xml_file
 
   end
   
@@ -82,6 +77,8 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     #Ler o arquivo para atualizar informações como CEST NCM entre outros quando o produtoXML já existir  
     puts "-------- CREATE PRODUTO XML -----" + params.to_s
 
+    puts params
+    # break;
     produtoXmlSalvar = [];
 
     # Itera sobre cada produto no hash de produtos
@@ -97,10 +94,6 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
         puts "-------- SE -------------------------"
         produto_xml_string = produto_info["produto_xml"]
         produto_xml_hash = JSON.parse(produto_xml_string)
-
-        puts "COD PROD - " + produto_info["cod_produto"]
-        puts "COD PROD - " + produto_info["cod_cor"]
-
 
         codigo_do_produtoXML = produto_xml_hash["codigo"]
         puts "Código do ProdutoXML: #{codigo_do_produtoXML}"
@@ -118,6 +111,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
           prXML.ucom = produto_xml_hash["ucom"]
           prXML.cfop = produto_xml_hash["cfop"]
           prXML.cest = produto_xml_hash["cest"]
+          prXML.desconto = produto_xml_hash["vDesc"]
 
         end
         # Pré-save
@@ -155,6 +149,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
                 cod_pessoa: produto_hash["cod_pessoa"],
                 ucom: produto_hash["ucom"],
                 cfop: produto_hash["cfop"],
+                desconto: produto_hash["vDesc"],
                 cest: produto_hash["cest"]
               )
 
@@ -179,38 +174,116 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     redirect_to collaborators_backoffice_xml_files_path , notice: "XML Atualizado"
   end
 
+  
   private
 
   def det_itens(products)
-    lista_produtos = []
+    list_ItensCompra = []
 
     products.each do |pr|
-      id = pr.at("cProd")&.text
-      nome = pr.at("xProd")&.text
-      valor = pr.at("vProd")&.text
 
-      produto = { id: id, nome: nome, valor: valor }
-      lista_produtos << produto
-    end
+      codEmissor = pr.at("cProd")&.text if pr.at("cProd")&.text || 0;
+      nmXML = pr.at("xProd")&.text if pr.at("xProd")&.text || '';
+      nmXML = GenericService.remover_acentos(nmXML); 
 
-    return lista_produtos
-  end
+      # xmlProds = Produtoxml.where(codproemissor: codEmissor, nome: nmXML, pessoa: @xml_file.pessoa).order(:codigo);
+      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).where(" nome ilike ? ", nmXML).order(:codigo)
 
-  def det_pagto(payments)
-    payments.each do |pay|
-      puts " Tipo: " + pay.at("tPag")
-      puts " desc: " + pay.at("xPag") if pay.at("xPag")
-      puts " valr: " + pay.at("vPag")
+      itemcompra = Itemcompra.new
+      produtoXMl = Produtoxml.new
+      if xmlProds 
+        xmlProds.each do |prXML|
+
+          if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === GenericService.remover_acentos((pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
+
+            prXML.ncm = ( pr.at("NCM")&.text if  pr.at("NCM")&.text || prXML.ncm);
+            prXML.produto.ncm = prXML.ncm;
+
+            #atualizar produtoXML e NCM Produto
+            if prXML.changed?
+              prXML.save!
+              puts "Produto XML Atualizado Codigo: #{prXML.codigo}"
+            end
+            produtoXMl = prXML;
+            itemcompra.produto = prXML.produto
+            itemcompra.cor = prXML.cor
+
+          end 
+        end
+      end
       
+      if produtoXMl.codigo.blank?
+        puts " ---------- new Produtoxml.new ----------"
+      end
+      produtoXMl.codproemissor = ( pr.at("cProd")&.text if pr.at("cProd")&.text || '')
+      produtoXMl.cod_pessoa = @xml_file.pessoa
+      produtoXMl.nome = nmXML
+      produtoXMl.infadicionais = GenericService.remover_acentos( (pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || '').to_s )
+      produtoXMl.ncm = ( pr.at("NCM")&.text if pr.at("NCM")&.text || '')
+      produtoXMl.ucom = ( pr.at("uCom")&.text if pr.at("uCom")&.text || '')
+      produtoXMl.cfop = ( pr.at("CFOP")&.text if pr.at("CFOP")&.text || '')
+      produtoXMl.cest = ( pr.at("CEST")&.text if pr.at("CEST")&.text || '')
+        
+      produtoXMl.desconto = (pr.at("vDesc")&.text if  pr.at("vDesc")&.text || '0').to_f;
+
+      itemcompra.cod_empresa = @xml_file.empresa_id
+      itemcompra.numeronf = @xml_file.compra.numeronf
+
+      # ST
+      icms10_elements = pr.xpath('.//*[local-name()="ICMS10"]')
+
+      if icms10_elements.any?
+        itemcompra.icms = (icms10_elements.at("vICMSST")&.text if  pr.at("vICMSST")&.text || 0).to_d  #pr.at("vICMS")&.text if  pr.at("vICMS")&.text || 0 # Não compoe o custo do produto
+      else
+        itemcompra.icms = 0.00
+      end
+      puts "\n Valor do ICMS #{ itemcompra.icms } \n"
+      puts "\n Valor do ICMS #{ icms10_elements.any? } \n"
+
+      itemcompra.quantidade = (pr.at("qCom")&.text if  pr.at("qCom")&.text || 0).to_i
+      itemcompra.ipi = ((pr.at("vIPI")&.text if  pr.at("vIPI")&.text || 0).to_f) #(pr.at("pIPI")&.text if  pr.at("pIPI")&.text || 0).to_f
+      # vIPI valor do ipi divide pela quantidade + valor unitario
+      
+
+      valorUnitario = (pr.at("vUnCom")&.text || '0').gsub(',', '.').to_f
+
+      valorIPI = pr.at("vIPI")&.text
+      valorIPI = (valorIPI.gsub(',', '.') if valorIPI).to_f
+      itemcompra.valorunitario = valorUnitario.to_f
+
+      vl_frete = pr.at("vFrete")&.text
+      vl_frete = (vl_frete.gsub(',', '.') if vl_frete).to_d
+      itemcompra.valor_frete = ( vl_frete ).to_d
+
+      itemcompra.pro_xml_temp = produtoXMl
+
+      list_ItensCompra << itemcompra
     end
+
+    return list_ItensCompra
   end
 
-  def charge_pagto(duplicates)
+
+  def dup_contas(duplicates)
+
+    list_contas = []
+    nrParcela = 0;
     duplicates.each do |pay|
-      puts " nDup: " + pay.at("nDup")
-      puts "dVenc: " + pay.at("dVenc") if pay.at("dVenc")
-      puts " vDup: " + pay.at("vDup")
-    end
-  end
+      nrParcela += 1;
+      conta = Contaspagrec.new
 
+      conta.cod_empresa = @xml_file.empresa_id
+      conta.ativo = true;
+      conta.dtvencimento = (pay.at("dVenc")&.text if  pay.at("dVenc")&.text || 0).to_date
+      conta.numeroparcela = nrParcela
+      conta.quitada = false;
+      conta.valorparcela = (pay.at("vDup")&.text if  pay.at("vDup")&.text || 0).to_f
+      conta.cod_tppagamento = 2 # 2 é Parcela de compra
+
+      list_contas << conta;
+    end
+
+    return list_contas;
+  end
+  
 end

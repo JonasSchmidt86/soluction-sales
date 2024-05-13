@@ -375,3 +375,9 @@
 # -- select max(cod_lancamentocaixa) from lancamentoscaixa
 # SELECT setval('lancamentocaixa_sequence', (select max(cod_lancamentocaixa)+1 from lancamentoscaixa));
 
+## add sequence na tabela Produtoxml
+# ALTER TABLE Produtoxml
+# ALTER COLUMN codigo SET DEFAULT nextval('produtoxml_codigo_seq');
+## add sequence na tabela FRETE
+# ALTER TABLE IF EXISTS public.frete
+# 	ALTER COLUMN cod_frete SET DEFAULT nextval('frete_sequence');

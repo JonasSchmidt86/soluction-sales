@@ -75,7 +75,6 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
 
     end
       
-
     def edit
         #@funcionario.funcionariosempresa.build if @funcionario.funcionariosempresa.blank?
     end
@@ -95,11 +94,6 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
                 empresa = Empresa.find_by(cod_empresa: codigo)
 
                 funcionario_empresa = @funcionario.funcionarioempresas.find_or_initialize_by(empresa: empresa)
-
-                puts "-------------------------"
-                puts "-------------------------"
-                puts empresa_attributes[:ativo]
-                puts "-------------------------"
                 funcionario_empresa.ativo = true
                 @funcionario.funcionarioempresas << funcionario_empresa;
             end

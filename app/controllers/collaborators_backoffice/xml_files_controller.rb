@@ -9,20 +9,37 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
 
       consulta = " empresa_id = ? ";
 
+      # criar parametro para ter a opção de ver ou não os processados 
+      consulta += " and compra_id is null "
+
       if !params[:term].blank?
           consulta += " and pessoa_id in (select cod_pessoa from pessoa where upper(apelido) ilike upper('%"+ params[:term] +"%')) "
       end
 
-      if !params[:dataInicial].blank? && !params[:dataFinal].blank?
-        consulta += " and date(created_at) between to_date('" + params[:dataInicial] +"', 'DD/MM/YYYY') and to_date('" + params[:dataFinal] + "', 'DD/MM/YYYY') ";
-      else
-          params[:dataInicial] = Date.today.beginning_of_month.strftime("%d/%m/%Y");
-          params[:dataFinal] = Date.today.end_of_month.strftime("%d/%m/%Y");
-          # consulta += " and date(created_at) between to_date('" + Date.today.beginning_of_month.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
-          consulta += " and date(created_at) between to_date('" + params[:dataInicial] +"', 'DD/MM/YYYY') and to_date('" + params[:dataFinal] + "', 'DD/MM/YYYY') "
+      dt_inicial = nil;
+      dt_final = nil;
+      begin 
+        unless params[:dataInicial].blank?
+          dt_inicial = Date.parse(params[:dataInicial]).strftime("%d/%m/%Y")
+        end
+        unless params[:dataFinal].blank?
+          dt_final = Date.parse(params[:dataFinal]).strftime("%d/%m/%Y")
+        end
+      rescue ArgumentError
+        dt_inicial = (Date.today.beginning_of_month.strftime("%d/%m/%Y"));
+        dt_final = (Date.today.end_of_month.strftime("%d/%m/%Y"));
+        params[:dataInicial] = dt_inicial
+        params[:dataFinal] = dt_final
+        
       end
 
-      @xml_files = XmlFile.where(consulta, current_collaborator.empresa.cod_empresa).page(params[:page])
+      puts "\nInicial: #{dt_inicial} - Final #{dt_final}"
+      puts "Inicial: #{dt_inicial} - Final #{dt_final}\n\n"
+
+      consulta += " and date(created_at) between to_date('" + dt_inicial.to_s + "', 'DD/MM/YYYY') and to_date('" + dt_final.to_s  + "', 'DD/MM/YYYY') ";
+    
+      @xml_files = XmlFile.where(consulta, current_collaborator.empresa.cod_empresa).page(params[:page]);
+
     end
   
     def show
@@ -34,11 +51,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
     end
 
     def import
-      # criar uma nova compra
-      # passar os dados das compra
-        # Fornecedor e valores
-      # Passar os itens
-      # Passar a forma de Pagamento
+      
         puts "Import - --------------"
         puts "Ler arquivo e passar para o produtoXML"
         redirect_to new_collaborators_backoffice_produtoxml_path(@xml_file), notice: "Import XML"
@@ -46,12 +59,13 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
     end
     
     def create
-
+      puts "-------- CREATE XML_FILE -----"
+      
       unless params[:xml_file]
         redirect_to collaborators_backoffice_xml_files_path, notice: 'Selecione um arquivo.'
         return
       end
-
+      
       @xml_file = XmlFile.new
       
       if xml_file_params[:file].present?
@@ -90,10 +104,34 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
 
         if cnpj_val
           fornecedor = Pessoa.select(:cod_pessoa, :apelido).where(cpf_cnpj: cnpj_val).limit(1).first
-          if fornecedor
-            @xml_file.name = fornecedor.apelido
-            @xml_file.pessoa = fornecedor
+          
+          if !fornecedor
+            # cadastrar fornecedor novo
+            fornecedor = Pessoa.new
+
+            fornecedor.tipo = 'J'; # se for cnpj
+            fornecedor.cpf_cnpj = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text;
+            fornecedor.rg_ie = xml_doc.xpath('//*[local-name()="emit"]').at("IE")&.text;
+
+            fornecedor.nome = xml_doc.xpath('//*[local-name()="emit"]').at("xNome")&.text;
+            fornecedor.apelido = xml_doc.xpath('//*[local-name()="emit"]').at("xFant")&.text;
+            
+            fornecedor.endereco = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xLgr")&.text;
+            fornecedor.numero = xml_doc.xpath('//*[local-name()="enderEmit"]').at("cMun")&.text;
+            fornecedor.bairro = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xBairro")&.text;
+            fornecedor.telefone = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
+            fornecedor.celular = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
+
+            # buscar pelo cep a cidade 
+            fornecedor.cep = xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text;
+
+            id_cidade = ViacepService.get_id_cidade(xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text)
+            fornecedor.cod_cidade = id_cidade.present? ? id_cidade : 1 # se não encontrar a cidade ele vai deixar padrão marechal
+
           end
+          @xml_file.name = fornecedor.apelido
+          @xml_file.pessoa = fornecedor
+
         end
     
         key = StorageService.dynamic_path(caminho_do_arquivo)

@@ -16,6 +16,13 @@ class ViacepService
         return nil
       end
     end
+
+    def self.get_id_cidade(cep)
+      address = self.get_address_by_cep(cep)
+      city_without_accents = I18n.transliterate(address[:city]);
+      cidade = Cidade.select(:cod_cidade).where("nome ilike ? ", city_without_accents).first;
+      cidade = cidade.cod_cidade if cidade.present?
+    end
     
   end
   

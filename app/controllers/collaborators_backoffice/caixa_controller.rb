@@ -36,11 +36,6 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
             @caixa = Caixa.new do |cx|
                 cx.cod_empresa = current_collaborator.cod_empresa
                 cx.dataabertura = DateTime.now
-                puts "----------------- DateTime ----"
-                puts cx.dataabertura
-                puts "------------------Date.NOW---"
-                puts Time.current
-                puts "------------------Date.NOW---"
 
                 cx.valorabertura = cx2.valorfechamento      
                 cx.cod_funcionarioabertura = current_collaborator.cod_funcionario

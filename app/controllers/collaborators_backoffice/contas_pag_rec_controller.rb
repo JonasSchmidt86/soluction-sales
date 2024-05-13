@@ -8,6 +8,7 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         @array =  ['Abertos', 'Liquidados', 'Todos']
         
         per_page = params[:per_page].present? ? params[:per_page].to_i : 30
+
         if params[:per_page].present? && params[:per_page].to_i === 0
             @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
                     .order(dtvencimento: :asc, cod_contaspagrec: :desc );
@@ -37,7 +38,11 @@ private
     def consulta_index
         consulta = "";      
         if !params[:nrVenda].blank?
-            consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
+            if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
+                consulta += " cod_compra in (select cod_compra from Compra where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and numeronf = '" + params[:nrVenda] + "') "
+            else
+                consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
+            end            
         else 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
                 consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "

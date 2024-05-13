@@ -26,6 +26,10 @@ class Produto < ApplicationRecord
         return [self.nome, self.cod_produto].join(' - ');
     end
 
+    def to_s
+        nome;
+    end
+
     paginates_per 30
     
 end

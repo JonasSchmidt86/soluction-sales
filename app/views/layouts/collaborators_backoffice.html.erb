@@ -186,6 +186,11 @@
                                                 Lançamentos Caixa
                                             <% end %>
                                         </a>
+                                        <a>
+                                            <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                                                Relatório de Compra
+                                            <% end %>
+                                        </a>
                                     </nav>
                                 </div>
 
@@ -230,6 +235,78 @@
 
         <script>
 
+// -------------------- FUNÇÃO PARA RETORNO O ENDEREÇO COM O CEP --------------------------------------------------------
+    function removerAcentos(texto) {
+        return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function buscarEnderecoPorCEP(cepInput) {
+        const cepValue = cepInput.value.replace(/\D/g, '');
+        if (cepValue.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
+            .then(response => response.json())
+            .then(data => {
+
+                const enderecoInput = document.querySelector('[name*="endereco"]');
+                const bairroInput = document.querySelector('[name*="bairro"]');
+                const citySelect = document.querySelector('[name*="cod_cidade"]');
+
+                if (!data.erro) {
+                    //document.getElementById('pessoa_endereco').value = removerAcentos(data.logradouro.toUpperCase());
+                    //document.getElementById('pessoa_bairro').value = removerAcentos(data.bairro.toUpperCase());
+                    //const citySelect = document.getElementById('pessoa_cod_cidade');
+
+                    if (enderecoInput) {
+                        enderecoInput.value = removerAcentos(data.logradouro.toUpperCase());
+                    }
+                    if (bairroInput) {
+                        bairroInput.value = removerAcentos(data.bairro.toUpperCase());
+                    }
+                    if (citySelect) {
+                        citySelect.value = removerAcentos(data.localidade.toUpperCase());
+                    }
+                    const desiredCity = removerAcentos(data.localidade.toUpperCase());
+
+                    for (let i = 0; i < citySelect.options.length; i++) {
+                        if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
+                            citySelect.value = citySelect.options[i].value;
+                            break;
+                        }
+                    }
+                } else {
+                    if (enderecoInput) {
+                        enderecoInput.value = "";
+                    }
+                    if (bairroInput) {
+                        bairroInput.value = "";
+                    }
+                    if (citySelect) {
+                        citySelect.value = 0;
+                    }
+                    // document.getElementById('pessoa_endereco').value = '';
+                    // document.getElementById('pessoa_cod_cidade').selectedIndex = 0;
+                    // document.getElementById('pessoa_bairro').selectedIndex = '';
+                }
+            })
+            .catch(error => console.error('Ocorreu um erro:', error));
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const cepInput = document.getElementById('pessoa_cep');
+        if (cepInput) {
+            cepInput.addEventListener('blur', function() {
+                buscarEnderecoPorCEP(cepInput);
+            });
+
+            cepInput.addEventListener('input', function() {
+                buscarEnderecoPorCEP(cepInput);
+            });
+        }
+    });
+
+// ----------------------------------------------------------------------------------
+
             $(document).ready(function () {
                 $('.datepicker').datepicker();
             });
@@ -239,6 +316,10 @@
                 var alertMessage = document.getElementById('alertMessage');
                 alertMessage.textContent = mensagem; // Define a mensagem personalizada no alerta
                 $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modals)
+                
+                setTimeout(function() {
+                    $(modal).modal('hide');
+                }, 2900); // Redireciona após 2.9 segundos (opcional)
             }
 
             <% if notice %>
@@ -276,8 +357,13 @@
                 // Quando o usuário digita no campo de texto
                 $('.text').on('input', function() {
                     $(this).val($(this).val().toUpperCase());
+                    $(this).attr("autocomplete", "off");
                 });
             });
+            // tira a sugestão dos campos 
+             $(document).ready(function() {
+                 $("input[type='text']").attr("autocomplete", "off");
+             });
 
 // ---------------------------------
 //
@@ -294,8 +380,6 @@
                 var elemento = document.getElementById('valor');
                 var valor = elemento.value;
 
-                console.log("Passou formatarMoeda!! ")
-
                 valor = valor + '';
                 valor = parseInt(valor.replace(/[\D]+/g, ''));
                 valor = valor + '';
@@ -307,6 +391,19 @@
                 elemento.value = valor;
                 if(valor == 'NaN') elemento.value = '';
             };
+
+            $('.cpf-cnpj').mask('000.000.000-00', {reverse: false});
+
+            // Adiciona um ouvinte de eventos para verificar se é CPF ou CNPJ e aplicar a máscara correta
+            $('.cpf-cnpj').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length > 11) {
+                    $(this).mask('00.000.000/0000-00', {reverse: true});
+                } else {
+                    $(this).mask('000.000.000-00', {reverse: true});
+                }
+            });
+
 
             // para mascaras gem jquery-mask-pluguin
             $(document).ready(function(){

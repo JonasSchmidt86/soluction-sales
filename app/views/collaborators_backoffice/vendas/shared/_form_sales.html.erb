@@ -12,6 +12,8 @@
                                         <li><%= message %></li>
                                     </ul>
                                 <% end %>
+                                <% @sale.errors.clear %>
+                                <% @sale.pessoa.errors.clear %>
                             </div>
                         <% end %> 
                                             
@@ -21,162 +23,171 @@
                             </h4>
                         </div>
                         <div class="card-body">
-                            <%= form_with(model: [ :collaborators_backoffice, @sale ], local: true) do |form| %>
 
-                            <div class="row g-2 d-flex align-items-center">
+                            <%= form_with(model: [ :collaborators_backoffice, @sale ], local: true) do |sale| %>
+                            
+                            <div class="col-md-12">
 
-                                <div class="col-md-9">
-                                    <div class="form-floating mb-3">
-                                        <input type="text" id="pessoa_search" placeholder="Digite para buscar" class="text form-control">
-                                        <div id="results_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
-                                        <%= form.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                                <div class="row align-items-center">
+                                    <div class="col-md-9">
+                                        <div class="form-floating">
+                                            <%= sale.text_field :nome_pessoa, class: "form-control text", placeholder:"Digite para buscar" %>
+                                            <%= sale.label :pessoa_nome, class:"" %>
+                                            <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                                            <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">         
+                                        <div class="form-floating">                               
+                                            <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle" do %>
+                                                <i class="fa-brands fa-hire-a-helper"></i>
+                                            <% end %>
+                                            <%= render partial: 'collaborators_backoffice/vendas/shared/pessoa_modal', locals: { form: sale } %>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="row my-2 mx-2 align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="form-floating">
+                                            <%= sale.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                                            <%= sale.label :data_venda, class:"" %>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            <%= sale.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                            <%= sale.label :numero_nf, class:"" %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row my-2 mx-2">
+                                    <div class="col-md-2">
+                                        <div class="form-floating">
+                                            <%= sale.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+                                            <%= sale.label :acrescimo, class:"" %>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-floating mb-3">
+                                            <%= sale.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+                                            <%= sale.label :desconto, class:"" %>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-floating mb-3">
+                                            <%= sale.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                                            <%= sale.label :valortotal, class:"" %>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-1">
-                                    <div class="form-floating mb-3">
-                                        <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), class:"btn btn-lg btn-info btn-circle btn-outline-dark" do %>
-                                            <i class="fa fa-info"></i>
-                                        <% end %>
-                                    </div>
-                                </div>
-                            </div>
+                                <!-- Tab panes -->
+                                <!-- Nav tabs -->
+                                <ul class="nav mt-1 mx-3 nav-tabs" id="myTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                                    </li>
+                                </ul>
 
-                            <div class="row mb-2">
-                                <div class="col-md-5">
-                                    <div class="form-floating mb-3 mb-md-0">
-                                        <%= form.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
-                                        <%= form.label :data_venda, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                                        <%= form.label :numero_nf, class:"" %>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3 mb-md-0">
-                                        <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
-                                        <%= form.label :acrescimo, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
-                                        <%= form.label :desconto, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :valortotal, class:"" %>
-                                    </div>
-                                </div>
-                            </div>
+                                <div class="tab-content">        
+                                    <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                                        <div class="card-body">
 
-                            <!-- Tab panes -->
-                            <!-- Nav tabs -->
-                            <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
-                                </li>
-                            </ul>
+                                            <div class="table-responsive">
+                                                <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 50%;">Nome</th>
+                                                            <th style="">Cor</th>
+                                                            <th style="width: 7%;">Qtd</th>
+                                                            <th style="width: 10%;">valor</th>
+                                                            <th style="width: 10%;">Total</th>
+                                                            <%# <th style="width: 3%;"></th> %>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="item_field" class='itens' >
+                                                        <%= sale.fields_for :itensvenda do |item| %>
+                                                            <%= render partial: "itensvenda_fields", locals: { f: item } %>   
+                                                        <% end %>
+                                                    </tbody>
+                                                </table>
+                                                <div class="form-actions">
+                                                    <%# link_to_add_association 'add task', sale, :itensvenda %>
+                                                    <%= link_to_add_association 'Adiciona Item', sale, :itensvenda, 
+                                                            force_non_association_create: true,
+                                                            class: 'btn btn-primary', data: { association_insertion_node: '.itens', 
+                                                                association_insertion_method: :append} %> <%# append para adicionar no fim da lista prepend para adicionar no inicio da lista%>
+                                                </div>
+                                            </div>
 
-                            <div class="tab-content">        
-                                <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
-                                    <div class="card-body">
+                                        </div>
+                                    </div>
 
-                                        <div class="table-responsive">
-                                            <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                                    <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                                        <div class="card-body">
+                                            <div class="row mb-2">
+                                                <div class="col-md-2">
+                                                    <div class="form-floating mb-3 mb-md-0">
+                                                        <%= sale.text_field :nmParcela, value: 1, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                                                        <%= sale.label :parcelas, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-floating mb-3">
+                                                        <%= sale.text_field :first_date, value: post_date(DateTime.now), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                                                        <%= sale.label :data_pagto, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="form-floating mb-3">
+                                                        <%= sale.text_field :interval, value: 30, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                                                        <%= sale.label :dias, class:"" %>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-floating mb-3">
+                                                        <a href="#" onclick="createBills()" class="btn btn-success">Calcular Parcelas</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <table id="tblContas" class="bills table table-sm align-middle table-light table-striped table-hover table-borderless">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width: 50%;">Nome</th>
-                                                        <th style="">Cor</th>
-                                                        <th style="width: 7%;">Qtd</th>
-                                                        <th style="width: 10%;">valor</th>
-                                                        <th style="width: 10%;">Total</th>
-                                                        <%# <th style="width: 3%;"></th> %>
+                                                        <th class="">Numero</th>
+                                                        <th class="">Dt Vencimento</th>
+                                                        <th class="">valor Parcela</th>
+                                                        <th style="width: 3%;"></th>
                                                     </tr>
                                                 </thead>
-                                                <tbody class='sales' id="item_field">
-                                                    <%= form.fields_for :itensvenda do |itens| %>
-                                                        <%= render partial: "itensvenda_fields", 
-                                                            locals: { f: itens } %>    
+                                                <tbody id = 'conta_field' class = "contas">
+                                                    <%= sale.fields_for :contas do |bill| %>
+                                                        <%= render partial: "conta_fields", locals: { f: bill } %> 
                                                     <% end %>
                                                 </tbody>
-                                            </table>
+                                            </table> 
+
                                             <div class="form-actions">
-                                                <%= link_to_add_association 'Adiciona Item', form, :itensvenda,
-                                                        class: 'btn btn-primary', data: { association_insertion_node: '.sales', 
-                                                            association_insertion_method: :append } %> <%# append para adicionar no fim da lista prepend para adicionar no inicio da lista%>
+                                                <%= link_to_add_association 'Adiciona Conta', sale, :contas, 
+                                                        force_non_association_create: true, id:"addConta",
+                                                        class: 'btn btn-primary bills', 
+                                                         data: { association_insertion_node: '.contas',
+                                                                association_insertion_method: :append } %>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
-                                    <div class="card-body">
-                                        <div class="row mb-2">
-                                            <div class="col-md-2">
-                                                <div class="form-floating mb-3 mb-md-0">
-                                                    <%= form.text_field :nmParcela, value: 1, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark"%>
-                                                    <%= form.label :parcelas, class:"" %>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-floating mb-3">
-                                                    <%= form.text_field :first_date, value: post_date(DateTime.now), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark"%>
-                                                    <%= form.label :data_pagto, class:"" %>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-floating mb-3">
-                                                    <%= form.text_field :interval, value: 30, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                                                    <%= form.label :dias, class:"" %>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-floating mb-3">
-                                                    <a href="#" onclick="createBills()" class="btn btn-success">Calcular Parcelas</a>
-                                                </div>
-                                            </div>
+                                    <div class="position-fixed bottom-0 end-0 m-4">
+                                        <div class="d-block my-3 mx-3">
+                                            <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+                                                <i class="fa fa-check fa-2x"></i>
+                                            </button>
                                         </div>
-                                        <table id="tblContas" class="bills table table-sm align-middle table-light table-striped table-hover table-borderless">
-                                            <thead>
-                                                <tr>
-                                                    <th class="">Numero</th>
-                                                    <th class="">Dt Vencimento</th>
-                                                    <th class="">valor Parcela</th>
-                                                    <th style="width: 3%;"></th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody id = 'conta_field' class = "contas">
-                                                <%= form.fields_for :contas do |bill| %>
-                                                    <%= render partial: "conta_fields", 
-                                                            locals: { f: bill } %> 
-                                                <% end %>
-                                            </tbody>
-                                        </table> 
-
-                                        <div class="form-actions">
-                                            <%= link_to_add_association 'Adiciona Conta', form, :contas, id:"conta", hidden: true,
-                                                    class: 'btn btn-primary bills', 
-                                                        display: "none", data: { association_insertion_node: '.contas', 
-                                                            association_insertion_method: :append } %>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                                <div class="form-floating mb-3 md-3 mt-0">  
-                                    <button type="submit" class="btn input-group-text btn-success">Salvar</button>
+                                    </div>  
                                 </div>
                             </div>
                             <% end %>
@@ -189,6 +200,7 @@
 </div>
 
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>
+
 <%= render partial: 'layouts/shared/modal_alert' %>
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -196,13 +208,12 @@
 // ---------------------------------
 
     document.addEventListener("keypress", function () { 
-        console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+        //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
         if(event.keyCode == 13){ // 13 é o Enter
             event.preventDefault();
         }
     });
 
-// ----------------------------------
 // -----------------------------------------------------------------
 // ------------ para baixo da tabela contas  -----------------------
 // -----------------------------------------------------------------
@@ -213,8 +224,8 @@ function createBills() {
     const nBills = parseInt(document.getElementById('venda_nmParcela').value);
     const firstDate = document.getElementById('venda_first_date').value;
     const interval = parseInt(document.getElementById('venda_interval').value);
-    const totalSale = parseFloat(document.getElementById('venda_valortotal').value);
-    
+    const totalSale = parseFloat(document.getElementById('venda_valortotal').value.replace(",","."));
+
     // Extrair dia, mês e ano
     let partes = firstDate.split('/');
     let dia = partes[0];
@@ -230,8 +241,7 @@ function createBills() {
     $('.contas').empty();
 
     for (let i = 0; i < nBills; i++) {
-        console.log(formatDate(billDate));
-
+        // console.log(formatDate(billDate));
         const bill = {
             number: i + 1,
             dueDate: new Date(billDate), // Cria uma nova instância para evitar referências compartilhadas
@@ -244,7 +254,10 @@ function createBills() {
 
     data.forEach((bill, index) => {
         // Cria um novo item do nested_field usando a função de adição fornecida pelo gem 'cocoon'
-        let newItem = $('#conta').data('association-insertion-template');
+        let newItem = $('#addConta').data('association-insertion-template');
+
+        console.log("index");
+        console.log(index);
 
         // Substitui os placeholders no conteúdo clonado com os dados do objeto bill
         newItem = newItem.replace(/new_contas/g, index);
@@ -261,7 +274,9 @@ function createBills() {
         var vlParc = document.getElementById(`venda_contas_attributes_${index}_valorparcela`);
 
         // Verifica se os campos existem antes de definir seus valores
-        if (nmParc && dtVenc && vlParc) {
+        if (nmParc !== null && nmParc !== undefined && nmParc !== '' &&
+                dtVenc !== null && dtVenc !== undefined && dtVenc !== '' &&
+                vlParc !== null && vlParc !== undefined && vlParc !== '') {
             nmParc.value = bill.number;
             dtVenc.value = formatDate(bill.dueDate);
             vlParc.value = parseFloat(bill.amount).toFixed(2).replace('.', ',');
@@ -269,9 +284,9 @@ function createBills() {
             console.error(`Elementos para a fatura ${index} não foram encontrados.`);
         }
     });
-
     data = [];
 }
+// ------------------------fim contas ----------------------------------
 
     // Função para formatar a data no formato 'dd/mm/yyyy'
     function formatDate(date) {
@@ -317,17 +332,14 @@ function createBills() {
     }
 
     $(document).ready(function() {
-        var categorySearch = $('#pessoa_search'); // 
-        var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
+        var categorySearch = $('#venda_nome_pessoa'); //document.getElementById('venda_pessoa'); // 
+        var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
         var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
-        console.log($(this).data('cod_pessoa'))
+        
+        var selectedPersonCpfCnpjField = $('#venda_pessoa_attributes_cpf_cnpj');
+        
         let apiUrl = url+ "buscas/buscar_pessoas";
 
-        // console.log(apiUrl);
-
-        <%# categorySearch.on('input', function() {
-            filterOptions();
-        }); %>
         // Adiciona um evento de keypress para a tecla Enter
         categorySearch.on('keydown', function(event) {
            // console.log(event.key);
@@ -336,9 +348,11 @@ function createBills() {
             } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
                 // Código 27 corresponde à tecla "ESC"
                 categorySearch.val(''); // Limpa o campo de busca
+                selectedPersonIdField.val("");
+                selectedPersonCpfCnpjField.val("");
                 resultsList.empty();
                 resultsList.hide();
-                selectedPersonIdField.val("");
+                
             }
         });
         
@@ -346,9 +360,12 @@ function createBills() {
         resultsList.on('click', 'div.list-group-item', function() {
             var selectedPerson = $(this).text();
             var selectedPersonId = $(this).data('cod_pessoa');
-
+            
             // Preenche o campo escondido com o ID da pessoa selecionada
             selectedPersonIdField.val(selectedPersonId);
+            selectedPersonCpfCnpjField.val($(this).data('cpf_cnpj'));
+            
+            buscarPessoaPorCpfCnpj(selectedPersonCpfCnpjField)
 
             // Atualiza o campo de busca com o nome da pessoa selecionada
             categorySearch.val(selectedPerson);
@@ -371,7 +388,10 @@ function createBills() {
                         var listItem = $('<div>').text(person.nome);
                         listItem.addClass('list-group-item');
                         listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                        listItem.data('cpf_cnpj',   person.cpf_cnpj); 
                         resultsList.append(listItem);
+                        //console.log(person.email);
+                        var data = person;
                     });
 
                     // Exibe a lista de resultados
@@ -401,6 +421,7 @@ function createBills() {
                     //selector = `venda_itensvenda_attributes_${index}_produto`;
                 }else {
                     selector = `venda_itensvenda_attributes_${index}_cod_produto`
+                    selector = `venda_itensvenda_attributes_${index}_cod_produto`
                 }
                 
                 var commentField = document.getElementById(selector);
@@ -408,7 +429,6 @@ function createBills() {
                 if ( commentField ){
                     commentField.value = inputField.value;
                 }
-                console.log("AQUI");
                 selectColorProduct(inputField)
                 inputField = "";
             }
@@ -419,9 +439,14 @@ function createBills() {
         field.value = field.value.replace(/\s/g, '');
 
         var index = thisIndex(field);
-        const corSelect = document.getElementById(`venda_itensvenda_attributes_${index}_cod_cor`);
+        let corSelect = document.getElementById(`venda_itensvenda_attributes_${index}_cod_cor`);
         var proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
         var proQtd = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
+
+// coloco a cor no index pq caso esteja trocando o item ele precisa estar no index 
+        if (corSelect){
+            corSelect.selectedIndex = 0;
+        }
 
         let apiUrl = url + 'vendas/consulta_estoque';
 
@@ -478,7 +503,6 @@ function createBills() {
             
             for (var i = 0; i < element.options.length; i++) {
 
-                // verificar se o campo selecionado ja tem valor se tiver pula
                 if (corSelect.value === null || corSelect.value === undefined || corSelect.value === ''){
                     
                     if (element.options[i].value === element.value) {
@@ -492,7 +516,6 @@ function createBills() {
                                 //alert("Quantidade insuficiente para venda!");
                                 alertModal("Possui " + parseFloat(quantidade).toFixed(0) + " no estoque. Quantidade insuficiente.");
                             }
-                            
                             corSelect.value = element.value;
                             proValor.value = parseFloat(valor).toFixed(2).replace(".",",");
                             proQtd.value = '1';//parseFloat(1).toFixed(0);
@@ -505,8 +528,8 @@ function createBills() {
             }   
         });
 
-// --------------------------- FIM COR ---------------------- //
     }
+// --------------------------- FIM COR ---------------------- //
 
 // ------------- calculas os valores da tela ---------------
 
@@ -517,12 +540,12 @@ function createBills() {
         let proTotal = document.getElementById(`venda_itensvenda_attributes_${index}_valor_total`);
         let venTotal = document.getElementById("valor_total");
 
-        let valUnit = parseFloat(proValor.value) * 100;
+        let valUnit = parseFloat(proValor.value.replace(",",".")) * 100;
 
 //console.log("PRODUTO = "+valUnit);
         //var ttProd = (parseFloat( proValor.value ) * parseFloat(proQtd.value)).toFixed(2);
 
-        proTotal.value = ((parseFloat( valUnit) * parseFloat(proQtd.value)) / 100 );
+        proTotal.value = ((parseFloat( valUnit) * parseFloat(proQtd.value.replace(",","."))) / 100 );
         proTotal.value = parseFloat(proTotal.value).toFixed(2).replace(".",",");
 
         setTotalVenda();
@@ -536,8 +559,8 @@ function createBills() {
     function setTotalVenda(){
         // Selecione a tabela
         var tabela = document.getElementById("tblProdutos");
-        var acrescimo = document.getElementById("venda_acrescimo").value;
-        var desconto = document.getElementById("venda_desconto").value;
+        var acrescimo = document.getElementById("venda_acrescimo").value.replace(",",".");
+        var desconto = document.getElementById("venda_desconto").value.replace(",",".");
 
         // Inicialize a variável para armazenar a soma
         var soma = 0;
@@ -547,21 +570,21 @@ function createBills() {
             // Obtenha o valor unitário da célula de classe "valor-unitario"
             var valorUnitarioCell = tabela.rows[i].querySelector(".valor-unitario");
             // Use uma expressão condicional para verificar se o valor é válido
-            var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value) : 0;
+            var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
             
             //console.log("TEXTO - "+valorUnitario)
 
             var qtdCell = tabela.rows[i].querySelector(".quantidade");
-            var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value) : 0;
+            var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value.replace(",",".")) : 0;
             
             // Some o valor unitário à variável de soma
             soma += (valorUnitario*qtdProduto);
         }
+
         soma += parseFloat(acrescimo) - parseFloat(desconto);
         document.getElementById("venda_valortotal").value = soma.toFixed(2).replace(".",",");
         // Exiba o resultado da soma
     }
-
 
     $(document).on('keydown', '.produto_search', function(event) {
         if (event.key === 'Enter') {
@@ -569,10 +592,10 @@ function createBills() {
         } else if (event.key === 'Escape') {
             // Verifique se o elemento é um input (por exemplo, <input>)
             if (this.tagName.toLowerCase() === 'input') {
-                this.value = "";
+                //this.value = "";
             } else {
                 // Se for um elemento de texto (por exemplo, <div>)
-                this.innerText = "";
+                //this.innerText = "";
             }
         }
     });
@@ -618,7 +641,7 @@ function createBills() {
             var query = field.value.trim().toLowerCase();
             productsList.empty();
             
-            console.log("productOptions --- ")
+            //console.log("productOptions --- ")
             
             $.ajax({
                 url: apiUrl,
@@ -643,5 +666,4 @@ function createBills() {
             });
         }
     };
-
 </script>

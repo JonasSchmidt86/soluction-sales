@@ -18,7 +18,7 @@
                             <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
                         </div>
 
-                        <div class="col-md-2 form-check form-check-inline d-flex justify-content-around">
+                        <div class="col-md-2 form-check form-check-inline d-flex">
                             <%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (params[:tipo].blank? ? 'F' : params[:tipo].to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %>
                         </div>
 
@@ -52,7 +52,7 @@
                                     <td class="col-auto"><%= pessoa.cod_pessoa %></td>
                                     <td class="col-auto"><%= pessoa.nome %></td>
                                     <% if pessoa.dtnascimento.present? %>
-                                        <td class="col-auto"><h5><%= pessoa.dtnascimento.strftime('%d/%m/%Y') %></h5></td>
+                                        <td class="col-auto"><%= pessoa.dtnascimento.strftime('%d/%m/%Y') %></td>
                                     <% else %>
                                         <td class="col-auto"><p></p></td>
                                     <% end %>

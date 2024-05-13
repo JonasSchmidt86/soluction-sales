@@ -6,7 +6,7 @@ class Contaspagrec < ApplicationRecord
     has_many :lancamentos, :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_contaspagrec', dependent: :delete_all, 
             inverse_of: :contaspagrec, dependent: :destroy
 
-    has_many :tpHLancamento, :class_name => 'tiposlancamento', :foreign_key => 'cod_tppagamento'
+    has_many :tiposlancamento, :class_name => 'Tiposlancamento', :foreign_key => 'cod_tppagamento', inverse_of: :contas
 
     accepts_nested_attributes_for :lancamentos, reject_if: :all_blank, allow_destroy: true #cocoon gem
 
@@ -33,8 +33,18 @@ class Contaspagrec < ApplicationRecord
     def nmParcela
         if !self.venda.nil?
             [self.venda.cod_vendaempresa, self.numeroparcela].join('-')
+
         elsif !self.compra.nil?
-            [self.compra.cod_compra, self.numeroparcela].join('-')
+            if !self.frete.nil?
+                [self.frete.nrromaneio, "F"].join('-')
+            else
+                if self.compra.numeronf.blank?
+                    ["S/N", self.numeroparcela].join('-')
+                else
+                    [self.compra.numeronf, self.numeroparcela].join('-')
+                end
+            end
+
         elsif !self.frete.nil?
             if self.frete.compra.numeronf.blank?
                 [self.frete.nrromaneio.to_i , "F"].join('-')

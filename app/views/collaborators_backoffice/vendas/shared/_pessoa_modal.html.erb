@@ -1,0 +1,218 @@
+<button type="button", class="btn btn-info btn-circle btn-lg", data-bs-toggle="modal",
+  data-bs-target="#vendaModal", data-bs-whatever= <%= "" %> >
+  <i class="fas fa-user-plus"></i>
+</button>
+
+<div class="modal fade" id="vendaModal" data-tor-parent="show">
+  <div class="modal-dialog  modal modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Cad cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <di   v class="modal-body">
+        <%# form_with(model: [ :collaborators_backoffice, Pessoa.new ], id:"form_pessoa", local: true) do |form_pessoa| %>
+        <%# form.fields_for :pessoa,id:"form_pessoa", local: true do  |form_pessoa| %>
+        <%= form.fields_for :pessoa, (form.object.pessoa || Pessoa.new), id: "form_pessoa", local: true do |form_pessoa| %>
+
+          <div class="col-md-12">
+
+            <div class="d-flex row align-items-center">
+                <div class="col-md-12 form-check form-check-inline">
+                    <h5><%= form_pessoa.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: 'F',id:"pessoa_tipo", item_wrapper_tag: false %></h5>
+                </div>
+            </div>
+
+            <%# form_pessoa.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+
+            <div class="row mb-2">
+              <div class="col-md-6">
+                  <div class="form-floating">
+                      <%= form_pessoa.text_field :cpf_cnpj, class: "pessoa_cpf_cnpj form-control", placeholder:"CPF/CNPJ" %>
+                      <%= form_pessoa.label :cpf_cnpj, class:"" %>
+                  </div>
+              </div>
+              <div class="col-md-6">
+                  <div class="form-floating">
+                      <%= form_pessoa.text_field :rg_ie, class: "rg form-control", placeholder:"RG/IE" %>
+                      <%= form_pessoa.label :rg_ie, class:"" %>
+                  </div>
+              </div>
+            </div>
+
+            <div class="row  my-2 text-wrap">
+                <div class="col-md-12">
+                    <div class="form-floating">
+                        <%= form_pessoa.text_field :nome, class: "text form-control", placeholder:"Nome" %>
+                        <%= form_pessoa.label :nome, class:"" %>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-1 text-wrap">
+              <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                      <%= form_pessoa.text_field :telefone, class: "form-control phone", placeholder:"Telefone" %>
+                      <%= form_pessoa.label :telefone, class:"" %>
+                  </div>
+              </div>
+              <div class="col-md-6">
+                  <div class="form-floating">
+                      <%= form_pessoa.text_field :celular, class: "form-control phone_with_ddd", placeholder:"Celular" %>
+                      <%= form_pessoa.label :celular, class:"" %>
+                  </div>
+              </div>
+            </div>
+
+            <hr class="my-2">
+
+            <div class="row mt-3 text-wrap">
+              <div class="col-md-4">
+                  <div class="form-floating">
+                      <%= form_pessoa.text_field :cep, class: "cep form-control", placeholder:"CEP", onblur:"buscarEnderecoPorCEP(this)" %>
+                      <%= form_pessoa.label :cep, class:"" %>
+                  </div>
+              </div>
+              <div class="col-md-8">
+                  <div class="form-floating">
+                      <%= form_pessoa.collection_select(:cod_cidade, Cidade.all.order(:nome), :cod_cidade, :nome, 
+                                  { :prompt => 'Não informado' }, { class: "form-control" }) %>
+                      <%= form_pessoa.label :cidade, class: "" %>
+                  </div>
+              </div>
+            </div>
+            <div class="row mt-3 text-wrap">
+              <div class="col-md-12">
+                  <div class="form-floating">
+                      <%= form_pessoa.text_field :complemento, class: "text form-control", placeholder:"Complemento" %>
+                      <%= form_pessoa.label :complemento, class:"" %>
+                  </div>
+              </div>
+            </div>
+            <div class="row my-2 text-wrap">
+                <div class="col-md-12">
+                    <div class="form-floating">
+                        <%= form_pessoa.text_field :endereco, class: "text form-control", placeholder:"Endereço" %>
+                        <%= form_pessoa.label :endereço, class:"" %>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2 text-wrap">
+                <div class="col-md-8">
+                        <div class="form-floating">
+                            <%= form_pessoa.text_field :bairro, class: "text form-control", placeholder:"Bairro" %>
+                            <%= form_pessoa.label :bairro, class:"" %>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <%= form_pessoa.text_field :numero, class: "numero form-control", placeholder:"Numero" %>
+                            <%= form_pessoa.label :numero, class:"" %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row my-2 text-wrap">
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <%= form_pessoa.text_field :email, class: "text form-control", placeholder:"Email" %>
+                            <%= form_pessoa.label :email, class:"" %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+          </div>  
+        <% end %>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+
+// --------------------- MUDA O TIPO DE PESSOA E A MASCARA DO CAMPO COF_CNPJ -------------------------
+
+    $(document).ready(function() {
+
+        // Adiciona um evento de mudança para os inputs de tipo de pessoa
+        $('input[name="venda[pessoa_attributes][tipo]"]').on('change', function() {
+            const tipoSelecionado = $(this).val(); // Obtém o valor do tipo de pessoa selecionado
+            aplicarMascara(tipoSelecionado); // Chama a função para aplicar a máscara com base no tipo de pessoa selecionado
+        });
+        // Aplica a máscara inicial com base no tipo de pessoa selecionado inicialmente
+        const tipoSelecionadoInicial = $('input[name="venda[pessoa_attributes][tipo]"]:checked').val();
+        aplicarMascara(tipoSelecionadoInicial);
+    });
+
+    // Função para aplicar a máscara com base no tipo de pessoa selecionado
+    function aplicarMascara(tipoSelecionado) {
+        const input = $('.pessoa_cpf_cnpj'); 
+        input.unmask(); // Remove a máscara atual
+        if (tipoSelecionado === 'F') {
+            input.val('')
+            input.mask('000.000.000-00', {reverse: true}); // Aplica a máscara de CPF
+        } else {
+            input.val('')
+            input.mask('00.000.000/0000-00', {reverse: true}); // Aplica a máscara de CNPJ
+        }
+    }
+
+    function buscarPessoaPorCpfCnpj(cpfCnpjInput) {
+        //aplicarMascara('F');
+        const cpfCnpj = cpfCnpjInput.val();
+            $.ajax({
+            url: 'check_cpf_cnpj_venda',
+            method: 'GET',
+            data: { cpf_cnpj: cpfCnpj }, // Substitua 'cpfCnpj' pelo valor do CPF ou CNPJ que você está verificando
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'not_found') {
+                    // O CPF ou CNPJ não foi encontrado no banco de dados
+                    console.log('CPF ou CNPJ não encontrado');
+                } else if (response.status === 'invalid_format') {
+                    // O CPF ou CNPJ não está no formato correto
+                    console.log('CPF ou CNPJ em formato inválido');
+                } else {
+                    // Pessoa encontrada no banco de dados
+                    var pessoa = response; // Aqui você tem os dados da pessoa retornada pelo servidor
+                    console.log('Pessoa encontrada:', pessoa.nome);
+                    
+                    aplicarMascara(pessoa.tipo);
+
+                    document.getElementById('venda_pessoa_attributes_cpf_cnpj').value = pessoa.cpf_cnpj;
+                    document.getElementById('venda_pessoa_attributes_rg_ie').value = pessoa.rg_ie;
+                    document.getElementById('venda_pessoa_attributes_nome').value = pessoa.nome;
+                    document.getElementById('venda_pessoa_attributes_telefone').value = pessoa.telefone;
+                    document.getElementById('venda_pessoa_attributes_celular').value = pessoa.celular;
+                    document.getElementById('venda_pessoa_attributes_cep').value = pessoa.cep;
+                    document.getElementById('venda_pessoa_attributes_cod_cidade').value = pessoa.cod_cidade;
+                    document.getElementById('venda_pessoa_attributes_complemento').value = pessoa.complemento;
+                    document.getElementById('venda_pessoa_attributes_endereco').value = pessoa.endereco;
+                    document.getElementById('venda_pessoa_attributes_bairro').value = pessoa.bairro;
+                    document.getElementById('venda_pessoa_attributes_numero').value = pessoa.numero;
+                    document.getElementById('venda_pessoa_attributes_email').value = pessoa.email;
+                    document.getElementById('venda_nome_pessoa').value = pessoa.nome;
+                    document.getElementById('selected_person_id').value = pessoa.cod_pessoa;
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro:', error);
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        $('.pessoa_cpf_cnpj').blur(function() {
+            var cpfCnpj = $(this).val();
+            if (cpfCnpj) {
+                buscarPessoaPorCpfCnpj($(this));
+            }
+        });
+    });
+
+</script>

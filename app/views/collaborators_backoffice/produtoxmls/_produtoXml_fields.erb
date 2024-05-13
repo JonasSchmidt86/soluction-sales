@@ -1,0 +1,25 @@
+Produto: <%= f.cod_produto %>-<%= f.cod_cor %><br>
+Nome: <%= f.produto.nome %> - <%= f.cor.nmcor %><br>
+Unidade Medida: <%= f.produto.ucom %><br>
+
+<%# <tr class= "nested-fields"> %>
+    <%# f.hidden_field :cod_produto %>
+    <%# <td class="col-md-3"> %>
+<%#  %>
+        <%# <%= f.text_field :produto,  %>
+            <%# class:"text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search",  %>
+            <%# placeholder:"Pressione Enter para buscar!"        %> %>
+    <%# </td> %>
+<%#  %>
+    <%# <td class="col-auto"> %>
+        <%# <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor),  %>
+                <%# :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'}, %>
+                    <%# class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>
+    <%# </td> %>
+<%#  %>
+    <%# <td class="align-middle fw-semibold"> %>
+        <%# <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+        <%# <i class="fa fa-trash-can"></i> %>
+        <%# <% end %> %>
+    <%# </td> %>
+<%# </tr> %>

@@ -1,4 +1,4 @@
-<div class="row mb-2">
+<div class="row mb-2 g-2">
 
     <div class="col-md-3">
         <div class="form-floating">
@@ -14,7 +14,7 @@
     </div>
     <div class="col-md-2">
         <div class="form-floating">
-            <%= form.text_field :dtconsulta, class: "form-control fallback datepicker", placeholder:"Data Consulta" %>
+            <%= form.text_field :dtconsulta, value: ( @pessoa.dtconsulta.blank? ? nil : l(@pessoa.dtconsulta) ), class: "fallback datepicker form-control", placeholder:"Data Consulta" %>
             <%= form.label :data_consulta, class:"" %>
         </div>
     </div>
@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<div class="row  my-2 text-wrap">
+<div class="row my-2 text-wrap g-2">
     <div class="col-md-6">
         <div class="form-floating">
             <%= form.text_field :nome, class: "text form-control", placeholder:"Nome" %>
@@ -47,7 +47,7 @@
         </div>
     </div>
 </div>
-<div class="row my-1 text-wrap">
+<div class="row my-1 text-wrap g-2">
     <div class="col-md-3">
         <div class="form-floating mb-3">
             <%= form.text_field :telefone, class: "form-control phone", placeholder:"Telefone" %>
@@ -69,7 +69,7 @@
     </div>
     <div class="col-md-3">
         <div class="form-floating">
-            <%= form.text_field :dtnascimento, class: "form-control fallback datepicker", placeholder:"Data Nascimento" %>
+            <%= form.text_field :dtnascimento, value: ( @pessoa.dtnascimento.blank? ? nil : l(@pessoa.dtnascimento) ), class: "form-control datepicker", placeholder:"Data Nascimento" %>
             <%= form.label :data_nascimento, class:"" %>
         </div>
     </div>
@@ -77,7 +77,7 @@
 
 <hr class="my-2">
 
-<div class="row mt-3 text-wrap">
+<div class="row mt-3 text-wrap g-2">
     <div class="col-md-2">
         <div class="form-floating">
             <%= form.text_field :cep, class: "cep form-control", placeholder:"CEP" %>
@@ -98,7 +98,7 @@
         </div>
     </div>
 </div>
-<div class="row my-2 text-wrap">
+<div class="row my-2 text-wrap g-2">
    <div class="col-md-6">
         <div class="form-floating">
             <%= form.text_field :endereco, class: "text form-control", placeholder:"Endereço" %>
@@ -119,7 +119,7 @@
     </div>
 </div>
 
-<div class="row my-2 text-wrap">
+<div class="row my-2 text-wrap g-2">
    <div class="col-md-6">
         <div class="form-floating">
             <%= form.text_field :email, class: "text form-control", placeholder:"Email" %>
@@ -142,7 +142,7 @@
 
 <hr class="my-2">
 
-<div class="row mt-3 text-wrap">
+<div class="row mt-3 text-wrap g-2">
    <div class="col-md-4">
         <div class="form-floating">
             <%= form.text_field :nomeconj, class: "text form-control", placeholder:"Nome cônjuge" %>
@@ -151,29 +151,8 @@
     </div>
    <div class="col-md-2">
         <div class="form-floating">
-            <%= form.text_field :dtnascimentoconj, class: "form-control datepicker", placeholder:"Data Nascimento" %>
+            <%= form.text_field :dtnascimentoconj, value: ( @pessoa.dtnascimentoconj.blank? ? nil : l(@pessoa.dtnascimentoconj) ), class: "form-control datepicker", placeholder:"Data Nascimento" %>
             <%= form.label :data_nascimento, class:"" %>
-        </div>
-    </div>
-   <div class="col-md-3">
-        <div class="form-floating">
-            <%= form.text_field :cpfconj, class: "cpf form-control", placeholder:"Cpf Cônjuge" %>
-            <%= form.label :cpf_cônjuge, class:"" %>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="form-floating mb-3">
-            <%= form.text_field :rgconjuge, class: "numero form-control", placeholder:"RG cônjuge" %>
-            <%= form.label :rg_cônjuge, class:"" %>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-3 text-wrap">
-   <div class="col-md-6">
-        <div class="form-floating">
-            <%= form.text_field :nomeconj, class: "text form-control", placeholder:"Nome cônjuge" %>
-            <%= form.label :nome_cônjuge, class:"" %>
         </div>
     </div>
    <div class="col-md-3">

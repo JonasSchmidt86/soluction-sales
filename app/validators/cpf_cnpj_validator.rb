@@ -34,6 +34,11 @@ class CpfCnpjValidator < ActiveModel::EachValidator
     soma += dv1 * 2
     dv2 = (soma % 11) < 2 ? 0 : 11 - (soma % 11)
 
+    puts "----------------------------------------";
+    puts "CPF valido? = "
+    puts cpf[-2, 2] == "#{dv1}#{dv2}";
+    puts "----------------------------------------";
+
     # Verifica se os dígitos verificadores calculados são iguais aos fornecidos no CPF
     cpf[-2, 2] == "#{dv1}#{dv2}"
 

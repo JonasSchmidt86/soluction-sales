@@ -23,9 +23,9 @@
                     <div class="card-body">
 
                         <%= form_with(model: [ :collaborators_backoffice, @pessoa ], id:"form_pessoa", local: true) do |form| %>
-                            <div class="col-md-12">
+                            <div class="col-md-12 ">
 
-                                <div class="d-flex row align-items-center">
+                                <div class="d-flex row align-items-center  g-2">
                                     <div class="col-md-2 form-check form-check-inline">
                                         <h5><%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (@pessoa.tipo.blank? ? 'F' : @pessoa.tipo.to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %></h5>
                                     </div>
@@ -135,56 +135,12 @@
         });
     });
 
-
-
-    
-    function removerAcentos(texto) {
-        return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const cepInput = document.getElementById('pessoa_cep');
-    if (cepInput) {
-        cepInput.addEventListener('input', function() {
-        const cepValue = cepInput.value.replace(/\D/g, '');
-        if (cepValue.length === 8) { // Verifica se o CEP possui 8 dígitos
-            fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.erro) { // Verifica se o CEP é válido
-                    document.getElementById('pessoa_endereco').value = removerAcentos(data.logradouro.toUpperCase());
-                    document.getElementById('pessoa_bairro').value = removerAcentos(data.bairro.toUpperCase());
-    // console.log(data)
-                    const citySelect = document.getElementById('pessoa_cod_cidade');
-                    desiredCity = removerAcentos(data.localidade.toUpperCase());
-
-                    for (let i = 0; i < citySelect.options.length; i++) {
-                        if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
-                            citySelect.value = citySelect.options[i].value;
-                            break;
-                        }
-                    }
-                } else {
-                    // Se o CEP não for encontrado, limpe os campos
-                    document.getElementById('pessoa_endereco').value = '';
-                    document.getElementById('pessoa_cod_cidade').selectedIndex = 0;
-                    document.getElementById('pessoa_bairro').selectedIndex = "";
-                }
-            })
-            .catch(error => console.error('Ocorreu um erro:', error));
-        }
-        });
-    }
-  });
-    
+// ----------------------------------------------------------------
 
     $(document).ready(function() {
-
         $('.pessoa_cpf_cnpj').blur(function() {
             var cpfCnpj = $(this).val();
-console.log($(this).val())
             $.ajax({
-                
                 url: 'check_cpf_cnpj',
                 method: 'GET',
                 data: { cpf_cnpj: cpfCnpj },
@@ -193,9 +149,6 @@ console.log($(this).val())
                     if (response.redirect_url) {
                         // Se o CPF/CNPJ existe, redirecione para a página de edição
                         window.location.href = response.redirect_url;
-                    } else {
-                        // Se o CPF/CNPJ não existe, faça algo (opcional)
-                        //console.log('CPF/CNPJ não encontrado');
                     }
                 },
                 error: function(xhr, status, error) {
@@ -212,4 +165,6 @@ console.log($(this).val())
             event.preventDefault();
         }
     });
+    // ----------------------------------------------------------------
+    
 </script>

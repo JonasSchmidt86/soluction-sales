@@ -4,21 +4,33 @@ class Venda < ApplicationRecord
     self.primary_key = "cod_venda"
 
     #https://api.rubyonrails.org/classes/ActiveRecord/NestedAttributes/ClassMethods.html
-    has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all
+    has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all, autosave: true
     accepts_nested_attributes_for :itensvenda, allow_destroy: true, update_only: true, reject_if: :all_blank
 
-    has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all
-    accepts_nested_attributes_for :contas, allow_destroy: true #, update_only: true, reject_if: :all_blank
+    has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all, autosave: true
+    accepts_nested_attributes_for :contas, allow_destroy: true, update_only: true, reject_if: :all_blank
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :vendas
-    
+    accepts_nested_attributes_for :pessoa, allow_destroy: false
+
     belongs_to :funcionario, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', inverse_of: :vendas
     
     belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', inverse_of: :vendas
 
-    validates :itensvenda, :contas, :funcionario, :empresa, :contas, presence: true
+    validates :itensvenda, :contas, :funcionario, :empresa, :pessoa, presence: true
 
     paginates_per 30
+
+    def nome_pessoa
+        if !pessoa.nil?
+            return pessoa.nome
+        end
+    end
+    def self.pessoa 
+        unless self.pessoa.blank?
+            return self.pessoa.nome
+        end
+    end
 
     def venda_nfe
         if self.cancelada

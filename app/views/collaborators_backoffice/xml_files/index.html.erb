@@ -54,6 +54,7 @@
                 
                 <tbody>
                     <% @xml_files.each do |xml_file| %>
+                    
                       <% xml_file_path = Rails.application.routes.url_helpers.rails_blob_path(xml_file.file, only_path: true) %>
                       <% xml_content = File.read(ActiveStorage::Blob.service.path_for(xml_file.file.key), encoding: 'UTF-8') %>
                       <% xml_doc = Nokogiri::XML(xml_content) %>
