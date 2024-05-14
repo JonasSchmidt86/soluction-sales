@@ -21,9 +21,13 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
       begin 
         unless params[:dataInicial].blank?
           dt_inicial = Date.parse(params[:dataInicial]).strftime("%d/%m/%Y")
+        else
+          dt_inicial = (Date.today.beginning_of_month.strftime("%d/%m/%Y"));
         end
         unless params[:dataFinal].blank?
           dt_final = Date.parse(params[:dataFinal]).strftime("%d/%m/%Y")
+        else
+          dt_final = (Date.today.end_of_month.strftime("%d/%m/%Y"));
         end
       rescue ArgumentError
         dt_inicial = (Date.today.beginning_of_month.strftime("%d/%m/%Y"));
@@ -70,7 +74,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
       
       if xml_file_params[:file].present?
 
-        unless File.extname(xml_file_params[:file]) == ".xml"
+        unless File.extname(xml_file_params[:file]).upcase == ".XML"
           redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo não é valido!.'
           return;
         end

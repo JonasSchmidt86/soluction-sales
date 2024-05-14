@@ -68,7 +68,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
               error_message = "Informe a cor do produto #{xml_pro["nome"].to_s.upcase}!"
               return render json: { error: error_message }, status: :not_found
             end
-puts "\n\n XML NOME : #{ xml_pro["nome"] } \n\n"
+
+            # puts "\n\n XML NOME : #{ xml_pro["nome"] } \n\n"
+
             if proXml.blank?
               
               if pro_temp["cod_cor"].present? && pro_temp["cod_produto"].present? && xml_pro["codigo"].blank? && proXml.blank?
@@ -215,7 +217,7 @@ puts "\n\n XML NOME : #{ xml_pro["nome"] } \n\n"
         xml = @compra.xml_file;
 
         unless xml.blank? 
-          xml.compra_id = nil
+          xml.compra = nil
           xml.save
         end
           

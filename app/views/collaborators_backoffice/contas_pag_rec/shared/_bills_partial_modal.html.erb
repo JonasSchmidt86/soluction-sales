@@ -21,14 +21,14 @@
             </div>
             <div class="col">
               <div class="form-floating mb-3 ">
-                <input type="text" class="form-control" id="recipient-name" value="<%= number_to_currency((bill.valorparcela - bill.valorPago)) %>" readonly>
+                <input type="text" class="form-control" id="vl_devido" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
                 <label for="recipient-name" class="col-form-label">Valor Devido:</label>
               </div>
             </div>
             <div class="col">
               <div class="form-floating mb-3 ">
               
-                <%= form.collection_select(:cod_bancoconta, (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa)), 
+                <%= form.collection_select(:cod_bancoconta, (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
                                             :cod_bancoconta, :nome_banco, {:prompt => 'CAIXA'}, 
                                                 class: "form-control", readonly: false) %>
                 <label for="destino">Destino/Banco</label> 
@@ -97,3 +97,28 @@
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+//  var label1 = document.getElementById("lb_bill_status");
+//  var check_status = document.getElementById("quitada");
+//
+//  check_status.onclick = function () {
+//      console.log("CLICOU ")
+//      console.log(check_status.value);
+//      label1.innerHTML = "";
+//      
+//      if (check_status.checked) {
+//          check_status.value = 1;
+//          label1.innerHTML = "Total";
+//          console.log("TOTAL")
+//      } else {
+//          check_status.value = 0;
+//          label1.innerHTML = "Parcial";
+//          console.log("Partial")
+//      }
+//  };
+
+
+</script>

@@ -110,15 +110,15 @@
                 <td><%= "R$ #{number_to_currency(bill.valorPago, separator: ",", delimiter: "", unit:"")}" %></td>
                 <td>
                 <% if bill.ativo %>
-                  <% somaReceber += (bill.valorparcela) %>
                   <% somaRecebido += bill.valorPago; %>
+                  <% somaReceber += (bill.valorparcela) %>
                 <% end %>
 
                   <div class="d-flex justify-content-start">
                     <% if !bill.quitada || bill.lancamentos.size == 0 %>
                       <% if bill.ativo %>
                         <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                            { :x => tipe_bill_true(params[:tipo_conta]) , 
+                            { :tipo_conta => params[:tipo_conta], 
                               :status_bill => params[:status_bill], 
                               :nrVenda => params[:nrVenda], 
                               :cliente => params[:cliente], 
@@ -227,12 +227,15 @@
   check_status.onclick = function () {
     console.log("CLICOU ")
     var label1 = document.getElementById("lb_bill_status");
+    var ttDev = document.getElementById("vl_devido");
+    var ttPag = document.getElementById("valorpagar");
     if (check_status.checked) {
         label1.innerHTML  = "Total";
-        console.log("TOTAL")
+        ttPag.value = ttDev.value;
     } else {
         label1.innerHTML  = "Parcial";
         console.log("Partial")
+        ttPag.value = 0,00
     }
   };
 

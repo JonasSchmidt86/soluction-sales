@@ -19,9 +19,15 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
         @bill =  Contaspagrec.find(params[:lancamentoscaixa][:contaspagrec])
 
-        @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
         
-        if @caixa.nil?
+        
+        if the_params[:cod_bancoconta].present? && the_params[:cod_bancoconta].to_i > 0
+            @launch.cod_bancoconta = the_params[:cod_bancoconta].to_i
+        else
+            @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
+        end
+
+        if @caixa.nil? && the_params[:cod_bancoconta].blank?
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
             { :tipo_conta => (the_params[:tipo_conta].length == 0) ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
             :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
@@ -74,12 +80,18 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
             
             @launch.datamodificacao = DateTime.now
 
+            if @bill.quitada
+                msg = "Total da conta baixada."
+            else
+                msg = "Parcial de conta baixada." 
+            end
+
             if @launch.save
                 redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                 { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
-                :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
-                
-                }  ), notice: "Parcial de conta baixada."
+                :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal],
+                :cod_bancoconta => params[:cod_bancoconta]
+                }  ), notice: msg
             else
                 messsage = ""
 
@@ -92,7 +104,8 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                 end
                     redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                     { :tipo_conta => the_params[:tipo_conta] ,:status_bill => the_params[:status_bill], :nrVenda => the_params[:nrVenda], 
-                    :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal]
+                    :cliente => the_params[:cliente], :dataInicial => the_params[:dataInicial], :dataFinal => the_params[:dataFinal],
+                    :cod_bancoconta => the_params[:cod_bancoconta]
                     }  ), notice: "Erro ao salvar a conta!" + message;
             end
         end

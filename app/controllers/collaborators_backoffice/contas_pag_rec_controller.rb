@@ -58,7 +58,11 @@ private
             end
 
             if !params[:cliente].blank?
-                consulta += "and cod_venda in (select cod_venda from venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
+                unless params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
+                    consulta += "and cod_venda in (select cod_venda from venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
+                else
+                    consulta += "and cod_compra in (select cod_compra from Compra where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
+                end
             end
             
             if params[:status_bill] == "Abertos"
@@ -85,9 +89,11 @@ private
     def partion(param_valor, historic)
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first   
         
-        if @caixa.nil?
-            flash[:alert] = "Caixa não esta aberto!"
-            :index
+        if @caixa.nil? && params[:cod_bancoconta].blank?
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }) , notice: "Abra o caixa para baixar a conta!!"
         else
 
             @launch = Lancamentoscaixa.new

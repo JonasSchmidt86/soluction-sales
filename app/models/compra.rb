@@ -19,7 +19,7 @@ class Compra < ApplicationRecord
     
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :compra, dependent: :destroy, optional: true, autosave: true
 
-    has_one :xml_file, dependent: :destroy, autosave: true
+    has_one :xml_file, autosave: true
 
     # after_save :atualizar_codigo_no_xml_file
     

@@ -162,7 +162,7 @@
                                         <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
                                         <div class="tab-pane" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="1">
                                             
-                                            <table id="datatablesSimple" class="dataTable-table my-3" style="height: 100px;" >
+                                            <table id="tblProducts" class="dataTable-table my-3" style="height: 100px;" >
                                                 <thead>
                                                     <tr>
                                                         <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Fornecedor</a></th>
@@ -350,13 +350,6 @@
                                                     </p>
                                                 </div>
 
-                                                <%# 
-                                                    select * from itemcompra where cod_compra = ( select max(cod_compra) from compra );
-                                                    delete from itemcompra where cod_compra = ( select max(cod_compra) from compra );
-                                                    delete from contaspagrec where cod_compra = ( select max(cod_compra) from compra );
-                                                    delete from compra where cod_compra = ( select max(cod_compra) from compra );
-                                                %>
-                                                
                                                 <div class="col-md-6">
                                                     <p class="text-start text-uppercase">
                                                         Frete: 
@@ -659,6 +652,10 @@
         let proFrete = document.getElementById(`compra_itensCompra_attributes_${index}_valor_frete`);
         let proDesconto = document.getElementById(`compra_itensCompra_attributes_${index}_desconto`);
         let proTotal = document.getElementById(`compra_itensCompra_attributes_${index}_valorTotal`);
+        
+        proTotal.value = 0;
+
+        console.log(index);
 
         proIpi = proIpi.value ? parseFloat(proIpi.value.replace(",", ".")) : 0;
         proFrete = proFrete.value ? parseFloat(proFrete.value.replace(",", ".")) : 0;
@@ -666,18 +663,65 @@
         proTotal = proTotal.value ? parseFloat(proTotal.value.replace(",", ".")) : 0;
         valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
 
+console.log(proIpi);
+console.log(proValor.value);
+console.log(proFrete);
+console.log(proDesconto);
+console.log(proTotal);
+console.log(valorst);
+
         // vlUni = ((parseFloat( proValor.value ? parseFloat(proValor.value.replace(",",".")) : 0) * (proQtd.value ? (parseFloat(proQtd.value.replace(",","."))) : 0 )));
         vlUni = (proIpi + proFrete + proTotal + valorst - proDesconto)
+        
         proTotal.value = vlUni + proIpi + proDesconto.value 
         proTotal.value = parseFloat(proTotal.value).toFixed(2).replace(".",",");
+
+        console.log(proTotal.value)
 
         proValor = "";
         proQtd   = "";
         proTotal = "";
         index = "";
-
+// setTotalCompra();
     }
     // fim valor total item \
+    function setTotalCompra() {
+        // Selecione a tabela
+        
+
+        var tabela = document.getElementById("tblProducts");
+        var totalCompra = document.getElementById("compra_valortotal").value.replace(",",".");
+        var desconto = document.getElementById("desconto").value.replace(",",".");
+        var outrasdespesas = document.getElementById("outrasdespesas").value.replace(",",".");
+        var valorfrete = document.getElementById("valorfrete").value.replace(",",".");
+
+        // Inicialize a variável para armazenar a soma
+        var soma = 0;
+
+        // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
+        for (var i = 1; i < tabela.rows.length; i++) {
+            // Obtenha o valor unitário da célula de classe "valor-unitario"
+            console.log("");
+            console.log(tabela.rows[i]);
+            console.log("");
+            var valorUnitarioCell = tabela.rows[i].querySelector(".valorunitario");
+            // Use uma expressão condicional para verificar se o valor é válido
+            var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
+            
+            //console.log("TEXTO - "+valorUnitario)
+
+            var qtdCell = tabela.rows[i].querySelector(".quantidade");
+            var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value.replace(",",".")) : 0;
+            
+            // Some o valor unitário à variável de soma
+            soma += (valorUnitario*qtdProduto);
+        }
+
+        soma += parseFloat(acrescimo) - parseFloat(desconto);
+        document.getElementById("compra_valortotal").value = soma.toFixed(2).replace(".",",");
+        // Exiba o resultado da soma
+    }
+    // fim total compra
     // ------------ BUSCA PESSOAS ------------- //
 
     $(document).ready(function() {

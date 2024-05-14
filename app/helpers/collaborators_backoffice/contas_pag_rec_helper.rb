@@ -20,13 +20,16 @@ module CollaboratorsBackoffice::ContasPagRecHelper
     end
     
     def tipe_bill_true( parametros )
-        puts "------------------>>>> Paramentro ---->> " + parametros.to_s
-        if parametros.blank?
-            false
-        elsif parametros.to_s == "false"
-            false
-        else
-            true
-        end
+        parametros = !! parametros
+puts "\n Parametros = #{parametros}\n"
+        return parametros
+        # puts "------------------>>>> Paramentro ---->> " + parametros.to_s
+        # if parametros.blank?
+        #     false
+        # elsif parametros.to_s == "false"
+        #     false
+        # else
+        #     true
+        # end
     end
 end

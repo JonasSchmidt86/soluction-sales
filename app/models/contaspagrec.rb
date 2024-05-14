@@ -94,11 +94,11 @@ class Contaspagrec < ApplicationRecord
                 
                 if !self.compra.nil? || !self.frete.nil?
                     for conta in self.lancamentos do
-                        if conta.tipo == 'E'
-                            valor -= conta.valor
+                        if conta.tipo == 'S'
+                            valor += conta.valor
                         else
                             if !conta.cancelada?
-                                valor += conta.valor
+                                valor -= conta.valor
                             end
                         end
                     end

@@ -43,7 +43,7 @@
                   <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                     <div class="col-md-5">
                       <%= form.collection_select(:cod_bancoconta, 
-                              (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa)), 
+                              (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
                                 :cod_bancoconta, :nome_banco, {:include_blank => 'Selecione um Destino', selected: params[:cod_bancoconta]}, 
                                 class: "text form-control", readonly: false) %>
                     </div>
@@ -125,7 +125,7 @@
                       <% else %>
                         <%# Se for funcionario nivel 1 liberado para remover porem se for de caixa diferente ele gera novo lancamento contra o primeiro %>
                         <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                          <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
+                          <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch, params.permit!), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
                               <i class="fa fa-minus"></i>
                           <% end %>

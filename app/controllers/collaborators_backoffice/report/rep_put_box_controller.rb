@@ -70,7 +70,8 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
 # se o caixa for diferente do caixa aberto gerar um lancamento de caixa de saida desse lancamento para zerar  
         if @launch.contaspagrec.nil?
             if @launch.destroy
-                redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso!"
+                redirect_to collaborators_backoffice_report_put_box_index_path(params.permit!
+                    ), notice: "Lancamento excluido com sucesso!"
             else
                 redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Erro ao excluir Lancamento!"
             end
@@ -79,9 +80,11 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
             @bill.quitada = false
             if @bill.save
                 if @launch.destroy
-                    redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Lancamento excluido com sucesso! E conta Ativada com sucesso!"
+                    redirect_to collaborators_backoffice_report_put_box_index_path(params.permit!
+                        ), notice: "Lancamento excluido com sucesso! E conta Ativada com sucesso!"
                 else
-                    redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Erro ao excluir Lancamento!"
+                    redirect_to collaborators_backoffice_report_put_box_index_path(params.permit!
+                        ), notice: "Erro ao excluir Lancamento!"
                 end
             else
                 redirect_to collaborators_backoffice_report_put_box_index_path, notice: "Não foi possivel reativar a conta!"
@@ -91,6 +94,11 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
     end
 
     private
+
+    def bill_params
+        params.require(:bill).permit(:cliente, :dataInicial, :dataFinal, :cod_bancoconta, :per_page, 
+        :cod_historico, :cod_operacao);
+    end
 
     def set_launch
         @launch = Lancamentoscaixa.find(params[:id])
