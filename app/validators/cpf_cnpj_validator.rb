@@ -1,14 +1,20 @@
 class CpfCnpjValidator < ActiveModel::EachValidator
 
   def validate_each(record, attribute, value)
-    value = value.to_s.gsub(/[^0-9]/, '')
-
-    if value.length == 11 && !validar_cpf(value)
-      record.errors[attribute] << ('Não é um CPF válido')
-    elsif value.length == 14 && !validar_cnpj(value)
-      record.errors[attribute] << ('Não é um CNPJ válido')
+    unless CPF.valid?(value) || CNPJ.valid?(value)
+      record.errors.add(attribute, "não é um CPF ou CNPJ válido")
     end
   end
+
+#  def validate_each(record, attribute, value)
+#    value = value.to_s.gsub(/[^0-9]/, '')
+#
+#    if value.length == 11 && !validar_cpf(value)
+#      record.errors[attribute] << ('Não é um CPF válido')
+#    elsif value.length == 14 && !validar_cnpj(value)
+#      record.errors[attribute] << ('Não é um CNPJ válido')
+#    end
+#  end
 
   private
 

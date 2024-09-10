@@ -5,8 +5,8 @@
           <h4>Estoque</h4>
       <% end %>
     
-    <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+        <div class="card-body">
+          <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
                 <% somaCusto = 0 %>
                 <% somaVenda = 0 %>
 
@@ -42,10 +42,16 @@
                     </div>
                     <% if current_collaborator.funcionario.permissao.nivel == 1 %>  
                       <div class="col-md-3 ml-auto">
-                        <%= form.text_field :valorVenda, class: "text-bg-info form-control ", readonly: true %>
+                        <div class="form-floating">
+                          <%= form.text_field :valorVenda, class: "text-bg-info form-control ", readonly: true %>
+                          <%= form.label :valor_venda, class:"" %>
                       </div>
+                    </div>
                       <div class="col-md-3 ml-auto  order-last">
-                        <%= form.text_field :valorCusto, class: "text-bg-warning form-control ", readonly: true %>
+                        <div class="form-floating">
+                          <%= form.text_field :valorCusto, class: "text-bg-warning form-control ", readonly: true %>
+                          <%= form.label :custo, class:"" %>
+                        </div>
                       </div>
                     <% end %>
                   </div>

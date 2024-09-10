@@ -60,8 +60,18 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
 
       @xml_file.compra = compra;
 
-      compra.itensCompra = det_itens(det_elements)
+      compra.itenscompra = det_itens(det_elements)
       compra.contas = dup_contas(dup_elements)
+
+      # se no xml vier com valor total = a zero
+      if compra.valortotal == 0 
+        # somar o total dos produtos
+        valorTotal = 0;
+        compra.itenscompra.each do |item|
+          valorTotal += item.valorunitario;
+        end
+        compra.valortotal = valorTotal;
+      end
 
       @xml_file.compra = compra;
     end

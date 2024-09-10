@@ -18,7 +18,7 @@
             <div class="form-floating mb-3">
                 <%= form.collection_select(:cod_empresasolicitada, Empresa.where("ativo = ?", true), :cod_empresa, :nome,{:prompt => ''}, 
                     class: "form-control") %>
-                <%= form.label :empresasolicitada, class:"" %>
+                <%= form.label :empresa_solicitada, class:"" %>
             </div>
             
             <div class="modal-footer">

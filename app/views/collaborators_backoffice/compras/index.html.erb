@@ -46,8 +46,8 @@
             </div>
             
             <div class="me-3 col-md-3">
-              <%= link_to new_collaborators_backoffice_venda_path,
-                          class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
+              <%= link_to new_collaborators_backoffice_compra_path,
+                          class:"btn btn-success btn-circle", data: {confirm: "Nova Compra?"} do %>
                   <i class="fa fa-plus"></i>
               <% end %>
             </div>
@@ -86,15 +86,15 @@
                   <% else %>
                     <tr class="">
                   <% end %> 
-                      <td><%= post_date (buy.datavenda? ? buy.datavenda : "") %> </td>
+                      <td><%= post_date (buy.datacompra? ? buy.datacompra : "") %> </td>
                       <td><div class="text-truncate" style="width: 150px" ><%= buy.empresa.nome %></div> </td>
                       <td><%= buy.pessoa.nome %></td>
-                      <td><%= buy.venda_nfe %> </td>
-                      <td><div class="text-truncate" style="max-width: 150px" ><%= buy.funcionario.usuario %></div> </td>
+                      <td><%# buy.venda_nfe %> </td>
+                      <td><div class="text-truncate" style="max-width: 150px" ><%= buy.collaborator.usuario %></div> </td>
                       <td><%= number_to_currency( buy.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                       <% unless buy.cancelada %>
                         <% somaVendas += buy.valortotal; %>
-                        <% somaRecebida += buy.valorRecebido; %>
+                        <% somaRecebida += buy.valorPago; %>
                         
                       <% end %>
                       <td>
@@ -117,8 +117,8 @@
                               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                                 <span class="visually-hidden">Toggle Dropdown</span>
                                 <li>
-                                  <%= link_to collaborators_backoffice_venda_path(buy), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
-                                      data: { confirm: "Deseja remover a Venda?" } do %>
+                                  <%= link_to collaborators_backoffice_compra_path(buy), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                                      data: { confirm: "Deseja remover a compra?" } do %>
                                     <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                                   <% end %> 
                                 </li>

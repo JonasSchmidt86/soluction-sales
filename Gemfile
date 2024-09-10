@@ -13,6 +13,11 @@ gem 'nfe-io'
 # gem 'carrierwave'
 # --------------
 
+#Formatador de html
+gem 'htmlbeautifier'
+
+gem "cpf_cnpj"
+
 # Gem para buscar endereço e cidade por cep
 gem 'httparty'
 

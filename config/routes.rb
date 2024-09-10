@@ -34,7 +34,7 @@ Rails.application.routes.draw do
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
-    resources :compras, only: [:index, :edit, :new, :create, :destroy]
+    resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do

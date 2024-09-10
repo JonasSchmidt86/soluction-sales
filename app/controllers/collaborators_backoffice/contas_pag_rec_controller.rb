@@ -104,7 +104,7 @@ private
             @launch.cancelada = false
             @launch.cod_bancoconta = params[:cod_bancoconta]
             puts "--------------------------"
-            puts params[:cod_bancoconta]
+            puts "Banco: #{params[:cod_bancoconta]}"
             puts "--------------------------"
             unless params[:cod_bancoconta]
                 @launch.caixa = @caixa    
@@ -121,14 +121,16 @@ private
                 @launch.tipo = 'S'
                 @launch.cod_tphitorico = 6 # pagamento de frete
             end
-            @launch.contaspagrec = @bill
 
+            @launch.contaspagrec = @bill
 
             @launch.dataabertura = @caixa.dataabertura
             
             @launch.datamodificacao = DateTime.now
 
             @bill.lancamentos << @launch
+
+            puts "ANTES SAVE";
 
             if @bill.save
                 redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
@@ -137,11 +139,16 @@ private
                 
                 }) , notice: "Conta Baixada com sucesso!"
             else
+                if @bill.errors
+                    message = @bill.errors
+                    puts @bill.errors.first.to_s
+                end
+
                 redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                 { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
                 :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
                 
-                }) , notice: "ERRO AO SALVAR CONTA!"
+                }) , notice: message
             end
         end
     end

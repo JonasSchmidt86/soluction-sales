@@ -64,10 +64,11 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
       # Crie uma nova coleção contendo apenas os itens desejados
       itens_a_manter = @sale.itensvenda.reject { |item_venda| item_venda.cod_produto.nil? }
-      conta_a_manter = @sale.contas.reject { |conta| conta.numeroparcela.blank? }
+      conta_a_manter = @sale.contas.reject { |conta| (conta.numeroparcela.blank? || conta.valorparcela.blank? ||  conta.dtvencimento.blank?) }
 
       # Atribua a nova coleção à associação
       @sale.itensvenda = itens_a_manter
+      @sale.contas = conta_a_manter
 
       puts "ANTES DE SALVAR"
 
@@ -132,8 +133,9 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         contas_attributes: [  :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, 
                               :_destroy, :cod_empresa, :ativo, :quitada, :cod_tppagamento ],
         pessoa_attributes: [  :tipo, :nome, :telefone, :celular, :cep, 
-                              :cod_cidade, :complemento, :endereco, :bairro, :numero, :email ])
-  
-      end
+                              :cod_cidade, :complemento, :endereco, :bairro, :numero, :email ]
+      )
+    end
+    
   end
   

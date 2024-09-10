@@ -4,8 +4,10 @@ class Compra < ApplicationRecord
 
     self.primary_key = "cod_compra"
 
-    has_many :itensCompra, :class_name => 'Itemcompra', :foreign_key => 'cod_compra', inverse_of: :compra, autosave: true, dependent: :destroy
-    accepts_nested_attributes_for :itensCompra, allow_destroy: true, update_only: true, reject_if: :all_blank
+    belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :compra, dependent: :destroy, optional: true, autosave: true
+    
+    has_many :itenscompra, :class_name => 'Itemcompra', :foreign_key => 'cod_compra', inverse_of: :compra, autosave: true, dependent: :destroy
+    accepts_nested_attributes_for :itenscompra, allow_destroy: true, update_only: true, reject_if: :all_blank
 
     has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_compra', inverse_of: :compra, autosave: true, dependent: :destroy
     accepts_nested_attributes_for :contas, allow_destroy: true, update_only: true, reject_if: :all_blank
@@ -16,8 +18,6 @@ class Compra < ApplicationRecord
     belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa'
     
     belongs_to :collaborator, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', inverse_of: :compras
-    
-    belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :compra, dependent: :destroy, optional: true, autosave: true
 
     has_one :xml_file, autosave: true
 

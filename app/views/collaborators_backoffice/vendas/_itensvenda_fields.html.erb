@@ -1,32 +1,32 @@
-<tr class= "nested-fields">
+<tr class="nested-fields">
     <%= f.hidden_field :cod_produto %>
     <td class="col-md-3">
-
         <%= f.text_field :produto, 
-            class:"text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
-            placeholder:"Pressione Enter para buscar!"
-        %>
+            class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
+            placeholder: "Pressione Enter para buscar!" %>
         <div id="products_list" class="position-absolute bg-light rounded form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 48%;"></div>
     </td>
 
     <td class="col-auto">
-        <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
-                :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'},
-                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>
+        <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
+                { prompt: "Selecione uma Cor" },
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
     </td>
-    <td class="">
+    <td>
         <%= f.text_field :quantidade, type: "number", step: "1", class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
     </td>
-    <td class="">
-        <%= f.text_field :valorunitario, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
+    <td>
+        <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
     </td>
-    <td class="">
-        <%= f.text_field :valor_total, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" , disabled: true %>
+    <td>
+        <%= f.text_field :valor_total, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
     </td>
+        
+        <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
+
     <td class="align-middle fw-semibold">
-        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover', onchange: "setValorTotal(this)" do %> <%# , data: { confirm: 'Tem certeza?' } %>
-        <i class="fa fa-trash-can"></i>
+        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+            <i class="fa fa-trash-can"></i>
         <% end %>
     </td>
-    <%= f.hidden_field :cod_empresa,  value: @sale.cod_empresa %>
 </tr>

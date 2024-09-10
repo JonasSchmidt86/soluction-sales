@@ -2,13 +2,16 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
 
     def index
-      @compras = Compra.all
-      @lembretes = Lembrete.where(ativo: true).order(:datacadastro).page(params[:page])
+      @buys = Compra.where(cod_empresa: current_collaborator.empresa.cod_empresa).order(cod_compra: :desc).page(params[:page])
+    end
+
+    def show
+      @compra = Compra.find_by(cod_compra: params[:id])
     end
 
     def new
     end
-  
+
     def create
       compra = Compra.new
 
@@ -40,8 +43,8 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
         compra.xml_file = XmlFile.find(params[:compra][:xml_file].to_i)
 
-        if params[:compra][:itensCompra_attributes].present?
-          itens = params[:compra][:itensCompra_attributes]
+        if params[:compra][:itenscompra_attributes].present?
+          itens = params[:compra][:itenscompra_attributes]
           
           # Verifique se itens é uma instância de ActionController::Parameters
           if itens.is_a?(ActionController::Parameters)
@@ -127,9 +130,48 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itemCompra.valor_frete = pro_temp["valor_frete"].gsub(',', '.').to_f
             itemCompra.cancelado = false
 
-            compra.itensCompra << itemCompra;
+            compra.itenscompra << itemCompra;
 
           end
+        end
+      end
+      
+      # frete
+      if params[:compra][:frete].present?
+
+        if !params[:compra][:frete][:cod_pessoa].blank?
+
+          frete = Frete.new;
+          frete.compra = compra;
+          frete.cod_pessoa = params[:compra][:frete][:cod_pessoa].to_i;
+          frete.cod_empresa = compra.cod_empresa
+          frete.ativo = true;
+          frete.datacadastro = Date.parse(params[:compra][:frete][:datacadastro]);
+          frete.datavencimento =  Date.parse(params[:compra][:frete][:datavencimento]);
+          frete.valor = params[:compra][:frete][:valor];
+          frete.nrromaneio = params[:compra][:frete][:nrromaneio];
+          compra.frete = frete;
+
+          conta = Contaspagrec.new
+          
+          conta.cod_empresa = frete.cod_empresa;
+          conta.ativo = true
+          conta.compra = compra
+          conta.frete = frete
+          conta.dtvencimento = frete.datavencimento
+          conta.numeroparcela = 0
+          conta.quitada = false
+          conta.valorparcela = frete.valor
+
+          frete.contas << conta;
+
+          # tenho que salvar o frete primeiro para a trigger do postgres funcionar
+          if frete.save!
+            # Criar a compra
+            compra.cod_frete = frete.cod_frete
+            puts "Frete persistido!"
+          end
+          
         end
       end
 
@@ -155,39 +197,6 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             # conta.cod_tppagamento = 1 #bill["cod_tppagamento"]
             compra.contas << conta
           end
-
-      end
-
-      # frete
-      if params[:compra][:frete].present?
-
-        if !params[:compra][:frete][:cod_pessoa].blank?
-          atr_frete = params[:compra][:frete]
-      
-          frete = Frete.new;
-          frete.compra = compra;
-          frete.cod_pessoa = params[:compra][:frete][:cod_pessoa].to_i;
-          frete.cod_empresa = compra.cod_empresa
-          frete.ativo = true;
-          frete.datacadastro = Date.parse(params[:compra][:frete][:datacadastro]);
-          frete.datavencimento =  Date.parse(params[:compra][:frete][:datavencimento]);
-          frete.valor = params[:compra][:frete][:valor];
-          frete.nrromaneio = params[:compra][:frete][:nrromaneio];
-
-          conta = Contaspagrec.new
-          
-          conta.cod_empresa = frete.cod_empresa;
-          conta.ativo = true
-          conta.compra = compra
-          conta.frete = frete
-          conta.dtvencimento = frete.datavencimento
-          conta.numeroparcela = 0
-          conta.quitada = false
-          conta.valorparcela = frete.valor
-
-          frete.contas << conta;
-          compra.frete = frete;
-        end
 
       end
 
@@ -268,7 +277,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           :cod_pessoa,
           :nrromaneio
         ],
-        itensCompra_attributes:[
+        itenscompra_attributes:[
           :cod_compra,
           :cod_empresa,
           :cod_produto,

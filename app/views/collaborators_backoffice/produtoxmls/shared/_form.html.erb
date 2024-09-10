@@ -172,7 +172,7 @@
                                                 <tbody>
                                                 
                                                     <% index = 0 %>
-                                                        <%= form_buy.fields_for :itensCompra do |form_itens| %>
+                                                        <%= form_buy.fields_for :itenscompra do |form_itens| %>
                                                         
                                                             <tr>
                                                                 <td class="align-middle">
@@ -592,7 +592,7 @@
             productsListDiv.id = `products_list_${index}`;
         }
         
-        var selectedProductIdField = document.getElementById(`compra_itensCompra_attributes_${index}_cod_produto`);
+        var selectedProductIdField = document.getElementById(`compra_itenscompra_attributes_${index}_cod_produto`);
 
         let productsList = $(`#products_list_${index}`);
 
@@ -643,38 +643,38 @@
     function setValorTotal(field) {
 
         let index = thisIndex(field);
-        let proValor = document.getElementById(`compra_itensCompra_attributes_${index}_valorunitario`);
-        let proQtd   = document.getElementById(`compra_itensCompra_attributes_${index}_quantidade`);
+        let proValor = document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
+        let proQtd   = document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
         
-        let valorst = document.getElementById(`compra_itensCompra_attributes_${index}_icms`);
+        let valorst = document.getElementById(`compra_itenscompra_attributes_${index}_icms`);
 
-        let proIpi = document.getElementById(`compra_itensCompra_attributes_${index}_ipi`);
-        let proFrete = document.getElementById(`compra_itensCompra_attributes_${index}_valor_frete`);
-        let proDesconto = document.getElementById(`compra_itensCompra_attributes_${index}_desconto`);
-        let proTotal = document.getElementById(`compra_itensCompra_attributes_${index}_valorTotal`);
-        
+        let proIpi = document.getElementById(`compra_itenscompra_attributes_${index}_ipi`);
+        let proFrete = document.getElementById(`compra_itenscompra_attributes_${index}_valor_frete`);
+        let proDesconto = document.getElementById(`compra_itenscompra_attributes_${index}_desconto`);
+        let proTotal = document.getElementById(`compra_itenscompra_attributes_${index}_valorTotal`);
+
+console.log("total= "+proTotal.value)
+
         proTotal.value = 0;
 
-        console.log(index);
+        console.log("Index = "+index);
 
         proIpi = proIpi.value ? parseFloat(proIpi.value.replace(",", ".")) : 0;
         proFrete = proFrete.value ? parseFloat(proFrete.value.replace(",", ".")) : 0;
-        proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
-        proTotal = proTotal.value ? parseFloat(proTotal.value.replace(",", ".")) : 0;
         valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
-
-console.log(proIpi);
-console.log(proValor.value);
-console.log(proFrete);
-console.log(proDesconto);
-console.log(proTotal);
-console.log(valorst);
+        proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
 
         // vlUni = ((parseFloat( proValor.value ? parseFloat(proValor.value.replace(",",".")) : 0) * (proQtd.value ? (parseFloat(proQtd.value.replace(",","."))) : 0 )));
-        vlUni = (proIpi + proFrete + proTotal + valorst - proDesconto)
+        vlUni = (proIpi + proFrete + valorst - proDesconto) / proQtd.value
+        console.log("vlUni = " + vlUni);
+
+let total = (vlUni + proValor.value.replace(",",".")) * proQtd.value;
         
-        proTotal.value = vlUni + proIpi + proDesconto.value 
-        proTotal.value = parseFloat(proTotal.value).toFixed(2).replace(".",",");
+        console.log("total= "+ total)
+
+        console.log("total= "+ proTotal.value)
+
+        proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
 
         console.log(proTotal.value)
 
@@ -688,7 +688,6 @@ console.log(valorst);
     function setTotalCompra() {
         // Selecione a tabela
         
-
         var tabela = document.getElementById("tblProducts");
         var totalCompra = document.getElementById("compra_valortotal").value.replace(",",".");
         var desconto = document.getElementById("desconto").value.replace(",",".");

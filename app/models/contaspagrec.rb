@@ -7,11 +7,10 @@ class Contaspagrec < ApplicationRecord
             inverse_of: :contaspagrec, dependent: :destroy
 
     has_many :tiposlancamento, :class_name => 'Tiposlancamento', :foreign_key => 'cod_tppagamento', inverse_of: :contas
-
     accepts_nested_attributes_for :lancamentos, reject_if: :all_blank, allow_destroy: true #cocoon gem
 
     belongs_to :venda, :class_name => 'Venda', :foreign_key => 'cod_venda', inverse_of: :contas, optional: true
-
+    
     belongs_to :compra, :class_name => 'Compra', :foreign_key => 'cod_compra', inverse_of: :contas, optional: true
     
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :contas, optional: true

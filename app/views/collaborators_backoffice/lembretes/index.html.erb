@@ -39,7 +39,13 @@
                 
                 <tbody>
                     <% @lembretes.each do |lembrete| %>
-                      <tr>
+                      
+                      <% if (!lembrete.ativo) %>
+                      <tr class="" style="background-color: #FA625E;">
+                    <% else %>
+                        <tr class="">
+                    <% end %> 
+
                         <td><%= (lembrete.datacadastro? ? l(lembrete.datacadastro) : "") %> </td>
                         <td><%= lembrete.empresa.nome %> </td>
                         <td><%= lembrete.descricao %> </td>

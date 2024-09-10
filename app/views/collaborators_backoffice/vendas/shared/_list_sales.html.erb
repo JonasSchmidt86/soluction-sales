@@ -1,28 +1,27 @@
 
 <div id="layoutAuthentication_content">
     <main>
-        <div class="card-body">
-
+        <div class="card mt-3">
             <div class="row justify-content-center">
                 <div class="">
-                    <div class="card mt-3">
-                    
-                        <% if @sale.errors.any? %>
-                            <div class="alert alert-danger alert-dismissible " role="alert">
-                                <% @sale.errors.full_messages.each do |message| %>
-                                    <ul>
-                                        <li><%= message %></li>
-                                    </ul>
-                                <% end %>
-                            </div>
-                        <% end %> 
-                                            
-                        <div class="card-header">
-                            <%# <%= link_to '', collaborators_backoffice_report_sales_path, class:'btn btn-close btn-block'  % > %>
-                            <h4 class="text-center font-weight-light">
-                                <%= "#{action_message} Venda"%> 
-                            </h4>
+                    <% if @sale.errors.any? %>
+                        <div class="alert alert-danger alert-dismissible " role="alert">
+                            <% @sale.errors.full_messages.each do |message| %>
+                                <ul>
+                                    <li><%= message %></li>
+                                </ul>
+                            <% end %>
                         </div>
+                    <% end %> 
+                                        
+                    <div class="card-header">
+                        <%# <%= link_to '', collaborators_backoffice_report_sales_path, class:'btn btn-close btn-block'  % > %>
+                        <h4 class="text-center font-weight-light">
+                            <%= "#{action_message} Venda"%> 
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body">
                         <%= form_with(model: [:collaborators_backoffice, @sale], local: true) do |form| %>
 
                         <div class="row">
@@ -91,7 +90,7 @@
 
                         <div class="tab-content">
                         
-                            <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                            <div class="tab-pane border border-top-0 active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
                                 <div class="card-body">
                                 <%# Lista de vendas não vai o botao de adicionar + itens %>
                                     <%# <div class="form-floating input-group mb-3 ">                
@@ -146,7 +145,7 @@
                                 </div>
                             </div>
 
-                            <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                            <div class="tab-pane border border-top-0" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
                                 <div class="card-body">
                                     <table id="datatablesSimple" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
                                         <thead>

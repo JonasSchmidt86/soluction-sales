@@ -34,7 +34,7 @@
               <div class="col-md-3 me-1">
                 <div class="mb-2">
                   <%= form.collection_select(:cod_funcionario, 
-                          (Funcionario.select(:cod_funcionario, :usuario).where("cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null ", current_collaborator.cod_empresa)), 
+                          (Funcionario.select(:cod_funcionario, :usuario).where("cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and ativo = true and datademissao is null ", current_collaborator.cod_empresa)), 
                             :cod_funcionario, :usuario, {:include_blank => 'Selecione um colaborador', selected: params[:cod_funcionario]}, 
                             class: "text form-control", readonly: false) %>
                 </div>
@@ -53,10 +53,16 @@
             </div>
             
             <div class="me-1 ms-auto col-md-3 ">
-              <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
+              <div class="form-floating">
+                <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
+                <%= form.label :Valor_pago, class:"" %>
+              </div>
             </div>
             <div class="ms-auto col-md-3 order-last ">
-              <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+              <div class="form-floating">
+                <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+                <%= form.label :Total, class:"" %>
+              </div>
             </div>
 
           </div>

@@ -1,10 +1,9 @@
 <br>
 <div id="layoutAuthentication_content">
-    <main>
-        <div class="container">
+    <div class="card-body">
             <div class="row justify-content-center">
-                <div class="col-lg-7">
-                    <div class="card mb-3" style="max-width: 800px;">
+                <div>
+                    <div class="card mb-3" >
                     
                         <% if @produto.errors.any? %>
                             <div class="alert alert-danger alert-dismissible " role="alert">
@@ -15,16 +14,18 @@
                                 <% end %>
                             </div>
                         <% end %> 
-                                            
-                        <div class="card-header">
-                            <%= link_to '', collaborators_backoffice_produtos_path, class:'btn btn-close btn-block'  %>
 
-                            <h4 class="text-center font-weight-light my-2">
-                                <%= "#{action_message} Produto"%> 
-                            </h4>
-                            
+                        <div class="card-header bg-primary" >                                                    
+                            <div class="d-flex">
+                                <h4 class="text-center font-weight-light">
+                                    <%= "#{action_message} Produto"%> 
+                                </h4>    
+                                <%= link_to '', collaborators_backoffice_produtos_path, class:'btn btn-close ms-auto' %>
+                            </div>
                         </div>
-                            
+
+                        <div class="card-body">
+                                 
                             <!-- Nav tabs -->
                             <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
                                 <li class="nav-item" role="presentation">
@@ -91,7 +92,7 @@
                                                     <td><%= item.venda.pessoa.nome %></td>
                                                     <td class=""><%= post_date item.venda.datavenda %></td>
                                                     <td class=""><%= item.quantidade.to_i %></td>
-                                                    <td class=""><%= number_to_currency item.valorunitario %></td>
+                                                    <td class=""><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
                                                 </tr>
                                             <% end %>
                                         </tbody>
@@ -116,7 +117,7 @@
                                                     <td><%= item.cod_cor %></td>
                                                     <td><%= item.compra.pessoa.nome %></td>
                                                     <td class=""><%= item.quantidade.to_i %></td>
-                                                    <td class=""><%= number_to_currency item.valorunitario%></td>
+                                                    <td class=""><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
                                                 </tr>
                                             <% end %>
                                         </tbody>
@@ -137,7 +138,6 @@
                 </div>
             </div>
         </div>
-    </main>
 </div>
 
 <script>

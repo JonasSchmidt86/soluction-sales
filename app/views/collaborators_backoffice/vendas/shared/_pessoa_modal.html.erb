@@ -10,9 +10,7 @@
         <h5 class="modal-title" id="modalLabel">Cad cliente</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <di   v class="modal-body">
-        <%# form_with(model: [ :collaborators_backoffice, Pessoa.new ], id:"form_pessoa", local: true) do |form_pessoa| %>
-        <%# form.fields_for :pessoa,id:"form_pessoa", local: true do  |form_pessoa| %>
+      <div class="modal-body">
         <%= form.fields_for :pessoa, (form.object.pessoa || Pessoa.new), id: "form_pessoa", local: true do |form_pessoa| %>
 
           <div class="col-md-12">
@@ -22,8 +20,6 @@
                     <h5><%= form_pessoa.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: 'F',id:"pessoa_tipo", item_wrapper_tag: false %></h5>
                 </div>
             </div>
-
-            <%# form_pessoa.hidden_field :cod_pessoa, id: 'selected_person_id' %>
 
             <div class="row mb-2">
               <div class="col-md-6">

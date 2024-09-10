@@ -1,0 +1,2 @@
+-- dump para bd
+-- pg_dump -h localhost -U jonas --no-owner --blobs -T -Fp -p 5432 --inserts -f /Users/jonas/Moveisrosa.backup MoveisRosa

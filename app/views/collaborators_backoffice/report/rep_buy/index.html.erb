@@ -46,17 +46,23 @@
             </div>
             
             <div class="me-3 col-md-3">
-              <%= link_to new_collaborators_backoffice_venda_path,
-                          class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
+              <%= link_to new_collaborators_backoffice_compra_path,
+                          class:"btn btn-success btn-circle", data: {confirm: "Nova Compra?"} do %>
                   <i class="fa fa-plus"></i>
               <% end %>
             </div>
             
             <div class="me-1 ms-auto col-md-3 ">
-              <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
+              <div class="form-floating">
+                <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
+                <%= form.label :total_pago, class:"" %>
+              </div>
             </div>
             <div class="ms-auto col-md-3 order-last ">
-              <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+              <div class="form-floating">
+                <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+                <%= form.label :Total_compra, class:"" %>
+              </div>
             </div>
 
           </div>
@@ -105,7 +111,7 @@
 
                             <ul class="dropdown-menu" style="width: 50px;">                                
                               <li>
-                                <%= link_to edit_collaborators_backoffice_compra_path(buy), class:"dropdown-item btn btn-info btn-circle" do %>
+                                <%= link_to collaborators_backoffice_compra_path(buy), class:"dropdown-item btn btn-info btn-circle" do %>
                                   <i class="fa fa-info", style="width: 35px;"></i>Informações
                                 <% end %>
                               </li>
@@ -113,7 +119,7 @@
                                 <span class="visually-hidden">Toggle Dropdown</span>
                                 <li>
                                   <%= link_to collaborators_backoffice_compra_path(buy), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
-                                      data: { confirm: "Deseja remover a Venda?" } do %>
+                                      data: { confirm: "Deseja remover a Compra?" } do %>
                                     <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                                   <% end %> 
                                 </li>

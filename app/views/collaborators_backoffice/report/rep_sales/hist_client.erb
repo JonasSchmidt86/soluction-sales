@@ -83,7 +83,7 @@
                           <td><%= sale.pessoa.nome %></td>
                           <td><%= sale.venda_nfe %> </td>
                           <td><%= sale.funcionario.usuario %> </td>
-                          <td><%= number_to_currency( sale.valortotal, precision: 2)  %></td>
+                          <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
 
                           <td>
                             <button type="button" onclick="MudarEstado('minhaDiv<%= sale %>')" class = "btn btn-info btn-circle"><i class="fa fa-info"></i></button>
@@ -93,8 +93,7 @@
                         <tr id="minhaDiv<%= sale %>" style="display: none;">
                           <td colspan="7">
                             <div class="dataTable-container">
-
-                              <table class="table table-striped">
+                              <table id="datatablesSimple" class="dataTable-table table-striped">
                                 <thead>
                                   <tr>
                                     <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
@@ -109,6 +108,7 @@
                                 </thead>
                                 
                                 <tbody>
+                                
                                   <% sale.contas.order("numeroparcela").each do |bill| %>
                                       <% if (!bill.ativo) %>
                                           <tr class="nested-fields text-danger">
@@ -125,17 +125,35 @@
                                       <td><%= bill.nmParcela %> </td>
                                       <td><%= bill.nmPessoa %> </td>
                                       <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                                      <td><%= number_to_currency( bill.valorparcela, precision: 2)  %></td>
-                                      <td><%= number_to_currency( bill.valorPago, precision: 2)  %></td>
-                                      <td>
+                                      <td><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
+                                      <td><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                                       
+                                      <td>
                                         <% if !bill.lancamentos.blank? %>
-                                          <%# lancamentos da parcela %>
                                           <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
                                         <% end %>
-              <%# ---------------------- %>
-
                                       </td>
+                                    </tr>
+                                  <% end %>
+                                </tbody>
+                              </table>
+                              <table id="datatablesSimple" class="dataTable-table table-striped table-borderless">
+                                <thead>
+                                  <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
+                                  <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
+                                  <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
+                                  <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
+                                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
+                                </thead>
+                                <tbody>
+                                  <% sale.itensvenda.order(:cod_item).each do |item| %>
+                                    <tr>
+                                      <td><%= item.full_codigo %> </td>
+                                      <td><%= item.produto.nome %> </td>
+                                      <td><%= item.cor.nmcor %> </td>
+                                      <td><%= item.quantidade.to_i %> </td>
+                                      <td><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                                    </tr>
                                   <% end %>
                                 </tbody>
                               </table>

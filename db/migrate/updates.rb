@@ -34,7 +34,6 @@
 #   where lancamentoscaixa.dataabertura = c.dataabertura;
 
 
-#   alter table lembretes alter column codigo set default nextval('lembretes_sequence'::regclass);
 #   alter table funcionarioempresa alter column cod_funcionarioempresa set default nextval('funcionario_codigo_seq'::regclass);
 #   alter table funcionario alter column cod_funcionario set default nextval('funcionario_codigo_seq'::regclass);
 #   ALTER TABLE Lancamentoscaixa ALTER COLUMN cod_lancamentocaixa SET DEFAULT nextval('lancamentocaixa_sequence'::regclass);
@@ -327,21 +326,6 @@
 
 # $BODY$;
 
-# -- adicionar sequence
-# ALTER TABLE itemvenda
-# ALTER COLUMN cod_item
-# SET DEFAULT nextval('itemvenda_codigo_seq'::regclass);
-
-# ALTER TABLE itemcompra
-# ALTER COLUMN cod_item
-# SET DEFAULT nextval('itemcompra_codigo_seq'::regclass);
-
-# ALTER TABLE contaspagrec
-# ALTER COLUMN cod_contaspagrec
-# SET DEFAULT nextval('contaspagrec_sequence'::regclass);
-
-
-
 
 # ALTER TABLE IF EXISTS public.empresaproduto DROP CONSTRAINT IF EXISTS empresaproduto_pkey;
 # ALTER TABLE IF EXISTS public.empresaproduto ADD CONSTRAINT empresaproduto_pkey PRIMARY KEY (id);
@@ -375,9 +359,196 @@
 # -- select max(cod_lancamentocaixa) from lancamentoscaixa
 # SELECT setval('lancamentocaixa_sequence', (select max(cod_lancamentocaixa)+1 from lancamentoscaixa));
 
-## add sequence na tabela Produtoxml
-# ALTER TABLE Produtoxml
-# ALTER COLUMN codigo SET DEFAULT nextval('produtoxml_codigo_seq');
 ## add sequence na tabela FRETE
 # ALTER TABLE IF EXISTS public.frete
 # 	ALTER COLUMN cod_frete SET DEFAULT nextval('frete_sequence');
+
+
+##### TIGGER UPDATE ESTOQUE MUDADO PARA AFTER
+
+# CREATE OR REPLACE TRIGGER UPDATE_ESTOQUE
+# AFTER INSERT OR DELETE OR UPDATE 
+# ON public.itemcompra
+# FOR EACH ROW
+# EXECUTE FUNCTION public.tgrf_estoquecompra();
+
+# -- FUNCTION: public.tgrf_estoquecompra()
+
+# -- DROP FUNCTION IF EXISTS public.tgrf_estoquecompra();
+
+# CREATE OR REPLACE FUNCTION public.tgrf_estoquecompra()
+#     RETURNS trigger
+#     LANGUAGE 'plpgsql'
+#     COST 100
+#     VOLATILE NOT LEAKPROOF
+# AS $BODY$
+# DECLARE
+#     EXISTE              BIGINT;   -- Se já existe o produto na tabela EMPRESAPRODUTO
+#     MARGEM              BIGINT;   -- Margem do produto
+#     GRUPOMARGEM         BIGINT;   -- Margem do grupo do produto
+#     PORCENTAGEM_MARGEM  NUMERIC(15,2); -- Porcentagem da margem do produto ou grupo
+#     NOVO_VALOR_VENDA    NUMERIC(15,2);
+	
+#     PRFRETE         	NUMERIC(15,2); 	-- EQUIVALENCIA DO FRETE 
+# 	CUSTOFINAL 			NUMERIC(15,2); 	-- CUSTO FINAL DO PRODUTO COM FRETE
+# 	VALORFRETE			NUMERIC(15,2); 	-- VALOR DO FRETE
+# 	VALORCOMPRA			NUMERIC(15,2);    	-- VALOR TOTAL DA COMPRA
+# 	ITEMQUANTIDADE		NUMERIC(15,2);    	-- QUANTIDADE DO ITEM BEGIN
+	
+# BEGIN
+	
+# 	RAISE NOTICE 'tipo %', TG_OP;
+# 	RAISE NOTICE 'tipo %', COALESCE(VALORCOMPRA,0);
+
+#     -- Verifica se a operação é DELETE
+#     IF TG_OP = 'DELETE' THEN
+#         -- Verifica se o item existe na tabela EMPRESAPRODUTO
+#         SELECT COUNT(*) INTO EXISTE
+#           FROM EMPRESAPRODUTO
+#          WHERE COD_EMPRESA = OLD.COD_EMPRESA
+#            AND COD_PRODUTO = OLD.COD_PRODUTO
+#            AND COD_COR = OLD.COD_COR;
+
+#         ITEMQUANTIDADE = OLD.QUANTIDADE;
+
+#         -- Se o item existir, atualiza o estoque e a quantidade fiscal
+#         IF EXISTE > 0 THEN
+#             UPDATE EMPRESAPRODUTO AS E
+#                SET QUANTIDADE = COALESCE(E.QUANTIDADE,0) - OLD.QUANTIDADE,
+#                    QTDFISCAL = CASE WHEN OLD.NUMERONF > 0 THEN COALESCE(E.QTDFISCAL,0) - OLD.QUANTIDADE ELSE E.QTDFISCAL END
+#              WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
+#                AND E.COD_COR = OLD.COD_COR
+#                AND E.COD_EMPRESA = OLD.COD_EMPRESA;
+#         -- Se o item não existir, insere na tabela EMPRESAPRODUTO
+#         ELSE
+#             INSERT INTO EMPRESAPRODUTO (
+#                 COD_COR, cod_empresa, cod_produto, customedio, quantidade, quantidademinima,
+#                 ultimocusto, valorvenda, dataalteracao
+#             )
+#             VALUES (
+#                 OLD.COD_COR, OLD.COD_EMPRESA, OLD.COD_PRODUTO, (0 - OLD.VALORUNITARIO), 0, 0,
+#                 OLD.VALORUNITARIO, 0, DATE(CURRENT_DATE)
+#             );
+#         END IF;
+
+#         RETURN OLD;
+#     -- Se a operação for INSERT ou UPDATE
+#     ELSE
+# 		------------------------
+# 		PRFRETE = 0;
+# 		CUSTOFINAL = 0;
+# 		VALORFRETE = 0;
+# 		VALORCOMPRA = 0;
+# 		ITEMQUANTIDADE = NEW.QUANTIDADE;
+# 		------------------------
+#         -- Cálculos de custo final, valor do frete, etc.
+
+# 		IF COALESCE(NEW.VALORST,0) > 0 THEN
+# 			CUSTOFINAL = (NEW.VALORUNITARIO + (NEW.VALORST / NEW.QUANTIDADE));
+# 		ELSE
+# 			CUSTOFINAL = NEW.VALORUNITARIO;
+# 		END IF;
+		
+# 		RAISE NOTICE 'CUSTO 1= %', CUSTOFINAL;
+		
+#         SELECT COALESCE(VALOR,0) INTO VALORFRETE
+# 		  FROM FRETE 
+# 		 WHERE COD_FRETE = ( SELECT COD_FRETE 
+# 				               FROM COMPRA
+# 				              WHERE COD_COMPRA = NEW.COD_COMPRA );
+
+# RAISE NOTICE 'frete 1= %', VALORFRETE;
+		
+# 		-- VERIFICA SE O VALOR DO FRETE E MAIOR QUE 0		
+# 		IF COALESCE(VALORFRETE,0) > 0 THEN
+		
+# 			SELECT VALORTOTAL INTO VALORCOMPRA
+# 			  FROM COMPRA 
+# 			 WHERE COD_COMPRA = NEW.COD_COMPRA;
+# RAISE NOTICE 'VALORCOMPRA %', COALESCE(VALORCOMPRA,0);
+# 			-- VERIFICA O VALOR TOTAL DA COMPRA SE E MAIOR QUE ZERO
+			
+# 			IF COALESCE(VALORCOMPRA,0) > 0 THEN	
+# 				PRFRETE = ((VALORFRETE / VALORCOMPRA)+1);
+# 				CUSTOFINAL = CUSTOFINAL * PRFRETE;
+# 			END IF;
+# RAISE NOTICE 'PRFRETE %', COALESCE(PRFRETE,0);
+# RAISE NOTICE 'CUSTOFINAL %', COALESCE(CUSTOFINAL,0);
+# 		END IF;
+
+#         -- calcula o valor de venda do produto
+# 		-- pegar margem para calcular o valor de venda
+
+# 		SELECT COD_MARGEM, GRUPO INTO MARGEM, GRUPOMARGEM 
+# 		 FROM PRODUTO 
+# 		WHERE COD_PRODUTO = NEW.COD_PRODUTO;
+		
+# 		-- verificar se o produto tem margem fixa
+# 		IF COALESCE(MARGEM,0) > 0 THEN
+		
+# 			SELECT MARGEMPRODUTO INTO PORCENTAGEM_MARGEM 
+# 		          FROM PARAMETROS 
+# 		         WHERE ATIVO = TRUE 
+# 		           AND COD_PARAMETRO = MARGEM;
+
+# 		-- se não tiver margem verificar se o grupo dele tem margem           		
+# 		ELSIF COALESCE(GRUPOMARGEM,0) > 0 THEN
+
+# 			SELECT COD_MARGEM INTO MARGEM
+# 			  FROM GRUPO 
+# 			 WHERE COD_GRUPO = GRUPOMARGEM;
+			 
+# 			 IF MARGEM IS NOT NULL THEN
+			 
+# 				SELECT MARGEMPRODUTO INTO PORCENTAGEM_MARGEM 
+# 				  FROM PARAMETROS 
+# 				 WHERE ATIVO = TRUE 
+# 				   AND COD_PARAMETRO = MARGEM;
+# 			END IF;						 
+# 		END IF;
+
+		
+#         -- Lógica para calcular NOVO_VALOR_VENDA, PORCENTAGEM_MARGEM, etc.
+# 		IF COALESCE(PORCENTAGEM_MARGEM,0) > 0 THEN
+# 			NOVO_VALOR_VENDA = CUSTOFINAL * ((PORCENTAGEM_MARGEM/100)+1);
+#         ELSE 
+#             NOVO_VALOR_VENDA = CUSTOFINAL;
+# 		END IF;
+
+#         -- Verifica se o item existe na tabela EMPRESAPRODUTO
+#         SELECT COUNT(*) INTO EXISTE
+#           FROM EMPRESAPRODUTO
+#         WHERE COD_EMPRESA = NEW.COD_EMPRESA
+#           AND COD_PRODUTO = NEW.COD_PRODUTO
+#           AND COD_COR = NEW.COD_COR;
+
+#         -- Se o item não existir, insere na tabela EMPRESAPRODUTO
+#         IF EXISTE = 0 THEN
+#             INSERT INTO EMPRESAPRODUTO (
+#                 COD_COR, cod_empresa, cod_produto, customedio, quantidade, quantidademinima,
+#                 ultimocusto, valorvenda, dataalteracao
+#             )
+#             VALUES (
+#                 NEW.COD_COR, NEW.COD_EMPRESA, NEW.COD_PRODUTO, COALESCE(CUSTOFINAL,0), 0, 0,
+#                 COALESCE(CUSTOFINAL,0), COALESCE(NOVO_VALOR_VENDA,0), DATE(CURRENT_DATE)
+#             );
+#         END IF;
+
+#         -- Atualiza o estoque e outros campos na tabela EMPRESAPRODUTO
+#         UPDATE EMPRESAPRODUTO AS E
+# 		   SET QUANTIDADE = COALESCE(E.QUANTIDADE,0) + ITEMQUANTIDADE,
+# 			   ULTIMOCUSTO = COALESCE(CUSTOFINAL,0),
+# 			   CUSTOMEDIO = COALESCE(((CUSTOFINAL + CUSTOMEDIO)/2),0),
+# 			   VALORVENDA = COALESCE(NOVO_VALOR_VENDA,0),
+# 			   QTDFISCAL = CASE WHEN NEW.NUMERONF > 0 THEN COALESCE(E.QTDFISCAL,0) + ITEMQUANTIDADE ELSE E.QTDFISCAL END
+#          WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
+#            AND E.COD_COR = NEW.COD_COR
+#            AND E.COD_EMPRESA = NEW.COD_EMPRESA;
+
+#         RETURN NEW;
+#     END IF;
+# END;
+# $BODY$;
+
+# ALTER FUNCTION public.tgrf_estoquecompra()
+#     OWNER TO jonas;
