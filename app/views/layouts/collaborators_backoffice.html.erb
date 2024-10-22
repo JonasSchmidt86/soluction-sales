@@ -7,7 +7,7 @@
         <!-- Bootstrap CSS -->
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        
+    
         <%= csrf_meta_tags %>
         <%= csp_meta_tag %>
         <%= favicon_link_tag 'mrosa.png' %>
@@ -121,37 +121,50 @@
                                     </div>
                                 </a>
 
-                        <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                            <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                                Vendas
-                            <% end %>
-                            <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                                XML    
-                            <% end %>
-                            <%= link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do %>
-                                Importar
-                            <% end %>
-                            <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
-                                Estoque
-                            <% end %>
-                            <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
-                                Pessoas
-                            <% end %>
-                            <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
-                                Produtos
-                            <% end %>
-                            <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
-                                Lembretes
-                            <% end %>
-                            <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
-                                Funcionário
-                            <% end %>
-                            <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                                Contas pagar/Receber
-                            <% end %>
-                            </nav>
-                        </div>
+                                <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
+                                    <nav class="sb-sidenav-menu-nested nav">
+                                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                                        Vendas
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
+                                        Pessoas
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
+                                        Produtos
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
+                                        Lembretes
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
+                                        Funcionário
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                                        Contas pagar/Receber
+                                    <% end %>
+                                    </nav>
+                                </div>
+
+                                <!-- Compras -->
+                                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
+                                    <div class="sb-nav-link-icon">
+                                        <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                                    </div>
+                                    Compras
+                                    <div class="sb-sidenav-collapse-arrow">
+                                        <i class="fas fa-angle-down"></i>
+                                    </div>
+                                </a>
+                                <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
+                                    <nav class="sb-sidenav-menu-nested nav">
+                                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+                                        XML    
+                                    <% end %>
+                                    <%= link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do %>
+                                        Importar
+                                    <% end %>
+                                    </nav>
+                                </div>
+
 
                         <!-- Relatórios -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
@@ -163,6 +176,9 @@
                         </a>
                         <div class="collapse" id="collapseRels" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
+                                <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                                    Estoque
+                                <% end %>
                                 <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
                                     Relatório de Vendas
                                 <% end %>
@@ -206,7 +222,7 @@
         <!-- Bootstrap JS and Popper.js -->
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-
+        
     </body>
 
 </html>
@@ -333,9 +349,9 @@
         });
     });
     // tira a sugestão dos campos 
-        $(document).ready(function() {
-            $("input[type='text']").attr("autocomplete", "off");
-        });
+//     $(document).ready(function() {
+//         $("input[type='text']").attr("autocomplete", "off");
+//     });
 
     function formatarMoeda() {
         var elemento = document.getElementById('valor');
@@ -402,5 +418,6 @@
             }
             });
         $('.selectonfocus').mask("00/00/0000", {selectOnFocus: true});
-    });         
+    });
+
 </script>

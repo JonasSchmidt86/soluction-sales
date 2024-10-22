@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackofficeController
     
-    before_action :set_produto, only: [:destroy]
+    before_action :set_produto, only: [:destroy, :edit]
 
     def index
         
@@ -10,12 +10,8 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
             consulta += " and produto.cod_produto::varchar = REPLACE(TRIM('"+ params[:term] +"%'), \'%\', \'\') OR produto.nome ILIKE '"+ params[:term] +"%'";
         end
 
-        
-
         if !params[:contem].blank?
             if params[:contem] == '1'
-            #     consulta += " and quantidade is not null "
-            # else 
                 consulta += " and empresaproduto.quantidade != 0 "
             end
         else 
@@ -23,7 +19,6 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
                 consulta += " and empresaproduto.quantidade != 0 "
             end
         end
-
 
         if !params[:cod_empresa].blank?
             consulta += " and empresaproduto.cod_empresa = "+params[:cod_empresa] + " "
@@ -35,9 +30,15 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         else
             @empresa_produtos = Empresaproduto.select("empresaproduto.*").joins(:produto).order("produto.nome ASC, empresaproduto.cod_empresa asc").where(consulta).page(params[:page]).per(per_page);
         end
-        
-        
 
+    end
+
+    def edit 
+        @empresa_produto
+
+        @estoque = Empresaproduto.where("cod_produto = ? and (ativo = true or quantidade > 0 )", @empresa_produto.cod_produto ).
+                    order("cod_empresa,cod_cor desc, quantidade desc");
+        puts @estoque.size;
     end
 
     def destroy

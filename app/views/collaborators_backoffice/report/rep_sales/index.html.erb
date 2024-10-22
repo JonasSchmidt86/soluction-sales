@@ -10,22 +10,22 @@
         <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
                               class:"col dataTable-search") do |form| %>
           
-          <div class="d-flex mb-2 col-md-6">
+          <div class="d-flex mb-2 col-md-5">
           
             <div class="col-md-1">
               <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
             </div>  
 
-            <div class="col-md-5">
+            <div class="col-md-6">
                     <%= form.text_field :term, class:"dataTable-input text", value:params[:term],placeholder:"Pessoa...", id:"text" %>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
                     class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
             </div>
             
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
                     class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
             </div>
@@ -35,7 +35,7 @@
                 <div class="mb-2">
                   <%= form.collection_select(:cod_funcionario, 
                           (Funcionario.select(:cod_funcionario, :usuario).where("cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and ativo = true and datademissao is null ", current_collaborator.cod_empresa)), 
-                            :cod_funcionario, :usuario, {:include_blank => 'Selecione um colaborador', selected: params[:cod_funcionario]}, 
+                            :cod_funcionario, :usuario, {:include_blank => 'Colaborador', selected: params[:cod_funcionario]}, 
                             class: "text form-control", readonly: false) %>
                 </div>
               </div>
@@ -45,23 +45,33 @@
               <button type='submit', class="btn btn-success btn-circle">Buscar</button>
             </div>
             
-            <div class="me-3 col-md-3">
+            <div class="me-1 col-md-2">
               <%= link_to new_collaborators_backoffice_venda_path,
                           class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
                   <i class="fa fa-plus"></i>
               <% end %>
             </div>
             
+
+            <div class="ms-auto col-md-3 ">
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <div class="form-floating">    
+                  <%= form.text_field :valorCusto, class: "text-bg-info form-control ", readonly: true %>
+                  <%= form.label :custo, class:"" %>
+                </div>
+              <% end %>
+            </div>
+
             <div class="me-1 ms-auto col-md-3 ">
               <div class="form-floating">
                 <%= form.text_field :valorPago, class: "text-bg-info form-control ", readonly: true %>
-                <%= form.label :Valor_pago, class:"" %>
+                <%= form.label :total_recebido, class:"" %>
               </div>
             </div>
             <div class="ms-auto col-md-3 order-last ">
               <div class="form-floating">
                 <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
-                <%= form.label :Total, class:"" %>
+                <%= form.label :total_vendas, class:"" %>
               </div>
             </div>
 
@@ -86,24 +96,26 @@
             <tbody>
                 <% somaVendas = 0; %>
                 <% somaRecebida = 0; %>
+                <% somaCusto = 0; %>
                 <% @sales.each do |sale| %>
                   <% if sale.cancelada %>
                     <tr class="" style="background-color: #FA625E;">
                   <% else %>
                     <tr class="">
                   <% end %> 
-                      <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
-                      <td><div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div> </td>
-                      <td><%= sale.pessoa.nome %></td>
-                      <td><%= sale.venda_nfe %> </td>
-                      <td><div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div> </td>
-                      <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                      <td class="align-middle"><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
+                      <td class="align-middle"><div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div> </td>
+                      <td class="align-middle"><%= sale.pessoa.nome %></td>
+                      <td class="align-middle"><%= sale.venda_nfe %> </td>
+                      <td class="align-middle"><div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div> </td>
+                      <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                       <% unless sale.cancelada %>
                         <% somaVendas += sale.valortotal; %>
                         <% somaRecebida += sale.valorRecebido; %>
+                        <% somaCusto += sale.valorCusto; %>
                         
                       <% end %>
-                      <td>
+                      <td class="align-middle">
                         <div class="dropdown" >
                             <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
@@ -169,4 +181,5 @@ function formatarReal(valor) {
   // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
   document.getElementById("valortotal").value = formatarReal(<%= somaVendas %>);
   document.getElementById("valorPago").value = formatarReal(<%= somaRecebida %>);
+  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
 </script>

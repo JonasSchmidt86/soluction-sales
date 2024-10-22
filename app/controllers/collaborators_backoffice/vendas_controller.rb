@@ -20,18 +20,75 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def new
-      puts " ---------- new --------- #{params}"
-
       @sale = Venda.new
       @sale.cod_empresa = current_collaborator.cod_empresa
       # @sale.itensvenda.build
-      1.times { @sale.itensvenda.build }
+      2.times { @sale.itensvenda.build }
       # @sale.contas.build
     end
   
     def create
       puts " -------- create ---------- #{params}"
       @sale = Venda.new(params_venda)
+
+      @sale.acrescimo = params[:venda][:acrescimo].gsub(',', '.').to_f;
+      @sale.desconto = params[:venda][:desconto].gsub(',', '.').to_f;
+      @sale.valortotal =  params[:venda][:valortotal].gsub(',', '.').to_f;
+
+      # varrer itens para validar valores quebrados
+       ## ver como vai pegar o params certo para cada item
+       if params[:venda][:itensvenda_attributes].present?
+        itens = params[:venda][:itensvenda_attributes]
+        
+        # Verifique se itens é uma instância de ActionController::Parameters
+        if itens.is_a?(ActionController::Parameters)
+          # Converta itens para uma matriz de hashes
+          itens = itens.values
+        end
+
+        @sale.itensvenda.clear;
+        
+        itens.each do |pro_temp|
+
+          item = Itemvenda.new
+
+          item.venda = @sale;
+          item.cod_produto = pro_temp[:cod_produto];
+          item.valorunitario = pro_temp[:valorunitario].gsub(',', '.').to_f;
+          item.cod_cor = pro_temp[:cod_cor];
+          item.quantidade = pro_temp[:quantidade];
+          item.cod_empresa = pro_temp[:cod_empresa];
+          @sale.itensvenda << item;
+        end
+      end
+
+      if params[:venda][:contas_attributes].present?
+        contas = params[:venda][:contas_attributes]
+        
+        # Verifique se itens é uma instância de ActionController::Parameters
+        if contas.is_a?(ActionController::Parameters)
+          # Converta itens para uma matriz de hashes
+          contas = contas.values
+        end
+
+        @sale.contas.clear;
+        
+        contas.each do |conta_venda|
+
+          conta = Contaspagrec.new
+
+          conta.venda = @sale;
+          conta.numeroparcela = conta_venda[:numeroparcela];
+          conta.dtvencimento = conta_venda[:dtvencimento];
+          conta.valorparcela = conta_venda[:valorparcela].gsub(',', '.').to_f;
+          conta.cod_empresa = conta_venda[:cod_empresa];
+          conta.ativo = true;
+          conta.quitada = false;
+          conta.cod_tppagamento = 1;
+
+          @sale.contas << conta;
+        end
+      end
 
       if !params[:venda][:cod_pessoa].blank?
         @pessoa = Pessoa.find_by(cod_pessoa: params[:venda][:cod_pessoa])
@@ -81,7 +138,6 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def edit
-      puts params
       @sale = Venda.find_by(cod_venda: params[:id])
     end
 

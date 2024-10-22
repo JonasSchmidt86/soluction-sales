@@ -359,12 +359,12 @@
 # -- select max(cod_lancamentocaixa) from lancamentoscaixa
 # SELECT setval('lancamentocaixa_sequence', (select max(cod_lancamentocaixa)+1 from lancamentoscaixa));
 
-## add sequence na tabela FRETE
+# -- add sequence na tabela FRETE
 # ALTER TABLE IF EXISTS public.frete
 # 	ALTER COLUMN cod_frete SET DEFAULT nextval('frete_sequence');
 
 
-##### TIGGER UPDATE ESTOQUE MUDADO PARA AFTER
+# ---- TIGGER UPDATE ESTOQUE MUDADO PARA AFTER
 
 # CREATE OR REPLACE TRIGGER UPDATE_ESTOQUE
 # AFTER INSERT OR DELETE OR UPDATE 
@@ -397,8 +397,8 @@
 	
 # BEGIN
 	
-# 	RAISE NOTICE 'tipo %', TG_OP;
-# 	RAISE NOTICE 'tipo %', COALESCE(VALORCOMPRA,0);
+# 	-- RAISE NOTICE 'tipo %', TG_OP;
+# 	-- RAISE NOTICE 'tipo %', COALESCE(VALORCOMPRA,0);
 
 #     -- Verifica se a operação é DELETE
 #     IF TG_OP = 'DELETE' THEN
@@ -442,14 +442,17 @@
 # 		ITEMQUANTIDADE = NEW.QUANTIDADE;
 # 		------------------------
 #         -- Cálculos de custo final, valor do frete, etc.
-
-# 		IF COALESCE(NEW.VALORST,0) > 0 THEN
-# 			CUSTOFINAL = (NEW.VALORUNITARIO + (NEW.VALORST / NEW.QUANTIDADE));
-# 		ELSE
-# 			CUSTOFINAL = NEW.VALORUNITARIO;
-# 		END IF;
 		
-# 		RAISE NOTICE 'CUSTO 1= %', CUSTOFINAL;
+# 		CUSTOFINAL = NEW.VALORUNITARIO + ((COALESCE(NEW.VALORST,0) / NEW.QUANTIDADE));
+# 		CUSTOFINAL = CUSTOFINAL + ((COALESCE(NEW.VALOR_FRETE,0) / NEW.QUANTIDADE));
+		
+# 		-- SOMA O IPI JUNTO COM O CUSTO DO PRODUTO DIVIDIDO PELA QUANTIDADE 
+# 		CUSTOFINAL = CUSTOFINAL + (NEW.IPI / NEW.QUANTIDADE);
+		
+# 		-- RAISE NOTICE 'valor-st 1= %', (COALESCE(NEW.VALORST,0));
+# 		-- RAISE NOTICE 'ipi 1= %', new.ipi;
+# 		-- RAISE NOTICE 'VALOR_FRETE 1= %', new.VALOR_FRETE;		
+# 		-- RAISE NOTICE 'CUSTO 1= %', CUSTOFINAL;
 		
 #         SELECT COALESCE(VALOR,0) INTO VALORFRETE
 # 		  FROM FRETE 
@@ -457,23 +460,27 @@
 # 				               FROM COMPRA
 # 				              WHERE COD_COMPRA = NEW.COD_COMPRA );
 
-# RAISE NOTICE 'frete 1= %', VALORFRETE;
+#         -- RAISE NOTICE 'frete 1= %', VALORFRETE;
 		
 # 		-- VERIFICA SE O VALOR DO FRETE E MAIOR QUE 0		
 # 		IF COALESCE(VALORFRETE,0) > 0 THEN
 		
 # 			SELECT VALORTOTAL INTO VALORCOMPRA
-# 			  FROM COMPRA 
-# 			 WHERE COD_COMPRA = NEW.COD_COMPRA;
-# RAISE NOTICE 'VALORCOMPRA %', COALESCE(VALORCOMPRA,0);
+# 			  FROM COMPRA WHERE COD_COMPRA = NEW.COD_COMPRA;
+		
+# 			-- VALORCOMPRA = COALESCE(NEW.VALORTOTAL,0);
+			 
+#             -- RAISE NOTICE 'VALORCOMPRA %', COALESCE(VALORCOMPRA,0);
+
 # 			-- VERIFICA O VALOR TOTAL DA COMPRA SE E MAIOR QUE ZERO
 			
 # 			IF COALESCE(VALORCOMPRA,0) > 0 THEN	
 # 				PRFRETE = ((VALORFRETE / VALORCOMPRA)+1);
 # 				CUSTOFINAL = CUSTOFINAL * PRFRETE;
 # 			END IF;
-# RAISE NOTICE 'PRFRETE %', COALESCE(PRFRETE,0);
-# RAISE NOTICE 'CUSTOFINAL %', COALESCE(CUSTOFINAL,0);
+
+# 			-- RAISE NOTICE 'PRFRETE %', COALESCE(PRFRETE,0);
+# 			-- RAISE NOTICE 'CUSTOFINAL %', COALESCE(CUSTOFINAL,0);
 # 		END IF;
 
 #         -- calcula o valor de venda do produto
@@ -506,23 +513,23 @@
 # 				   AND COD_PARAMETRO = MARGEM;
 # 			END IF;						 
 # 		END IF;
-
 		
-#         -- Lógica para calcular NOVO_VALOR_VENDA, PORCENTAGEM_MARGEM, etc.
+		
+# 		-- Lógica para calcular NOVO_VALOR_VENDA, PORCENTAGEM_MARGEM, etc.
 # 		IF COALESCE(PORCENTAGEM_MARGEM,0) > 0 THEN
 # 			NOVO_VALOR_VENDA = CUSTOFINAL * ((PORCENTAGEM_MARGEM/100)+1);
 #         ELSE 
 #             NOVO_VALOR_VENDA = CUSTOFINAL;
 # 		END IF;
-
+		
+		
 #         -- Verifica se o item existe na tabela EMPRESAPRODUTO
 #         SELECT COUNT(*) INTO EXISTE
 #           FROM EMPRESAPRODUTO
 #         WHERE COD_EMPRESA = NEW.COD_EMPRESA
 #           AND COD_PRODUTO = NEW.COD_PRODUTO
 #           AND COD_COR = NEW.COD_COR;
-
-#         -- Se o item não existir, insere na tabela EMPRESAPRODUTO
+# 		-- Se o item não existir, insere na tabela EMPRESAPRODUTO
 #         IF EXISTE = 0 THEN
 #             INSERT INTO EMPRESAPRODUTO (
 #                 COD_COR, cod_empresa, cod_produto, customedio, quantidade, quantidademinima,
@@ -533,7 +540,7 @@
 #                 COALESCE(CUSTOFINAL,0), COALESCE(NOVO_VALOR_VENDA,0), DATE(CURRENT_DATE)
 #             );
 #         END IF;
-
+		
 #         -- Atualiza o estoque e outros campos na tabela EMPRESAPRODUTO
 #         UPDATE EMPRESAPRODUTO AS E
 # 		   SET QUANTIDADE = COALESCE(E.QUANTIDADE,0) + ITEMQUANTIDADE,
@@ -550,5 +557,7 @@
 # END;
 # $BODY$;
 
-# ALTER FUNCTION public.tgrf_estoquecompra()
-#     OWNER TO jonas;
+# -- ver log postgres
+# -- jonas@MacBook-Pro-de-Jonas ~ % tail -f /opt/homebrew/var/postgresql@14/pg_log/postgresql-*.log
+
+

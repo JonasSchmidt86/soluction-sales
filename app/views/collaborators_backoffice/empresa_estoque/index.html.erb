@@ -3,7 +3,7 @@
 
         <%= link_to collaborators_backoffice_empresa_estoque_index_path(:contem == false), class:"card-header" do %>
           <h4>Estoque</h4>
-      <% end %>
+        <% end %>
     
         <div class="card-body">
           <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
@@ -43,13 +43,13 @@
                     <% if current_collaborator.funcionario.permissao.nivel == 1 %>  
                       <div class="col-md-3 ml-auto">
                         <div class="form-floating">
-                          <%= form.text_field :valorVenda, class: "text-bg-info form-control ", readonly: true %>
+                          <%= form.text_field :valorVenda, class: "money2 text-bg-info form-control ", readonly: true %>
                           <%= form.label :valor_venda, class:"" %>
                       </div>
                     </div>
                       <div class="col-md-3 ml-auto  order-last">
                         <div class="form-floating">
-                          <%= form.text_field :valorCusto, class: "text-bg-warning form-control ", readonly: true %>
+                          <%= form.text_field :valorCusto, class: "money2 text-bg-warning form-control ", readonly: true %>
                           <%= form.label :custo, class:"" %>
                         </div>
                       </div>
@@ -63,11 +63,11 @@
               <table id="datatablesSimple" class="dataTable-table table-striped">
                 <thead>
                   <tr>
+                    <th data-sortable="" style="width: 3%;">Emp..</th>
                     <th data-sortable="" style="width: 7%;">Codigo</th>
                     <th data-sortable="">Nome</th>
                     <th data-sortable="" style="width: 20%;">Cor</th>
                     <th data-sortable="" style="width: 7%;">Qtd</th>
-                    <th data-sortable="" style="width: 7%;">Empresa</th>
                     <th data-sortable="" style="width: 8%;">Vl Venda</th>
 
                     <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -80,12 +80,12 @@
                 <tbody>
                   <% @empresa_produtos.each do |estoque| %>
                     <tr>
-                      <td class="align-middle fw-semibold"><%= estoque.full_codigo %> </td>
-                      <td class="align-middle fw-semibold"><%= estoque.produto.nome %> </td>
-                      <td class="align-middle fw-semibold"><%= estoque.cor.nmcor %> </td>
-                      <td class="align-middle fw-semibold"><%= estoque.quantidade.to_i %> </td>
-                      <td class="align-middle fw-semibold"><%= estoque.cod_empresa %> </td>
-                      <td class="align-middle fw-semibold"><%= number_to_currency estoque.valorvenda %> </td>
+                      <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
+                      <td class="align-middle "><%= estoque.full_codigo %> </td>
+                      <td class="align-middle "><%= estoque.produto.nome %> </td>
+                      <td class="align-middle "><%= estoque.cor.nmcor %> </td>
+                      <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
+                      <td class="align-middle "><%= "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> </td>
 
                       <% if estoque.quantidade > 0 %>
                         <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
@@ -93,12 +93,31 @@
                       <% end %>
 
                       <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <td class="align-middle fw-semibold"><%= number_to_currency estoque.ultimocusto %> </td>
+
+
+                      <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
                         <td class="align-middle">
-                          <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), method: :delete, 
+
+                          <div class="dropdown" >
+                            <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                            </button>
+
+                            <ul class="dropdown-menu position-absolute" style="width: 50px;">                                
+                              <li>
+                                <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque), 
+                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja editar estoque empresa?"} do %>
+                                  <i class="fa fa-minus" style="width: 35px;"></i>Editar 
+                                <% end %>
+                              </li>
+                              <li>
+                                <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover estoque empresa?"} do %>
-                            <i class="fa fa-minus"></i>
-                          <% end %>
+                                  <i class="fa fa-minus" style="width: 35px;"></i>Remover 
+                                <% end %>
+                              </li>
+                            </ul>
+                          <div>
                         </td> 
                       <% end %>
                     </tr>

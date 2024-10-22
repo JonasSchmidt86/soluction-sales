@@ -46,16 +46,16 @@
                         <tr class="">
                     <% end %> 
 
-                        <td><%= (lembrete.datacadastro? ? l(lembrete.datacadastro) : "") %> </td>
-                        <td><%= lembrete.empresa.nome %> </td>
-                        <td><%= lembrete.descricao %> </td>
-                        <td>
+                        <td class= "align-middle text-center"><%= (lembrete.datacadastro? ? l(lembrete.datacadastro) : "") %> </td>
+                        <td class= "align-middle"><%= lembrete.empresa.nome %> </td>
+                        <td class= "align-middle"><%= lembrete.descricao %> </td>
+                        <td class= "align-middle">
                           <% unless !lembrete.empresaSol  %>
                             <%= lembrete.empresaSol.nome %>
                           <% end %>
                         </td>
-                        <td><%= lembrete.funcionario.usuario %> </td>
-                        <td>
+                        <td class= "align-middle"><%= lembrete.funcionario.usuario %> </td>
+                        <td class= "align-middle">
                           <%= link_to collaborators_backoffice_lembrete_path(lembrete), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lembrete?"} do %>
                               <i class="fa fa-minus"></i>

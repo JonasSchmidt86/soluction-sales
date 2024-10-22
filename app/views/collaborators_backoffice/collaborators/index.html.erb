@@ -32,11 +32,9 @@
                 <tbody>
                   <% @collaborators.each do |collaborator| %>
                     <tr>
-                      <td><%= collaborator.id %> </td>
-                      <td><%= collaborator.email %> </td>
-
-                      <%# <td><%= link_to 'Show', lembrete % ></td> %>
-                      <td>
+                      <td class= "align-middle"><%= collaborator.id %> </td>
+                      <td class= "align-middle"><%= collaborator.email %> </td>
+                      <td class= "align-middle">
                         <%= link_to edit_collaborators_backoffice_collaborator_path(collaborator), 
                                     class:"btn btn-primary btn-circle" do %>
                             <i class="fa fa-edit"></i>

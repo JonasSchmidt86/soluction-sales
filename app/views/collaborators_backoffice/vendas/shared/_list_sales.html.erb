@@ -58,6 +58,7 @@
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-3">
+                            <%# erro esta trocando o ponto pela virgula antes  %>
                                 <div class="form-floating mb-3 mb-md-0">
                                     <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                                     <%= form.label :acrescimo, class:"" %>

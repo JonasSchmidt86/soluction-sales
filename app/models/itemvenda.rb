@@ -23,7 +23,7 @@ class Itemvenda < ApplicationRecord
     end
     
     def valor_total
-        self.valorunitario * self.quantidade
+        (self.valorunitario || 0) * (self.quantidade || 0)
     end
 
     def full_codigo

@@ -572,8 +572,12 @@ function formatDate(date) {
 
             if ( data.length === 0 ){
                 corSelect.value = 1; // 1 é a cor padrão 
-            } else if(data.length === 1 ){
-                corSelect.value = data[0].cod_cor;
+            
+            //
+            //} else if(data.length === 1 ){
+            //    corSelect.value = data[0].cod_cor;
+            //
+
             } else if (data.length > 0) {
                 data.forEach(cor => {
                     var option = document.createElement("option");

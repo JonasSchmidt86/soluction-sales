@@ -101,14 +101,14 @@
                   <tr class="">
               <% end %> 
 
-                <td><%= (bill.quitada_ext) %> </td>
-                <td><%= bill.nmCollaborator %> </td>
-                <td><%= bill.nmParcela %> </td>
-                <td><%= bill.nmPessoa %> </td>
-                <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                <td><%= "R$ #{number_to_currency(bill.valorparcela, separator: ",", delimiter: "", unit:"")}" %></td>
-                <td><%= "R$ #{number_to_currency(bill.valorPago, separator: ",", delimiter: "", unit:"")}" %></td>
-                <td>
+                <td class= "align-middle"><%= (bill.quitada_ext) %> </td>
+                <td class= "align-middle"><%= bill.nmCollaborator %> </td>
+                <td class= "align-middle"><%= bill.nmParcela %> </td>
+                <td class= "align-middle"><%= bill.nmPessoa %> </td>
+                <td class= "align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
+                <td class= "align-middle"><%= "R$ #{number_to_currency(bill.valorparcela, separator: ",", delimiter: "", unit:"")}" %></td>
+                <td class= "align-middle"><%= "R$ #{number_to_currency(bill.valorPago, separator: ",", delimiter: "", unit:"")}" %></td>
+                <td class= "align-middle">
                 <% if bill.ativo %>
                   <% somaRecebido += bill.valorPago; %>
                   <% somaReceber += (bill.valorparcela) %>

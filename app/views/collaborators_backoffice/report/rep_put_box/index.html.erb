@@ -95,26 +95,26 @@
                     <% end %>
                   <% end %> 
                 
-                    <td><%# NORMALMENTE RETIRADA QUE SAI COMO ENTRADA NA CONTA %>
+                    <td class="align-middle"><%# NORMALMENTE RETIRADA QUE SAI COMO ENTRADA NA CONTA %>
                       <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
                         S
                       <% else %>
                         <%= lauch.tipo %>
                       <% end %>
                     </td>
-                    <td><%= lauch.empresa.cod_empresa %> </td>
-                    <td><%= lauch.funcionario.usuario %> </td>
-                    <td><%= lauch.historico.descricao %></td> <%# historico%>
-                    <td><%= lauch.nmParcela %> </td>
-                    <td><%= lauch.nmPessoa %></td>
-                    <td><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
-                    <td><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
+                    <td class="align-middle"><%= lauch.empresa.cod_empresa %> </td>
+                    <td class="align-middle"><%= lauch.funcionario.usuario %> </td>
+                    <td class="align-middle"><%= lauch.historico.descricao %></td> <%# historico%>
+                    <td class="align-middle"><%= lauch.nmParcela %> </td>
+                    <td class="align-middle"><%= lauch.nmPessoa %></td>
+                    <td class="align-middle"><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
+                    <td class="align-middle"><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
                     <% if lauch.tipo == 'E' && lauch.cod_bancoconta.nil?%>
                       <% somaEntradas += lauch.valor %>
                     <% else %>
                       <% somaSaidas += lauch.valor %>
                     <% end %>
-                    <td>
+                    <td class="align-middle">
 
                       <%# somente pode excluir o lançamento se for do mesmo caixa que esta aberto %>
                       <% if ((!lauch.caixa.nil? && !@caixa.nil? ) && (lauch.caixa.id === @caixa.id) ) %>

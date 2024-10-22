@@ -8,16 +8,15 @@
     <div class="card-body">
         <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
           
-              <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, 
-                                    class:"col dataTable-search  col-md-6") do |form| %>
-                                    
-                <div class="d-flex mb-2">
+              <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get) do |form| %>
+
+                <div class="d-flex mb-2 col-md-8 align-items-center">
           
                   <div class="col-md-1">
                     <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
                   </div> 
                   
-                  <div class="col-md-7">
+                  <div class="col-md-4">
                     <%= form.text_field :term, class:"text dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
                   </div>
 
@@ -31,20 +30,40 @@
                         class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
                   </div>
 
-                  <div class="me-1 mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+                  <div class="me-0 cod-mb-1">
+                    <button type='submit', class="btn btn-success btn-circle">Buscar</button>
+                  </div>
                   
-                  <div class="mb-2 col-md-4 order-5 ">
+                  <%# <div class="mb-1 col-md-1 order-5 "> %>
+                  <div class="me-3 col-md-1 order-5 ">
                     <%= link_to new_collaborators_backoffice_venda_path,
                                 class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
                         <i class="fa fa-plus"></i>
                     <% end %>
                   </div>
-                  <div class="ms-auto col-md-3 order-last ">
-                    <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+                  
+                  <div class="ms-auto col-md-2  order-last ">
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                      <div class="form-floating">    
+                        <%= form.text_field :valorCusto, class: "text-bg-info form-control ", readonly: true %>
+                        <%= form.label :custo, class:"" %>
+                      </div>
+                    <% end %>
                   </div>
-                  <div class="ms-auto col-md-3 order-last ">
-                    <%= form.text_field :valorDevido, class: "text-bg-warning form-control ", readonly: true %>
+
+                  <div class="ms-auto col-md-2 order-last ">
+                    <div class="form-floating">
+                      <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+                      <%= form.label :total_vendas, class:"" %>
+                    </div>
                   </div>
+                  <div class="me-1 ms-auto col-md-2  order-last ">
+                    <div class="form-floating">
+                      <%= form.text_field :valorDevido, class: "text-bg-warning form-control ", readonly: true %>
+                      <%= form.label :valor_Devido, class:"" %>
+                    </div>
+                  </div>
+
 
                 </div>
                 
@@ -68,6 +87,7 @@
                 <tbody>
                 <% somaTotal = 0 %>
                 <% somaDevido = 0 %>
+                <% somaCusto = 0 %>
 
                     <% @sales.each do |sale| %>
                       <% if sale.cancelada %>
@@ -75,23 +95,24 @@
                       <% else %>
                         <tr class="">
                         
-                        <% somaTotal += sale.valortotal %>
-                        <% somaDevido += sale.valorDevido %>
+                        <% somaTotal += (sale.valortotal || 0) %>
+                        <% somaDevido += (sale.valorDevido || 0) %>
+                        <% somaCusto += (sale.valorCusto || 0) %>
                       <% end %>
-                          <td><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
-                          <td><%= sale.empresa.nome %> </td>
-                          <td><%= sale.pessoa.nome %></td>
-                          <td><%= sale.venda_nfe %> </td>
-                          <td><%= sale.funcionario.usuario %> </td>
-                          <td><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                          <td class="align-middle"><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
+                          <td class="align-middle"><%= sale.empresa.nome %> </td>
+                          <td class="align-middle"><%= sale.pessoa.nome %></td>
+                          <td class="align-middle"><%= sale.venda_nfe %> </td>
+                          <td class="align-middle"><%= sale.funcionario.usuario %> </td>
+                          <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
 
-                          <td>
+                          <td class="align-middle">
                             <button type="button" onclick="MudarEstado('minhaDiv<%= sale %>')" class = "btn btn-info btn-circle"><i class="fa fa-info"></i></button>
                           </td>
 
                         </tr>
                         <tr id="minhaDiv<%= sale %>" style="display: none;">
-                          <td colspan="7">
+                          <td colspan="7" class="align-middle">
                             <div class="dataTable-container">
                               <table id="datatablesSimple" class="dataTable-table table-striped">
                                 <thead>
@@ -121,14 +142,13 @@
                                           <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
                                       <% end %> 
                                       
-                                      <td><%= bill.nmCollaborator %> </td>
-                                      <td><%= bill.nmParcela %> </td>
-                                      <td><%= bill.nmPessoa %> </td>
-                                      <td><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                                      <td><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
-                                      <td><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
-                                      
-                                      <td>
+                                      <td class="align-middle"><%= bill.nmCollaborator %> </td>
+                                      <td class="align-middle"><%= bill.nmParcela %> </td>
+                                      <td class="align-middle"><%= bill.nmPessoa %> </td>
+                                      <td class="align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
+                                      <td class="align-middle"><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
+                                      <td class="align-middle"><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                                      <td class="align-middle">
                                         <% if !bill.lancamentos.blank? %>
                                           <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
                                         <% end %>
@@ -148,11 +168,11 @@
                                 <tbody>
                                   <% sale.itensvenda.order(:cod_item).each do |item| %>
                                     <tr>
-                                      <td><%= item.full_codigo %> </td>
-                                      <td><%= item.produto.nome %> </td>
-                                      <td><%= item.cor.nmcor %> </td>
-                                      <td><%= item.quantidade.to_i %> </td>
-                                      <td><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                                      <td class="align-middle"><%= item.full_codigo %> </td>
+                                      <td class="align-middle"><%= item.produto.nome %> </td>
+                                      <td class="align-middle"><%= item.cor.nmcor %> </td>
+                                      <td class="align-middle"><%= item.quantidade.to_i %> </td>
+                                      <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
                                     </tr>
                                   <% end %>
                                 </tbody>
@@ -191,4 +211,5 @@
   // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
   document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
   document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
+  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
 </script>

@@ -14,16 +14,16 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
     def create
       compra = Compra.new
-
+      
       #puts " -------- create COMPRA ---------- #{params}"
       puts " -------- create COMPRA ----------"
 
       if params[:compra].present?
         compra.numeronf = params[:compra][:numeronf];
         compra.serienf = params[:compra][:serienf];
-        compra.desconto = params[:compra][:desconto].to_f;
-        compra.valorfrete = params[:compra][:valorfrete].to_f;
-        compra.valortotal = params[:compra][:valortotal].to_f;
+        compra.desconto = params[:compra][:desconto].gsub(',', '.').to_f;
+        compra.valorfrete = params[:compra][:valorfrete].gsub(',', '.').to_f;
+        compra.valortotal = params[:compra][:valortotal].gsub(',', '.').to_f;
         compra.arquivoxml = params[:compra][:arquivoxml];
 
         compra.cancelada = false
@@ -148,7 +148,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           frete.ativo = true;
           frete.datacadastro = Date.parse(params[:compra][:frete][:datacadastro]);
           frete.datavencimento =  Date.parse(params[:compra][:frete][:datavencimento]);
-          frete.valor = params[:compra][:frete][:valor];
+          frete.valor = params[:compra][:frete][:valor].gsub(',', '.').to_f;
           frete.nrromaneio = params[:compra][:frete][:nrromaneio];
           compra.frete = frete;
 
@@ -193,7 +193,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             conta.dtvencimento = Date.parse(bill["dtvencimento"])
             conta.numeroparcela = bill["numeroparcela"].to_i
             conta.quitada = false
-            conta.valorparcela = bill["valorparcela"].to_f
+            conta.valorparcela = bill["valorparcela"].gsub(',', '.').to_f
             # conta.cod_tppagamento = 1 #bill["cod_tppagamento"]
             compra.contas << conta
           end

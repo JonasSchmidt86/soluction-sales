@@ -19,11 +19,10 @@
           <tbody>
               <% Funcionario.where("ativo = ? ", true).each do |fun| %>
                 <tr>
-                  <td><%= l(fun.datacontrato) %> </td>
-                  
-                  <td><%= (!fun.pessoa.blank? ? (fun.pessoa.nome) : "") %></td>
-                  <td><%= (!fun.pessoa.blank? ? (fun.pessoa.cpf_cnpj) : "") %></td>
-                  <td>
+                  <td class= "align-middle"><%= l(fun.datacontrato) %> </td>
+                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa.nome) : "") %></td>
+                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa.cpf_cnpj) : "") %></td>
+                  <td class= "align-middle">
                     <%= link_to edit_collaborators_backoffice_collaborator_path(fun), class:"btn btn-success btn-circle" do %>
                       <i class="fa fa-plus"></i>
                     <% end %>

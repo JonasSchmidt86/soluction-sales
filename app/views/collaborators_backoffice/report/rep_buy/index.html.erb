@@ -92,18 +92,18 @@
                   <% else %>
                     <tr class="">
                   <% end %> 
-                      <td><%= post_date (buy.datacompra? ? buy.datacompra : "") %> </td>
-                      <td><div class="text-truncate" style="width: 150px" ><%= buy.empresa.nome %></div> </td>
-                      <td><%= buy.pessoa.nome %></td>
-                      <td><%= buy.compra_nfe %> </td>
-                      <td><div class="text-truncate" style="max-width: 150px" ><%= buy.collaborator.usuario %></div> </td>
-                      <td><%= number_to_currency( buy.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                      <td class="align-middle"><%= post_date (buy.datacompra? ? buy.datacompra : "") %> </td>
+                      <td class="align-middle"><div class="text-truncate" style="width: 150px" ><%= buy.empresa.nome %></div> </td>
+                      <td class="align-middle"><%= buy.pessoa.nome %></td>
+                      <td class="align-middle"><%= buy.compra_nfe %> </td>
+                      <td class="align-middle"><div class="text-truncate" style="max-width: 150px" ><%= buy.collaborator.usuario %></div> </td>
+                      <td class="align-middle"><%= number_to_currency( buy.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                       <% unless buy.cancelada %>
                         <% somaVendas += buy.valortotal; %>
                         <% somaRecebida += buy.valorPago; %>
                         
                       <% end %>
-                      <td>
+                      <td class="align-middle">
                         <div class="dropdown" >
                             <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>

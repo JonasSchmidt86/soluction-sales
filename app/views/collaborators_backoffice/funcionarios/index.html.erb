@@ -47,10 +47,10 @@
                 <tbody>
                     <% @funcionarios.each do |funcionario| %>
                       <tr>
-                        <td><%= l(funcionario.datacontrato) %> </td>
-                        <td><%= funcionario.usuario %> </td>
-                        <td><%= funcionario.pessoa.nome %> </td>
-                        <td>
+                        <td class= "align-middle"><%= l(funcionario.datacontrato) %> </td>
+                        <td class= "align-middle"><%= funcionario.usuario %> </td>
+                        <td class= "align-middle"><%= funcionario.pessoa.nome %> </td>
+                        <td class= "align-middle">
                           <%= link_to collaborators_backoffice_funcionario_path(funcionario), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Colaborador?"} do %>
                               <i class="fa fa-minus"></i>

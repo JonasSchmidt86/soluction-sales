@@ -58,4 +58,12 @@ class Venda < ApplicationRecord
         return self.valortotal - self.valorRecebido
     end
     
+    def valorCusto
+        valorCusto = 0;
+        for item in self.itensvenda do 
+            valorCusto += ((item.valororiginal || 0) * (item.quantidade || 0))
+        end
+        return valorCusto;
+    end
+    
 end
