@@ -17,6 +17,8 @@ namespace :dev do
         # show_spinner("Cadastrando o usuário padrão...") { %x(rails dev:add_default_user) }
       else
         puts "Você não está em ambiente de desenvolvimento!"
+        show_spinner("Migrando BD...") { %x(rails db:migrate) } 
+        show_spinner("Cadastrando o colaborador padrão...") { %x(rails dev:add_default_collaborator) } 
       end
     end
   
