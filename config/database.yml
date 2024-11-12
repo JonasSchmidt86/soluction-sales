@@ -1,0 +1,44 @@
+
+default: &default
+  adapter: postgresql
+  encoding: UTF8
+  # For details on connection pooling, see Rails configuration guide
+  # http://guides.rubyonrails.org/configuring.html#database-pooling
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+# development:
+#   <<: *default
+#   database: d41kgv1ffv8tiv
+#   username: ejumakccezxkxf
+#   password: 2e77acce89ba14a17b3003add7c0d592f807f3a6bc7089c92b5c7f6b56aec710
+#   host: ec2-3-232-218-211.compute-1.amazonaws.com
+
+# Fazer bkp no formato sql com inserts, localhost MAC
+# cd /opt/homebrew/opt/postgresql@14/bin 
+# pg_dump -h localhost -U jonas -Fp -p 5432 --inserts -f /Users/jonas/Moveisrosa.backup MoveisRosa
+
+production:
+# development:
+#   <<: *default
+  database: df2a6d9421k29o
+  username: u2h73eqbi2682h
+  password: pf3fd2f0da43b76faead0b728e6d9e1168198d8286c2fd97c5b6032e369cdceda
+  host: cfls9h51f4i86c.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
+
+# development:
+#   <<: *default
+#   database: moveisrosa1
+#   username: moveisrosa1
+#   password: Jonas1234
+#   host: pgsql.moveisrosa.kinghost.net
+
+development:
+  <<: *default
+  database: MoveisRosa
+  username: jonas
+  host: localhost
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+
