@@ -44,7 +44,7 @@
                     <div class="col-md-5">
                       <%= form.collection_select(:cod_bancoconta, 
                               (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
-                                :cod_bancoconta, :nome_banco, {:include_blank => 'Selecione um Destino', selected: params[:cod_bancoconta]}, 
+                                :cod_bancoconta, :nome_banco, {:include_blank => 'CAIXA', selected: params[:cod_bancoconta]}, 
                                 class: "text form-control", readonly: false) %>
                     </div>
                   <% end %>
@@ -109,11 +109,13 @@
                     <td class="align-middle"><%= lauch.nmPessoa %></td>
                     <td class="align-middle"><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
                     <td class="align-middle"><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
-                    <% if lauch.tipo == 'E' && lauch.cod_bancoconta.nil?%>
+                    
+                    <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil?%>
                       <% somaEntradas += lauch.valor %>
                     <% else %>
                       <% somaSaidas += lauch.valor %>
                     <% end %>
+
                     <td class="align-middle">
 
                       <%# somente pode excluir o lançamento se for do mesmo caixa que esta aberto %>

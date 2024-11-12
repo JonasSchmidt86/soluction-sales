@@ -366,7 +366,7 @@
 
 # ---- TIGGER UPDATE ESTOQUE MUDADO PARA AFTER
 
-# CREATE OR REPLACE TRIGGER UPDATE_ESTOQUE
+# CREATE OR REPLACE TRIGGER update_estoque
 # AFTER INSERT OR DELETE OR UPDATE 
 # ON public.itemcompra
 # FOR EACH ROW
@@ -375,6 +375,9 @@
 # -- FUNCTION: public.tgrf_estoquecompra()
 
 # -- DROP FUNCTION IF EXISTS public.tgrf_estoquecompra();
+
+
+# -----------------
 
 # CREATE OR REPLACE FUNCTION public.tgrf_estoquecompra()
 #     RETURNS trigger
@@ -386,10 +389,10 @@
 #     EXISTE              BIGINT;   -- Se já existe o produto na tabela EMPRESAPRODUTO
 #     MARGEM              BIGINT;   -- Margem do produto
 #     GRUPOMARGEM         BIGINT;   -- Margem do grupo do produto
-#     PORCENTAGEM_MARGEM  NUMERIC(15,2); -- Porcentagem da margem do produto ou grupo
+#     PORCENTAGEM_MARGEM  NUMERIC(15,5); -- Porcentagem da margem do produto ou grupo
 #     NOVO_VALOR_VENDA    NUMERIC(15,2);
 	
-#     PRFRETE         	NUMERIC(15,2); 	-- EQUIVALENCIA DO FRETE 
+#     PRFRETE         	NUMERIC(15,5); 	-- EQUIVALENCIA DO FRETE 
 # 	CUSTOFINAL 			NUMERIC(15,2); 	-- CUSTO FINAL DO PRODUTO COM FRETE
 # 	VALORFRETE			NUMERIC(15,2); 	-- VALOR DO FRETE
 # 	VALORCOMPRA			NUMERIC(15,2);    	-- VALOR TOTAL DA COMPRA
@@ -449,10 +452,10 @@
 # 		-- SOMA O IPI JUNTO COM O CUSTO DO PRODUTO DIVIDIDO PELA QUANTIDADE 
 # 		CUSTOFINAL = CUSTOFINAL + (NEW.IPI / NEW.QUANTIDADE);
 		
-# 		-- RAISE NOTICE 'valor-st 1= %', (COALESCE(NEW.VALORST,0));
-# 		-- RAISE NOTICE 'ipi 1= %', new.ipi;
-# 		-- RAISE NOTICE 'VALOR_FRETE 1= %', new.VALOR_FRETE;		
-# 		-- RAISE NOTICE 'CUSTO 1= %', CUSTOFINAL;
+# -- 		RAISE NOTICE 'valor-st 1= %', (COALESCE(NEW.VALORST,0));
+# -- 		RAISE NOTICE 'ipi 1= %', new.ipi;
+# -- 		RAISE NOTICE 'VALOR_FRETE 1= %', new.VALOR_FRETE;		
+# -- 		RAISE NOTICE 'CUSTO 1= %', CUSTOFINAL;
 		
 #         SELECT COALESCE(VALOR,0) INTO VALORFRETE
 # 		  FROM FRETE 
@@ -460,7 +463,7 @@
 # 				               FROM COMPRA
 # 				              WHERE COD_COMPRA = NEW.COD_COMPRA );
 
-#         -- RAISE NOTICE 'frete 1= %', VALORFRETE;
+# --         RAISE NOTICE 'frete 1= %', VALORFRETE;
 		
 # 		-- VERIFICA SE O VALOR DO FRETE E MAIOR QUE 0		
 # 		IF COALESCE(VALORFRETE,0) > 0 THEN
@@ -470,7 +473,7 @@
 		
 # 			-- VALORCOMPRA = COALESCE(NEW.VALORTOTAL,0);
 			 
-#             -- RAISE NOTICE 'VALORCOMPRA %', COALESCE(VALORCOMPRA,0);
+# --             RAISE NOTICE 'VALORCOMPRA %', COALESCE(VALORCOMPRA,0);
 
 # 			-- VERIFICA O VALOR TOTAL DA COMPRA SE E MAIOR QUE ZERO
 			
@@ -479,8 +482,8 @@
 # 				CUSTOFINAL = CUSTOFINAL * PRFRETE;
 # 			END IF;
 
-# 			-- RAISE NOTICE 'PRFRETE %', COALESCE(PRFRETE,0);
-# 			-- RAISE NOTICE 'CUSTOFINAL %', COALESCE(CUSTOFINAL,0);
+#  			RAISE NOTICE 'PRFRETE %', COALESCE(PRFRETE,0);
+# -- 			RAISE NOTICE 'CUSTOFINAL %', COALESCE(CUSTOFINAL,0);
 # 		END IF;
 
 #         -- calcula o valor de venda do produto

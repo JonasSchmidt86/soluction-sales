@@ -32,7 +32,7 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
         end
 
         if params[:cod_bancoconta].present? && !params[:cod_bancoconta].nil? && params[:cod_bancoconta]
-            consulta += " and lancamentoscaixa.cod_bancoconta = " + params[:cod_bancoconta].to_s + " and lancamentoscaixa.caixa_id is null "
+            consulta += " and lancamentoscaixa.cod_bancoconta = " + params[:cod_bancoconta].to_s  #+ " and lancamentoscaixa.caixa_id is null "
         else
             consulta += " and caixa_id is not null "
         end
@@ -62,7 +62,7 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
                                 .order( datapagto: :desc );
         else
             @lauches = Lancamentoscaixa.where(consulta, current_collaborator.cod_empresa )
-                                .order( datapagto: :desc ).page(params[:page]).per(per_page);
+                                .order( datapagto: :desc).page(params[:page]).per(per_page);
         end
     end
 

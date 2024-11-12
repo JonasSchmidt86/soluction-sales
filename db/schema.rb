@@ -105,7 +105,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.string "tituloframe", limit: 100, null: false
   end
 
-  create_table "caixa", id: :serial, force: :cascade do |t|
+  create_table "caixa", primary_key: ["cod_empresa", "dataabertura"], force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.datetime "dataabertura", null: false
     t.datetime "datafechamento"
@@ -115,6 +115,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.decimal "valorsaidas", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_funcionarioabertura", null: false
     t.bigint "cod_funcionariofechamento"
+    t.serial "id", null: false
   end
 
   create_table "cidade", primary_key: "cod_cidade", id: :bigint, default: nil, force: :cascade do |t|
@@ -190,7 +191,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.index ["cod_pessoa"], name: "fke_pessoa"
   end
 
-  create_table "empresaproduto", id: :serial, force: :cascade do |t|
+  create_table "empresaproduto", primary_key: ["cod_cor", "cod_empresa", "cod_produto"], force: :cascade do |t|
     t.bigint "cod_cor", null: false
     t.bigint "cod_empresa", null: false
     t.bigint "cod_produto", null: false
@@ -202,6 +203,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.date "dataalteracao"
     t.decimal "qtdfiscal", precision: 18, scale: 2, default: "0.0"
     t.string "cest", limit: 15
+    t.serial "id", null: false
     t.boolean "ativo", default: true
   end
 
@@ -257,7 +259,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.index ["cod_pessoa"], name: "fkfe_pessoa"
   end
 
-  create_table "funcionario", primary_key: "cod_funcionario", id: :bigint, default: -> { "nextval('funcionario_codigo_seq'::regclass)" }, force: :cascade do |t|
+  create_table "funcionario", primary_key: "cod_funcionario", id: :bigint, default: nil, force: :cascade do |t|
     t.boolean "ativo"
     t.date "datacontrato"
     t.date "datademissao"
@@ -269,7 +271,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.index ["cod_pessoa"], name: "fkfu_pessoa"
   end
 
-  create_table "funcionarioempresa", primary_key: "cod_funcionarioempresa", id: :bigint, default: -> { "nextval('funcionario_codigo_seq'::regclass)" }, force: :cascade do |t|
+  create_table "funcionarioempresa", primary_key: "cod_funcionarioempresa", id: :bigint, default: nil, force: :cascade do |t|
     t.boolean "ativo"
     t.bigint "cod_empresa"
     t.bigint "cod_funcionario", null: false
@@ -315,7 +317,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.decimal "valororiginal", precision: 18, scale: 2, default: "0.0"
   end
 
-  create_table "lancamentoscaixa", primary_key: "cod_lancamentocaixa", id: :bigint, default: -> { "nextval('lancamentocaixa_sequence'::regclass)" }, force: :cascade do |t|
+  create_table "lancamentoscaixa", primary_key: "cod_lancamentocaixa", id: :bigint, default: nil, force: :cascade do |t|
     t.string "tipo", limit: 1, null: false
     t.bigint "cod_empresa", null: false
     t.bigint "cod_funcionario", null: false
@@ -568,7 +570,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
   add_foreign_key "lancamentoscaixa", "bancocheques", column: "cod_dadoscheque", primary_key: "cod_dadoscheque", name: "fk_bancocheque"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancocontadestino", primary_key: "cod_bancoconta", name: "fk_bancocontadestino"
-  add_foreign_key "lancamentoscaixa", "caixa", name: "fk_caixa"
+  add_foreign_key "lancamentoscaixa", "caixa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_caixa"
   add_foreign_key "lancamentoscaixa", "contaspagrec", column: "cod_contaspagrec", primary_key: "cod_contaspagrec", name: "fk_contaspagrec"
   add_foreign_key "lancamentoscaixa", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "lancamentoscaixa", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "fk_funcionario"
