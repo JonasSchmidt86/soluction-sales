@@ -41,3 +41,4 @@ Gemfile.lock.bkp
 yarn-debug.log*
 .yarn-integrity
 /xml/*
+/XML/*

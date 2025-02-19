@@ -9,12 +9,12 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
 
   def new
 
-    puts "-------- NEW PRODUTO XML -----" + params.to_s
+    # puts "-------- NEW PRODUTO XML -----" + params.to_s
 
     @xml_file = XmlFile.find_by(id: params[:format]);
     # gera o xml_file cria a compra
-    puts "--------------------------"
-    puts @xml_file.name.to_s.upcase
+    # puts "--------------------------"
+    # puts @xml_file.name.to_s.upcase
 
     if @xml_file.compra.nil?
       compra = Compra.new;

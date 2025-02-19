@@ -1,0 +1,55 @@
+          <div class="modal fade" id="modalLancamento" tabindex="-1" aria-labelledby="modalLancamentoLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="modalLancamentoLabel">Novo Lançamento de Caixa</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                
+                <div class="modal-body">
+                  <%= form_with model: [ :collaborators_backoffice, Lancamentoscaixa.new ], local: true do |form| %>
+                    
+                    <!-- Tipo (Entrada ou Saída) -->
+                    <div class="mb-3">
+                      <%= form.label :tipo, "Tipo" %>
+                      <%= form.select :tipo, [["Entrada", "E"], ["Saída", "S"]], {}, class: "form-control" %>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="mb-3">
+                      <%= form.label :descricao, "Descrição" %>
+                      <%= form.text_field :descricao, class: "text form-control", placeholder: "Digite a descrição" %>
+                    </div>
+
+                    <div class="mb-3">
+                      <%= form.label :descricao, "Histórico" %>
+                      <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
+                                                  params[:cod_historico] ), include_blank: "Histórico", class: "form-control") %>
+                    </div>
+                    
+                    <!-- Valor -->
+                    <div class="mb-3">
+                      <%= form.label :valor, "Valor" %>
+                      <%= form.text_field :valor, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00" %>
+                    </div>
+                    <!-- Destino -->
+                    <div class="md-3">
+                      <%= form.label :valor, "Destino" %>
+                      <%= form.collection_select(:cod_bancoconta, 
+                              (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
+                                :cod_bancoconta, :nome_banco, {:include_blank => 'CAIXA', selected: params[:cod_bancoconta]}, 
+                                class: "text form-control", readonly: false) %>
+                    </div>
+
+                    <!-- Botão de Submissão -->
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                      <!-- <button type="submit" class="btn btn-success btn-block">Salvar</button>  -->
+                      <%= form.submit "Salvar", class: "btn btn-success" %>
+                    </div>
+
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>

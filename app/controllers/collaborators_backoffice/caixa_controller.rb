@@ -4,7 +4,11 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
     # before_action :params_caixa, only: [:update]
 
     def index
-        @caixas = Caixa.where("cod_empresa = ?", current_collaborator.cod_empresa).order("datafechamento desc").page(params[:page])
+        @caixas = Caixa
+            # .includes(funcionario_abertura: :permissao, funcionario_fechamento:{}, empresa:{})
+            .where("cod_empresa = ?", current_collaborator.cod_empresa)
+            .order("datafechamento desc")
+            .page(params[:page])
     end
 
     def update

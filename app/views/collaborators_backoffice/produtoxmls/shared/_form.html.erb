@@ -40,14 +40,12 @@
 
                                 <% if @xml_file.file.attached? %>
 
-
                                     <%= form_buy.hidden_field :arquivoxml, value: form_buy.object.arquivoxml %>
                                     <%= form_buy.hidden_field :valortotal, value: form_buy.object.valortotal %>
                                     <%= form_buy.hidden_field :outrasdespesas, value: form_buy.object.outrasdespesas %>
                                     <%= form_buy.hidden_field :desconto, value: form_buy.object.desconto %>
                                     <%= form_buy.hidden_field :valorfrete, value: form_buy.object.valorfrete %>
                                     <%= form_buy.hidden_field :xml_file, value: @xml_file.id %>
-
 
                                     <div class="tab-content">
 
@@ -57,7 +55,7 @@
                                             <div class="row g-2 my-2">
                                                 <div class="col-md-6">
                                                     <div class="form-floating mb-3 mb-md-0">
-                                                        <%= form_buy.text_field :arquivoxml, disabled: true, class: "text form-control", placeholder:"arquivo" %>
+                                                        <%= form_buy.text_field :arquivoxml, value: @xml_file.file.filename, disabled: true, class: "text form-control", placeholder:"arquivo" %>
                                                         <%= form_buy.label :arquivoxml, class:"" %>
                                                     </div>
                                                 </div>
@@ -240,13 +238,13 @@
                                                                     <div class="row g-2 my-2">
                                                                         <div class="col-md-3">
                                                                             <div class="form-floating">
-                                                                                <%= form_itens.number_field :quantidade, step: 1, class: "form-control ", onchange: "setValorTotal(this)" %>
+                                                                                <%= form_itens.number_field :quantidade, step: 1, class: "form-control quantidade", onchange: "setValorTotal(this)" %>
                                                                                 <%= form_itens.label :quantidade, class:"" %>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-md-3">
                                                                             <div class="form-floating">
-                                                                                <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                                                                <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorunitario", placeholder:"", onchange: "setValorTotal(this)"  %>
                                                                                 <%= form_itens.label :valorunitario, class:"" %>
                                                                             </div>
                                                                         </div>
@@ -260,7 +258,7 @@
                                                                         </div>
                                                                         <div class="col-md-3">
                                                                             <div class="form-floating">
-                                                                                <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                                                                <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
                                                                                 <%= form_itens.label :Icms_10_ST, class:"" %>
                                                                             </div>
                                                                         </div>
@@ -292,7 +290,7 @@
                                                                             <div class="form-floating">
                                                                                 <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
                                                                                 <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
-                                                                                <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                                                                <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
                                                                                 <%= form_itens.label :valor_total, class:"" %>
                                                                             </div>
                                                                         </div>
@@ -321,59 +319,58 @@
                                                 <div class="col-md-6">
                                                     <p class="text-start text-uppercase">
                                                         Total Prod: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vProd")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :tt_produto, value: number_to_currency( ((tot_element.at("vProd")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <p class="text-start text-uppercase">
                                                         Desconto: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vDesc")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :desconto, value: number_to_currency( ((tot_element.at("vDesc")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <p class="text-start text-uppercase">
                                                         Seguro: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vSeg")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :vSeguro, value: number_to_currency( ((tot_element.at("vSeg")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <p class="text-start text-uppercase">
                                                         Icms 10 ST: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vST")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :vST, value: number_to_currency( ((tot_element.at("vST")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <hr class="my-2">
                                                     <p class="text-start text-uppercase">
                                                         Numero Fatura: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= (fat_element.at("nFat")&.text).to_i || 0 %></span>
+                                                        <%= form_buy.text_field :Nr_fatura, value: ((fat_element.at("nFat")&.text).to_i || 0), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
-                                                    <p class="text-start text-uppercase">
-                                                        Valor NF: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((fat_element.at("vLiq")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
-                                                    </p>
+                                                    
                                                 </div>
 
                                                 <div class="col-md-6">
                                                     <p class="text-start text-uppercase">
                                                         Frete: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vFrete")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :valorfrete, value: number_to_currency( ((tot_element.at("vFrete")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <p class="text-start text-uppercase">
-                                                        Outros: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vOutro")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        outrasdespesas
+                                                        <%= form_buy.text_field :outrasdespesas, value: number_to_currency( ((tot_element.at("vOutro")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
 
                                                     <p class="text-start text-uppercase">
                                                         Total IPI: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((tot_element.at("vIPI")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        <%= form_buy.text_field :vIPI, value: number_to_currency( ((tot_element.at("vIPI")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
                                                     </p>
                                                     <p class="text-start text-uppercase">
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;">
+                                                        <span class="form-control border-top-0 border-start-0 border-end-0 border-bottom-0 border-dark" style="font-weight: bold !important;">
+                                                            <br>
                                                             <br>
                                                         </span>
                                                     </p>
                                                     <hr class="my-2">
+
                                                     <p class="text-start text-uppercase">
-                                                        Valor Origem: 
-                                                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((fat_element.at("vOrig")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span>
+                                                        Valor NF: 
+                                                        <%= form_buy.text_field :Valor_liquido, value: number_to_currency( ((fat_element.at("vLiq")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
                                                     </p>
                                                 </div>
                                             </div>
@@ -429,7 +426,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
                                                 
                                                 <%= form_ff.hidden_field :empresa  %>
                                                 <%= form_ff.hidden_field :ativo %>
@@ -522,11 +518,19 @@
                 // Manipular a resposta JSON em caso de sucesso
                 if (response.message) {
                     // Se a resposta contém uma mensagem de sucesso
-                    alertModal(response.message)
-                    setTimeout(function() {
-                        window.location.href = '<%= collaborators_backoffice_xml_files_path %>';
-                    }, 3000); // Redireciona após 3 segundos (opcional)
-                    
+                    $.bootstrapGrowl(response.message, {
+                        ele: 'body',
+                        type: 'success',
+                        offset: { from: 'top', amount: 60 },
+                        align: 'center',
+                        width: 250,
+                        delay: 4000,
+                        allow_dismiss: false,
+                        stackup_spacing: 40,
+                    });
+                    if (response.compra_url) {
+                        window.location.href = response.compra_url; 
+                    }
                 } else if (response.error) {
                     // Se a resposta contém uma mensagem de erro
                     alertModal(response.error);
@@ -643,6 +647,7 @@
     function setValorTotal(field) {
 
         let index = thisIndex(field);
+        
         let proValor = document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
         let proQtd   = document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
         
@@ -651,9 +656,10 @@
         let proIpi = document.getElementById(`compra_itenscompra_attributes_${index}_ipi`);
         let proFrete = document.getElementById(`compra_itenscompra_attributes_${index}_valor_frete`);
         let proDesconto = document.getElementById(`compra_itenscompra_attributes_${index}_desconto`);
+        let custoUnitFinal = document.getElementById(`compra_itenscompra_attributes_${index}_custoFinal`);
         let proTotal = document.getElementById(`compra_itenscompra_attributes_${index}_valorTotal`);
 
-console.log("total= "+proTotal.value)
+     console.log("total= "+proTotal.value)
 
         proTotal.value = 0;
 
@@ -664,63 +670,67 @@ console.log("total= "+proTotal.value)
         valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
         proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
 
-        // vlUni = ((parseFloat( proValor.value ? parseFloat(proValor.value.replace(",",".")) : 0) * (proQtd.value ? (parseFloat(proQtd.value.replace(",","."))) : 0 )));
         vlUni = (proIpi + proFrete + valorst - proDesconto) / proQtd.value
-        console.log("vlUni = " + vlUni);
-
-let total = (vlUni + proValor.value.replace(",",".")) * proQtd.value;
+     
+     console.log("vlUni = " + vlUni);
         
-        console.log("total= "+ total)
+        let custoFinalUnit = parseFloat(vlUni) + parseFloat(proValor.value.replace(",","."));
+        
+        custoUnitFinal.value = parseFloat(custoFinalUnit).toFixed(2).replace(".",",");
 
-        console.log("total= "+ proTotal.value)
+        let total = ((vlUni *proQtd.value) + parseFloat(proValor.value.replace(",",".")) * proQtd.value);
+
+     console.log("total= "+ total)
+     console.log("total= "+ proTotal.value)
 
         proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
 
-        console.log(proTotal.value)
+    // console.log(proTotal.value)
 
         proValor = "";
         proQtd   = "";
         proTotal = "";
         index = "";
-// setTotalCompra();
+ setTotalCompra();
     }
+
     // fim valor total item \
     function setTotalCompra() {
         // Selecione a tabela
         
         var tabela = document.getElementById("tblProducts");
-        var totalCompra = document.getElementById("compra_valortotal").value.replace(",",".");
-        var desconto = document.getElementById("desconto").value.replace(",",".");
-        var outrasdespesas = document.getElementById("outrasdespesas").value.replace(",",".");
-        var valorfrete = document.getElementById("valorfrete").value.replace(",",".");
+        var desconto = document.getElementById("compra_desconto").value.replace(",",".");
+        var seguro = document.getElementById("compra_vSeguro").value.replace(",",".");
+        var outrasdespesas = document.getElementById("compra_outrasdespesas").value.replace(",",".");
+        var valorfrete = document.getElementById("compra_valorfrete").value.replace(",",".");
+        var vIPI = document.getElementById("compra_vIPI").value.replace(",",".");
+
+        var valor_liquido = document.getElementById("compra_Valor_liquido");
+        var totalProduto = document.getElementById("compra_tt_produto");
+        var totalST = document.getElementById("compra_vST");
 
         // Inicialize a variável para armazenar a soma
         var soma = 0;
+        var somaST = 0;
 
         // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
-        for (var i = 1; i < tabela.rows.length; i++) {
-            // Obtenha o valor unitário da célula de classe "valor-unitario"
-            console.log("");
-            console.log(tabela.rows[i]);
-            console.log("");
-            var valorUnitarioCell = tabela.rows[i].querySelector(".valorunitario");
-            // Use uma expressão condicional para verificar se o valor é válido
-            var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
-            
-            //console.log("TEXTO - "+valorUnitario)
-
-            var qtdCell = tabela.rows[i].querySelector(".quantidade");
-            var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value.replace(",",".")) : 0;
-            
-            // Some o valor unitário à variável de soma
-            soma += (valorUnitario*qtdProduto);
+        for (var i = 1; i < tabela.rows.length; i++) {            
+            soma += parseFloat(tabela.rows[i].querySelector(".valorTotal").value.replace(",","."));
+            somaST += parseFloat(tabela.rows[i].querySelector(".valorST").value.replace(",","."));
         }
+        
+        totalProduto.value = soma.toFixed(2).replace(".",",");
+        totalST.value = somaST.toFixed(2).replace(".",",");
 
-        soma += parseFloat(acrescimo) - parseFloat(desconto);
-        document.getElementById("compra_valortotal").value = soma.toFixed(2).replace(".",",");
+        // soma = soma + parseFloat(valorfrete) + parseFloat(outrasdespesas) + parseFloat(seguro) - parseFloat(desconto);
+        
+        console.log("Soma = " + soma);
+
+        valor_liquido.value = soma.toFixed(2).replace(".",",");
         // Exiba o resultado da soma
     }
     // fim total compra
+
     // ------------ BUSCA PESSOAS ------------- //
 
     $(document).ready(function() {

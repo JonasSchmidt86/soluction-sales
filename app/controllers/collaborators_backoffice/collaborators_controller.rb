@@ -4,7 +4,7 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
   before_action :set_collaborator, only: [:edit, :update, :destroy]
   
   def index
-    @collaborators = Collaborator.all.page(params[:page])
+    @collaborators = Collaborator.includes(:empresa).all.page(params[:page])
   end
 
   def edit

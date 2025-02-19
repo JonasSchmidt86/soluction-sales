@@ -9,30 +9,41 @@
         <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
               <%= form_with(url: collaborators_backoffice_xml_files_path, local: true, method: :get, 
                                     class:"col dataTable-search col-md-6") do |form| %>
-                <div class="d-flex">
-                  <div class="col-md-10">
-                      <div class="mb-2">
-                          <%= form.text_field :term, class:"dataTable-input text", value:params[:term],placeholder:"Fornecedor...", id:"text" %>
-                      </div> 
-                  </div>
+                <div class="d-flex align-items-center">
+  <div class="col-md-10">
+    <div class="mb-2">
+      <%= form.text_field :term, class:"dataTable-input text", value: params[:term], placeholder: "Fornecedor...", id: "text" %>
+    </div> 
+  </div>
 
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Date.today.beginning_of_month.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
-                    </div>
-                  </div>
-                  
-                  <div class="col-md-3">
-                    <div class="mb-2 ">
-                      <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                          class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-                    </div>
-                  </div>
+  <div class="col-md-3">
+    <div class="mb-2">
+      <%= form.text_field :dataInicial, value: (params[:dataInicial].present? ? params[:dataInicial] : Date.today.beginning_of_month.strftime("%d/%m/%Y")),
+          class: "fallback dataTable-input datepicker", placeholder: "Data Inicial" %>
+    </div>
+  </div>
 
-                  <div class="mb-2"><button type='submit', class="btn btn-success btn-circle">Buscar</button></div>
+  <div class="col-md-3">
+    <div class="mb-2">
+      <%= form.text_field :dataFinal, value: (params[:dataFinal].present? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")),
+          class: "fallback dataTable-input datepicker", placeholder: "Data Final" %>
+    </div>
+  </div>
 
-                </div>
+  <div class="col-md-2 d-flex align-items-center ms-3">
+    <div class="form-check mb-2 ms-2">
+      <%= form.check_box :todos, { class: "form-check-input", id: "checkboxTodos", checked: params[:todos] == "1" }, "1", "0" %>
+      <%= form.label :todos, "Todos", class: "form-check-label" %>
+    </div>
+  </div>
+
+
+
+  <div class="mb-2">
+    <button type='submit' class="btn btn-success btn-circle">Buscar</button>
+  </div>
+</div>
+
                 
               <% end %>
 
@@ -54,15 +65,25 @@
                 
                 <tbody>
                     <% @xml_files.each do |xml_file| %>
-                    
-                      <% xml_file_path = Rails.application.routes.url_helpers.rails_blob_path(xml_file.file, only_path: true) %>
-                      <% xml_content = File.read(ActiveStorage::Blob.service.path_for(xml_file.file.key), encoding: 'UTF-8') %>
+                      
+                      <% if xml_file.present? %>
+                        <% xml_file_path = Rails.application.routes.url_helpers.rails_blob_path(xml_file.file, only_path: true) %>
+
+                        <% file_path = ActiveStorage::Blob.service.path_for(xml_file.file.key) %>
+                        <% if File.exist?(file_path) %>
+                          <% xml_content = File.read(file_path, encoding: 'UTF-8') %>
+                        <% else %>
+                          <% Rails.logger.error "Arquivo não encontrado para o registro #{xml_file.id}. Apagando registro." %>
+                          <% xml_file.destroy %>
+                          <p>Registro apagado devido à ausência do arquivo.</p>
+                        <% end %>
+                      <% end %>
+
+
                       <% xml_doc = Nokogiri::XML(xml_content) %>
 
-                      <% numeroNF = xml_doc.at_xpath('//*[local-name()="ide"]').at("nNF")&.text if xml_doc.at_xpath('//*[local-name()="ide"]').at("nNF")&.text%>
-                      
+                      <% numeroNF = xml_doc.at_xpath('//*[local-name()="ide"]').at("nNF")&.text if xml_doc.at_xpath('//*[local-name()="ide"]').at("nNF")&.text%>                      
                       <% existe = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: xml_file.pessoa.cod_pessoa).size %>
-                      
                       <% unless existe.to_i > 0 %>
                         <tr class="">
                       <% else %>
@@ -82,23 +103,28 @@
                                 </button>
 
                                 <ul class="dropdown-menu" style="width: 50px;">                                
-                                <li>
-                                    <% if xml_file.file.attached? %>
-                                        <%= link_to rails_blob_path(xml_file.file, disposition: 'attachment'), 
-                                                class:"dropdown-item btn btn-info btn-circle" do %>
-                                    
-                                            <i class="fa fa-download", style="width: 35px;"></i>Download
-                                        <% end %>
-                                    <% end %>
-                                </li>
+                                
                                 <li>
                                 <% unless existe > 0 %>
                                     <%= link_to import_collaborators_backoffice_xml_file_path(xml_file), method: :post, 
                                             class:"dropdown-item btn btn-info btn-circle" do %>
-                                    <i class="fas fa-file-import", style="width: 35px;"></i> Importar
+                                      <i class="fas fa-file-import", style="width: 35px;"></i> Importar
+                                    <% end %>
+                                  <% else %>
+                                    <%= link_to collaborators_backoffice_compra_path(xml_file.compra), class:"dropdown-item btn btn-info btn-circle" do %>
+                                      <i class="fa fa-info", style="width: 35px;"></i>Informações
                                     <% end %>
                                   <% end %>
                                 </li>
+                                <li>
+                                    <% if xml_file.file.attached? %>
+                                        <%= link_to rails_blob_path(xml_file.file, disposition: 'attachment'), 
+                                                class:"dropdown-item btn btn-info btn-circle" do %>
+                                            <i class="fa fa-download", style="width: 35px;"></i>Download
+                                        <% end %>
+                                    <% end %>
+                                </li>
+
                                 <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                                 <span class="visually-hidden">Toggle Dropdown</span>
                                     <li>
@@ -114,12 +140,9 @@
                             </div>
                         </td>
                       </tr>
-
                     <% end %>
-
                 </tbody>
               </table>
-              
                 <%= form_with(model: [ :collaborators_backoffice, XmlFile.new ], local: true, method: :post, 
                                     class:"col dataTable-search col-md-6") do |form| %>
 

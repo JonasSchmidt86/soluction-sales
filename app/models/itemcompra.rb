@@ -20,7 +20,7 @@ class Itemcompra < ApplicationRecord
     end
     
     def valor_total
-        self.valorunitario * self.quantidade
+        (self.valorunitario * self.quantidade) + self.ipi + self.valorst + self.valor_frete
     end
 
     def full_codigo

@@ -4,4 +4,4 @@ local:
 
 local_custom:
   service: Disk
-  root: <%= Rails.root.join("xml") %>
+  root: <%= Rails.root.join("XML") %>

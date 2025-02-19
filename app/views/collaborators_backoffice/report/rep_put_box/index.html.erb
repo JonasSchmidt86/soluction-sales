@@ -51,11 +51,11 @@
 
                   <button type='submit', class="btn btn-success btn-circle">Buscar</button>
 
-                  <div class="ms-auto col-md-4 order-last">
+                  <div class="ms-auto col-md-5 order-last">
                     <%= form.text_field :valorEntradas, class: "text-bg-info form-control ", readonly: true %>
                   </div>
-                  <div class="ms-auto col-md-4 order-last ">
-                    <%= form.text_field :valorSaidas, class: "text-bg-danger form-control ", readonly: true %>
+                  <div class="ms-auto col-md-5 order-last ">
+                    <%= form.text_field :valorSaidas, style:"width: 125px;", class: "text-bg-danger form-control ", readonly: true %>
                   </div>
 
                 </div>
@@ -110,11 +110,26 @@
                     <td class="align-middle"><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
                     <td class="align-middle"><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
                     
-                    <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil?%>
-                      <% somaEntradas += lauch.valor %>
-                    <% else %>
+                    
+                    <% if lauch.tipo == 'S' %>
                       <% somaSaidas += lauch.valor %>
-                    <% end %>
+                    <% else %>
+
+                      <% if params[:cod_bancoconta].present? %>
+                        <% if lauch.tipo == 'E' %>
+                          <% somaEntradas += lauch.valor %>
+                        <% else %>
+                          <% somaSaidas += lauch.valor %>
+                        <% end %>
+                      <% else %>
+                        <% if lauch.tipo == 'E' && lauch.cod_bancoconta.blank? %>
+                          <% somaEntradas += lauch.valor %>
+                        <% else %>
+                          <% somaSaidas += lauch.valor %>
+                        <% end %>
+                      <% end %> 
+                    <% end %> 
+
 
                     <td class="align-middle">
 
@@ -142,6 +157,18 @@
             </table>
           </div>
 
+          <div class="position-fixed bottom-0 end-0 m-4">
+            <div class="d-block mb-2">
+              <button class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-lg"
+                      style="width: 60px; height: 60px;"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalLancamento">
+                <i class="fa fa-plus fa-2x"></i>
+              </button>
+            </div>
+          </div>          
+          <%= render partial: 'collaborators_backoffice/report/rep_put_box/shared/lancamentosdiverso_modal', locals: { action_message: 'Modal' } %>
+
           <% if @lauches.respond_to?(:total_pages) %>
             <div class="dataTable-bottom">
               <div class="dataTable-info"><%= page_entries_info @lauches, entry_name: 'item' %></div>
@@ -168,6 +195,24 @@
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
   // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  document.getElementById("valorEntradas").value = formatarReal(<%= somaEntradas %>);
-  document.getElementById("valorSaidas").value = formatarReal(<%= somaSaidas %>);
+  // document.getElementById("valorEntradas").value = formatarReal(<%= somaEntradas %>);
+  // document.getElementById("valorSaidas").value = formatarReal(<%= somaSaidas %>);
+
+  document.addEventListener("DOMContentLoaded", function() {
+    function formatarReal(valor) {
+      return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    // Pega os inputs pelo ID
+    let inputEntradas = document.getElementById("valorEntradas");
+    let inputSaidas = document.getElementById("valorSaidas");
+
+    if (inputEntradas && inputSaidas) {
+      inputEntradas.value = formatarReal(<%= somaEntradas %>);
+      inputSaidas.value = formatarReal(<%= somaSaidas %>);
+    } else {
+      console.warn("Os campos de entrada e saída não foram encontrados.");
+    }
+  });
+
 </script>

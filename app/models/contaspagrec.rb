@@ -35,7 +35,7 @@ class Contaspagrec < ApplicationRecord
 
         elsif !self.compra.nil?
             if !self.frete.nil?
-                [self.frete.nrromaneio, "F"].join('-')
+                [self.frete.nrromaneio, "F", self.frete.pessoa.nome].join('-')
             else
                 if self.compra.numeronf.blank?
                     ["S/N", self.numeroparcela].join('-')

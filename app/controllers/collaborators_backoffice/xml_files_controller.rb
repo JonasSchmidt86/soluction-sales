@@ -9,15 +9,18 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
 
       consulta = " empresa_id = ? ";
 
+      dt_inicial = nil;
+      dt_final = nil;
+
       # criar parametro para ter a opção de ver ou não os processados 
-      consulta += " and compra_id is null "
+      unless params[:todos].present? && params[:todos] == '1'
+       consulta += " and compra_id is null "
+      end
 
       if !params[:term].blank?
           consulta += " and pessoa_id in (select cod_pessoa from pessoa where upper(apelido) ilike upper('%"+ params[:term] +"%')) "
       end
 
-      dt_inicial = nil;
-      dt_final = nil;
       begin 
         unless params[:dataInicial].blank?
           dt_inicial = Date.parse(params[:dataInicial]).strftime("%d/%m/%Y")
@@ -37,8 +40,8 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
         
       end
 
-      puts "\nInicial: #{dt_inicial} - Final #{dt_final}"
-      puts "Inicial: #{dt_inicial} - Final #{dt_final}\n\n"
+      # puts "\nInicial: #{dt_inicial} - Final #{dt_final}"
+      # puts "Inicial: #{dt_inicial} - Final #{dt_final}\n\n"
 
       consulta += " and date(created_at) between to_date('" + dt_inicial.to_s + "', 'DD/MM/YYYY') and to_date('" + dt_final.to_s  + "', 'DD/MM/YYYY') ";
     
@@ -80,29 +83,25 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
         end
 
         @xml_file.file = xml_file_params[:file] if xml_file_params[:file];
-        @xml_file.name = xml_file_params[:name] if xml_file_params[:name];
-
-        # diretorio_destino = File.join(Dir.pwd, "xml", current_collaborator.empresa.nome, "Recebidos")
-        # diretorio_destino = File.join("xml",current_collaborator.empresa.nome, "Recebidos")
-
-        # FileUtils.mkdir_p(diretorio_destino) unless File.directory?(diretorio_destino)
 
         xml_content = File.read(xml_file_params[:file].tempfile, encoding: 'UTF-8')
         xml_doc = Nokogiri::XML(xml_content)
     
-        id_nfe = xml_doc.at_xpath('//*[local-name()="infNFe"]')
-        cod = id_nfe['Id']
-        # @xml_file.file.filename = cod
-    
-        caminho_do_arquivo = File.join(xml_file_params[:file].original_filename)
-
         cnpj_val = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text
         cnpj_dest = xml_doc.xpath('//*[local-name()="dest"]').at("CNPJ")&.text
-
         if cnpj_dest == current_collaborator.empresa.cpf_cnpj
           @xml_file.empresa = current_collaborator.empresa
         else 
           redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo de Outra empresa.'
+          return 
+        end
+        
+        id_nfe = xml_doc.at_xpath('//*[local-name()="infNFe"]')
+        @xml_file.name = id_nfe['Id']
+
+        blob = ActiveStorage::Blob.find_by(filename: id_nfe['Id'])
+        if blob.present?
+          redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo já foi importado.'
           return 
         end
 
@@ -137,21 +136,19 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           @xml_file.pessoa = fornecedor
 
         end
-    
-        key = StorageService.dynamic_path(caminho_do_arquivo)
-        
-        blob = ActiveStorage::Blob.find_by(key: key)
 
-        unless blob.nil?
-          redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo já Existe.'
-          return
+        file_io = xml_file_params[:file]
+        # file_io = @xml_file.file
+        company = current_collaborator.empresa
+      
+        # Associa o arquivo com o serviço personalizado
+        @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
+        numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
+        compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
+        if compra.size > 0
+          @xml_file.compra = compra.first;
         end
 
-        @xml_file.file.attach(io: xml_file_params[:file].tempfile,
-                              filename: cod,
-                              content_type: xml_file_params[:file].content_type,
-                              service_name: :local_custom,
-                              key: key)
       end
     
       if @xml_file.save

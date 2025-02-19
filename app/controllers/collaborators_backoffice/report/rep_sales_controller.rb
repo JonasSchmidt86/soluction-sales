@@ -26,10 +26,10 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         # tipo T é transferencia 
         consulta += " and tipo <> 'T' "
         if params[:per_page].present? && params[:per_page].to_i === 0
-            @sales = Venda.where(consulta, current_collaborator.cod_empresa )
+            @sales = Venda.includes(empresa: {}, funcionario: {}, pessoa: {}, itensvenda: :produto, contas: :lancamentos).where(consulta, current_collaborator.cod_empresa )
                                         .order(datavenda: :desc);
         else
-            @sales = Venda.where(consulta, current_collaborator.cod_empresa )
+            @sales = Venda.includes(empresa: {}, funcionario: {}, pessoa: {}, itensvenda: :produto, contas: :lancamentos).where(consulta, current_collaborator.cod_empresa )
                                         .order(datavenda: :desc).page(params[:page]).per(per_page);
         end
     end

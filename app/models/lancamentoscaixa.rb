@@ -17,7 +17,11 @@ class Lancamentoscaixa < ApplicationRecord
 
     belongs_to :bancoconta,  :class_name => 'Bancoconta',           :foreign_key => 'cod_bancoconta', inverse_of: :lancamentos, optional: :true
 
-    validates :valor,numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" }
+    validates :valor,numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" };
+    validates :historico, presence: { message: "Histórico não pode ser vazio!" };
+    validates :empresa, presence: { message: "Empresa não pode ser vazio!" };
+    validates :funcionario, presence: { message: "Colaborador não pode ser vazio!" };
+    validates :tipo, presence: { message: "Informe se é Entrada ou Saida" };
 
     def nmPessoa 
         if self.pessoa.nil?

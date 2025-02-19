@@ -17,7 +17,7 @@
                 <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
               </div>
 
-              <div id= "venda" class="dataTable-input col-md-4 form-check form-switch">
+              <div id= "venda" class="dataTable-input col-md-5 form-check form-switch">
                 <label id="lb_pag_rec" for= "tipo_conta" class="label-check d-inline-block form-check-label"><%= tipe_bill(params[:tipo_conta])%></label>
                   <%= form.check_box :tipo_conta, { checked: tipe_bill_true(params[:tipo_conta]),
                     class: "form-check-input", type:"checkbox" }, true, false %>
@@ -28,7 +28,7 @@
                     {selected: params[:status_bill], prompt: false}, class: "form-control") %>
               </div> 
 
-              <div class="col-md-5">
+              <div class="col-md-4">
                   <div class="">
                       <%= form.text_field :nrVenda, class:"dataTable-input", value:params[:nrVenda],placeholder:"Cod Venda", id:"numeric" %>
                   </div> 

@@ -58,10 +58,10 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
         per_page = params[:per_page].present? ? params[:per_page].to_i : 30
 
         if params[:per_page].present? && params[:per_page].to_i === 0
-            @lauches = Lancamentoscaixa.where(consulta, current_collaborator.cod_empresa )
+            @lauches = Lancamentoscaixa.includes(:empresa, :funcionario, :bancoconta, :caixa, :contaspagrec, :historico).where(consulta, current_collaborator.cod_empresa )
                                 .order( datapagto: :desc );
         else
-            @lauches = Lancamentoscaixa.where(consulta, current_collaborator.cod_empresa )
+            @lauches = Lancamentoscaixa.includes(:empresa, :funcionario, :bancoconta, :caixa, :contaspagrec, :historico).where(consulta, current_collaborator.cod_empresa )
                                 .order( datapagto: :desc).page(params[:page]).per(per_page);
         end
     end

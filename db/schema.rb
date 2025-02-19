@@ -115,7 +115,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.decimal "valorsaidas", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_funcionarioabertura", null: false
     t.bigint "cod_funcionariofechamento"
-    t.serial "id", null: false
+    t.bigserial "id", null: false
   end
 
   create_table "cidade", primary_key: "cod_cidade", id: :bigint, default: nil, force: :cascade do |t|
@@ -301,7 +301,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.decimal "valorunitario", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_cor"
     t.boolean "cancelado", default: false, null: false
-    t.decimal "valor_frete", precision: 10, scale: 2
+    t.decimal "valor_frete", precision: 10, scale: 2, default: "0.0"
   end
 
   create_table "itemvenda", primary_key: "cod_item", id: :bigint, default: -> { "nextval('itemvenda_codigo_seq'::regclass)" }, force: :cascade do |t|

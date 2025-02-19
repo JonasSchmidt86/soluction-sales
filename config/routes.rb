@@ -29,10 +29,14 @@ Rails.application.routes.draw do
     resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :funcionarios, only: [:index, :edit, :update, :new, :create, :destroy]
-    resources :empresa_estoque, only: [:index, :edit, :destroy]
+    resources :empresa_estoque, only: [:index, :edit, :destroy, :update]
+    
     resources :caixa, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
+    
+    resources :lancamentosdiversos, only: [:index, :edit, :update, :new, :create, :destroy]
+
     resources :vendas, only: [:index, :edit, :new, :create, :destroy]
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]

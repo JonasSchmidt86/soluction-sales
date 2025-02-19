@@ -1,44 +1,76 @@
 class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackofficeController
     
-    before_action :set_produto, only: [:destroy, :edit]
+    before_action :set_produto, only: [:destroy, :edit, :update]
 
     def index
+        # Inicializando a consulta base
+        query = Empresaproduto.includes(:produto, :cor).select("empresaproduto.*")
+                                .joins(:produto)
+                                .order("produto.nome ASC, empresaproduto.cod_empresa ASC")
+                                .where(empresaproduto: { ativo: true })
         
-        consulta = " empresaproduto.ativo = true ";
-
-        if !params[:term].blank?
-            consulta += " and produto.cod_produto::varchar = REPLACE(TRIM('"+ params[:term] +"%'), \'%\', \'\') OR produto.nome ILIKE '"+ params[:term] +"%'";
+        # Adicionando condição para `term`
+        if params[:term].present?
+            term = params[:term].strip
+            query = query.where(
+            "produto.cod_produto::varchar = REPLACE(TRIM(?), '%', '') OR produto.nome ILIKE ?",
+            term, "#{term}%"
+            )
         end
-
-        if !params[:contem].blank?
-            if params[:contem] == '1'
-                consulta += " and empresaproduto.quantidade != 0 "
-            end
-        else 
-            unless params.present? && params.key?(:contem) && params.key?(:cod_empresa) && params.key?(:term) && params.key?(:cod_produto)
-                consulta += " and empresaproduto.quantidade != 0 "
-            end
+        
+        # Adicionando condição para `contem`
+        if params[:contem].present? && params[:contem] == '1'
+            query = query.where.not(empresaproduto: { quantidade: 0 })
+        elsif !params.key?(:contem) || !params.key?(:cod_empresa) || !params.key?(:term) || !params.key?(:cod_produto)
+            query = query.where("empresaproduto.quantidade <= 0")
         end
-
-        if !params[:cod_empresa].blank?
-            consulta += " and empresaproduto.cod_empresa = "+params[:cod_empresa] + " "
+        
+        # Adicionando condição para `cod_empresa`
+        if params[:cod_empresa].present?
+            query = query.where(empresaproduto: { cod_empresa: params[:cod_empresa] })
         end
-
-        per_page = params[:per_page].present? ? params[:per_page].to_i : 30
-        if params[:per_page].present? && params[:per_page].to_i === 0
-            @empresa_produtos = Empresaproduto.select("empresaproduto.*").joins(:produto).order("produto.nome ASC, empresaproduto.cod_empresa asc").where(consulta);
+        
+        # Configurando paginação
+        if params[:per_page] == 'Todas'
+            @empresa_produtos = query
         else
-            @empresa_produtos = Empresaproduto.select("empresaproduto.*").joins(:produto).order("produto.nome ASC, empresaproduto.cod_empresa asc").where(consulta).page(params[:page]).per(per_page);
+            per_page = params[:per_page].to_i > 0 ? params[:per_page].to_i : 30
+            if per_page == 0
+            @empresa_produtos = query
+            else
+            @empresa_produtos = query.page(params[:page]).per(per_page)
+            end
         end
+    end
 
+    def update
+        @empresa_produto.valorvenda = params[:estoque][:valorvenda].gsub(',', '.').to_f;
+        if @empresa_produto.save!
+            render json: { message: "Valor atualizado com sucesso!", estoque: @empresa_produto }, status: :ok
+          else
+            render json: { message: "Erro ao atualizar valor.", errors: @empresa_produto.errors.full_messages }, status: :unprocessable_entity
+          end
     end
 
     def edit 
-        @empresa_produto
+        # @empresa_produto
+        # puts params
+        
+        if params[:format].present?
+            puts params[:format]
+            @empresa_produtos = Empresaproduto
+                        .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
+                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
+                puts "Passou por aqui!! "
+        else
 
-        @estoque = Empresaproduto.where("cod_produto = ? and (ativo = true or quantidade > 0 )", @empresa_produto.cod_produto ).
-                    order("cod_empresa,cod_cor desc, quantidade desc");
-        puts @estoque.size;
+            @empresa_produtos = Empresaproduto
+                .joins("INNER JOIN itemcompra ON empresaproduto.cod_produto = itemcompra.cod_produto")
+                    .where(itemcompra: { cod_compra: params[:id] }) # Ajuste no filtro
+                    .where("empresaproduto.ativo = ? OR empresaproduto.quantidade > ?", true, 0)
+                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
+        end
+        # puts @estoque.size;
     end
 
     def destroy

@@ -40,6 +40,9 @@
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Compras</button>
                                 </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers" type="button" role="tab" aria-controls="settings" aria-selected="false">Saidas Transfe.</button>
+                                </li>
                             </ul>
 
                             <!-- Tab panes -->
@@ -116,6 +119,38 @@
                                                     <td><%= post_date item.compra.datacompra %></td>
                                                     <td><%= item.cod_cor %></td>
                                                     <td><%= item.compra.pessoa.nome %></td>
+                                                    <td class=""><%= item.quantidade.to_i %></td>
+                                                    <td class=""><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
+                                                </tr>
+                                            <% end %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tab-pane" id="transfers" role="tabpanel" aria-labelledby="transfers-tab" tabindex="0">                        
+                                    <table id="datatablesSimple" class="dataTable-table">
+                                        <thead>
+                                            <tr>
+                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter"></a></th>
+                                                <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Cor</a></th>
+                                                <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                                                <th data-sortable="" style="width: 15.886288%;"><a href="#" class="dataTable-sorter">Dt Venda</a></th>
+                                                <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
+                                                <th data-sortable="" style="width: 110px;"><a href="#" class="dataTable-sorter">Valor</a></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% @produto.itensvenda.joins(:venda)
+                                                        .where(cod_empresa: current_collaborator.cod_empresa)
+                                                        .where(venda: { cod_empresa: current_collaborator.cod_empresa, tipo: 'T' })
+                                                        .order(cod_item: :desc)
+                                                        .page(params[:page])
+                                                        .each do |item| %>
+
+                                                <tr>
+                                                    <td><%= item.cod_empresa %></td>
+                                                    <td><%= item.cod_cor %></td>
+                                                    <td><%= item.venda.pessoa.nome %></td>
+                                                    <td class=""><%= post_date item.venda.datavenda %></td>
                                                     <td class=""><%= item.quantidade.to_i %></td>
                                                     <td class=""><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
                                                 </tr>

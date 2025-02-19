@@ -6,7 +6,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
     end
 
     def show
-      @compra = Compra.find_by(cod_compra: params[:id])
+      @compra = Compra.includes(itenscompra: :produto, contas: {}).find_by(cod_compra: params[:id])
     end
 
     def new
@@ -21,16 +21,19 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       if params[:compra].present?
         compra.numeronf = params[:compra][:numeronf];
         compra.serienf = params[:compra][:serienf];
-        compra.desconto = params[:compra][:desconto].gsub(',', '.').to_f;
-        compra.valorfrete = params[:compra][:valorfrete].gsub(',', '.').to_f;
-        compra.valortotal = params[:compra][:valortotal].gsub(',', '.').to_f;
+        compra.desconto = params[:compra][:desconto]&.gsub(',', '.').to_f || 0.0;
+        compra.valorfrete = params[:compra][:valorfrete]&.gsub(',', '.').to_f || 0.0;
+        # compra.valortotal = params[:compra][:valortotal]&.gsub(',', '.').to_f || 0.0;
+        compra.valortotal = params[:compra][:Valor_liquido]&.gsub(',', '.').to_f || 0.0;
+
         compra.arquivoxml = params[:compra][:arquivoxml];
 
         compra.cancelada = false
         # compra.datacancelamento = params[:compra][:datacancelamento];
         compra.datacompra = Date.parse(params[:compra][:datacompra]);
         compra.dataemissao = Date.parse(params[:compra][:dataemissao]);
-        compra.outrasdespesas = params[:compra][:outrasdespesas].to_f;
+        
+        compra.outrasdespesas = (params[:compra][:outrasdespesas].to_f + params[:compra][:vST].to_f + params[:compra][:vSeguro].to_f);
         
         compra.cod_compraempresa = (Compra.select(:cod_compraempresa).where("cod_empresa = ? ", current_collaborator.cod_empresa ).maximum(:cod_compraempresa) + 1);
         compra.cod_funcionario = current_collaborator.cod_funcionario
@@ -72,8 +75,6 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
               return render json: { error: error_message }, status: :not_found
             end
 
-            # puts "\n\n XML NOME : #{ xml_pro["nome"] } \n\n"
-
             if proXml.blank?
               
               if pro_temp["cod_cor"].present? && pro_temp["cod_produto"].present? && xml_pro["codigo"].blank? && proXml.blank?
@@ -83,20 +84,26 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
                                           codproemissor: xml_pro["codproemissor"]).where(" nome ilike ? ", xml_pro["nome"].to_s.upcase.rstrip).order(:codigo).first
                 
                 puts proXml.blank?
+                # puts proXml.nome
+                # puts proXml.infadicionais.present?
+                # puts xml_pro["infadicionais"]
+                # puts xml_pro["infadicionais"].to_s.rstrip.upcase
+
                 if !proXml.blank?
                   unless proXml.infadicionais.nil? && (xml_pro["infadicionais"].nil? || xml_pro["infadicionais"].to_s.strip.empty?) ||
-                    proXml.infadicionais.upcase.rstrip == xml_pro["infadicionais"].to_s.upcase.rstrip
+                    proXml.infadicionais.to_s.rstrip.upcase == xml_pro["infadicionais"].to_s.rstrip.upcase
                     proXml = nil  
                   end
                 end
+                puts "Passou o unless"
               end
             end
 
             if proXml.blank?
               proXml = Produtoxml.new
               proXml.codproemissor = xml_pro["codproemissor"]
-              proXml.infadicionais = xml_pro["infadicionais"].to_s.rstrip.upcase
-              proXml.nome = xml_pro["nome"].to_s.rstrip.upcase
+              proXml.infadicionais = xml_pro["infadicionais"].to_s.rstrip.upcase if xml_pro["infadicionais"].present?
+              proXml.nome = xml_pro["nome"].to_s.rstrip.upcase if xml_pro["nome"].present?
               proXml.ucom = xml_pro["ucom"]
               proXml.ncm = xml_pro["ncm"]
               proXml.cfop = xml_pro["cfop"]
@@ -108,7 +115,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             proXml.cod_pessoa = compra.cod_pessoa
 
             unless proXml.save!
-              error_message = "Erro ao cadastrar novo produtoXML #{xml_pro["nome"].to_s.rstrip.upcase}!"
+              error_message = "Erro ao cadastrar novo produtoXML #{xml_pro["nome"].to_s.rstrip.upcase  if xml_pro["nome"].present?}!"
               return render json: { error: error_message }, status: :not_found
             else
               xml_pro["codigo"] = proXml.codigo;
@@ -121,13 +128,13 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itemCompra.cod_empresa = compra.cod_empresa
             itemCompra.cod_produto = pro_temp["cod_produto"]
             #itemCompra.icms = pro_temp["icms"] 
-            itemCompra.ipi = pro_temp["ipi"].gsub(',', '.').to_f
+            itemCompra.ipi = pro_temp["ipi"]&.gsub(',', '.').to_f
             itemCompra.numeronf = compra.numeronf
             itemCompra.quantidade = pro_temp["quantidade"]
-            itemCompra.valorst = pro_temp["icms"].gsub(',', '.').to_f
-            itemCompra.valorunitario = pro_temp["valorunitario"].gsub(',', '.').to_f
+            itemCompra.valorst = pro_temp["icms"]&.gsub(',', '.').to_f || 0.0
+            itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
             itemCompra.cod_cor = pro_temp["cod_cor"]
-            itemCompra.valor_frete = pro_temp["valor_frete"].gsub(',', '.').to_f
+            itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0
             itemCompra.cancelado = false
 
             compra.itenscompra << itemCompra;
@@ -203,7 +210,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       if compra.save!
         respond_to do |format|
           format.html { redirect_to collaborators_backoffice_compras_path, notice: 'Compra criada com sucesso.' }
-          format.json { render json: { message: 'Compra criada com sucesso' }, status: :created }
+          format.json { render json: { message: 'Compra criada com sucesso', compra_url: edit_collaborators_backoffice_empresa_estoque_path(compra) }, status: :created }
         end
       else
         # Se houver erros na compra

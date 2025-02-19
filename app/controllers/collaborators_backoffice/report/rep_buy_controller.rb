@@ -25,10 +25,10 @@ class CollaboratorsBackoffice::Report::RepBuyController < CollaboratorsBackoffic
         end
 
         if params[:per_page].present? && params[:per_page].to_i === 0
-            @buys = Compra.where(consulta, current_collaborator.cod_empresa )
+            @buys = Compra.includes(:frete, :itenscompra, :contas, :pessoa, :empresa, :collaborator,:xml_file).where(consulta, current_collaborator.cod_empresa )
                                         .order(datacompra: :desc);
         else
-            @buys = Compra.where(consulta, current_collaborator.cod_empresa )
+            @buys = Compra.includes(:frete, :itenscompra, :contas, :pessoa, :empresa, :collaborator,:xml_file).where(consulta, current_collaborator.cod_empresa )
                                         .order(datacompra: :desc).page(params[:page]).per(per_page);
         end
     end

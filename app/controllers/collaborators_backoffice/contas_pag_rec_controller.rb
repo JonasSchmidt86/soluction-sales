@@ -16,7 +16,6 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
             @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
                     .order(dtvencimento: :asc, cod_contaspagrec: :desc ).page(params[:page]).per(per_page);
         end
-
     end
     
     def edit
@@ -45,7 +44,7 @@ private
             end            
         else 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
-                consulta += "  (cod_compra is not null or cod_frete is not null) and cod_venda is null "
+                consulta += "  cod_venda is null "
             else
                 consulta += "  cod_venda is not null and cod_frete is null "
                 consulta += "  and cod_venda not in (select cod_venda from venda where tipo = 'T' and cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + ") "
@@ -61,7 +60,7 @@ private
                 unless params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
                     consulta += "and cod_venda in (select cod_venda from venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
                 else
-                    consulta += "and cod_compra in (select cod_compra from Compra where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))"
+                    consulta += "and (cod_compra in (select cod_compra from Compra where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%')))) or (cod_frete in (select cod_frete from frete where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_pessoa in (select cod_pessoa from pessoa where upper(trim(nome)) like upper(trim('"+ params[:cliente] +"%'))))))"
                 end
             end
             
@@ -154,3 +153,13 @@ private
     end
 
 end
+
+
+# select cod_empresa, cod_produto, cod_cor, quantidade, function_estoquereal(cod_empresa,cod_produto,cod_cor ) as real
+#   from empresaproduto 
+#  where cod_empresa = 2 
+#    and cod_produto >= 5000 and cod_produto < 10000
+#    and quantidade != function_estoquereal(cod_empresa,cod_produto,cod_cor )
+ 
+#  order by cod_produto asc
+ 

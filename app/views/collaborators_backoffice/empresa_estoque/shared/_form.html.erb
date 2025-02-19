@@ -1,0 +1,213 @@
+<div class="card mt-4">
+
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header bg-primary" do %>
+          <h4 class:"card-header" > <%= "#{action_message} Valor de venda!" %></h4>
+        <% end %>
+
+        <div class="card-body">
+          <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+
+            <div class="dataTable-container">
+
+              <table id="datatablesSimple" class="dataTable-table table-striped" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th data-sortable="" style="width: 3%;">Emp..</th>
+                    <th data-sortable="" style="width: 7%;">Codigo</th>
+                    <th data-sortable="">Nome</th>
+                    <th data-sortable="" style="width: 20%;">Cor</th>
+                    <th data-sortable="" style="width: 7%;">Qtd</th>
+
+                    <th style="width: 100px">Vl Venda</th>
+                    <%# <th data-sortable="" style="width: 8%;">Vl Venda</th> %>
+
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                      <th data-sortable="" style="width: 8%;">Custo</th>
+                      <th data-sortable="" style="width: 55px;">Grava</th>
+                      <% end %>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  <% @empresa_produtos.each do |estoque| %>
+                    <tr>
+                      <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
+                      <td class="align-middle "><%= estoque.full_codigo %> </td>
+                      <td class="align-middle "><%= estoque.produto.nome %> </td>
+                      <td class="align-middle "><%= estoque.cor.nmcor %> </td>
+                      <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
+
+                      <td class="align-middle ">
+                        <input type="text" 
+                              input_html= { inputmode: "numeric", pattern: "[0-9]*" }
+                              class="money2 form-control form-control-sm editable-valor-venda" 
+                              data-id="<%= estoque.id %>" 
+                              value="<%= number_with_precision(estoque.valorvenda, precision: 2, separator: ',', delimiter: '') %>">
+
+
+
+<%# "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> 
+                      </td>
+
+                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+
+                      <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                        <td class="align-middle">
+                          <%= link_to "#", class: "btn btn-success btn-circle salvar-valor", data: { id: estoque.id } do %>
+                            <i class="fa fa-check"></i>
+                          <% end %>
+                        </td> 
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tbody>
+            </table>
+        </div>
+        
+        
+    </div>
+</div>
+
+<script>
+
+  function salvarValor(estoqueId) {
+    const inputField = document.querySelector(`.editable-valor-venda[data-id="${estoqueId}"]`);
+    
+    if (!inputField) {
+      console.error("Erro: Input não encontrado.");
+      return;
+    }
+
+    let valor = inputField.value.trim();
+    if (!valor) return;
+
+    // Converte de formato brasileiro para formato numérico (troca vírgula por ponto)
+    const valorFormatado = valor.replace(/\./g, "").replace(",", ".");
+
+    fetch(`/collaborators_backoffice/empresa_estoque/${estoqueId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+      },
+      body: JSON.stringify({ estoque: { valorvenda: valorFormatado, id_compra: estoqueId } }),
+    })
+    .then(response => response.ok ? response.json() : Promise.reject("Erro ao salvar"))
+    .then(data => {
+      $.bootstrapGrowl(data.message, {
+        ele: 'body',
+        type: 'success',
+        offset: { from: 'top', amount: 60 },
+        align: 'center',
+        width: 300,
+        delay: 3000,
+        allow_dismiss: false,
+        stackup_spacing: 40,
+      });
+      console.log("Valor atualizado com sucesso:", data);
+
+    })
+    .catch(error => {
+      $.bootstrapGrowl("Erro ao salvar. Tente novamente.", { type: 'danger' });
+      console.error("Erro:", error);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".salvar-valor").forEach(button => {
+      button.addEventListener("click", function() {
+        const estoqueId = this.dataset.id;
+        salvarValor(estoqueId); // Chama a função ao clicar no botão
+      });
+    });
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".editable-valor-venda").forEach(input => {
+      input.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          event.preventDefault(); // Evita quebra de linha
+          const estoqueId = this.dataset.id;
+          salvarValor(estoqueId); // Chama a função ao pressionar Enter
+        }
+      });
+    });
+  });
+
+
+
+//  document.addEventListener("DOMContentLoaded", function() {
+//    const inputs = document.querySelectorAll(".editable-valor-venda");
+//
+//    if (inputs.length === 0) {
+//      console.warn("Nenhum input .editable-valor-venda encontrado!");
+//      return;
+//    }
+//
+//    inputs.forEach(input => {
+//      let lastValue = input.value.trim(); // Armazena o último valor para evitar requisições desnecessárias
+//
+//      // Verifica se ENTER foi pressionado
+//      input.addEventListener("keydown", (event) => {
+//        if (event.key === "Enter") {
+//          event.preventDefault();
+//          input.blur(); // Dispara o evento "blur" para salvar os dados
+//        }
+//      });
+//
+//      // Salva os dados ao perder o foco (blur)
+//      input.addEventListener("blur", (event) => {
+//
+//        const inputField = event.target;
+//        let valor = inputField.value.trim();
+//        const estoqueId = inputField.dataset.id;
+//
+//        if (!estoqueId) {
+//          console.error("Erro: data-id não encontrado no input.");
+//          return;
+//        }
+//
+//        // Formatar o valor para o formato correto antes de enviar (Ex: R$ 1.000,50 → 1000.50)
+//        valor = valor.replace(/\./g, "").replace(",", ".");
+//
+//        // Se o valor não mudou, não envia requisição
+//        if (valor === lastValue) return;
+//        lastValue = valor;
+//
+//        // Enviar requisição AJAX para atualizar o valor no servidor
+//        fetch(`/collaborators_backoffice/empresa_estoque/${estoqueId}`, {
+//          method: "PATCH",
+//          headers: {
+//            "Content-Type": "application/json",
+//            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+//          },
+//          body: JSON.stringify({ estoque: { valorvenda: valor, id: estoqueId } }),
+//        })
+//          .then(response => {
+//            if (!response.ok) throw new Error("Erro ao salvar o valor.");
+//            return response.json();
+//          })
+//          .then(data => {
+//            // Exibir mensagem de sucesso com bootstrap-growl
+//            $.bootstrapGrowl(data.message, {
+//              ele: 'body',
+//              type: 'success',
+//              offset: { from: 'top', amount: 60 },
+//              align: 'center',
+//              width: 300,
+//              delay: 3000,
+//              allow_dismiss: false,
+//              stackup_spacing: 40,
+//            });
+//            console.log("Valor atualizado com sucesso:", data);
+//          })
+//          .catch(error => {
+//            $.bootstrapGrowl("Erro ao salvar. Tente novamente.", { type: 'danger' });
+//            console.error("Erro:", error);
+//          });
+//      });
+//    });
+//  });
+
+
+</script>

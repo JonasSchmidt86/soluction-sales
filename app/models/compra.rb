@@ -31,6 +31,11 @@ class Compra < ApplicationRecord
       end
   end
 
+  def acrescimo_total
+    # tudo que for acrescimo do item ou da nota
+    0;
+  end
+
     def valorPago
       valor = 0
       unless self.cancelada

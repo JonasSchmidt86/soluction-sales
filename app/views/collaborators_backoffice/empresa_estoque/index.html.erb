@@ -1,12 +1,13 @@
 
-<div class="card mt-4">
 
-        <%= link_to collaborators_backoffice_empresa_estoque_index_path(:contem == false), class:"card-header" do %>
+<div class="card mt-3 mb-3">
+
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header" do %>
           <h4>Estoque</h4>
         <% end %>
     
         <div class="card-body">
-          <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+          <div class="dataTable-wrapper dataTable-loading">
                 <% somaCusto = 0 %>
                 <% somaVenda = 0 %>
 
@@ -58,9 +59,10 @@
 
                 <% end %>
 
+
               <div class="dataTable-container">
 
-              <table id="datatablesSimple" class="dataTable-table table-striped">
+              <table id="datatablesSimple" class="dataTable-table table-striped mb-5">
                 <thead>
                   <tr>
                     <th data-sortable="" style="width: 3%;">Emp..</th>
@@ -73,7 +75,7 @@
                     <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                       <th data-sortable="" style="width: 8%;">Custo</th>
                       <th data-sortable="" style="width: 55px;">Desativar</th>
-                      <% end %>
+                    <% end %>
                   </tr>
                 </thead>
                 
@@ -96,29 +98,38 @@
 
 
                       <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
-                        <td class="align-middle">
+                      
+                      <td class="align-middle">
 
-                          <div class="dropdown" >
-                            <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
-                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                            </button>
 
-                            <ul class="dropdown-menu position-absolute" style="width: 50px;">                                
-                              <li>
-                                <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque), 
-                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja editar estoque empresa?"} do %>
-                                  <i class="fa fa-minus" style="width: 35px;"></i>Editar 
-                                <% end %>
-                              </li>
-                              <li>
-                                <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), method: :delete, 
-                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover estoque empresa?"} do %>
-                                  <i class="fa fa-minus" style="width: 35px;"></i>Remover 
-                                <% end %>
-                              </li>
-                            </ul>
-                          <div>
-                        </td> 
+                        <div class="dropdown">
+                          <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                          </button>
+
+                          <%# <ul class="dropdown-menu position-absolute" style="z-index: 1050;"> %>
+                          <ul class="dropdown-menu position-fixed" style="top: 100px; left: 50px; z-index: 1050;">
+
+                            <li>
+                              <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque.cod_produto, "produto"), 
+                                          class: "dropdown-item text-primary", 
+                                          data: { confirm: "Deseja editar o valor do Produto?" } do %>
+                                <i class="fas fa-edit me-2"></i> Editar
+                              <% end %>
+                            </li>
+                            <li>
+                              <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), 
+                                          method: :delete, 
+                                          class: "dropdown-item text-danger", 
+                                          data: { confirm: "Deseja remover o estoque da empresa?" } do %>
+                                <i class="fas fa-trash me-2"></i> Remover
+                              <% end %>
+                            </li>
+                          </ul>
+                        </div>
+
+
+                      </td> 
                       <% end %>
                     </tr>
                   <% end %>
@@ -134,7 +145,7 @@
               </div>
             </div>
         <% else %>
-          <div class="dataTable-bottom">
+          <div class="dataTable-bottom mb-9">
             <div class="dataTable-info">
             <h5>Exibindo <%= @empresa_produtos.size %> registros</h5>
             </div>
@@ -146,6 +157,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
 <script>
   $(document).ready(function() {
     var contemCheckbox = $('#contem-checkbox');
