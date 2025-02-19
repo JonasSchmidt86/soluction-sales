@@ -14,5 +14,16 @@ class XmlFile < ApplicationRecord
 
   paginates_per 30
   
+  private
+
+  # Sobrescreva o método `service_name` dinamicamente
+  def file_service_name
+    if empresa.custom_storage_enabled?
+      :local_custom
+    else
+      :local
+    end
+  end
+
 end
   
