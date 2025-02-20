@@ -20,10 +20,11 @@ default: &default
 production:
 # development:
 #   <<: *default
-  database: df2a6d9421k29o
-  username: u2h73eqbi2682h
-  password: pf3fd2f0da43b76faead0b728e6d9e1168198d8286c2fd97c5b6032e369cdceda
-  host: cfls9h51f4i86c.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
+  database: d3de713pjh4qpj
+  username: u5t1hfv20epekm
+  password: p05b2aba74268f186fed19e51b2e730b6a98394f726693a59b984a0398650f972
+  host: c67okggoj39697.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
+
 
 # development:
 #   <<: *default
