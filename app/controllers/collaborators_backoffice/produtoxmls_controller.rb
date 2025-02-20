@@ -193,7 +193,8 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     products.each do |pr|
 
       codEmissor = pr.at("cProd")&.text if pr.at("cProd")&.text || 0;
-      nmXML = pr.at("xProd")&.text if pr.at("xProd")&.text || '';
+      # nmXML = pr.at("xProd")&.text if pr.at("xProd")&.text || '';
+      nmXML = pr.at("xProd")&.text || ''
       nmXML = GenericService.remover_acentos(nmXML); 
 
       # xmlProds = Produtoxml.where(codproemissor: codEmissor, nome: nmXML, pessoa: @xml_file.pessoa).order(:codigo);
@@ -204,8 +205,10 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       if xmlProds 
         xmlProds.each do |prXML|
 
-          if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === GenericService.remover_acentos((pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
-
+          # if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === GenericService.remover_acentos((pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
+          if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === 
+            GenericService.remover_acentos((pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
+         
             prXML.ncm = ( pr.at("NCM")&.text if  pr.at("NCM")&.text || prXML.ncm);
             prXML.produto.ncm = prXML.ncm;
 
