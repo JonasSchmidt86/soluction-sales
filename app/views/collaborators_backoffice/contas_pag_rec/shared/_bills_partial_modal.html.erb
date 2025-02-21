@@ -1,6 +1,6 @@
                             
-<div class="modal fade" id="launchPartialModal<%= bill.cod_contaspagrec %>" data-tor-parent="show">
-  <div class="modal-dialog modal-dialog-top modal-lg modal-dialog-scrollable">
+<div class="modal fade" id="launchPartialModal<%= bill.cod_contaspagrec %>" data-tor-parent="static">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
     
       <%= form_with(model: [ :collaborators_backoffice, Lancamentoscaixa.new ], method: :post, local: true) do |form| %>
