@@ -60,8 +60,10 @@
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lembrete?"} do %>
                               <i class="fa fa-minus"></i>
                           <% end %>
-                          <%= link_to edit_collaborators_backoffice_lembrete_path(lembrete), method: :get, class:"btn btn-success btn-circle" do %>
-                            <i class="fa fa-edit"></i>
+                          <% if current_collaborator.cod_funcionario == lembrete.cod_funcionario %>
+                            <%= link_to edit_collaborators_backoffice_lembrete_path(lembrete), method: :get, class:"btn btn-success btn-circle" do %>
+                              <i class="fa fa-edit"></i>
+                            <% end %>
                           <% end %>
                         </td>
                       </tr>
