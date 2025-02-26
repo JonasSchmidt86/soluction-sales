@@ -72,10 +72,10 @@
             <div id="layoutSidenav_nav">
                 <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
                     <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
-                        <div class="nav">
+                        <div class="nav mt-2">
                             <!-- Perfil -->
                             <div class="profile clearfix d-flex justify-content-center">
-                                <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), style:"width: 120px; height: 120px;", id:"imgAvatarLg", class:"rounded mx-auto d-block rounded-5"), '#', "data-bs-toggle":"modal", "data-bs-target":"#avatarModal" %>
+                                <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), style:"width: 120px; height: 150px;", id:"imgAvatarLg", class:"rounded mx-auto d-block rounded-5"), '#', "data-bs-toggle":"modal", "data-bs-target":"#avatarModal" %>
                             </div>
 
                             <!-- Menu Principal -->

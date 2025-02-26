@@ -43,6 +43,9 @@
                                     class:"btn btn-danger btn-circle", data: {confirm: "Deseja excluit colaborador?"} do %>
                             <i class="fa fa-minus"></i>
                         <% end %>
+
+                        <%= button_to 'Resetar Senha', reset_password_collaborators_backoffice_collaborator_path(collaborator), method: :post, class: "btn btn-warning" %>
+
                       </td>
                     </tr>
                   <% end %>

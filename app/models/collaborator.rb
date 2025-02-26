@@ -4,8 +4,7 @@ class Collaborator < ApplicationRecord
   
   self.primary_key = "id"
 
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+  devise :database_authenticatable, :recoverable, :rememberable, :validatable #, :registerable
   
   belongs_to :funcionario, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', optional: true
   
@@ -14,6 +13,7 @@ class Collaborator < ApplicationRecord
   belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', optional: true
 
   # validates :email, presence: :true, on: :update, unless: :reset_password_token_present?
+  validates :password, presence: true, if: -> { encrypted_password.present? }
 
   def reset_password_token_present?
     # !! duas exclamaçoes retorna valor boleano, se trouxer o token ele não faz o validate
@@ -21,6 +21,8 @@ class Collaborator < ApplicationRecord
     puts "GLOBAL"
     !!global_params[:collaborator][:reset_password_token]
   end
+  
+  private 
   
   def pessoa_nome
     funcionario.pessoa.nome

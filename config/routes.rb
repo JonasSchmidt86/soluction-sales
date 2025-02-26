@@ -64,6 +64,12 @@ Rails.application.routes.draw do
     #  get 'collaborator/index'
     #  get 'collaborator/edit:id', to: 'collaborators#edit'
   end
+# rota para resetar senha colaborador
+    namespace :collaborators_backoffice do
+      resources :collaborators do
+        post :reset_password, on: :member
+      end
+    end
 
 # configurar generate
 # não gerar o test, na pasta config/aplication.rb tds configurações

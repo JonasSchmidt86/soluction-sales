@@ -1,35 +1,51 @@
 <!-- Modal -->
-<%# <div class="modal fade" id="avatarModal" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true"> %>
-<div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="avatarModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-scrollable modal-dialog-centered">
-  
-      <div class="modal-content">
+    <div class="modal-content">
 
+      <%= form_with(model: [ :collaborators_backoffice, Funcionario.find(current_collaborator.funcionario.cod_funcionario) ], 
+                    class: "form-horizontal form-label-left") do |form| %>
 
-        <%= form_with(model: [ :collaborators_backoffice, Funcionario.find(current_collaborator.funcionario.cod_funcionario) ], 
-                                              class:"form-horizontal form-label-left") do |form| %>
+        <div class="modal-header">
+          <h5 class="modal-title" id="avatarModalLabel">Avatar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
 
-          <div class="modal-header">
-              <h5 class="modal-title" id="staticBackdropLabel">Avatar</h5>
-              <%# <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button> %>
+        <div class="modal-body">
+          <div class="form-group">
+            <% image_tag(avatar_url || asset_path('img_bkp.jpg'), alt: "Avatar", class: "img-circle profile_img", style: "width: 120px; height: 150px", id: "imagePreview") %>
+            
+            <!-- Aqui a imagem carregada será exibida -->
+            <div id="imagePreview" class="image-preview" style="width: 120; height: 150; overflow: hidden;">
+              <img id="imgPreview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;"/>
+            </div>
+
+            <%= form.file_field :avatar, id: "avatarFileInput" %>
           </div>
+        </div>
 
-          <div class="modal-body">
-                <div class="form-group">
-                    <%# <%= form.label :avatar % > %>
-                    <%= image_tag(avatar_url, alt:"...", class:"img-circle profile_img",
-                          style:"width: 200px; height: 200px", id:"imgAvatarMd") %>
-                    <%= form.file_field :avatar %>
-                </div>
-          </div>
+        <div class="modal-footer">
+          <%= form.submit "Salvar", class: "btn btn-primary" %>
+        </div>
+      <% end %>
 
-          <div class="modal-footer">
-              <%= form.submit "Salvar", class: "btn btn-primary" %>
-          </div>
-        <% end %>
-        
     </div>
   </div>
 </div>
+
+<script>
+  document.getElementById("avatarFileInput").addEventListener("change", function(event) {
+    var file = event.target.files[0];
+    
+    if (file) {
+      var reader = new FileReader();
+      
+      reader.onload = function(e) {
+        var imgElement = document.getElementById("imgPreview");
+        imgElement.src = e.target.result;
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  });
+</script>

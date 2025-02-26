@@ -57,7 +57,7 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
         end
         
         if params_funcionario[:avatar]
-            
+
             if @funcionario.update!(params_funcionario)
                 redirect_to collaborators_backoffice_welcome_index_path, notice: "Foto Atualizada!!"
             else 

@@ -1,10 +1,21 @@
 class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackofficeController
   
   before_action :verify_password, only: [:update]
-  before_action :set_collaborator, only: [:edit, :update, :destroy]
   
+  before_action :set_collaborator, only: [:edit, :update, :destroy]
+
   def index
     @collaborators = Collaborator.includes(:empresa).all.page(params[:page])
+  end
+
+  def reset_password
+    @collaborator = Collaborator.find(params[:id])
+    token = @collaborator.send(:set_reset_password_token) # Chama o método protegido de forma segura
+
+    CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
+
+    redirect_to collaborators_backoffice_collaborators_path, 
+                notice: "E-mail de redefinição de senha enviado para #{@collaborator.email}."
   end
 
   def edit
