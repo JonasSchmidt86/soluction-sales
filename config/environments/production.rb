@@ -87,10 +87,19 @@ Rails.application.configure do
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new 'app-name')
 
   if ENV["RAILS_LOG_TO_STDOUT"].present?
-    logger           = ActiveSupport::Logger.new(STDOUT)
+    require "logger"
+  
+    logger           = Logger.new($stdout)
     logger.formatter = config.log_formatter
     config.logger    = ActiveSupport::TaggedLogging.new(logger)
+    config.log_level = :info
   end
+  
+  config.action_dispatch.default_headers = {
+    'Access-Control-Allow-Origin' => 'https://www.moveisrosa.shop',
+    'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS, DELETE, PUT, PATCH',
+    'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With'
+  }
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
