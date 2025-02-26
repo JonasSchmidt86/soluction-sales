@@ -6,6 +6,8 @@ ruby '3.2.7'
 
 gem 'webpacker'
 
+gem 'rack-cors'
+
 #xml nfe ------
 gem 'nokogiri'
 gem 'nfe-io'

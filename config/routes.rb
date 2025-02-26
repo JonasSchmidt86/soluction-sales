@@ -5,9 +5,7 @@ Rails.application.routes.draw do
   #   get 'produtoxmls/edit'
   #   get 'produtoxmls/new'
   # end
-  namespace :collaborators_backoffice do
-    get 'sales/index'
-  end
+
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
   
@@ -44,6 +42,9 @@ Rails.application.routes.draw do
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
       post 'import/:id', on: :member, to: 'xml_files#import', as: :import
     end
+    resources :collaborators do
+      post :reset_password, on: :member
+    end
 
     resources :notas_fiscais, only: :index
     root to: 'notas_fiscais#index'
@@ -58,21 +59,12 @@ Rails.application.routes.draw do
     get 'report_sales', to: 'report/rep_sales#index'
     get 'report_buy', to: 'report/rep_buy#index'
     get 'report/report_sales/hist_client/:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'
-
+    get 'sales/index'
     get 'report_put_box', to: 'report/rep_put_box#index', as: 'report_put_box_index'
     delete '/report_put_box/:id', to: 'report/rep_put_box#destroy', as: 'report_put_box_destroy'
     #  get 'collaborator/index'
     #  get 'collaborator/edit:id', to: 'collaborators#edit'
   end
-# rota para resetar senha colaborador
-    namespace :collaborators_backoffice do
-      resources :collaborators do
-        post :reset_password, on: :member
-      end
-    end
-
-# configurar generate
-# não gerar o test, na pasta config/aplication.rb tds configurações
 
   # get 'welcome/index'
   get 'inicio', to: 'site/welcome#index' # inicio é o nome que vai aparecer www....com/inicio
