@@ -22,7 +22,7 @@
             <!-- Navbar Brand-->
             <div class="p-2 d-flex justify-content-start text-truncate">
                 <%= link_to (current_collaborator.empresa.nome unless current_collaborator.empresa.blank? ) , 
-                    collaborators_backoffice_welcome_index_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 text-truncate   "%>
+                    root_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 text-truncate   "%>
             </div>
 
             <!-- Sidebar Toggle -->
@@ -93,7 +93,7 @@
                                 <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
                                     <nav class="sb-sidenav-menu-nested nav">
                                         <li>
-                                            <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
+                                            <%= link_to root_path, class:"nav-link" do %>
                                                 <i class="fa fa-dashboard fa-fw"></i> Dashboard
                                             <% end %>
                                         </li>
