@@ -17,6 +17,8 @@ require "action_mailer/railtie"
 require "action_view/railtie"
 require "action_cable/engine"
 require "sprockets/railtie"
+require 'logger'
+
 # require "rails/test_unit/railtie" 
 
 # Require the gems listed in Gemfile, including any gems
@@ -27,7 +29,7 @@ module SoluctionSales
 
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.1
+    config.load_defaults 7.1
     
     config.time_zone = 'Brasilia'
     config.active_record.default_timezone = :utc
@@ -44,6 +46,8 @@ module SoluctionSales
     # the framework and any gems in your application.
 
     config.generators.system_tests = nil
+    # config.logger = Logger.new(STDOUT)
+    # config.log_level = :debug
     config.middleware.insert_before 0, Rack::Cors do
       allow do
         origins 'https://www.moveisrosa.shop'

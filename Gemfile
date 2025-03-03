@@ -25,7 +25,12 @@ gem "cpf_cnpj"
 gem 'httparty'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1', '>= 6.1.7.10'
+# gem 'rails', '~> 6.1', '>= 6.1.7.10'
+gem 'rails', '~> 7.1.0'
+gem 'railties', '~> 7.1'
+gem 'listen', '~> 3.5'
+
+
 # gem 'activesupport', '6.1.7.10'
 
 # pg postgres
@@ -62,7 +67,8 @@ gem 'jbuilder', '~> 2.5'
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.1.0', require: false
 gem 'devise'
-gem 'railties', '~> 6.1', '>= 6.1.7.3'
+# gem 'railties', '~> 6.1', '>= 6.1.7.3'
+
 gem 'rails-i18n', '~> 7.0', '>= 7.0.6'
 gem 'tty-spinner'
 gem 'kaminari'
@@ -79,7 +85,8 @@ group :development do
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem 'web-console', '>= 3.3.0'
   # ---- estava dentro do development
-  gem 'listen', '>= 3.0.5', '< 3.2'
+  # gem 'listen', '>= 3.0.5', '< 3.2'
+
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
