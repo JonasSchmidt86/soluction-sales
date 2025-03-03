@@ -488,22 +488,7 @@
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
 
-//    const isLocalhost = () => {
-//        return (
-//            window.location.hostname === 'localhost' ||
-//            window.location.hostname === '127.0.0.1'
-//        );
-//    };
-//    let url = "";
-
-    let url = 'http://' +window.location.host + '/collaborators_backoffice/';
-
-//    if (isLocalhost()) {
-//        url = 'http://localhost:3000/collaborators_backoffice/';
-//    } else {
-//        url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
-//    }
-
+    let url = window.location.origin + '/collaborators_backoffice/';
 
     $(document).ready(function() {
     $('#xml_compra').submit(function(event) {
