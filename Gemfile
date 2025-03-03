@@ -25,8 +25,8 @@ gem "cpf_cnpj"
 gem 'httparty'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1', '>= 6.1.7.3'
-gem 'activesupport', '6.1.7.6'
+gem 'rails', '~> 6.1', '>= 6.1.7.10'
+# gem 'activesupport', '6.1.7.10'
 
 # pg postgres
 gem 'pg', '>= 1.4.6'
@@ -69,8 +69,6 @@ gem 'kaminari'
 gem 'kaminari-i18n'
 gem 'jquery_mask_rails', '~> 0.1.0'
 gem "cocoon" # gem para add no formulario pergunta as respostas dinamicamente 
-
-
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console

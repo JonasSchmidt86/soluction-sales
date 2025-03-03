@@ -32,7 +32,7 @@ module SoluctionSales
     config.time_zone = 'Brasilia'
     config.active_record.default_timezone = :utc
 
-    config.active_storage.service = :local
+    # config.active_storage.service = :local
 
     # config.i18n.default_locale = :"pt-BR"
     config.i18n.default_locale = 'pt-BR'
@@ -44,15 +44,15 @@ module SoluctionSales
     # the framework and any gems in your application.
 
     config.generators.system_tests = nil
-
-  end
-
-  config.middleware.insert_before 0, Rack::Cors do
-    allow do
-      origins 'https://www.moveisrosa.shop'
-      resource '*', headers: :any, methods: [:get, :post, :patch, :put, :delete, :options, :head], credentials: true
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins 'https://www.moveisrosa.shop'
+        resource '*', headers: :any, methods: [:get, :post, :patch, :put, :delete, :options, :head], credentials: true
+      end
     end
   end
+
+  
 
   
 end
