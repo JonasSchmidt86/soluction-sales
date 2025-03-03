@@ -42,3 +42,5 @@ yarn-debug.log*
 .yarn-integrity
 /xml/*
 /XML/*
+/public/XML
+/public/storage
