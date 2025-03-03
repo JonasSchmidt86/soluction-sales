@@ -325,21 +325,22 @@ function formatDate(date) {
         }
     }
 
-    const isLocalhost = () => {
-        return (
-            window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1'
-        );
-    };
+//    const isLocalhost = () => {
+//        return (
+//            window.location.hostname === 'localhost' ||
+//            window.location.hostname === '127.0.0.1'
+//        );
+//    };
 
-    let url = "";
+    let url = 'http://' +window.location.host + '/collaborators_backoffice/';
 
-    if (isLocalhost()) {
-        url = 'http://localhost:3000/collaborators_backoffice/';
-    } else {
-        // url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
-        url = 'https://www.moveisrosa.shop/collaborators_backoffice/';
-    }
+//    if (isLocalhost()) {
+//        console.log(window.location.host);
+//        url = 'http://localhost:3000/collaborators_backoffice/';
+//    } else {
+//        // url = 'https://mrstore-09d04ec9e74b.herokuapp.com/collaborators_backoffice/';
+//        url = 'https://www.moveisrosa.shop/collaborators_backoffice/';
+//    }
     
     function abrirModal() {
         var modal = document.getElementById('coresModal');
