@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_04_27_155654) do
-
+ActiveRecord::Schema[7.1].define(version: 2024_04_27_155654) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,7 +20,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.bigint "cod_cor", null: false
     t.bigint "cod_produto", null: false
     t.decimal "quantidade", precision: 18, scale: 2, default: "0.0"
-    t.datetime "datacadastro"
+    t.datetime "datacadastro", precision: nil
     t.bigint "cod_empresa", null: false
   end
 
@@ -30,7 +29,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.string "record_type", null: false
     t.bigint "record_id", null: false
     t.bigint "blob_id", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", precision: nil, null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
@@ -42,7 +41,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.text "metadata"
     t.bigint "byte_size", null: false
     t.string "checksum", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", precision: nil, null: false
     t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
@@ -107,8 +106,8 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
 
   create_table "caixa", primary_key: ["cod_empresa", "dataabertura"], force: :cascade do |t|
     t.bigint "cod_empresa", null: false
-    t.datetime "dataabertura", null: false
-    t.datetime "datafechamento"
+    t.datetime "dataabertura", precision: nil, null: false
+    t.datetime "datafechamento", precision: nil
     t.decimal "valorabertura", precision: 18, scale: 2, default: "0.0"
     t.decimal "valorentradas", precision: 18, scale: 2, default: "0.0"
     t.decimal "valorfechamento", precision: 18, scale: 2, default: "0.0"
@@ -128,10 +127,10 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "remember_created_at", precision: nil
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.bigint "cod_funcionario"
     t.bigint "cod_empresa"
     t.index ["email"], name: "index_collaborators_on_email", unique: true
@@ -142,8 +141,8 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.bigint "cod_empresa", null: false
     t.boolean "cancelada"
     t.bigint "cod_frete"
-    t.datetime "datacancelamento"
-    t.datetime "datacompra"
+    t.datetime "datacancelamento", precision: nil
+    t.datetime "datacompra", precision: nil
     t.date "dataemissao"
     t.string "numeronf", limit: 255
     t.string "serienf", limit: 255
@@ -209,8 +208,8 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
 
   create_table "entrega", primary_key: "cod_entrega", id: :bigint, default: -> { "nextval('entrega_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "assistencia", default: false, null: false
-    t.datetime "dataassistencia", comment: "DATA DE SOLICITACAO DE PEÇAS"
-    t.datetime "dataentrega"
+    t.datetime "dataassistencia", precision: nil, comment: "DATA DE SOLICITACAO DE PEÇAS"
+    t.datetime "dataentrega", precision: nil
     t.boolean "entregue", default: false, null: false
     t.string "observacao", limit: 255
     t.bigint "cod_venda", null: false
@@ -323,9 +322,9 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.bigint "cod_funcionario", null: false
     t.boolean "cancelada"
     t.bigint "cod_contaspagrec"
-    t.datetime "dataabertura"
-    t.datetime "datamodificacao"
-    t.datetime "datapagto"
+    t.datetime "dataabertura", precision: nil
+    t.datetime "datamodificacao", precision: nil
+    t.datetime "datapagto", precision: nil
     t.decimal "valor", precision: 18, scale: 2, default: "0.0", null: false
     t.bigint "cod_dadoscheque"
     t.bigint "cod_bancoconta"
@@ -470,10 +469,10 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "remember_created_at", precision: nil
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -482,8 +481,8 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
     t.string "tipo", limit: 1, null: false
     t.bigint "cod_empresa", null: false
     t.boolean "cancelada"
-    t.datetime "datanf"
-    t.datetime "datavenda"
+    t.datetime "datanf", precision: nil
+    t.datetime "datavenda", precision: nil
     t.bigint "numeronf"
     t.decimal "valortotal", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_frete"
@@ -498,8 +497,8 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
   end
 
   create_table "xml_files", force: :cascade do |t|
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.text "name"
     t.bigint "pessoa_id"
     t.bigint "empresa_id"
@@ -570,7 +569,7 @@ ActiveRecord::Schema.define(version: 2024_04_27_155654) do
   add_foreign_key "lancamentoscaixa", "bancocheques", column: "cod_dadoscheque", primary_key: "cod_dadoscheque", name: "fk_bancocheque"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancocontadestino", primary_key: "cod_bancoconta", name: "fk_bancocontadestino"
-  add_foreign_key "lancamentoscaixa", "caixa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_caixa"
+  add_foreign_key "lancamentoscaixa", "caixa", column: ["cod_empresa", "dataabertura"], primary_key: ["cod_empresa", "dataabertura"], name: "fk_caixa"
   add_foreign_key "lancamentoscaixa", "contaspagrec", column: "cod_contaspagrec", primary_key: "cod_contaspagrec", name: "fk_contaspagrec"
   add_foreign_key "lancamentoscaixa", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "lancamentoscaixa", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "fk_funcionario"

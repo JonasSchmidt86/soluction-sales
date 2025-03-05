@@ -1,7 +1,7 @@
 local:
   service: Disk
-  root: <%= Rails.root.join("public/storage") %>
+  root: <%= Rails.root.join("storage") %>
 
 local_custom:
   service: Disk
-  root: <%= Rails.root.join("public/XML") %>
+  root: <%= Rails.root.join("storage/XML") %>

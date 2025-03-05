@@ -5,15 +5,16 @@ class Collaborator < ApplicationRecord
   self.primary_key = "id"
 
   devise :database_authenticatable, :recoverable, :rememberable, :validatable #, :registerable
-  
-  belongs_to :funcionario, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', optional: true
+
+  belongs_to :funcionario, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', optional: false
   
   accepts_nested_attributes_for :funcionario, update_only: true, reject_if: :all_blank
   
-  belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', optional: true
+  belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', optional: false
 
   # validates :email, presence: :true, on: :update, unless: :reset_password_token_present?
-  validates :password, presence: true, if: -> { encrypted_password.present? }
+
+  validates :password, presence: true, if: -> { encrypted_password.blank? && new_record? }
 
   def reset_password_token_present?
     # !! duas exclamaçoes retorna valor boleano, se trouxer o token ele não faz o validate

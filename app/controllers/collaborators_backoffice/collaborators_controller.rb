@@ -30,13 +30,15 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
   def create
     @collaborator = Collaborator.new(params_collaborator)
     if @collaborator.save
+      @collaborator.send_reset_password_instructions # Envia o e-mail com link para definir senha
       redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador Cadastrado com sucesso!"
     else 
-      render :new
+      redirect_to collaborators_backoffice_collaborators_path, notice: "Erro ao cadastrar Colaborador!"
     end
   end
 
   def update
+    puts "UPDATE #{params_collaborator}" 
     if @collaborator.update(params_collaborator)
       bypass_sign_in(@collaborator) # quando troca a senha não precisa refazer o login
 

@@ -35,7 +35,7 @@ production:
 
 development:
   <<: *default
-  database: MoveisRosa
+  database: moveisrosa
   username: jonas
   host: localhost
 

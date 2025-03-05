@@ -34,7 +34,7 @@ gem 'listen', '~> 3.5'
 # gem 'activesupport', '6.1.7.10'
 
 # pg postgres
-gem 'pg', '>= 1.4.6'
+gem 'pg', '>= 1.5.9'
 
 gem 'sassc'
 # Use Puma as the app server
