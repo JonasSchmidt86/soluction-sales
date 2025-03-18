@@ -1,0 +1,107 @@
+<div class="card">
+  <div class="card-header">
+    <h5 class="card-title mb-0">Imagens do Produto</h5>
+  </div>
+  <div class="card-body">
+    <%= form_for [:collaborators_backoffice, @produto, ProdutoImagem.new], url: collaborators_backoffice_produto_imagens_path(@produto), html: { multipart: true, class: 'mb-4' } do |f| %>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <%= f.label :imagem, 'Selecione a imagem' %>
+            <%= f.file_field :imagem, class: 'form-control', accept: 'image/*' %>
+          </div>
+        </div>
+        <td class="col-auto">
+          <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
+                  { prompt: "Selecione uma Cor" },
+                      class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+            <%= f.label :grupo, 'Grupo da imagem' %>
+            <%= f.select :grupo, ProdutoImagem.grupos_disponiveis, {}, class: 'form-control' %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <%= f.label :principal, 'Imagem Principal' %>
+            <div class="custom-control custom-switch">
+              <%= f.check_box :principal, class: 'custom-control-input' %>
+              <%= f.label :principal, 'Sim', class: 'custom-control-label' %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%= f.submit 'Adicionar Imagem', class: 'btn btn-primary' %>
+    <% end %>
+
+    <% ProdutoImagem.grupos_disponiveis.each do |grupo| %>
+      <div class="mb-4">
+        <h6 class="text-muted mb-3"><%= grupo.titleize %></h6>
+        <div class="row" data-sortable-group="<%= grupo %>">
+          <% @produto.produto_imagens.por_grupo(grupo).ordenadas.each do |imagem| %>
+            <div class="col-md-3 mb-3" data-sortable-item="<%= imagem.id %>">
+              <div class="card h-100">
+                <%= image_tag imagem.imagem.medium.url, class: 'card-img-top' %>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="custom-control custom-switch">
+                      <%= check_box_tag 'principal', '1', imagem.principal, 
+                          class: 'custom-control-input toggle-principal',
+                          data: { url: toggle_principal_collaborators_backoffice_produto_imagem_path(@produto, imagem) } %>
+                      <%= label_tag 'principal', 'Principal', class: 'custom-control-label' %>
+                    </div>
+                    <%= link_to collaborators_backoffice_produto_imagem_path(@produto, imagem), 
+                        method: :delete, 
+                        data: { confirm: 'Tem certeza?' },
+                        class: 'btn btn-danger btn-sm' do %>
+                      <i class="fas fa-trash"></i>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% content_for :javascript do %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Inicializa o Sortable para cada grupo de imagens
+      ProdutoImagem.grupos_disponiveis.forEach(function(grupo) {
+        new Sortable(document.querySelector(`[data-sortable-group="${grupo}"]`), {
+          animation: 150,
+          onEnd: function(evt) {
+            const itemId = evt.item.dataset.sortableItem;
+            const newOrder = Array.from(evt.to.children).indexOf(evt.item) + 1;
+            
+            fetch(`/collaborators_backoffice/produtos/<%= @produto.id %>/imagens/${itemId}/update_ordem`, {
+              method: 'PATCH',
+              headers: {
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+              },
+              body: JSON.stringify({ ordem: newOrder })
+            });
+          }
+        });
+      });
+
+      // Toggle principal
+      document.querySelectorAll('.toggle-principal').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+          fetch(this.dataset.url, {
+            method: 'PATCH',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            }
+          });
+        });
+      });
+    });
+  </script>
+<% end %> 

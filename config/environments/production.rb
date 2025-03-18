@@ -100,6 +100,11 @@ Rails.application.configure do
     'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS, DELETE, PUT, PATCH',
     'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With'
   }
+  
+  #Rails.application.config.hosts << "www.moveisrosa.shop"
+  config.hosts << "moveisrosa.shop"
+  config.hosts << "www.moveisrosa.shop"
+  
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false

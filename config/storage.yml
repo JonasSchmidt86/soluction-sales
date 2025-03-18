@@ -4,4 +4,12 @@ local:
 
 local_custom:
   service: Disk
+  root: <%= Rails.root.join("storage/IMG") %>
+
+xml_storage:
+  service: Disk
   root: <%= Rails.root.join("storage/XML") %>
+
+produtos_storage:
+  service: Disk
+  root: <%= Rails.root.join("storage/Produtos") %>

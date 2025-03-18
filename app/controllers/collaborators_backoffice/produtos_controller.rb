@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeController
 
 
-    before_action :set_produto, only: [:edit, :update, :destroy]
+    before_action :set_produto, only: [:edit, :update, :destroy, :show]
     #before_action :get_produto, only: [:new, :edit, :update,]
 
     
@@ -58,10 +58,13 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         end
     end
 
+    def show
+    end
+
     private 
 
     def params_produto
-        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :cod_grupo, :cod_marca )
+        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :cod_grupo, :cod_marca, :produtos_storage )
     end
 
     def set_produto

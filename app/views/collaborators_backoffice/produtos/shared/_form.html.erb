@@ -88,7 +88,17 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% @produto.itensvenda.where("cod_empresa = ? ", current_collaborator.cod_empresa).order("cod_item desc").page(params[:page]).each do |item| %>
+                                            <%# @produto.itensvenda.where("cod_empresa = ? and cod_venda = (select cod_venda from venda where cod_venda = itemvenda.cod_venda and tipo = 'V')", current_collaborator.cod_empresa).order("cod_item desc").page(params[:page]).each do |item| %>
+
+                                            <% @produto.itensvenda
+                                                .joins("INNER JOIN venda ON venda.cod_venda = itemvenda.cod_venda")
+                                                .where("itemvenda.cod_empresa = ? AND venda.tipo = 'V'", current_collaborator.cod_empresa)
+                                                .order("itemvenda.cod_item DESC")
+                                                .page(params[:page])
+                                                .each do |item| %>
+
+
+
                                                 <tr>
                                                     <td><%= item.cod_empresa %></td>
                                                     <td><%= item.cod_cor %></td>

@@ -1,0 +1,56 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Produto: <%= @produto.nome %></h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p>
+                <strong>Código:</strong>
+                <%= @produto.cod_produto %>
+              </p>
+              <p>
+                <strong>Nome:</strong>
+                <%= @produto.nome %>
+              </p>
+              <p>
+                <strong>Grupo:</strong>
+                <%= @produto.cod_grupo&.nomegrupo %>
+              </p>
+              <p>
+                <strong>Marca:</strong>
+                <%= @produto.cod_marca&.nome %>
+              </p>
+              <p>
+                <strong>NCM:</strong>
+                <%= @produto.ncm %>
+              </p>
+              <p>
+                <strong>CEST:</strong>
+                <%= @produto.cest %>
+              </p>
+              <p>
+                <strong>CFOP:</strong>
+                <%= @produto.cfop %>
+              </p>
+              <p>
+                <strong>Unidade:</strong>
+                <%= @produto.ucom %>
+              </p>
+              <p>
+                <strong>Ativo:</strong>
+                <%= @produto.ativo ? 'Sim' : 'Não' %>
+              </p>
+            </div>
+          </div>
+          <%= link_to 'Editar', edit_collaborators_backoffice_produto_path(@produto), class: 'btn btn-primary' %>
+          <%= link_to 'Voltar', collaborators_backoffice_produtos_path, class: 'btn btn-secondary' %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%= render 'imagens' %>
+</div> 

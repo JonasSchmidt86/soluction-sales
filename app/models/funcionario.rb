@@ -4,7 +4,7 @@ class Funcionario < ApplicationRecord
     self.primary_key = "cod_funcionario"
     alias_attribute :id, :cod_funcionario
 
-    has_one_attached :avatar, service: :local
+    has_one_attached :avatar, service: :local_custom
     
     #ativo = true
 

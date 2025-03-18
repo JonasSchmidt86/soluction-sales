@@ -132,6 +132,11 @@
                                   <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Histórico
                                 <% end %>
                               </li>
+                              <li>
+                                <%= link_to collaborators_backoffice_contas_pag_rec_index_path(nrVenda: sale.cod_vendaempresa), class:"dropdown-item btn btn-info btn-circle" do %>
+                                  <i class="far fa-money-bill-alt", style="width: 35px;"></i> Financeiro
+                                <% end %>
+                              </li>
                               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                                 <span class="visually-hidden">Toggle Dropdown</span>
                                 <li>

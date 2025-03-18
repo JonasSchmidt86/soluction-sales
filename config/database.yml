@@ -17,13 +17,12 @@ default: &default
 # cd /opt/homebrew/opt/postgresql@14/bin 
 # pg_dump -h localhost -U jonas -Fp -p 5432 --inserts -f /Users/jonas/Moveisrosa.backup MoveisRosa
 
-production:
-# development:
+# production:
 #   <<: *default
-  database: d3de713pjh4qpj
-  username: u5t1hfv20epekm
-  password: p05b2aba74268f186fed19e51b2e730b6a98394f726693a59b984a0398650f972
-  host: c67okggoj39697.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
+  # database: d3de713pjh4qpj
+  # username: u5t1hfv20epekm
+  # password: p05b2aba74268f186fed19e51b2e730b6a98394f726693a59b984a0398650f972
+  # host: c67okggoj39697.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
 
 
 # development:
@@ -35,9 +34,23 @@ production:
 
 development:
   <<: *default
+  # database: moveisrosa
+  # username: jonas
+  # host: localhost
+  database: moveisrosa_teste
+  username: jonas
+  password: J0nas1922
+  host: 85.31.231.205
+
+production:
+  <<: *default
+  # database: moveisrosa
+  # username: jonas
+  # host: localhost
   database: moveisrosa
   username: jonas
-  host: localhost
+  password: J0nas1922
+  host: rstore.vps-kinghost.net
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

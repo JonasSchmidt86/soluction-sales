@@ -6,15 +6,23 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
     def index
         @array =  ['Abertos', 'Liquidados', 'Todos']
-        
-        per_page = params[:per_page].present? ? params[:per_page].to_i : 30
+        puts params
+        {"controller"=>"collaborators_backoffice/contas_pag_rec", "action"=>"index", "format"=>"18185"}
 
-        if params[:per_page].present? && params[:per_page].to_i === 0
+        if !params[:nrVenda].blank?
             @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
-                    .order(dtvencimento: :asc, cod_contaspagrec: :desc );
+                        .order(dtvencimento: :asc, cod_contaspagrec: :desc );
         else
-            @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
-                    .order(dtvencimento: :asc, cod_contaspagrec: :desc ).page(params[:page]).per(per_page);
+
+            per_page = params[:per_page].present? ? params[:per_page].to_i : 30
+
+            if params[:per_page].present? && params[:per_page].to_i === 0
+                @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
+                        .order(dtvencimento: :asc, cod_contaspagrec: :desc );
+            else
+                @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
+                        .order(dtvencimento: :asc, cod_contaspagrec: :desc ).page(params[:page]).per(per_page);
+            end
         end
     end
     

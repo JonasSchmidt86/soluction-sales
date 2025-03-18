@@ -17,7 +17,8 @@ class Funcionarioempresa < ApplicationRecord
     belongs_to :empresa, foreign_key: 'cod_empresa', inverse_of: :funcionarioempresas
 
     validates_uniqueness_of :empresa, scope: :funcionario
-    
+    has_many :framefuncionario, foreign_key: 'cod_frame', inverse_of: :funcionarioempresas
+
     def nome_empresa
         if !empresa.blank?
             self.empresa.nome
