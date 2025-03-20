@@ -228,16 +228,16 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       if produtoXMl.codigo.blank?
         puts " ---------- new Produtoxml.new ----------"
       end
-      produtoXMl.codproemissor = ( pr.at("cProd")&.text if pr.at("cProd")&.text || '')
+      produtoXMl.codproemissor = pr.at("cProd")&.text || ''
       produtoXMl.cod_pessoa = @xml_file.pessoa
       produtoXMl.nome = nmXML
-      produtoXMl.infadicionais = GenericService.remover_acentos( (pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || '').to_s )
-      produtoXMl.ncm = ( pr.at("NCM")&.text if pr.at("NCM")&.text || '')
-      produtoXMl.ucom = ( pr.at("uCom")&.text if pr.at("uCom")&.text || '')
-      produtoXMl.cfop = ( pr.at("CFOP")&.text if pr.at("CFOP")&.text || '')
-      produtoXMl.cest = ( pr.at("CEST")&.text if pr.at("CEST")&.text || '')
-        
-      produtoXMl.desconto = (pr.at("vDesc")&.text if  pr.at("vDesc")&.text || '0').to_f;
+      produtoXMl.infadicionais = GenericService.remover_acentos((pr.at("infAdProd")&.text || '').to_s)
+      produtoXMl.ncm = pr.at("NCM")&.text || ''
+      produtoXMl.ucom = pr.at("uCom")&.text || ''
+      produtoXMl.cfop = pr.at("CFOP")&.text || ''
+      produtoXMl.cest = pr.at("CEST")&.text || ''
+      produtoXMl.desconto = (pr.at("vDesc")&.text || '0').to_f
+
 
       itemcompra.cod_empresa = @xml_file.empresa_id
       itemcompra.numeronf = @xml_file.compra.numeronf
