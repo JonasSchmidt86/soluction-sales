@@ -34,13 +34,14 @@ default: &default
 
 development:
   <<: *default
+  database: moveisrosa
+  username: jonas
+  host: localhost
+
   # database: moveisrosa
   # username: jonas
-  # host: localhost
-  database: moveisrosa_teste
-  username: jonas
-  password: J0nas1922
-  host: 85.31.231.205
+  # password: J0nas1922
+  # host: 85.31.231.205
 
 production:
   <<: *default
@@ -50,7 +51,7 @@ production:
   database: moveisrosa
   username: jonas
   password: J0nas1922
-  host: rstore.vps-kinghost.net
+  host: 85.31.231.205
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

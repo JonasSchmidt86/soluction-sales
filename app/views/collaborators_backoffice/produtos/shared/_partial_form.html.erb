@@ -8,10 +8,16 @@
                     <%= form.label :cod_produto, class:"" %>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <div class="form-floating">
                     <%= form.text_field :cfop, class: "text form-control", placeholder:"Produto", id:"text" %>
                     <%= form.label :cfop, class:"" %>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <%= form.text_field :ucom, class: "text form-control", placeholder:"Produto", id:"text" %>
+                    <%= form.label :ucom, class:"" %>
                 </div>
             </div>
         </div>
@@ -35,7 +41,7 @@
         </div>
         
         <div class="form-floating mb-3">
-            <%= form.collection_select(:cod_marca, getBrands("%"), :cod_marca, :nome, 
+            <%= form.collection_select(:marca, getBrands("%"), :cod_marca, :nome, 
                 {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"brands") %>
             <%= form.label :brands, class:"" %>
         </div>
@@ -43,7 +49,7 @@
         <div class="row mb-0">
             <div class="col-md-6">
                 <div class="form-floating mb-3 mb-md-0">
-                    <%= form.collection_select(:cod_grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo, 
+                    <%= form.collection_select(:grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo, 
                         {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
                     <%= form.label :group, class:"" %>
                 </div>

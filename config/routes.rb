@@ -24,14 +24,10 @@ Rails.application.routes.draw do
 
     # cria varias rotas possiveis sem precisar criar uma a uma
     resources :collaborators, only: [:index, :edit, :update, :new, :create, :destroy]
+    
     resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] 
+    resources :produto_imagens, only: [:index, :create, :edit, :destroy]
 
-    resources :produto_imagens, as: 'imagens', controller: 'produto_imagens', only: [:index, :create, :destroy] do
-      member do
-        patch :update_ordem
-        patch :toggle_principal
-      end
-    end
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :funcionarios, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :empresa_estoque, only: [:index, :edit, :destroy, :update]

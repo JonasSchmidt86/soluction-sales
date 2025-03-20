@@ -4,18 +4,15 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     before_action :set_produto, only: [:edit, :update, :destroy, :show]
     #before_action :get_produto, only: [:new, :edit, :update,]
 
-    
-
     def index
         @produtos = Produto.order('cod_produto').all.page(params[:page])
     end
     
-    
     def update
-        if @produto.update(params_produto)
-            redirect_to collaborators_backoffice_produtos_path, notice: "Produto Cadastrado com sucesso!"
+        if @produto.update(params_produto.except(:imagens))
+          redirect_to collaborators_backoffice_produtos_path, notice: "Produto atualizado com sucesso!"
         else
-            render :edit  
+          render :edit
         end
     end
 
@@ -30,6 +27,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
 
     def create
         @produto = Produto.new(params_produto)
+
         if @produto.cod_produto.blank?
             @produto.cod_produto = Produto.last.cod_produto += 1
         end
@@ -38,6 +36,14 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         else 
             render :new
         end
+    end
+    
+    def remover_imagem
+        @produto = Produto.find(params[:id])
+        imagem = @produto.imagens.find(params[:imagem_id])  # Encontra a imagem associada ao produto
+        imagem.purge  # Remove a imagem
+    
+        redirect_to collaborators_backoffice_imagens_path, notice: "Imagem removida com sucesso."
     end
 
     def destroy
@@ -64,7 +70,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     private 
 
     def params_produto
-        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :cod_grupo, :cod_marca, :produtos_storage )
+        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :grupo, :marca, imagens: [] )
     end
 
     def set_produto

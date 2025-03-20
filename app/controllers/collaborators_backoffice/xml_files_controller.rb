@@ -46,6 +46,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
       consulta += " and date(created_at) between to_date('" + dt_inicial.to_s + "', 'DD/MM/YYYY') and to_date('" + dt_final.to_s  + "', 'DD/MM/YYYY') ";
     
       @xml_files = XmlFile.where(consulta, current_collaborator.empresa.cod_empresa).page(params[:page]);
+      puts @xml_files.size
 
     end
   
@@ -161,7 +162,6 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
     
     
     def destroy
-
       if @xml_file.destroy
         redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo XML excluído com sucesso.'
       else

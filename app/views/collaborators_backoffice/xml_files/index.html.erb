@@ -9,42 +9,40 @@
         <div class="dataTable-wrapper dataTable-loading sortable searchable fixed-columns">
               <%= form_with(url: collaborators_backoffice_xml_files_path, local: true, method: :get, 
                                     class:"col dataTable-search col-md-6") do |form| %>
+
                 <div class="d-flex align-items-center">
-  <div class="col-md-10">
-    <div class="mb-2">
-      <%= form.text_field :term, class:"dataTable-input text", value: params[:term], placeholder: "Fornecedor...", id: "text" %>
-    </div> 
-  </div>
+                  <div class="col-md-10">
+                    <div class="mb-2">
+                      <%= form.text_field :term, class:"dataTable-input text", value: params[:term], placeholder: "Fornecedor...", id: "text" %>
+                    </div> 
+                  </div>
 
-  <div class="col-md-3">
-    <div class="mb-2">
-      <%= form.text_field :dataInicial, value: (params[:dataInicial].present? ? params[:dataInicial] : Date.today.beginning_of_month.strftime("%d/%m/%Y")),
-          class: "fallback dataTable-input datepicker", placeholder: "Data Inicial" %>
-    </div>
-  </div>
+                  <div class="col-md-3">
+                    <div class="mb-2">
+                      <%= form.text_field :dataInicial, value: (params[:dataInicial].present? ? params[:dataInicial] : Date.today.beginning_of_month.strftime("%d/%m/%Y")),
+                          class: "fallback dataTable-input datepicker", placeholder: "Data Inicial" %>
+                    </div>
+                  </div>
 
-  <div class="col-md-3">
-    <div class="mb-2">
-      <%= form.text_field :dataFinal, value: (params[:dataFinal].present? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")),
-          class: "fallback dataTable-input datepicker", placeholder: "Data Final" %>
-    </div>
-  </div>
+                  <div class="col-md-3">
+                    <div class="mb-2">
+                      <%= form.text_field :dataFinal, value: (params[:dataFinal].present? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")),
+                          class: "fallback dataTable-input datepicker", placeholder: "Data Final" %>
+                    </div>
+                  </div>
 
-  <div class="col-md-2 d-flex align-items-center ms-3">
-    <div class="form-check mb-2 ms-2">
-      <%= form.check_box :todos, { class: "form-check-input", id: "checkboxTodos", checked: params[:todos] == "1" }, "1", "0" %>
-      <%= form.label :todos, "Todos", class: "form-check-label" %>
-    </div>
-  </div>
+                  <div class="col-md-2 d-flex align-items-center ms-3">
+                    <div class="form-check mb-2 ms-2">
+                      <%= form.check_box :todos, { class: "form-check-input", id: "checkboxTodos", checked: params[:todos] == "1" }, "1", "0" %>
+                      <%= form.label :todos, "Todos", class: "form-check-label" %>
+                    </div>
+                  </div>
 
+                  <div class="mb-2">
+                    <button type='submit' class="btn btn-success btn-circle">Buscar</button>
+                  </div>
+                </div>
 
-
-  <div class="mb-2">
-    <button type='submit' class="btn btn-success btn-circle">Buscar</button>
-  </div>
-</div>
-
-                
               <% end %>
 
             <div class="">
@@ -65,6 +63,8 @@
                 
                 <tbody>
                     <% @xml_files.each do |xml_file| %>
+                      <% puts xml_file.file.filename %>
+                      <% puts "---------------------" %>
                       
                       <% if xml_file.present? %>
                         <% xml_file_path = Rails.application.routes.url_helpers.rails_blob_path(xml_file.file, only_path: true) %>

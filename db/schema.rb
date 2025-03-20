@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_18_175707) do
+ActiveRecord::Schema[7.1].define(version: 2024_04_28_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -431,15 +431,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_175707) do
   end
 
   create_table "produto_imagens", force: :cascade do |t|
+    t.string "name", limit: 100
     t.integer "cod_produto", null: false
-    t.string "imagem", null: false
-    t.integer "grupo", default: 0
+    t.integer "cod_grupo"
     t.integer "ordem", default: 0
     t.boolean "principal", default: false
+    t.integer "cod_cor", default: 1
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "cod_cor"
-    t.index ["cod_produto", "grupo"], name: "index_produto_imagens_on_cod_produto_and_grupo"
+    t.index ["cod_produto", "cod_cor"], name: "index_produto_imagens_on_cod_produto_and_cod_cor"
+    t.index ["cod_produto", "cod_grupo"], name: "index_produto_imagens_on_cod_produto_and_cod_grupo"
     t.index ["cod_produto", "principal"], name: "index_produto_imagens_on_cod_produto_and_principal"
     t.index ["cod_produto"], name: "index_produto_imagens_on_cod_produto"
   end
@@ -599,6 +600,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_175707) do
   add_foreign_key "produto", "grupo", column: "grupo", primary_key: "cod_grupo", name: "fk_grupo"
   add_foreign_key "produto", "marca", column: "marca", primary_key: "cod_marca", name: "fk_marca"
   add_foreign_key "produto", "parametros", column: "cod_margem", primary_key: "cod_parametro", name: "fk_parametros"
+  add_foreign_key "produto_imagens", "cores", column: "cod_cor", primary_key: "cod_cor"
+  add_foreign_key "produto_imagens", "grupo", column: "cod_grupo", primary_key: "cod_grupo"
+  add_foreign_key "produto_imagens", "produto", column: "cod_produto", primary_key: "cod_produto"
   add_foreign_key "produtoxml", "cores", column: "cod_cor", primary_key: "cod_cor", name: "fk_cor"
   add_foreign_key "produtoxml", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
   add_foreign_key "produtoxml", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"

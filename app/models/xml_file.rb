@@ -1,7 +1,7 @@
 # app/models/xml_file.rb
 class XmlFile < ApplicationRecord
   
-  has_one_attached :file #, dependent: :destroy
+  has_one_attached :file, dependent: :destroy
     
   belongs_to :pessoa, class_name: 'Pessoa', foreign_key: 'pessoa_id', optional: true
   accepts_nested_attributes_for :pessoa, allow_destroy: false
