@@ -45,9 +45,6 @@ development:
 
 production:
   <<: *default
-  # database: moveisrosa
-  # username: jonas
-  # host: localhost
   database: moveisrosa
   username: jonas
   password: J0nas1922
