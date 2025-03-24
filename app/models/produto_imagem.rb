@@ -14,6 +14,8 @@ class ProdutoImagem < ApplicationRecord
   scope :principais, -> { where(principal: true) }
 
   before_save :set_ordem
+  
+  paginates_per 30
 
   private
 

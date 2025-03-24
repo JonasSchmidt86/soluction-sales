@@ -1,3 +1,7 @@
 {
-    "vscode-erb-beautify.useBundler": true
+  "vscode-erb-beautify.useBundler": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[erb]": {
+    "editor.defaultFormatter": "aliariff.vscode-erb-beautify"
+  }
 }

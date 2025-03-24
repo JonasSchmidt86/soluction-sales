@@ -5,13 +5,27 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
   def index
-    @produto = Produto.find(2909)
+    
+    @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
+
+
+    # aqui ele deveria trazer todas as imagens dos produtos
+    @produto = params[:cod_produto].present? ? Produto.find(params[:cod_produto]) : Produto.new
     if @produto.nil?
       @produto_imagens = ProdutoImagem.new
     else
       @produto_imagens = @produto.produto_imagens.ordenadas
     end
     # @produto_imagens = @produto.produto_imagens.order(created_at: :desc)
+  end
+
+  def edit
+    @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
+    if @produto.nil?
+      @produto_imagens = ProdutoImagem.new
+    else
+      @produto_imagens = @produto.produto_imagens.ordenadas
+    end
   end
   
   def create
@@ -34,7 +48,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
 
         # Gere o nome do arquivo com base no nome do produto
         
-        nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}.#{imagem.original_filename.split('.').last}"
+        nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}_#{imagem.original_filename.split('.').first}.#{imagem.original_filename.split('.').last}"
         
         puts "Nome da imagem: #{nome_imagem} ---------------------"
         # Anexando a imagem ao modelo
@@ -45,10 +59,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
 
       end
 
-      redirect_to collaborators_backoffice_produto_imagens_path, notice: 'Imagens associadas ao produto foram salvas com sucesso!'
+      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), notice: 'Imagens associadas ao produto foram salvas com sucesso!'
 
     else
-      redirect_to collaborators_backoffice_produto_imagens_path, alert: 'Nenhuma imagem foi selecionada!'
+      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), alert: 'Nenhuma imagem foi selecionada!'
     end
   rescue ActiveRecord::Rollback => e
     # Caso ocorra um erro, redireciona com a mensagem de erro
@@ -62,7 +76,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
 
     if @produto_imagem.destroy
     # Redirecionar ou renderizar conforme necessário
-      redirect_to collaborators_backoffice_produto_imagens_path, notice: "Imagem removida com sucesso!"
+      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), notice: "Imagem removida com sucesso!"
     else
       redirect_to collaborators_backoffice_produto_imagens_path, alert: "Falha ao remover imagem!"
     end
@@ -92,6 +106,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   
   def set_produto_imagem
     @produto_imagem = ProdutoImagem.find(params[:id]);
+    @produto = @produto_imagem.produto;
   end
   
   # def produto_imagem_params

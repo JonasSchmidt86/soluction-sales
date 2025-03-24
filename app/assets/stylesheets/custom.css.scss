@@ -1,0 +1,21 @@
+.row-clickable:hover {
+  background-color: #007bff !important; /* Azul ao passar o mouse */
+  color: white;
+}
+
+form {
+  // min-width: 900px; /* Largura mínima para o formulário */
+}
+
+.modal-content {
+  background: transparent;  /* Torna o fundo transparente */
+  border: none;  /* Remove a borda do modal */
+}
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);  /* A sombra do fundo pode ser leve */
+}
+
+.modal-body {
+  padding: 0 !important;  /* Remove o padding da área do modal */
+}

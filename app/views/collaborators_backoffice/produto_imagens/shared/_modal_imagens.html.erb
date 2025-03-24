@@ -1,0 +1,28 @@
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content"  style="background: transparent; border: none;">
+            <div class="modal-body">
+                <div id="carouselImages" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <% @produto.produto_imagens.each_with_index do |imagem, index| %>
+                        <div class="carousel-item <%= 'active' if index == 0 %>">
+                            <%= image_tag(imagem.imagem.presence || asset_path(imagem.imagem), 
+                                class: "d-block w-100 rounded", 
+                                style: "max-height: 90vh; object-fit: contain;") 
+                            %>
+                        </div>
+                        <% end %>
+                    </div>
+                    <!-- Botões de navegação -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselImages" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselImages" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

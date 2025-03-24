@@ -5,7 +5,7 @@
           <h4>Produtos</h4>
       <% end %>
     
-    <div class="card-body">
+    <div class="card-body" style="" >  
         <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
             <div class="dataTable-top row">
               <%= form_with(url: collaborators_backoffice_search_path, local: true, method: :get, 
@@ -19,8 +19,8 @@
 
             </div>
 
-              <div class="dataTable-container">
-              <table id="datatablesSimple" class="dataTable-table table-striped">
+              <div class="dataTable-container" style="min-height: 70vh;">
+              <table id="datatablesSimple" class="dataTable-table table-striped table-hover" >
                 <thead>
                   <tr>
                     <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
@@ -28,11 +28,7 @@
                     <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">NCm</a></th>
 
 
-                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                    <th data-sortable="" style="width: 105px;">
-                  <% else %>
                     <th data-sortable="" style="width: 55px;">
-                  <% end %>
                       <%= link_to new_collaborators_backoffice_produto_path(), class:"btn btn-success btn-circle" do %>
                         <i class="fa fa-plus"></i>
                       <% end %>
@@ -45,23 +41,43 @@
                     <% if (!produto.ativo) %>
                       <tr class="" style="background-color: #FA625E;">
                     <% else %>
-                        <tr class="">
+                        <tr >
                     <% end %> 
 
                       <td class="align-middle fw-semibold"><%= produto.cod_produto %> </td>
-                      <td class="align-middle fw-semibold"><%= produto.nome %> </td>
+                      <td class="align-middle fw-semibold" title="Clique para editar" onclick="window.location='<%= edit_collaborators_backoffice_produto_path(produto) %>'" style="cursor: pointer;"><%= produto.nome %> </td>
                       <td class="align-middle fw-semibold"><%= produto.ncm %> </td>
 
                       <td class="align-middle fw-semibold">
-                        <%= link_to edit_collaborators_backoffice_produto_path(produto), class:"btn btn-success btn-circle" do %>
-                          <i class="fa fa-edit"></i>
-                        <% end %>
-                        <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                          <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
-                                      class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover produto?"} do %>
-                              <i class="fa fa-trash-can"></i>
-                          <% end %>
-                        <% end %>
+
+                        <div class="dropdown" >
+                          <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                          </button>
+
+                          <ul class="dropdown-menu" style="max-width: 35px;">  
+
+                            <li>
+                                <%= link_to edit_collaborators_backoffice_produto_path(produto), class:"dropdown-item btn btn-info btn-circle" do %>
+                                  <i class="fa fa-edit", style="width: 35px;"></i> Editar
+                                <% end %>
+                              </li>
+                            <li>
+                              <%= link_to edit_collaborators_backoffice_produto_imagen_path(id: produto.cod_produto), class: "dropdown-item btn btn-info btn-circle", title: "Gerenciar Imagens" do %>
+                                <i class="fa fa-images", style="width: 35px;"></i>Add Imagens
+                              <% end %>
+                            </li>
+                            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                              <li>
+                                <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
+                                            class:"dropdown-item btn btn-danger btn-circle", data: {confirm: "Deseja remover produto?"} do %>
+                                    <i class="fa fa-trash-can", style="width: 35px;"></i>Excluir
+                                <% end %>
+                              </li>
+                            <% end %>
+                          </ul>
+                        </div>
+
                       </td> 
                     </tr>
                   <% end %>
@@ -69,7 +85,7 @@
 
               </table>
         </div>
-        
+
         <div class="dataTable-bottom">
           <div class="dataTable-info"><%= page_entries_info @produtos, entry_name: 'item' %></div>
               <div class = "text-center">
@@ -80,3 +96,13 @@
         
     </div>
 </div>
+
+<script>
+
+  function rowClick(event, url) {
+    // Verifica se o clique foi dentro de um elemento com a classe "no-link"
+    if (!event.target.closest(".no-link")) {
+      window.location = url;
+    }
+  }
+</script>
