@@ -11,6 +11,6 @@ class CollaboratorsBackoffice::Produtos::SearchController < CollaboratorsBackoff
         @produtos = Produto.where('cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR nome ILIKE :query ', query: "%#{query}%")
           .order(:cod_produto).page(params[:page])
   
-      end
+    end
 
 end

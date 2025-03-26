@@ -5,19 +5,15 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
   def index
-    
-    @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
-
-
-    # aqui ele deveria trazer todas as imagens dos produtos
-    @produto = params[:cod_produto].present? ? Produto.find(params[:cod_produto]) : Produto.new
-    if @produto.nil?
-      @produto_imagens = ProdutoImagem.new
-    else
-      @produto_imagens = @produto.produto_imagens.ordenadas
-    end
-    # @produto_imagens = @produto.produto_imagens.order(created_at: :desc)
+    # @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
+    query = params[:term]
+    @produto_imagens = ProdutoImagem.joins(:produto) # Supondo que existe uma associação com a tabela Produto
+                      .where('produto_imagens.cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR 
+                              produto.nome ILIKE :query', query: "%#{query}%")
+                      .order(:cod_produto)
+                      .page(params[:page])
   end
+
 
   def edit
     @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
@@ -58,11 +54,19 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         produto_imagem.save
 
       end
+      puts params[:path]
+      puts params[:path]
+      
+      if params[:path].present? 
+        path = edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto)
+      else
+        path = collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto)
+      end
 
-      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), notice: 'Imagens associadas ao produto foram salvas com sucesso!'
+      redirect_to path, notice: 'Imagens associadas ao produto foram salvas com sucesso!'
 
     else
-      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), alert: 'Nenhuma imagem foi selecionada!'
+      redirect_to path, alert: 'Nenhuma imagem foi selecionada!'
     end
   rescue ActiveRecord::Rollback => e
     # Caso ocorra um erro, redireciona com a mensagem de erro
@@ -74,11 +78,16 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     # Remove a imagem do ActiveStorage antes de excluir o registro
     @produto_imagem.imagem.purge if @produto_imagem.imagem.attached?
 
-    if @produto_imagem.destroy
-    # Redirecionar ou renderizar conforme necessário
-      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto), notice: "Imagem removida com sucesso!"
+    if params[:term].present?
+      path = edit_collaborators_backoffice_produto_imagen_path(@produto_imagem.produto.cod_produto)
     else
-      redirect_to collaborators_backoffice_produto_imagens_path, alert: "Falha ao remover imagem!"
+      path = collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto)
+    end
+
+    if @produto_imagem.destroy
+      redirect_to path, notice: "Imagem removida com sucesso!"
+    else
+      redirect_to path, alert: "Falha ao remover imagem!"
     end
   end
   

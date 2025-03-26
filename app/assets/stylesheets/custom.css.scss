@@ -19,3 +19,23 @@ form {
 .modal-body {
   padding: 0 !important;  /* Remove o padding da área do modal */
 }
+
+/* Mostrar os três pontinhos quando passar o mouse */
+.dropdown:hover .dropdown-indicator {
+  display: block;
+}
+
+/* Remover a seta para baixo do dropdown */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+/* Garante que o dropdown apareça sobre a imagem */
+.dropdown-menu {
+  position: absolute !important;
+  top: 10px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 1050 !important;
+  width: auto !important;
+}
