@@ -7,11 +7,13 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   def index
     # @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
     query = params[:term]
-    @produto_imagens = ProdutoImagem.joins(:produto) # Supondo que existe uma associação com a tabela Produto
+    @produto_imagens = ProdutoImagem.joins(:produto)
                       .where('produto_imagens.cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR 
                               produto.nome ILIKE :query', query: "%#{query}%")
-                      .order(:cod_produto)
+                      .where(params[:cod_cor].present? ? ["cod_cor = ?", params[:cod_cor]] : nil)
+                      .order(:cod_produto, :cod_cor)
                       .page(params[:page])
+
   end
 
 
@@ -44,19 +46,28 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
 
         # Gere o nome do arquivo com base no nome do produto
         
-        nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}_#{imagem.original_filename.split('.').first}.#{imagem.original_filename.split('.').last}"
+        nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}_#{imagem.original_filename.split('.').first}.#{imagem.original_filename}"
         
-        puts "Nome da imagem: #{nome_imagem} ---------------------"
+        # Abrir a imagem com MiniMagick
+        imagem_processada = MiniMagick::Image.read(imagem.tempfile)
+        imagem_processada.resize "1920x1080" # Ajuste as dimensões conforme necessário
+
         # Anexando a imagem ao modelo
-        produto_imagem.imagem.attach(io: imagem.tempfile, filename: nome_imagem, key: nome_imagem)
+        produto_imagem.imagem.attach(
+            io: StringIO.open(imagem_processada.to_blob),
+            filename: nome_imagem,
+            content_type: imagem.content_type,
+            key: nome_imagem
+          )
+
+        # produto_imagem.imagem.attach(io: imagem.tempfile, filename: nome_imagem, key: nome_imagem)
+
         @produto.produto_imagens << produto_imagem
         
         produto_imagem.save
 
       end
-      puts params[:path]
-      puts params[:path]
-      
+
       if params[:path].present? 
         path = edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto)
       else
