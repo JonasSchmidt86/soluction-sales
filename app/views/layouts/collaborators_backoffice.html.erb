@@ -414,8 +414,18 @@
             const tbody = modal.querySelector('#tabela-cores-body');
             const titulo = modal.querySelector('#modal-produto-titulo');
 
+            const editUrl = `/collaborators_backoffice/produtos/${produtoId}/edit`;
+
             // Atualiza o título dinamicamente
-            titulo.textContent = `Estoque do produto: ${produtoId}`;
+
+            //titulo.textContent = `Estoque do produto: ${'<button type="button" class="btn-close" data-bs-dismiss="modal"></button>'}`;
+            titulo.innerHTML = `
+                Editar produto:
+                <a href="${editUrl}" class="btn btn-sm btn-outline-primary ms-3">
+                    ${produtoNome}
+                </a>
+            `;
+
 
             // Carregamento da tabela
             tbody.innerHTML = `<tr><td colspan="3">Carregando...</td></tr>`;

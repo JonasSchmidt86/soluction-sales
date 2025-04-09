@@ -23,10 +23,9 @@
                       <div class="col-md-12">
                         <div class="form-floating mb-3 mb-md-0">
                           <%= form.hidden_field :cod_produto %>
-                          <%= form.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"Selecione o produto!" %>
+                          <%= form.text_field :nome, disabled: false, class: "text form-control produto_search", placeholder:"Selecione o produto!" %>
                           <%= form.label :produto, class:"" %>
                           <div id="products_list" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
-                          <%# index += 1 %>
                         </div>
                       </div>
                     </div>
@@ -34,7 +33,7 @@
                     <div class="row mb-3">
                       <div class="col-md-2">
                         <div class="form-floating mb-3 mb-md-0">
-                          <%= form.text_field :cod_produto, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
+                          <%= form.text_field :cod_produto, disabled: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
                           <%= form.label :cod_produto, class:"" %>
                         </div>
                       </div>
@@ -47,7 +46,7 @@
                       </div>
                       <div class="col-md-6">
                         <div class="form-floating">
-                          <%= form.text_field :nome, value: (!@produto.blank? ? @produto.nome : nil), class: "text form-control", placeholder:"Produto", id:"text" %>
+                          <%= form.text_field :nome, disabled: true, value: (!@produto.blank? ? @produto.nome : nil), class: "text form-control", placeholder:"Produto", id:"text" %>
                           <%= form.label :name, class:"" %>
                         </div>
                       </div>
@@ -57,64 +56,57 @@
                       <%= form.file_field :imagens, multiple: true, class: "form-control" %>
                       <div class="d-flex flex-wrap gap-3 mt-3">
                         <% @produto_imagens.each_with_index do |imagem, index| %>
-
                           <div class="position-relative image-container" style="display: inline-block;">
                             <!-- Imagem -->
-
-                              <div class="dropdown position-relative">
-                                <!-- Botão com imagem -->
-                                <button class="btn p-0 border-0 dropdown-toggle " 
+                            <div class="dropdown position-relative">
+                              <!-- Botão com imagem -->
+                              <button class="btn p-0 border-0 dropdown-toggle " 
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
                                         aria-expanded="false" 
                                         style="position: relative; caret-color: transparent;">
-                                  <%= image_tag(imagem.imagem, 
+                                <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
                                     style: "max-width: 100%; height: 180px; object-fit: contain;" 
                                   ) %>
-                                  <!-- Três pontinhos -->
-                                  <span class="dropdown-indicator position-absolute top-0 end-0 bg-dark text-white p-1 rounded-circle" 
-                                        style="display: none; cursor: pointer;">
-                                    ⋮
-                                  </span>
-                                </button>
-
-                                <!-- Dropdown sobre a imagem -->
-                                <ul class="dropdown-menu position-absolute" 
+                                <!-- Três pontinhos -->
+                              </button>
+                              <!-- Dropdown sobre a imagem -->
+                              <ul class="dropdown-menu position-absolute" 
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
-                                  <li>
-
-                                    <button class="open-modal dropdown-item" 
+                                <li>
+                                  <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
-                                      data-index="<%= index %>">
-                                      🔍 Ampliar
-
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button class="open-modal dropdown-item" 
+                                      data-index="<%= index %>"
+                                      data-produto-id="<%= (!@produto.blank? ? @produto.id : nil) %>"
+                                      >
+                                    🔍 Ampliar
+                                  </button>
+                                </li>
+                                <li>
+                                  <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#produto_info" 
                                       data-index="<%= imagem.produto.id %>"
-                                      data-produto-id="<%= imagem.produto.id %>">
-                                      ℹ️ Informações
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem, term:"path_edit"), 
+                                      data-produto-id="<%= imagem.produto.id %>"
+                                      data-produto-nome="<%= (!@produto.blank? ? @produto.nome : nil) %>" >
+                                    ℹ️ Informações
+                                  </button>
+                                </li>
+                                <li>
+                                  <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem, term:"path_edit"), 
                                       method: :delete, 
                                       data: { confirm: "Tem certeza de que deseja remover esta imagem?" },
                                       class: "dropdown-item text-danger"
                                     %>
-                                  </li>
-                                </ul>
+                                </li>
+                              </ul>
                             </div>
                           </div>
-
                         <% end %>
                       </div>
                     </div>
@@ -138,6 +130,7 @@
                     <div id="setTime">
                     </div
                   </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,13 +139,8 @@
       </div>
     </div>
   </div>
-</div>
-  
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script>
-
-  
-
     document.addEventListener("keypress", function () {
         //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
         if(event.keyCode == 13){ // 13 é o Enter
@@ -242,7 +230,7 @@
     };
 
 
-  document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener("DOMContentLoaded", function () {
     let carousel = document.querySelector("#carouselImages");
     let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
 
@@ -277,7 +265,5 @@
         }
       }
     });
-  });
-
-
+      });
   </script>

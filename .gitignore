@@ -4,6 +4,21 @@
 # or operating system, you probably want to add a global ignore instead:
 #   git config --global core.excludesfile '~/.gitignore_global'
 
+
+
+# --- passo a passo para fazer o commit da nova versão no servidor -----
+# cd /home/jonas/www/soluction-sales/
+# sudo systemctl stop puma
+# systemctl stop nginx.service
+# git pull origin master
+
+# sudo systemctl daemon-reload
+# systemctl start nginx.service
+# sudo systemctl start puma
+
+
+
+
 # Ignore bundler config.
  /.bundle
 
