@@ -61,6 +61,7 @@
                             <div class="dropdown position-relative">
                               <!-- Botão com imagem -->
                               <button class="btn p-0 border-0 imagem-botao"
+                                        data-index="<%= index %>"
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
@@ -76,7 +77,7 @@
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
                                 <li>
                                   <button class="open-modal dropdown-item" 
-                                        id="abrir-modal-imagens" 
+                                      id="abrir-modal-imagens_<%= index %>" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
@@ -143,8 +144,9 @@
   <script>
     document.querySelectorAll('.imagem-botao').forEach((botao) => {
       botao.addEventListener('dblclick', function () {
-        console.log("Botão clicado");
-        document.getElementById('abrir-modal-imagens').click();
+        const index = botao.getAttribute('data-index');
+        console.log(index)
+        document.getElementById(`abrir-modal-imagens_${index}`).click();
       });
     });
 

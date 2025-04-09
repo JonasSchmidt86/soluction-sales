@@ -50,7 +50,8 @@
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
-                                        aria-expanded="false" 
+                                        aria-expanded="false"
+                                        data-index="<%= index %>"
                                         style="position: relative; caret-color: transparent;">
                               <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
@@ -62,7 +63,7 @@
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
                               <li>
                                 <button class="open-modal dropdown-item" 
-                                        id="abrir-modal-imagens" 
+                                        id="abrir-modal-imagens_<%= index %>" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
@@ -118,8 +119,9 @@
   <script>
     document.querySelectorAll('.imagem-botao').forEach((botao) => {
       botao.addEventListener('dblclick', function () {
-        console.log("Botão clicado");
-        document.getElementById('abrir-modal-imagens').click();
+        const index = botao.getAttribute('data-index');
+        console.log(index)
+        document.getElementById(`abrir-modal-imagens_${index}`).click();
       });
     });
 
