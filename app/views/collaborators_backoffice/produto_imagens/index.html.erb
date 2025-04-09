@@ -7,7 +7,7 @@
           <div class="card-header bg-primary" >
             <div class="d-flex">
               <%= link_to collaborators_backoffice_produto_imagens_path, class:"card-header bg-primary" do %>
-                  <h5>Imagens</h5>
+                <h5>Imagens</h5>
               <% end %>
             </div>
           </div>
@@ -18,86 +18,89 @@
                 <div class="card-body">
                   <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :get, 
                                     class:"col dataTable-search col-md-12") do |form| %>
-                    
-                    
                     <div class="d-flex align-items-center mb-2">
-                        <div class="col-md-8">
-                          <div class="form-floating mb-2 mb-md-1">
-                            <%= form.text_field :term, value: params[:term], class:"text form-control", placeholder:"Nome produto...", id:"text" %>
-                            <%= form.label :produto, class:"" %>
-                          </div>
+                      <div class="col-md-8">
+                        <div class="form-floating mb-2 mb-md-1">
+                          <%= form.text_field :term, value: params[:term], class:"text form-control", placeholder:"Nome produto...", id:"text" %>
+                          <%= form.label :produto, class:"" %>
                         </div>
-
-                        <div class="col-md-3">
-                          <div class="form-floating mb-2 mb-md-1">
-                            <%= form.collection_select(:cod_cor, 
+                      </div>
+                      <div class="col-md-3">
+                        <div class="form-floating mb-2 mb-md-1">
+                          <%= form.collection_select(:cod_cor, 
                                     (Core.select(:cod_cor, :nmcor).where(ativo: true)), 
                                       :cod_cor, :nmcor, {:include_blank => 'Selecione uma cor', selected: params[:cod_cor]}, 
                                       class: "text form-control", readonly: false) %>
-                          </div>
                         </div>
-
-                        <div class="d-flex align-items-center h-100 me-4 col-md-1">
-                          <button type='submit' class="btn btn-success btn-lg h-100">Buscar</button>
-                        </div>
+                      </div>
+                      <div class="d-flex align-items-center h-100 me-4 col-md-1">
+                        <button type='submit' class="btn btn-success btn-lg h-100">Buscar</button>
+                      </div>
                     </div>
-                    <% end %>
-                    <hr class="my-2">
-                    <div class="row mb-3">
-                      <div class="d-flex flex-wrap gap-3 mt-3">
-                        <% @produto_imagens.each_with_index do |imagem, index| %>
-
-                          <div class="position-relative image-container" style="display: inline-block;">
-                            <!-- Imagem -->
-
-                              <div class="dropdown position-relative">
-                                <!-- Botão com imagem -->
-                                <button class="btn p-0 border-0 dropdown-toggle " 
+                  <% end %>
+                  <hr class="my-2">
+                  <div class="row mb-3">
+                    <div class="d-flex flex-wrap gap-3 mt-3">
+                      <% @produto_imagens.each_with_index do |imagem, index| %>
+                        <div class="position-relative image-container" style="display: inline-block;">
+                          <!-- Imagem -->
+                          <div class="dropdown position-relative">
+                            <!-- Botão com imagem -->
+                            <button class="btn p-0 border-0 dropdown-toggle " 
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
                                         aria-expanded="false" 
                                         style="position: relative; caret-color: transparent;">
-                                  <%= image_tag(imagem.imagem, 
+                              <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
-                                    style: "max-width: 100%; height: 180px; object-fit: contain;" 
+                                    style: "max-width: 220px; height: 180px; object-fit: contain;" 
                                   ) %>
-                                  <!-- Três pontinhos -->
-                                  <span class="dropdown-indicator position-absolute top-0 end-0 bg-dark text-white p-1 rounded-circle" 
+                              <!-- Três pontinhos -->
+                              <span class="dropdown-indicator position-absolute top-0 end-0 bg-dark text-white p-1 rounded-circle" 
                                         style="display: none; cursor: pointer;">
-                                    ⋮
-                                  </span>
-                                </button>
-
-                                <!-- Dropdown sobre a imagem -->
-                                <ul class="dropdown-menu position-absolute" 
+                                ⋮
+                              </span>
+                            </button>
+                            <!-- Dropdown sobre a imagem -->
+                            <ul class="dropdown-menu position-absolute" 
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
-                                  <li>
-
-                                    <button class="open-modal dropdown-item" 
+                              <li>
+                                <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
                                       data-index="<%= index %>">
-                                      🔍 Ampliar
-
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem), 
+                                  🔍 Ampliar
+                                </button>
+                              </li>
+                              <li>
+                                <button class="open-modal dropdown-item" 
+                                      type="button" 
+                                      data-bs-toggle="modal" 
+                                      data-bs-target="#produto_info" 
+                                      data-index="<%= imagem.produto.id %>"
+                                      data-produto-id="<%= imagem.produto.id %>"
+                                      data-produto-nome="<%= imagem.produto.nome %>">
+                                  ℹ️ Informações
+                                </button>
+                              </li>
+                              <li>
+                                <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem), 
                                       method: :delete, 
                                       data: { confirm: "Tem certeza de que deseja remover esta imagem?" },
                                       class: "dropdown-item text-danger"
                                     %>
-                                  </li>
-                                </ul>
-                            </div>
+                              </li>
+                            </ul>
                           </div>
-                        <% end %>
-                      </div>
+                        </div>
+                      <% end %>
                     </div>
+                  </div>
                   <!-- Modal com Carousel para navegar entre imagens -->
                   <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
+                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Informações' } %>
                 </div>
               </div>
               <div class="mt-0 mb-3">
@@ -114,11 +117,8 @@
       </div>
     </div>
   </div>
-  
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script>
-    
-
     document.addEventListener("DOMContentLoaded", function () {
     let carousel = document.querySelector("#carouselImages");
     let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
@@ -154,8 +154,5 @@
         }
       }
     });
-  });
-
-
-
+      });
   </script>

@@ -67,6 +67,22 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     def show
     end
 
+    def estoque
+        produto = Produto.find(params[:id])
+        
+        dados = produto.empresaprodutos.where("quantidade <> 0").map do |ep|
+            {
+            id_empresa: ep.cod_empresa,
+            nome_produto: produto.nome,
+            cor: "#{ep.cod_cor} - #{ep.cor.nmcor}",
+            quantidade: ep.quantidade.to_i
+            }
+        end
+        
+        render json: dados
+    end
+
+      
     private 
 
     def params_produto

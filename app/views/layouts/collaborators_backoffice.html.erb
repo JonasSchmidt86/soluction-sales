@@ -1,81 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-    <head>
-        <meta charset="utf-8" />
-        
-        <title>Moveis Rosa Store</title>
-        <!-- Bootstrap CSS -->
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-        <%= csrf_meta_tags %>
-        <%= csp_meta_tag %>
-        <%= favicon_link_tag 'mrosa.png' %>
-        <%= stylesheet_link_tag 'application' %>
-        <%= stylesheet_link_tag 'collaborators_backoffice' %>
-    
-    </head>
-    <body class="sb-nav-fixed bg-light">
-
-        <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-primary hstack gap-3 ">
-            
-            <!-- Navbar Brand-->
-            <div class="p-2 d-flex justify-content-start text-truncate">
-                <%= link_to (current_collaborator.empresa.nome unless current_collaborator.empresa.blank? ) , 
+  <head>
+    <meta charset="utf-8" />
+    <title>Moveis Rosa Store</title>
+    <!-- Bootstrap CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= favicon_link_tag 'mrosa.png' %>
+    <%= stylesheet_link_tag 'application' %>
+    <%= stylesheet_link_tag 'collaborators_backoffice' %>
+  </head>
+  <body class="sb-nav-fixed bg-light">
+    <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-primary hstack gap-3 ">
+      <!-- Navbar Brand-->
+      <div class="p-2 d-flex justify-content-start text-truncate">
+        <%= link_to (current_collaborator.empresa.nome unless current_collaborator.empresa.blank? ) , 
                     root_path, class: "bg-light border badge text-white bg-dark navbar-brand fs-4 text-truncate   "%>
-            </div>
-
-            <!-- Sidebar Toggle -->
-            <button class="btn btn-link btn-sm order-0 me-4 me-lg-0" id="sidebarToggle" aria-label="Alternar Navegação">
-                <i class="fas fa-bars"></i>
-            </button>
-            
-            <!-- sidebar hora -->
-            <div class="text-center">
-                <a id="myId" class=" text-black hstack fs-5 ">Hora</a>
-                <a> </a>
-            </div>
-                
-            <!-- Navbar Menu -->
-            <div class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0 text-truncate">
-                <button type="button" class="btn btn-success btn-circle" data-bs-toggle="modal" data-bs-target="#empresaModal" data-bs-whatever="passa para o modal" style="max-width: 150px;">
-                    <i class="me-lg-6">
-                        <%= current_collaborator.empresa.nome unless current_collaborator.empresa.nome.blank? %>
-                    </i>
-                </button>
-            </div>
-
-            <!-- Navbar-->
-            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle  text-truncate" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user fa-fw"></i>
-                        <%= current_collaborator.funcionario.pessoa.nome %>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <a class="dropdown-item" href="#">
-                                <%= link_to destroy_collaborator_session_path, class:"dropdown-item", method: :delete do %>
-                                <i class="fa fa-power-off fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Sair
-                                <% end %>
-                        </li>
-                    </ul>
-                </li>
+      </div>
+      <!-- Sidebar Toggle -->
+      <button class="btn btn-link btn-sm order-0 me-4 me-lg-0" id="sidebarToggle" aria-label="Alternar Navegação">
+        <i class="fas fa-bars"></i>
+      </button>
+      <!-- sidebar hora -->
+      <div class="text-center">
+        <a id="myId" class=" text-black hstack fs-5 ">Hora</a>
+        <a> </a>
+      </div>
+      <!-- Navbar Menu -->
+      <div class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0 text-truncate">
+        <button type="button" class="btn btn-success btn-circle" data-bs-toggle="modal" data-bs-target="#empresaModal" data-bs-whatever="passa para o modal" style="max-width: 150px;">
+          <i class="me-lg-6">
+            <%= current_collaborator.empresa.nome unless current_collaborator.empresa.nome.blank? %>
+          </i>
+        </button>
+      </div>
+      <!-- Navbar-->
+      <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle  text-truncate" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user fa-fw"></i>
+            <%= current_collaborator.funcionario.pessoa.nome %>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#">
+                <%= link_to destroy_collaborator_session_path, class:"dropdown-item", method: :delete do %>
+                  <i class="fa fa-power-off fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Sair
+                <% end %>
+              </li>
             </ul>
-            
-        </nav>
-
-        <div id="layoutSidenav">
-            <!-- Sidebar (Navegação Lateral) -->
-            <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
-                    <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
-                        <div class="nav mt-2">
-                            <!-- Perfil -->
-                            <div class="profile clearfix d-flex justify-content-center">
-                                <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), 
+          </li>
+        </ul>
+      </nav>
+      <div id="layoutSidenav">
+        <!-- Sidebar (Navegação Lateral) -->
+        <div id="layoutSidenav_nav">
+          <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
+            <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
+              <div class="nav mt-2">
+                <!-- Perfil -->
+                <div class="profile clearfix d-flex justify-content-center">
+                  <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), 
                                         style: "max-width: 100%; height: 180px;", 
                                         id: "imgAvatarLg", 
                                         class: "rounded mx-auto d-block rounded-5", 
@@ -83,160 +72,144 @@
                                         '#', 
                                         data: { bs_toggle: "modal", bs_target: "#avatarModal" } 
                                     %>
-
-                            </div>
-
-                            <!-- Menu Principal -->
-                            <div class="sb-sidenav-menu-heading">Menus</div>
-                                <!-- Menu Colapsável Principal -->
-                                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCads" aria-expanded="true" aria-controls="collapseCads">
-                                    <div class="sb-nav-link-icon">
-                                        <i class="fa-solid fa-money-check-dollar fa-flip" style="--fa-animation-duration: 3s;"></i>
-                                    </div>
-                                        Principal
-                                    <div class="sb-sidenav-collapse-arrow">
-                                        <i class="fas fa-angle-down"></i>
-                                    </div>
-                                </a>
-                                <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
-                                        <li>
-                                            <%= link_to root_path, class:"nav-link" do %>
-                                                <i class="fa fa-dashboard fa-fw"></i> Dashboard
-                                            <% end %>
-                                        </li>
-                                        <li>
-                                            <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
-                                                <i class="fa fa-dashboard fa-fw"></i> Caixa
-                                            <% end %>
-                                        </li>
-                                        <li>
-                                            <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
-                                                <i class="fa fa-users fa-fw"></i> Colaboradores
-                                            <% end %>
-                                        </li>
-                                    </nav>
-                                </div>
-
-                                <!-- Navbar Principal - Cadastros -->
-                                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
-                                    <div class="sb-nav-link-icon">
-                                        <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
-                                    </div>
-                                    Cadastros
-                                    <div class="sb-sidenav-collapse-arrow">
-                                        <i class="fas fa-angle-down"></i>
-                                    </div>
-                                </a>
-
-                                <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
-                                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                                        Vendas
-                                    <% end %>
-                                    <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
-                                        Pessoas
-                                    <% end %>
-                                    <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
-                                        Produtos
-                                    <% end %>
-                                    <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
-                                        Lembretes
-                                    <% end %>
-                                    <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
-                                        Funcionário
-                                    <% end %>
-                                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                                        Contas pagar/Receber
-                                    <% end %>
-                                    </nav>
-                                </div>
-
-                                <!-- Compras -->
-                                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
-                                    <div class="sb-nav-link-icon">
-                                        <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
-                                    </div>
-                                    Compras
-                                    <div class="sb-sidenav-collapse-arrow">
-                                        <i class="fas fa-angle-down"></i>
-                                    </div>
-                                </a>
-                                <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
-                                    <nav class="sb-sidenav-menu-nested nav">
-                                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                                        XML    
-                                    <% end %>
-                                    <%# link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do % >
+                </div>
+                <!-- Menu Principal -->
+                <div class="sb-sidenav-menu-heading">Menus</div>
+                <!-- Menu Colapsável Principal -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCads" aria-expanded="true" aria-controls="collapseCads">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-money-check-dollar fa-flip" style="--fa-animation-duration: 3s;"></i>
+                  </div>
+                  Principal
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <li>
+                      <%= link_to root_path, class:"nav-link" do %>
+                        <i class="fa fa-dashboard fa-fw"></i> Dashboard
+                      <% end %>
+                    </li>
+                    <li>
+                      <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
+                        <i class="fa fa-dashboard fa-fw"></i> Caixa
+                      <% end %>
+                    </li>
+                    <li>
+                      <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
+                        <i class="fa fa-users fa-fw"></i> Colaboradores
+                      <% end %>
+                    </li>
+                  </nav>
+                </div>
+                <!-- Navbar Principal - Cadastros -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Cadastros
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                      Vendas
+                    <% end %>
+                    <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
+                      Pessoas
+                    <% end %>
+                    <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
+                      Produtos
+                    <% end %>
+                    <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
+                      Lembretes
+                    <% end %>
+                    <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
+                      Funcionário
+                    <% end %>
+                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                      Contas pagar/Receber
+                    <% end %>
+                  </nav>
+                </div>
+                <!-- Compras -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Compras
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+                      XML    
+                    <% end %>
+                    <%# link_to collaborators_backoffice_produtoxmls_path, class: "nav-link" do % >
                                         Importar
                                     <% end %>
-                                    </nav>
-                                </div>
-
-
-                        <!-- Relatórios -->
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
-                            <div class="sb-nav-link-icon">
-                            <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
-                            </div>
-                            Relatórios
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseRels" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
-                                    Estoque
-                                <% end %>
-                                <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
-                                    Relatório de Vendas
-                                <% end %>
-                                <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
-                                    Lançamentos Caixa
-                                <% end %>
-                                <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
-                                    Relatório de Compra
-                                <% end %>
-                            </nav>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- Footer do Sidebar -->
-                    <div class="sb-sidenav-footer">
-                        <div class="small">Quem está Logado:</div>
-                        <%= current_collaborator.funcionario.usuario %>
-                    </div>
-                </nav>
-            </div>
-
-            <!-- Conteúdo Principal -->
-            <div id="layoutSidenav_content">
-                <main>
-                <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11">
-                    <%= yield %>
+                  </nav>
                 </div>
-                </main>
+                <!-- Relatórios -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Relatórios
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseRels" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                      Estoque
+                    <% end %>
+                    <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                      Relatório de Vendas
+                    <% end %>
+                    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+                      Lançamentos Caixa
+                    <% end %>
+                    <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                      Relatório de Compra
+                    <% end %>
+                  </nav>
+                </div>
+              </div>
             </div>
+            <!-- Footer do Sidebar -->
+            <div class="sb-sidenav-footer">
+              <div class="small">Quem está Logado:</div>
+              <%= current_collaborator.funcionario.usuario %>
+            </div>
+          </nav>
         </div>
-
-        <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
-        <!-- Modal -->
-        <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
-        <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
-
-        <%= javascript_include_tag 'application'%>
-        <%= javascript_include_tag 'collaborators_backoffice' %>
-  
-        <!-- Bootstrap JS and Popper.js -->
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-        
+        <!-- Conteúdo Principal -->
+        <div id="layoutSidenav_content">
+          <main>
+            <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11">
+              <%= yield %>
+            </div>
+          </main>
+        </div>
+      </div>
+      <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
+      <!-- Modal -->
+      <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
+      <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
+      <%= javascript_include_tag 'application'%>
+      <%= javascript_include_tag 'collaborators_backoffice' %>
+      <!-- Bootstrap JS and Popper.js -->
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
-
-</html>
-
-<script>
-
+  </html>
+  <script>
     // -------------------- FUNÇÃO PARA RETORNO O ENDEREÇO COM O CEP --------------------------------------------------------
     function removerAcentos(texto) {
         return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -301,7 +274,7 @@
         }
     });
 
-// ----------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------
 
     $(document).ready(function () {
         $('.datepicker').datepicker();
@@ -312,7 +285,7 @@
         var alertMessage = document.getElementById('alertMessage');
         alertMessage.textContent = mensagem; // Define a mensagem personalizada no alerta
         $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modals)
-        
+
         setTimeout(function() {
             $(modal).modal('hide');
         }, 2900); // Redireciona após 2.9 segundos (opcional)
@@ -333,7 +306,7 @@
         });
 
     <% end %>
-// ----------- Horas da PG -------            
+    // ----------- Horas da PG -------
     var div = document.getElementById("myId");
 
     // Adicionando ouvinte de clique
@@ -346,7 +319,7 @@
         var date = new Date();
         div.innerHTML = date.toLocaleTimeString();
     }, 1000/* 1s */);
-// --------------------------------
+    // --------------------------------
 
     // deixa Maiuscula o input com class text
     $(document).ready(function() {
@@ -356,10 +329,10 @@
             $(this).attr("autocomplete", "off");
         });
     });
-    // tira a sugestão dos campos 
-//     $(document).ready(function() {
-//         $("input[type='text']").attr("autocomplete", "off");
-//     });
+    // tira a sugestão dos campos
+    //     $(document).ready(function() {
+    //         $("input[type='text']").attr("autocomplete", "off");
+    //     });
 
     function formatarMoeda() {
         var elemento = document.getElementById('valor');
@@ -428,4 +401,48 @@
         $('.selectonfocus').mask("00/00/0000", {selectOnFocus: true});
     });
 
-</script>
+
+    // ------------------ Abre modal de estoque do prouto nas imagens -----------------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('produto_info');
+        if (!modal) return;
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const produtoId = button.getAttribute('data-produto-id');
+            const produtoNome = button.getAttribute('data-produto-nome');
+            const tbody = modal.querySelector('#tabela-cores-body');
+            const titulo = modal.querySelector('#modal-produto-titulo');
+
+            // Atualiza o título dinamicamente
+            titulo.textContent = `Estoque do produto: ${produtoId}`;
+
+            // Carregamento da tabela
+            tbody.innerHTML = `<tr><td colspan="3">Carregando...</td></tr>`;
+
+            fetch(`/collaborators_backoffice/produtos/${produtoId}/estoque`)
+            .then(res => res.json())
+            .then(dados => {
+                if (dados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3"> ${produtoNome} Sem Estoque.</td></tr>`;
+                return;
+                }
+
+                tbody.innerHTML = "";
+                dados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td class="text-center">${item.id_empresa}</td>
+                    <td>${item.nome_produto}</td>
+                    <td>${item.cor}</td>
+                    <td class="text-center">${item.quantidade}</td>
+                `;
+                tbody.appendChild(tr);
+                });
+            })
+            .catch(() => {
+                tbody.innerHTML = `<tr><td colspan="3">Erro ao carregar dados.</td></tr>`;
+            });
+        });
+    });
+  </script>

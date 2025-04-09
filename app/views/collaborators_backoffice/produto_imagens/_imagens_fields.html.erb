@@ -1,33 +1,30 @@
-
 <div class="nested-fields">
-    <div class="row">
-        <div class="col-md-4">
-          <div class="form-group">
-            <%= f.label :imagem, 'Selecione a imagem' %>
-            <%= f.file_field :imagem, class: 'form-control', accept: 'image/*' %>
-          </div>
-        </div>
-        <td class="col-auto">
-          <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
+  <div class="row">
+    <div class="col-md-4">
+      <div class="form-group">
+        <%= f.label :imagem, 'Selecione a imagem' %>
+        <%= f.file_field :imagem, class: 'form-control', accept: 'image/*' %>
+      </div>
+    </div>
+    <td class="col-auto">
+      <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
                   { prompt: "Selecione uma Cor" },
                       class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
-        </div>
-
-        <div class="col-md-4">
-          <div class="form-group">
-            <%= f.label :grupo, 'Grupo da imagem' %>
-            <%= f.select :grupo, ProdutoImagem.grupos_disponiveis, {}, class: 'form-control' %>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="form-group">
-            <%= f.label :principal, 'Imagem Principal' %>
-            <div class="custom-control custom-switch">
-              <%= f.check_box :principal, class: 'custom-control-input' %>
-              <%= f.label :principal, 'Sim', class: 'custom-control-label' %>
-            </div>
-          </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <%= f.label :grupo, 'Grupo da imagem' %>
+        <%= f.select :grupo, ProdutoImagem.grupos_disponiveis, {}, class: 'form-control' %>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <%= f.label :principal, 'Imagem Principal' %>
+        <div class="custom-control custom-switch">
+          <%= f.check_box :principal, class: 'custom-control-input' %>
+          <%= f.label :principal, 'Sim', class: 'custom-control-label' %>
         </div>
       </div>
+    </div>
+  </div>
 </div>
-

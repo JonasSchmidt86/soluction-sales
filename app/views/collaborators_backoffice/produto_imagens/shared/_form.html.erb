@@ -95,6 +95,16 @@
                                     </button>
                                   </li>
                                   <li>
+                                    <button class="open-modal dropdown-item" 
+                                      type="button" 
+                                      data-bs-toggle="modal" 
+                                      data-bs-target="#produto_info" 
+                                      data-index="<%= imagem.produto.id %>"
+                                      data-produto-id="<%= imagem.produto.id %>">
+                                      ℹ️ Informações
+                                    </button>
+                                  </li>
+                                  <li>
                                     <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem, term:"path_edit"), 
                                       method: :delete, 
                                       data: { confirm: "Tem certeza de que deseja remover esta imagem?" },
@@ -119,13 +129,14 @@
                   <% end %>
                   <!-- Modal com Carousel para navegar entre imagens -->
                   <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
+                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Estoque' } %>
                 </div>
               </div>
               <div class="mt-0 mb-3">
                 <div class="d-grid">
                   <div class="col-md-9 col-sm-9  offset-md-3">
-                    <div id="setTime"></div
-                                    </div>
+                    <div id="setTime">
+                    </div
                   </div>
                 </div>
               </div>
@@ -135,9 +146,13 @@
       </div>
     </div>
   </div>
+</div>
   
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script>
+
+  
+
     document.addEventListener("keypress", function () {
         //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
         if(event.keyCode == 13){ // 13 é o Enter

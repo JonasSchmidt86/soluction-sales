@@ -44,9 +44,6 @@
                               data-id="<%= estoque.id %>" 
                               value="<%= number_with_precision(estoque.valorvenda, precision: 2, separator: ',', delimiter: '') %>">
 
-
-
-<%# "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> 
                       </td>
 
                       <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -133,81 +130,5 @@
       });
     });
   });
-
-
-
-//  document.addEventListener("DOMContentLoaded", function() {
-//    const inputs = document.querySelectorAll(".editable-valor-venda");
-//
-//    if (inputs.length === 0) {
-//      console.warn("Nenhum input .editable-valor-venda encontrado!");
-//      return;
-//    }
-//
-//    inputs.forEach(input => {
-//      let lastValue = input.value.trim(); // Armazena o último valor para evitar requisições desnecessárias
-//
-//      // Verifica se ENTER foi pressionado
-//      input.addEventListener("keydown", (event) => {
-//        if (event.key === "Enter") {
-//          event.preventDefault();
-//          input.blur(); // Dispara o evento "blur" para salvar os dados
-//        }
-//      });
-//
-//      // Salva os dados ao perder o foco (blur)
-//      input.addEventListener("blur", (event) => {
-//
-//        const inputField = event.target;
-//        let valor = inputField.value.trim();
-//        const estoqueId = inputField.dataset.id;
-//
-//        if (!estoqueId) {
-//          console.error("Erro: data-id não encontrado no input.");
-//          return;
-//        }
-//
-//        // Formatar o valor para o formato correto antes de enviar (Ex: R$ 1.000,50 → 1000.50)
-//        valor = valor.replace(/\./g, "").replace(",", ".");
-//
-//        // Se o valor não mudou, não envia requisição
-//        if (valor === lastValue) return;
-//        lastValue = valor;
-//
-//        // Enviar requisição AJAX para atualizar o valor no servidor
-//        fetch(`/collaborators_backoffice/empresa_estoque/${estoqueId}`, {
-//          method: "PATCH",
-//          headers: {
-//            "Content-Type": "application/json",
-//            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
-//          },
-//          body: JSON.stringify({ estoque: { valorvenda: valor, id: estoqueId } }),
-//        })
-//          .then(response => {
-//            if (!response.ok) throw new Error("Erro ao salvar o valor.");
-//            return response.json();
-//          })
-//          .then(data => {
-//            // Exibir mensagem de sucesso com bootstrap-growl
-//            $.bootstrapGrowl(data.message, {
-//              ele: 'body',
-//              type: 'success',
-//              offset: { from: 'top', amount: 60 },
-//              align: 'center',
-//              width: 300,
-//              delay: 3000,
-//              allow_dismiss: false,
-//              stackup_spacing: 40,
-//            });
-//            console.log("Valor atualizado com sucesso:", data);
-//          })
-//          .catch(error => {
-//            $.bootstrapGrowl("Erro ao salvar. Tente novamente.", { type: 'danger' });
-//            console.error("Erro:", error);
-//          });
-//      });
-//    });
-//  });
-
 
 </script>

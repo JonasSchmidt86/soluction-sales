@@ -25,7 +25,12 @@ Rails.application.routes.draw do
     # cria varias rotas possiveis sem precisar criar uma a uma
     resources :collaborators, only: [:index, :edit, :update, :new, :create, :destroy]
     
-    resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] 
+    resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] do
+      member do
+        get :estoque
+      end
+    end
+    
     resources :produto_imagens, only: [:index, :create, :edit, :destroy]
 
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
