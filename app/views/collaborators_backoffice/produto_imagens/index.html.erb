@@ -46,7 +46,7 @@
                           <!-- Imagem -->
                           <div class="dropdown position-relative">
                             <!-- Botão com imagem -->
-                            <button class="btn p-0 border-0 dropdown-toggle " 
+                            <button class="btn p-0 border-0 imagem-botao" 
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
@@ -56,17 +56,13 @@
                                     class: "d-block w-100 rounded", 
                                     style: "max-width: 220px; height: 180px; object-fit: contain;" 
                                   ) %>
-                              <!-- Três pontinhos -->
-                              <span class="dropdown-indicator position-absolute top-0 end-0 bg-dark text-white p-1 rounded-circle" 
-                                        style="display: none; cursor: pointer;">
-                                ⋮
-                              </span>
                             </button>
                             <!-- Dropdown sobre a imagem -->
                             <ul class="dropdown-menu position-absolute" 
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
                               <li>
                                 <button class="open-modal dropdown-item" 
+                                        id="abrir-modal-imagens" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
@@ -120,6 +116,14 @@
   </div>
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script>
+    document.querySelectorAll('.imagem-botao').forEach((botao) => {
+      botao.addEventListener('dblclick', function () {
+        console.log("Botão clicado");
+        document.getElementById('abrir-modal-imagens').click();
+      });
+    });
+
+
     document.addEventListener("DOMContentLoaded", function () {
     let carousel = document.querySelector("#carouselImages");
     let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });

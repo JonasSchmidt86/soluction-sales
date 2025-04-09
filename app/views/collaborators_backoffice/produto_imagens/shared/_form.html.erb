@@ -60,7 +60,7 @@
                             <!-- Imagem -->
                             <div class="dropdown position-relative">
                               <!-- Botão com imagem -->
-                              <button class="btn p-0 border-0 dropdown-toggle imagem-botao" 
+                              <button class="btn p-0 border-0 imagem-botao"
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
@@ -68,7 +68,7 @@
                                         style="position: relative; caret-color: transparent;">
                                 <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
-                                    style: "max-width: 100%; height: 180px; object-fit: contain;" 
+                                    style: "max-width: 220px; height: 180px; object-fit: contain;" 
                                   ) %>
                               </button>
                               <!-- Dropdown sobre a imagem -->
@@ -76,7 +76,7 @@
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
                                 <li>
                                   <button class="open-modal dropdown-item" 
-                                      id="abrir-modal-imagens"
+                                        id="abrir-modal-imagens" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
