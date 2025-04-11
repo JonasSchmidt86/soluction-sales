@@ -20,8 +20,25 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       compra = Compra.new;
       puts "------------ nil compra ---------- "
       
-      xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
-      xml_doc = Nokogiri::XML(xml_content)
+      #service = @xml_file.file.blob.service 
+      #file_path = service.path_for(@xml_file.file.key)
+
+      puts "------_>>>>>> #{@xml_file.local_file_path} "
+      
+      #xml_content = File.read(@xml_file.local_file_path, encoding: 'UTF-8')
+      #xml_doc = Nokogiri::XML(xml_content)
+
+      file_path = @xml_file.local_file_path
+
+      if file_path && File.exist?(file_path)
+        xml_content = File.read(file_path, encoding: 'UTF-8')
+        xml_doc = Nokogiri::XML(xml_content)
+      else
+        Rails.logger.error "Arquivo não encontrado: #{file_path.inspect}"
+        # redirect_to some_path, alert: "Arquivo XML não encontrado."s
+      end
+
+
 
       ide_element = xml_doc.xpath('//*[local-name()="ide"]')
       emit_elements = xml_doc.xpath('//*[local-name()="emit"]')

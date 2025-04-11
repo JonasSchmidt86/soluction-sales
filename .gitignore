@@ -7,6 +7,7 @@
 
 
 # --- passo a passo para fazer o commit da nova versão no servidor -----
+# ssh root@85.31.231.205 
 # cd /home/jonas/www/soluction-sales/
 # sudo systemctl stop puma
 # systemctl stop nginx.service
