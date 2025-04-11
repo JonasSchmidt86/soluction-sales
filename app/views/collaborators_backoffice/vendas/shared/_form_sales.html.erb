@@ -295,7 +295,61 @@ function createBills() {
         row.find('input[id*=_quitada]').val(false);
         row.find('input[id*=_cod_tppagamento]').val(1);
     });
+
+    // Listener para atualizar parcelas automaticamente ao mudar qualquer valor
+    $('#conta_fields').on('change', 'input[id*=_valorparcela]', function () {
+        const total = totalSale;
+        let updatedIndex = $(this).closest('tr').index(); // índice da parcela alterada
+        let soma = 0;
+
+        const rows = $('#conta_fields tr');
+        const numParcelas = rows.length;
+        
+        // Somar os valores das parcelas até a que foi alterada
+        for (let i = 0; i <= updatedIndex; i++) {
+            let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+            if (isNaN(val)) val = 0;
+            soma += val;
+        }
+
+        // Valor restante que precisa ser redistribuído
+        let restante = total - soma;
+        let parcelasRestantes = numParcelas - (updatedIndex + 1);
+
+        if (parcelasRestantes <= 0) return;
+
+        // Valor padrão das parcelas seguintes
+        let novoValor = parseFloat((restante / parcelasRestantes).toFixed(2));
+
+        // Atualiza as parcelas seguintes
+        for (let i = updatedIndex + 1; i < numParcelas; i++) {
+            rows.eq(i).find('input[id*=_valorparcela]').val(novoValor.toFixed(2).replace('.', ','));
+        }
+
+        // Corrigir diferença de centavos na última parcela
+        let totalAtual = 0;
+        for (let i = 0; i < numParcelas; i++) {
+            let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+            if (isNaN(val)) val = 0;
+            totalAtual += val;
+        }
+
+        let diff = parseFloat((total - totalAtual).toFixed(2));
+        if (Math.abs(diff) >= 0.01) {
+            let ultimaParcela = rows.eq(numParcelas - 1);
+            let val = parseFloat(ultimaParcela.find('input[id*=_valorparcela]').val().replace(',', '.'));
+            ultimaParcela.find('input[id*=_valorparcela]').val((val + diff).toFixed(2).replace('.', ','));
+        }
+    });
+
+
 }
+
+
+
+
+
+
 
 // Função para formatar a data no formato DD/MM/AAAA
 function formatDate(date) {
@@ -489,10 +543,12 @@ function formatDate(date) {
             if ( data.length === 0 ){
                 corSelect.value = 1; // 1 é a cor padrão 
             
-            //
-            //} else if(data.length === 1 ){
-            //    corSelect.value = data[0].cod_cor;
-            //
+            
+            } else if(data.length === 1 ){
+                corSelect.value = data[0].cod_cor;
+                proQtd.value = 1;
+                proValor.value = data[0].valorvenda;
+                setValorTotal(field);
 
             } else if (data.length > 0) {
                 data.forEach(cor => {

@@ -23,7 +23,7 @@
                       <div class="col-md-12">
                         <div class="form-floating mb-3 mb-md-0">
                           <%= form.hidden_field :cod_produto %>
-                          <%= form.text_field :nome, disabled: false, class: "text form-control produto_search", placeholder:"Selecione o produto!" %>
+                          <%= form.text_field :nome, readonly: true, class: "text form-control produto_search", placeholder:"Selecione o produto!" %>
                           <%= form.label :produto, class:"" %>
                           <div id="products_list" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
                         </div>
@@ -33,8 +33,8 @@
                     <div class="row mb-3">
                       <div class="col-md-2">
                         <div class="form-floating mb-3 mb-md-0">
-                          <%= form.text_field :cod_produto, disabled: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
-                          <%= form.label :cod_produto, class:"" %>
+                          <%= form.text_field :cod_produto, readonly: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
+                          <%= form.label :codigo_produto, class:"" %>
                         </div>
                       </div>
                       <div class="col-md-4">
@@ -145,7 +145,6 @@
     document.querySelectorAll('.imagem-botao').forEach((botao) => {
       botao.addEventListener('dblclick', function () {
         const index = botao.getAttribute('data-index');
-        console.log(index)
         document.getElementById(`abrir-modal-imagens_${index}`).click();
       });
     });

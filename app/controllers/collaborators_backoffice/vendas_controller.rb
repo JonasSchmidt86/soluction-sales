@@ -14,6 +14,21 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
                    .joins(:empresaprodutos)
                    .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
                    .order(quantidade: :desc, nmcor: :asc, cod_cor: :asc)
+      if @cores.empty?
+        @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
+                      .joins(:empresaprodutos).select(:cod_empresa)
+                      .where("cod_produto = ?", params[:id_produto])
+                      .order(valorvenda: :desc)
+                      .limit(1);
+        @cores.each do |core|
+          if(core.cod_empresa != current_collaborator.cod_empresa)
+            core.cod_cor = 1;
+            core.nmcor = "PADRAO";
+            core.quantidade = 0;
+          end
+        end
+      end
+
       respond_to do |format|
         format.json { render json: @cores }
       end

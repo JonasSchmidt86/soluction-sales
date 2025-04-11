@@ -120,7 +120,6 @@
     document.querySelectorAll('.imagem-botao').forEach((botao) => {
       botao.addEventListener('dblclick', function () {
         const index = botao.getAttribute('data-index');
-        console.log(index)
         document.getElementById(`abrir-modal-imagens_${index}`).click();
       });
     });

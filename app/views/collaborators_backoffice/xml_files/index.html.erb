@@ -67,9 +67,13 @@
                       <% puts "---------------------" %>
                       
                       <% if xml_file.present? %>
-                        <% xml_file_path = Rails.application.routes.url_helpers.rails_blob_path(xml_file.file, only_path: true) %>
+
+                        <% service = xml_file.file.blob.service %>
+                        <% file_path = service.path_for(xml_file.file.key) %>
 
                         <% file_path = ActiveStorage::Blob.service.path_for(xml_file.file.key) %>
+                        <% Rails.logger.error "PATH #{file_path}.---------------------------" %>
+
                         <% if File.exist?(file_path) %>
                           <% xml_content = File.read(file_path, encoding: 'UTF-8') %>
                         <% else %>
