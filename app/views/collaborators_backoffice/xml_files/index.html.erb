@@ -50,8 +50,8 @@
           </thead>
           <tbody>
             <% @xml_files.each do |xml_file| %>
-              <%# puts xml_file.file.filename %>
-              <%# puts "---------------------" %>
+              <% puts "NOME >>> #{xml_file.file.inspect}" %>
+              <% puts "---------------------" %>
               <% if xml_file.present? %>
                 <% service = xml_file.file.blob.service %>
                 <% file_path = service.path_for(xml_file.file.key) %>
@@ -65,7 +65,7 @@
                   <% xml_content = File.read(file_path, encoding: 'UTF-8') %>
                 <% else %>
                   <% Rails.logger.error "Arquivo não encontrado para o registro #{xml_file.id}. Apagando registro." %>
-                  <%# xml_file.destroy %>
+                  <%#xml_file.destroy %>
                   <p>Registro apagado devido à ausência do arquivo.</p>
                 <% end %>
               <% end %>
@@ -129,7 +129,7 @@
           </table>
           <%= form_with(model: [ :collaborators_backoffice, XmlFile.new ], local: true, method: :post, 
                                     class:"col dataTable-search col-md-6") do |form| %>
-            <%= form.file_field :file, class:"btn btn-success btn-circle" %>
+            <%= form.file_field :file, multiple: true, class:"btn btn-success btn-circle" %>
             <%= form.submit 'Enviar', class:"btn btn-success btn-circle" %>
           <% end %>
         </div>

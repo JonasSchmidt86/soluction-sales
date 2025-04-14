@@ -17,25 +17,34 @@
               <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                 <div class="card-body">
                   <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :get, 
-                                    class:"col dataTable-search col-md-12") do |form| %>
-                    <div class="d-flex align-items-center mb-2">
-                      <div class="col-md-8">
-                        <div class="form-floating mb-2 mb-md-1">
-                          <%= form.text_field :term, value: params[:term], class:"text form-control", placeholder:"Nome produto...", id:"text" %>
-                          <%= form.label :produto, class:"" %>
-                        </div>
+              class: "row g-2 align-items-stretch mb-3") do |form| %>
+                    <!-- Campo de busca (term) -->
+                    <div class="col-md-6">
+                      <div class="form-floating h-100">
+                        <%= form.text_field :term, value: params[:term], class: "form-control h-100", placeholder: "Nome produto...", id: "text" %>
+                        <%= form.label :term, "Produto" %>
                       </div>
-                      <div class="col-md-3">
-                        <div class="form-floating mb-2 mb-md-1">
-                          <%= form.collection_select(:cod_cor, 
-                                    (Core.select(:cod_cor, :nmcor).where(ativo: true)), 
-                                      :cod_cor, :nmcor, {:include_blank => 'Selecione uma cor', selected: params[:cod_cor]}, 
-                                      class: "text form-control", readonly: false) %>
-                        </div>
+                    </div>
+                    <!-- Select de cor -->
+                    <div class="col-md-3">
+                      <div class="form-floating h-100">
+                        <%= form.collection_select(:cod_cor, 
+            Core.select(:cod_cor, :nmcor).where(ativo: true), 
+            :cod_cor, :nmcor, 
+            { include_blank: 'Selecione uma cor', selected: params[:cod_cor] }, 
+            class: "form-control h-100") %>
+                        <%= form.label :cod_cor, "Cor" %>
                       </div>
-                      <div class="d-flex align-items-center h-100 me-4 col-md-1">
-                        <button type='submit' class="btn btn-success btn-lg h-100">Buscar</button>
-                      </div>
+                    </div>
+                    <!-- Botão Buscar -->
+                    <div class="col-md-auto d-flex align-items-stretch">
+                      <button type="submit" class="btn btn-success btn-lg w-100">Buscar</button>
+                    </div>
+                    <!-- Link Add Imagens -->
+                    <div class="col-md-auto d-flex align-items-stretch">
+                      <%= link_to edit_collaborators_backoffice_produto_imagen_path(0), title: "Gerenciar Imagens", class: "btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center" do %>
+                        <i class="fa fa-images me-2"></i> Add Imagens
+                      <% end %>
                     </div>
                   <% end %>
                   <hr class="my-2">

@@ -19,10 +19,14 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
 
   def edit
     @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
-    if @produto.nil?
-      @produto_imagens = ProdutoImagem.new
-    else
-      @produto_imagens = @produto.produto_imagens.ordenadas
+    if params[:id].present? && params[:id] == "0"
+      @produto = Produto.new
+    elsif params[:id].present?
+      if @produto.nil?
+        @produto_imagens = ProdutoImagem.new
+      else
+        @produto_imagens = @produto.produto_imagens.ordenadas
+      end
     end
   end
   
@@ -35,7 +39,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   
     # Verifique se as imagens estão presentes
     if params[:imagens].present?
-
+      if @produto.blank?
+        redirect_to edit_collaborators_backoffice_produto_imagen_path(0,params.to_unsafe_h), notice: 'Produto não encontrado!'
+        return
+      end
       params[:imagens].each do |imagem|
         next if imagem.blank?
 
@@ -121,7 +128,9 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   private
   
   def set_produto
-    @produto = Produto.find(params[:cod_produto]);
+    if params[:cod_produto].present?
+      @produto = Produto.find(params[:cod_produto]);
+    end
   end
   
   def set_produto_imagem

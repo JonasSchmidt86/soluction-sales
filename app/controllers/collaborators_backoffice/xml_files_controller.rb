@@ -74,94 +74,130 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
         return
       end
       
-      @xml_file = XmlFile.new
       
-      if xml_file_params[:file].present?
+      
+      arquivos = params[:xml_file][:file].reject(&:blank?) # Remove strings vazias
+      
+      puts "Arquivos: #{arquivos.size }"
 
-        unless File.extname(xml_file_params[:file]).upcase == ".XML"
-          redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo não é valido!.'
-          return;
+      arquivos_salvos = []
+      arquivos_erro = []
+
+      if arquivos.size > 0
+
+        #if xml_file_params[:file].present?
+        arquivos.map do |arquivo|
+          @xml_file = XmlFile.new
+          puts " INICIO ----------------- #{arquivo.inspect}"
+          puts "----------------- #{arquivo.original_filename}"
+          puts "----------------- #{arquivo.content_type}"
+
+          unless File.extname(arquivo.original_filename).upcase == ".XML"
+            arquivos_erro << arquivo
+            next;
+          end
+
+          @xml_file.file = arquivo;
+
+          puts "EXISTE = #{File.exist?(arquivo.tempfile)}"
+
+          xml_content = File.read(arquivo.tempfile, encoding: 'UTF-8')
+          xml_doc = Nokogiri::XML(xml_content)
+      
+          cnpj_val = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text
+          cnpj_dest = xml_doc.xpath('//*[local-name()="dest"]').at("CNPJ")&.text
+
+          if cnpj_dest == current_collaborator.empresa.cpf_cnpj
+            @xml_file.empresa = current_collaborator.empresa
+          else 
+            #redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo de Outra empresa.'
+            arquivos_erro << arquivo
+            puts " ------------------ ------------------ Arquivo de Outra empresa."
+            next;
+          end
+          
+          id_nfe = xml_doc.at_xpath('//*[local-name()="infNFe"]')
+          @xml_file.name = id_nfe['Id']
+
+          blob = ActiveStorage::Blob.find_by(filename: id_nfe['Id'])
+          if blob.present?
+            arquivos_erro << arquivo
+            puts " ------------------ ------------------ Arquivo já foi importado. #{blob.filename}"
+            next;
+          end
+
+          if cnpj_val
+            fornecedor = Pessoa.select(:cod_pessoa, :apelido).where(cpf_cnpj: cnpj_val).limit(1).first
+            
+            if !fornecedor
+              # cadastrar fornecedor novo
+              fornecedor = Pessoa.new
+
+              fornecedor.tipo = 'J'; # se for cnpj
+              fornecedor.cpf_cnpj = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text;
+              fornecedor.rg_ie = xml_doc.xpath('//*[local-name()="emit"]').at("IE")&.text;
+
+              fornecedor.nome = xml_doc.xpath('//*[local-name()="emit"]').at("xNome")&.text;
+              fornecedor.apelido = xml_doc.xpath('//*[local-name()="emit"]').at("xFant")&.text;
+              
+              fornecedor.endereco = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xLgr")&.text;
+              fornecedor.numero = xml_doc.xpath('//*[local-name()="enderEmit"]').at("cMun")&.text;
+              fornecedor.bairro = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xBairro")&.text;
+              fornecedor.telefone = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
+              fornecedor.celular = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
+
+              # buscar pelo cep a cidade 
+              fornecedor.cep = xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text;
+
+              id_cidade = ViacepService.get_id_cidade(xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text)
+              fornecedor.cod_cidade = id_cidade.present? ? id_cidade : 1 # se não encontrar a cidade ele vai deixar padrão marechal
+
+            end
+            @xml_file.name = fornecedor.apelido
+            @xml_file.pessoa = fornecedor
+            puts "Fornecedor: #{fornecedor.inspect}"
+          end
+
+          file_io = arquivo
+          # file_io = @xml_file.file
+          company = current_collaborator.empresa 
+          puts "----------------- #{company}"
+        
+          # Associa o arquivo com o serviço personalizado
+          @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
+          numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
+          compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
+          puts "---COMPRA SE EXISTE = -------------- #{compra.size}"
+          if compra.size > 0
+            @xml_file.compra = compra.first;
+          end
+puts "----------------- ANTES DE SALVAR -----------------"
+          # Se o arquivo XML foi salvo com sucesso, redirecione para a página de listagem
+          if @xml_file.save
+            arquivos_salvos << @xml_file
+          else
+              puts "Erro ao salvar XML: #{xml_file.errors.full_messages.join(', ')}"
+          end
+puts "----------------- depois DE SALVAR ----------------- #{arquivos_salvos.size}"
         end
-
-        @xml_file.file = xml_file_params[:file] if xml_file_params[:file];
-
-        xml_content = File.read(xml_file_params[:file].tempfile, encoding: 'UTF-8')
-        xml_doc = Nokogiri::XML(xml_content)
-    
-        cnpj_val = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text
-        cnpj_dest = xml_doc.xpath('//*[local-name()="dest"]').at("CNPJ")&.text
-        if cnpj_dest == current_collaborator.empresa.cpf_cnpj
-          @xml_file.empresa = current_collaborator.empresa
-        else 
-          redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo de Outra empresa.'
-          return 
+      end
+        if arquivos_salvos.size > 0
+          if arquivos_erro.size > 0
+            redirect_to collaborators_backoffice_xml_files_path, notice: "#{arquivos_salvos.count} arquivo(s) XML enviado(s) com sucesso. 
+          #{arquivos_erro.count} arquivo(s) com erro(s)."
+          else
+            redirect_to collaborators_backoffice_xml_files_path, notice: "#{arquivos_salvos.count} arquivo(s) XML enviado(s) com sucesso."
+          end
+          
+        else
+          redirect_to collaborators_backoffice_xml_files_path, notice: 'Nenhum XML foi processado com sucesso.'
         end
         
-        id_nfe = xml_doc.at_xpath('//*[local-name()="infNFe"]')
-        @xml_file.name = id_nfe['Id']
 
-        blob = ActiveStorage::Blob.find_by(filename: id_nfe['Id'])
-        if blob.present?
-          redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo já foi importado.'
-          return 
-        end
-
-        if cnpj_val
-          fornecedor = Pessoa.select(:cod_pessoa, :apelido).where(cpf_cnpj: cnpj_val).limit(1).first
-          
-          if !fornecedor
-            # cadastrar fornecedor novo
-            fornecedor = Pessoa.new
-
-            fornecedor.tipo = 'J'; # se for cnpj
-            fornecedor.cpf_cnpj = xml_doc.xpath('//*[local-name()="emit"]').at("CNPJ")&.text;
-            fornecedor.rg_ie = xml_doc.xpath('//*[local-name()="emit"]').at("IE")&.text;
-
-            fornecedor.nome = xml_doc.xpath('//*[local-name()="emit"]').at("xNome")&.text;
-            fornecedor.apelido = xml_doc.xpath('//*[local-name()="emit"]').at("xFant")&.text;
-            
-            fornecedor.endereco = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xLgr")&.text;
-            fornecedor.numero = xml_doc.xpath('//*[local-name()="enderEmit"]').at("cMun")&.text;
-            fornecedor.bairro = xml_doc.xpath('//*[local-name()="enderEmit"]').at("xBairro")&.text;
-            fornecedor.telefone = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
-            fornecedor.celular = xml_doc.xpath('//*[local-name()="enderEmit"]').at("fone")&.text;
-
-            # buscar pelo cep a cidade 
-            fornecedor.cep = xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text;
-
-            id_cidade = ViacepService.get_id_cidade(xml_doc.xpath('//*[local-name()="emit"]').at("CEP")&.text)
-            fornecedor.cod_cidade = id_cidade.present? ? id_cidade : 1 # se não encontrar a cidade ele vai deixar padrão marechal
-
-          end
-          @xml_file.name = fornecedor.apelido
-          @xml_file.pessoa = fornecedor
-
-        end
-
-        file_io = xml_file_params[:file]
-        # file_io = @xml_file.file
-        company = current_collaborator.empresa
-      
-        # Associa o arquivo com o serviço personalizado
-        @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
-        numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
-        compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
-        if compra.size > 0
-          @xml_file.compra = compra.first;
-        end
-
-      end
-    
-      if @xml_file.save
-        redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo XML enviado com sucesso.'
-      else
-        redirect_to collaborators_backoffice_xml_files_path, alert: 'Falha ao processar o arquivo XML.'
-      end
     end
     
-    
-    
     def destroy
+
       if @xml_file.destroy
         redirect_to collaborators_backoffice_xml_files_path, notice: 'Arquivo XML excluído com sucesso.'
       else
@@ -193,7 +229,6 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
     private
 
     def xml_file_params
-      
       if params[:xml_file]
         params.require(:xml_file).permit(:file)
       end

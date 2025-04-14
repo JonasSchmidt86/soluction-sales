@@ -20,63 +20,78 @@
                   <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :post, 
                                     class:"col dataTable-search") do |form| %>
                     <div class="row mb-3">
-                      <div class="col-md-12">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form.hidden_field :cod_produto %>
-                          <%= form.text_field :nome, readonly: true, class: "text form-control produto_search", placeholder:"Selecione o produto!" %>
-                          <%= form.label :produto, class:"" %>
-                          <div id="products_list" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                      <div class="row mb-3">
+                        <div class="d-flex align-items-center w-100">
+                          <!-- Campo com form-floating -->
+                          <div class="form-floating me-2 flex-grow-1" style="position: relative;">
+                            <%= form.hidden_field :cod_produto %>
+                            <%= form.text_field :nome, class: "form-control produto_search", placeholder: "Selecione o produto!", id: "nome_produto" %>
+                            <%= form.label :nome, "Produto" %>
+                            <div id="products_list" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <hr class="my-2">
-                    <div class="row mb-3">
-                      <div class="col-md-2">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form.text_field :cod_produto, readonly: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
-                          <%= form.label :codigo_produto, class:"" %>
+                      <hr class="my-2">
+                      <div class="row mb-3">
+                        <div class="col-md-2">
+                          <div class="form-floating mb-3 mb-md-0">
+                            <%= form.text_field :cod_produto, readonly: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
+                            <%= form.label :codigo_produto, class:"" %>
+                          </div>
                         </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form.collection_select(:cod_cor, (@produto.blank? ? Core.all : Core.where("cod_cor in (select DISTINCT cod_cor from empresaproduto where cod_produto = ? )", @produto.cod_produto ).order(:cod_cor) ), :cod_cor, :nmcor_cod,
+                        <div class="col-md-4">
+                          <div class="form-floating mb-3 mb-md-0">
+                            <%= form.collection_select(:cod_cor, ((@produto.nil?) ? Core.all : Core.where("cod_cor in (select DISTINCT cod_cor from empresaproduto where cod_produto = ? )", @produto.cod_produto ).order(:cod_cor) ), :cod_cor, :nmcor_cod,
                                                         {:prompt => 'Selecione uma Cor'}, class: "form-control") %>
-                          <%= form.label :Cores, class:"" %>
+                            <%= form.label :Cores, class:"" %>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <%= form.text_field :nome, disabled: true, value: (!@produto.blank? ? @produto.nome : nil), class: "text form-control", placeholder:"Produto", id:"text" %>
+                            <%= form.label :name, class:"" %>
+                          </div>
                         </div>
                       </div>
-                      <div class="col-md-6">
-                        <div class="form-floating">
-                          <%= form.text_field :nome, disabled: true, value: (!@produto.blank? ? @produto.nome : nil), class: "text form-control", placeholder:"Produto", id:"text" %>
-                          <%= form.label :name, class:"" %>
+                      <hr class="my-2">
+                      <div class="row mb-3">
+                        <div class="row g-2 align-items-end">
+                          <!-- Campo de upload (sem form-floating, mas visual igual) -->
+                          <div class="col-md-9">
+                            <div class="h-100">
+                              <%= form.file_field :imagens, multiple: true, class: "form-control" %>
+                            </div>
+                          </div>
+                          <!-- Botão salvar -->
+                          <div class="col-md-3 d-flex align-items-end">
+                            <%= form.hidden_field :path, value: 'edit' %>
+                            <button type="submit" class="btn btn-success w-100">Salvar</button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <hr class="my-2">
-                    <div class="row mb-3">
-                      <%= form.file_field :imagens, multiple: true, class: "form-control" %>
-                      <div class="d-flex flex-wrap gap-3 mt-3">
-                        <% @produto_imagens.each_with_index do |imagem, index| %>
-                          <div class="position-relative image-container" style="display: inline-block;">
-                            <!-- Imagem -->
-                            <div class="dropdown position-relative">
-                              <!-- Botão com imagem -->
-                              <button class="btn p-0 border-0 imagem-botao"
+                        <div class="d-flex flex-wrap gap-3 mt-3">
+                          <%# @produto_imagens.each_with_index do |imagem, index| %>
+                            <% (@produto_imagens || []).each_with_index do |imagem, index| %>
+                              <div class="position-relative image-container" style="display: inline-block;">
+                                <!-- Imagem -->
+                                <div class="dropdown position-relative">
+                                  <!-- Botão com imagem -->
+                                  <button class="btn p-0 border-0 imagem-botao"
                                         data-index="<%= index %>"
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
                                         aria-expanded="false" 
                                         style="position: relative; caret-color: transparent;">
-                                <%= image_tag(imagem.imagem, 
+                                    <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
                                     style: "max-width: 220px; height: 180px; object-fit: contain;" 
                                   ) %>
-                              </button>
-                              <!-- Dropdown sobre a imagem -->
-                              <ul class="dropdown-menu position-absolute" 
+                                  </button>
+                                  <!-- Dropdown sobre a imagem -->
+                                  <ul class="dropdown-menu position-absolute" 
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
-                                <li>
-                                  <button class="open-modal dropdown-item" 
+                                    <li>
+                                      <button class="open-modal dropdown-item" 
                                       id="abrir-modal-imagens_<%= index %>" 
                                       type="button" 
                                       data-bs-toggle="modal" 
@@ -84,53 +99,47 @@
                                       data-index="<%= index %>"
                                       data-produto-id="<%= (!@produto.blank? ? @produto.id : nil) %>"
                                       >
-                                    🔍 Ampliar
-                                  </button>
-                                </li>
-                                <li>
-                                  <button class="open-modal dropdown-item" 
+                                        🔍 Ampliar
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#produto_info" 
                                       data-index="<%= imagem.produto.id %>"
                                       data-produto-id="<%= imagem.produto.id %>"
                                       data-produto-nome="<%= (!@produto.blank? ? @produto.nome : nil) %>" >
-                                    ℹ️ Informações
-                                  </button>
-                                </li>
-                                <li>
-                                  <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem, term:"path_edit"), 
+                                        ℹ️ Informações
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem, term:"path_edit"), 
                                       method: :delete, 
                                       data: { confirm: "Tem certeza de que deseja remover esta imagem?" },
                                       class: "dropdown-item text-danger"
                                     %>
-                                </li>
-                              </ul>
-                            </div>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </div>
+                            <% end %>
                           </div>
-                        <% end %>
-                      </div>
-                    </div>
-                    <div class="mt-3 mb-3">
-                      <div class="d-grid text-center">
-                        <div class="col-md-9 col-sm-9  offset-md-3">
-                          <%= form.hidden_field :path, value: 'edit' %>
-                          <button type="submit" class="btn btn-success btn-block">Salvar</button>
                         </div>
+                      <% end %>
+                      <!-- Modal com Carousel para navegar entre imagens -->
+                      <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
+                      <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Estoque' } %>
+                    </div>
+                  </div>
+                  <div class="mt-0 mb-3">
+                    <div class="d-grid">
+                      <div class="col-md-9 col-sm-9  offset-md-3">
+                        <div id="setTime">
+                        </div
+                  </div>
                       </div>
                     </div>
-                  <% end %>
-                  <!-- Modal com Carousel para navegar entre imagens -->
-                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
-                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Estoque' } %>
-                </div>
-              </div>
-              <div class="mt-0 mb-3">
-                <div class="d-grid">
-                  <div class="col-md-9 col-sm-9  offset-md-3">
-                    <div id="setTime">
-                    </div
-                  </div>
                   </div>
                 </div>
               </div>
@@ -138,140 +147,138 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-  <script>
-    document.querySelectorAll('.imagem-botao').forEach((botao) => {
-      botao.addEventListener('dblclick', function () {
-        const index = botao.getAttribute('data-index');
-        document.getElementById(`abrir-modal-imagens_${index}`).click();
-      });
-    });
-
-        document.addEventListener("keypress", function () {
-            //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-            if(event.keyCode == 13){ // 13 é o Enter
-                event.preventDefault();
-            }
+      <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+      <script>
+        document.querySelectorAll('.imagem-botao').forEach((botao) => {
+          botao.addEventListener('dblclick', function () {
+            const index = botao.getAttribute('data-index');
+            document.getElementById(`abrir-modal-imagens_${index}`).click();
+          });
         });
 
-        // ---------------------------------
-
-        $(document).on('keydown', '.produto_search', function(event) {
-
-            let productsList = $(`#products_list`);
-            if (event.key === 'Enter') {
-                selectProduct(this);
-            } else if (event.key === 'Escape') {
-                productsList.empty();
-                productsList.hide();
-            }
-        });
-        let url = window.location.origin + '/collaborators_backoffice/';
-        function selectProduct(field) {
-
-            // Obtém a referência da div pelo id atual
-            var productsListDiv = document.getElementById(`products_list`);
-
-            // Verifica se a div com id "products_list" existe
-            if (productsListDiv) {
-                // Define o novo id
-                productsListDiv.id = `products_list`;
-            }
-
-            var selectedProductIdField = document.getElementById(`produto`);
-
-            let productsList = $(`#products_list`);
-
-            let apiUrl = url+ "buscas/buscar_produtos";
-
-            productOptions();
-
-            // Adiciona um evento de clique aos itens da lista
-            productsList.on('click', `div.list-group-item`, function() {
-                let selectedProduct = $(this).data('produto');
-                let selectedProductId = $(this).data('cod_produto');
-                console.log(produto)
-                field.value =  selectedProduct ;
-                selectedProductIdField.value = selectedProductId;
-                // Limpa a lista de resultados
-                productsList.hide();
-
+            document.addEventListener("keypress", function () {
+                //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                if(event.keyCode == 13){ // 13 é o Enter
+                    event.preventDefault();
+                }
             });
-            function productOptions() {
-                var query = field.value.trim().toLowerCase();
-                productsList.empty();
 
-                $.ajax({
-                    url: apiUrl,
-                    method: 'GET',
-                    data: { entidade: 'Produto', query: query },
-                    success: function(data) {
-                        if (data.length === 1) {
-                            // Se houver apenas um produto encontrado, redireciona automaticamente
-                            window.location.href = `/collaborators_backoffice/produto_imagens/${data[0].cod_produto}/edit`;
-                        } else {
-                            // Exibe lista para seleção caso tenha mais de um resultado
-                            productsList.empty();
-                            data.forEach(function(product) {
-                                var listItem = $('<div>').text(product.produto);
-                                listItem.addClass('list-group-item');
-                                listItem.data('cod_produto', product.cod_produto);
-                                listItem.data('produto', product.produto);
-                                productsList.append(listItem);
-                            });
+            // ---------------------------------
 
-                            productsList.show();
-                        }
-                    },
-                    error: function(err) {
-                        console.error('Erro na requisição AJAX:', err);
-                    }
+            $(document).on('keydown', '.produto_search', function(event) {
+
+                let productsList = $(`#products_list`);
+                if (event.key === 'Enter') {
+                    selectProduct(this);
+                } else if (event.key === 'Escape') {
+                    productsList.empty();
+                    productsList.hide();
+                }
+            });
+            let url = window.location.origin + '/collaborators_backoffice/';
+            function selectProduct(field) {
+
+                // Obtém a referência da div pelo id atual
+                var productsListDiv = document.getElementById(`products_list`);
+
+                // Verifica se a div com id "products_list" existe
+                if (productsListDiv) {
+                    // Define o novo id
+                    productsListDiv.id = `products_list`;
+                }
+
+                var selectedProductIdField = document.getElementById(`produto`);
+
+                let productsList = $(`#products_list`);
+
+                let apiUrl = url+ "buscas/buscar_produtos";
+
+                productOptions();
+
+                // Adiciona um evento de clique aos itens da lista
+                productsList.on('click', `div.list-group-item`, function() {
+                    let selectedProduct = $(this).data('produto');
+                    let selectedProductId = $(this).data('cod_produto');
+                    console.log(produto)
+                    field.value =  selectedProduct ;
+                    selectedProductIdField.value = selectedProductId;
+                    // Limpa a lista de resultados
+                    productsList.hide();
+
                 });
-            }
-            // Quando um produto da lista for clicado, redireciona para a edição
-            $(document).on('click', '.list-group-item', function() {
-                var productId = $(this).data('cod_produto');
-                window.location.href = `/collaborators_backoffice/produto_imagens/${productId}/edit`;
+                function productOptions() {
+                    var query = field.value.trim().toLowerCase();
+                    productsList.empty();
+
+                    $.ajax({
+                        url: apiUrl,
+                        method: 'GET',
+                        data: { entidade: 'Produto', query: query },
+                        success: function(data) {
+                            if (data.length === 1) {
+                                // Se houver apenas um produto encontrado, redireciona automaticamente
+                                window.location.href = `/collaborators_backoffice/produto_imagens/${data[0].cod_produto}/edit`;
+                            } else {
+                                // Exibe lista para seleção caso tenha mais de um resultado
+                                productsList.empty();
+                                data.forEach(function(product) {
+                                    var listItem = $('<div>').text(product.produto);
+                                    listItem.addClass('list-group-item');
+                                    listItem.data('cod_produto', product.cod_produto);
+                                    listItem.data('produto', product.produto);
+                                    productsList.append(listItem);
+                                });
+
+                                productsList.show();
+                            }
+                        },
+                        error: function(err) {
+                            console.error('Erro na requisição AJAX:', err);
+                        }
+                    });
+                }
+                // Quando um produto da lista for clicado, redireciona para a edição
+                $(document).on('click', '.list-group-item', function() {
+                    var productId = $(this).data('cod_produto');
+                    window.location.href = `/collaborators_backoffice/produto_imagens/${productId}/edit`;
+                });
+            };
+
+
+              document.addEventListener("DOMContentLoaded", function () {
+            let carousel = document.querySelector("#carouselImages");
+            let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+
+            document.querySelectorAll(".open-modal").forEach(function (button) {
+              button.addEventListener("click", function () {
+                let index = this.getAttribute("data-index"); // Pega o índice da imagem clicada
+                let items = document.querySelectorAll("#carouselImages .carousel-item");
+
+                items.forEach((item) => item.classList.remove("active")); // Remove 'active' de todas as imagens
+
+                if (items[index]) {
+                  items[index].classList.add("active"); // Define a imagem correta como ativa
+                }
+
+                carouselInstance.to(index); // Muda para a imagem correta no carousel
+              });
             });
-        };
 
+            // Navegação com as setas do teclado (esquerda e direita)
+            document.addEventListener("keydown", function (event) {
+              let activeIndex = [...document.querySelectorAll("#carouselImages .carousel-item")].findIndex(item => item.classList.contains("active"));
 
-          document.addEventListener("DOMContentLoaded", function () {
-        let carousel = document.querySelector("#carouselImages");
-        let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+              if (event.key === "ArrowRight") { // Setas para a direita
+                if (activeIndex < document.querySelectorAll("#carouselImages .carousel-item").length - 1) {
+                  carouselInstance.next(); // Move para a próxima imagem
+                }
+              }
 
-        document.querySelectorAll(".open-modal").forEach(function (button) {
-          button.addEventListener("click", function () {
-            let index = this.getAttribute("data-index"); // Pega o índice da imagem clicada
-            let items = document.querySelectorAll("#carouselImages .carousel-item");
-
-            items.forEach((item) => item.classList.remove("active")); // Remove 'active' de todas as imagens
-
-            if (items[index]) {
-              items[index].classList.add("active"); // Define a imagem correta como ativa
-            }
-
-            carouselInstance.to(index); // Muda para a imagem correta no carousel
-          });
-        });
-
-        // Navegação com as setas do teclado (esquerda e direita)
-        document.addEventListener("keydown", function (event) {
-          let activeIndex = [...document.querySelectorAll("#carouselImages .carousel-item")].findIndex(item => item.classList.contains("active"));
-
-          if (event.key === "ArrowRight") { // Setas para a direita
-            if (activeIndex < document.querySelectorAll("#carouselImages .carousel-item").length - 1) {
-              carouselInstance.next(); // Move para a próxima imagem
-            }
-          }
-
-          if (event.key === "ArrowLeft") { // Setas para a esquerda
-            if (activeIndex > 0) {
-              carouselInstance.prev(); // Move para a imagem anterior
-            }
-          }
-        });
-          });
-  </script>
+              if (event.key === "ArrowLeft") { // Setas para a esquerda
+                if (activeIndex > 0) {
+                  carouselInstance.prev(); // Move para a imagem anterior
+                }
+              }
+            });
+              });
+      </script>
