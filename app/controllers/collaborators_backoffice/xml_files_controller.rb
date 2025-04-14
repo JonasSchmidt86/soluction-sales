@@ -87,19 +87,18 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
 
         #if xml_file_params[:file].present?
         arquivos.map do |arquivo|
+
           @xml_file = XmlFile.new
-          puts " INICIO ----------------- #{arquivo.inspect}"
-          puts "----------------- #{arquivo.original_filename}"
-          puts "----------------- #{arquivo.content_type}"
 
           unless File.extname(arquivo.original_filename).upcase == ".XML"
             arquivos_erro << arquivo
+            puts " ------------------ ------------------ Arquivo não é XML."
             next;
           end
 
           @xml_file.file = arquivo;
 
-          puts "EXISTE = #{File.exist?(arquivo.tempfile)}"
+          # puts "EXISTE = #{File.exist?(arquivo.tempfile)}"
 
           xml_content = File.read(arquivo.tempfile, encoding: 'UTF-8')
           xml_doc = Nokogiri::XML(xml_content)
@@ -119,8 +118,9 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           id_nfe = xml_doc.at_xpath('//*[local-name()="infNFe"]')
           @xml_file.name = id_nfe['Id']
 
+          xml_file = XmlFile.joins(file_attachment: :blob).find_by(active_storage_blobs: { filename: id_nfe['Id'] })
           blob = ActiveStorage::Blob.find_by(filename: id_nfe['Id'])
-          if blob.present?
+          if blob.present? && xml_file.present?
             arquivos_erro << arquivo
             puts " ------------------ ------------------ Arquivo já foi importado. #{blob.filename}"
             next;
@@ -183,12 +183,10 @@ puts "----------------- depois DE SALVAR ----------------- #{arquivos_salvos.siz
       end
         if arquivos_salvos.size > 0
           if arquivos_erro.size > 0
-            redirect_to collaborators_backoffice_xml_files_path, notice: "#{arquivos_salvos.count} arquivo(s) XML enviado(s) com sucesso. 
-          #{arquivos_erro.count} arquivo(s) com erro(s)."
+            redirect_to collaborators_backoffice_xml_files_path, notice: "#{arquivos_salvos.count} arquivo(s) XML enviado(s) com sucesso. #{arquivos_erro.count} arquivo(s) com erro(s)."
           else
             redirect_to collaborators_backoffice_xml_files_path, notice: "#{arquivos_salvos.count} arquivo(s) XML enviado(s) com sucesso."
           end
-          
         else
           redirect_to collaborators_backoffice_xml_files_path, notice: 'Nenhum XML foi processado com sucesso.'
         end

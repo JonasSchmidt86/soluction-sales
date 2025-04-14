@@ -1,6 +1,8 @@
 # app/models/xml_file.rb
 class XmlFile < ApplicationRecord
   
+  before_destroy :purge_file
+
   has_one_attached :file, dependent: :destroy, service: :xml_storage
     
   belongs_to :pessoa, class_name: 'Pessoa', foreign_key: 'pessoa_id', optional: true
@@ -24,16 +26,18 @@ class XmlFile < ApplicationRecord
       existing_blob = ActiveStorage::Blob.find_by(key: custom_key)
   
       if existing_blob
-        self.file.attach(existing_blob)
-      else
-        self.file.attach(
-          io: io,
-          filename: filename,
-          content_type: io.content_type || 'application/octet-stream',
-          service_name: :xml_storage,
-          key: custom_key
-        )
+        # Remove o arquivo existente
+        existing_blob.purge
       end
+      
+      # Anexa o novo arquivo
+      self.file.attach(
+        io: io,
+        filename: filename,
+        content_type: io.content_type || 'application/octet-stream',
+        service_name: :xml_storage,
+        key: custom_key
+      )      
   
       Rails.logger.info("Arquivo anexado com chave: #{custom_key}")
     rescue StandardError => e
@@ -45,6 +49,12 @@ class XmlFile < ApplicationRecord
   def local_file_path
     return unless file.attached? && file.blob.present?  
     file.blob.service.send(:path_for, file.key)
+  end
+
+  private
+
+  def purge_file
+    file.purge_later if file.attached?
   end
   
 
