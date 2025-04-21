@@ -21,9 +21,9 @@ Rails.application.routes.draw do
     get 'welcome/index'
     post 'welcome/index'
     get 'search', to: 'produtos/search#produtos'
-
+    get 'check_cpf_cnpj', to: 'check_cpf_cnpj'
     # cria varias rotas possiveis sem precisar criar uma a uma
-    resources :collaborators, only: [:index, :edit, :update, :new, :create, :destroy]
+    resources :collaborators, only: [:index, :edit, :update, :new, :create, :destroy, :check_cpf_cnpj]
     
     resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] do
       member do
@@ -59,6 +59,7 @@ Rails.application.routes.draw do
     
     # rotas do javascript - ajax
     post 'vendas/consulta_estoque', to: 'vendas#consulta_estoque'
+    post 'compras/consulta_estoque', to: 'compras#consulta_estoque'
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'

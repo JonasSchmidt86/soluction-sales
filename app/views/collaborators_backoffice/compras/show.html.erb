@@ -1,218 +1,203 @@
-
 <div id="layoutAuthentication_content">
-    <main>
-        
-        <div class="card mt-3" style="width: 100%;">
-
-            <div class="row justify-content-center">
-                <div class="">
-                        <% if @compra.errors.any? %>
-                            <div class="alert alert-danger alert-dismissible " role="alert">
-                                <% @compra.errors.full_messages.each do |message| %>
-                                    <ul>
-                                        <li><%= message %></li>
-                                    </ul>
-                                <% end %>
-                            </div>
-                        <% end %>     
-
-                        <div class="card-header">
-                            <h4 class="text-center font-weight-light">
-                                <%= "Compra"%> 
-                            </h4>
-                        </div>
-
-                        <div class="card-body">
-
-                        <%= form_with(model: [:collaborators_backoffice, @compra], local: true) do |form| %>
-
-                            <div class="row mt-3 ">
-                                <div class="col-md-10 ">
-                                    <div class="form-floating mb-3 ">
-                                        <%= form.collection_select(:cod_pessoa, Pessoa.where("cod_pessoa = ? ", @compra.cod_pessoa), 
+  <main>
+    <div class="card mt-3" style="width: 100%;">
+      <div class="row justify-content-center">
+        <div class="">
+          <% if @compra.errors.any? %>
+            <div class="alert alert-danger alert-dismissible " role="alert">
+              <% @compra.errors.full_messages.each do |message| %>
+                <ul>
+                  <li><%= message %></li>
+                </ul>
+              <% end %>
+            </div>
+          <% end %>
+          <div class="card-header">
+            <h4 class="text-center font-weight-light">
+              <%= "Visualizando Compra"%>
+            </h4>
+          </div>
+          <div class="card-body">
+            <%= form_with(model: [:collaborators_backoffice, @compra], local: true) do |form| %>
+              <div class="row mt-3 ">
+                <div class="col-md-10 ">
+                  <div class="form-floating mb-3 ">
+                    <%= form.collection_select(:cod_pessoa, Pessoa.where("cod_pessoa = ? ", @compra.cod_pessoa), 
                                                 :cod_pessoa, :nome, {:prompt => 'Selecione uma Pessoa'}, 
                                                     class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true) %>
-                                        <%= form.label :pessoa, class:"" %>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row g-2">
-                                <div class="col-md-5">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :datacompra,value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :data_compra, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-5">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :numero_nf, class:"" %>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3 mb-md-0">
-                                        <%= form.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :acrescimo, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :desconto, class:"" %>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating mb-3">
-                                        <%= form.text_field :valortotal, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                                        <%= form.label :valortotal, class:"" %>
-                                    </div>
-                                </div>
-                            </div>
-
-                        <!-- Tab panes -->
-                        <!-- Nav tabs -->
-                            <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content">
-                            
-                                <div class="tab-pane active border border-top-0" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
-                                    <div class="card-body">
-
-                                        <div class="table-responsive">    
-                                            <table  id="tbl" class="table table-light table-striped table-hover">
-                                                <thead>
-                                                    <tr>
-                                                        <th style="width: 10%;" >Cod</th>
-                                                        <th>Nome</th>
-                                                        <th>Qtd</th>
-                                                        <th>Frete</th>
-                                                        <th>IPI</th>
-                                                        <th>ST</th>
-                                                        <th>valor</th>
-                                                        <th>Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id = 'itens'>
-
-                                                    <% @compra.itenscompra.each do |item| %>
-
-                                                        <% if (@compra.cancelada) %>
-                                                            <tr class="nested-fields text-danger">
-                                                        <% else %>
-                                                            <tr class="nested-fields">
-                                                        <% end %> 
-
-                                                            <td class="" >
-                                                                <%= item.full_codigo %>
-                                                            </td>
-                                                            <td class="">
-                                                                <%= item.nome_produto %>
-                                                            </td>
-                                                            <td class="table-info">
-                                                                <%= item.quantidade.to_i %>
-                                                            </td>
-                                                            <td class="table-success" >
-                                                                <%= number_to_currency(item.valor_frete, separator: ",", delimiter: "", unit:"") %>
-                                                            </td>
-                                                            <td class="table-success" >
-                                                                <%= number_to_currency(item.ipi, separator: ",", delimiter: "", unit:"") %>
-                                                            </td>
-                                                            <td class="table-success" >
-                                                                <%= number_to_currency(item.valorst, separator: ",", delimiter: "", unit:"") %>
-                                                            </td>
-                                                            <td class="table-success" >
-                                                                <%= number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"") %>
-                                                            </td>
-                                                            <td class="">
-                                                                <%= number_to_currency(item.valor_total, separator: ",", delimiter: "", unit:"" ) %>
-                                                            </td>
-                                                        </tr>
-                                                    <% end %>    
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tab-pane border border-top-0" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
-                                    <div class="card-body">
-                                        <table id="datatablesSimple" class="table table-light table-striped table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th class="">Numero</th>
-                                                    <th class="">Dt Vencimento</th>
-                                                    <th class="">valor Parcela</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id = 'contas'>
-                                                <% @compra.contas.each do |contas| %>
-                                                    <% if (!contas.ativo) %>
-                                                        <tr class="nested-fields text-danger table-danger">
-                                                    <% elsif contas.quitada %>
-                                                        <tr class= "nested-fields table-primary">   
-                                                    <% else %>
-                                                        <tr class= "nested-fields"> 
-                                                    <% end %>
-                                                        <td class="">
-                                                            <%= contas.nmParcela %>
-                                                        </td>
-                                                        <td class="">
-                                                            <%= post_date(contas.dtvencimento) %>
-                                                        </td>
-                                                        <td class="" >
-                                                            <%= number_to_currency(contas.valorparcela, separator: ",", delimiter: "", unit:"") %>
-                                                        </td>
-                                                    </tr>
-
-                                                <% end %>
-                                                    
-                                            </tbody>
-                                        </table> 
-                                    </div>
-                                </div>
-
-                                <div class="form-floating mb-3 md-3 mt-0">  
-                                    <%# <button type="submit" class="btn input-group-text btn-success">Salvar</button> %>
-                                </div>
-                            </div>
-                        <% end %>
-                    </div>
+                    <%= form.label :pessoa, class:"" %>
+                  </div>
                 </div>
+              </div>
+              <div class="row mb-1 g-1">
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= form.text_field :datacompra, value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :data_compra, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= form.text_field :serie, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :serie, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= form.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :numero_nf, class:"" %>
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-2 g-1">
+                <div class="col-md-2">
+                  <div class="form-floating mb-3 mb-md-0">
+                    <%= form.text_field :outrasdespesas, value: number_to_currency(form.object.outrasdespesas,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :outras_despesas, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= form.text_field :desconto, value: number_to_currency(form.object.desconto,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :desconto, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= form.text_field :valortotal, value: number_to_currency(form.object.valortotal,  unit: "", separator: ",", delimiter: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.label :valortotal, class:"" %>
+                  </div>
+                </div>
+              </div>
+              <!-- Tab panes -->
+              <!-- Nav tabs -->
+              <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                </li>
+              </ul>
+              <div class="tab-content">
+                <div class="tab-pane active border border-top-0" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table  id="tbl" class="table table-light table-striped table-hover">
+                        <thead>
+                          <tr>
+                            <th style="width: 10%;" >Cod</th>
+                            <th>Nome</th>
+                            <th>Qtd</th>
+                            <th>Frete</th>
+                            <th>IPI</th>
+                            <th>ST</th>
+                            <th>valor</th>
+                            <th>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody id = 'itens'>
+                          <% @compra.itenscompra.each do |item| %>
+                            <% if (@compra.cancelada) %>
+                              <tr class="nested-fields text-danger">
+                              <% else %>
+                                <tr class="nested-fields">
+                                <% end %>
+                                <td class="" >
+                                  <%= item.full_codigo %>
+                                </td>
+                                <td class="">
+                                  <%= item.nome_produto %>
+                                </td>
+                                <td class="table-info">
+                                  <%= item.quantidade.to_i %>
+                                </td>
+                                <td class="table-success" >
+                                  <%= number_to_currency(item.valor_frete, separator: ",", delimiter: "", unit:"") %>
+                                </td>
+                                <td class="table-success" >
+                                  <%= number_to_currency(item.ipi, separator: ",", delimiter: "", unit:"") %>
+                                </td>
+                                <td class="table-success" >
+                                  <%= number_to_currency(item.valorst, separator: ",", delimiter: "", unit:"") %>
+                                </td>
+                                <td class="table-success" >
+                                  <%= number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"") %>
+                                </td>
+                                <td class="">
+                                  <%= number_to_currency(item.valor_total, separator: ",", delimiter: "", unit:"" ) %>
+                                </td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane border border-top-0" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                    <div class="card-body">
+                      <table id="datatablesSimple" class="table table-light table-striped table-hover">
+                        <thead>
+                          <tr>
+                            <th class="">Numero</th>
+                            <th class="">Dt Vencimento</th>
+                            <th class="">valor Parcela</th>
+                          </tr>
+                        </thead>
+                        <tbody id = 'contas'>
+                          <% @compra.contas.each do |contas| %>
+                            <% if (!contas.ativo) %>
+                              <tr class="nested-fields text-danger table-danger">
+                              <% elsif contas.quitada %>
+                                <tr class= "nested-fields table-primary">
+                                <% else %>
+                                  <tr class= "nested-fields">
+                                  <% end %>
+                                  <td class="">
+                                    <%= contas.nmParcela %>
+                                  </td>
+                                  <td class="">
+                                    <%= post_date(contas.dtvencimento) %>
+                                  </td>
+                                  <td class="" >
+                                    <%= number_to_currency(contas.valorparcela, separator: ",", delimiter: "", unit:"") %>
+                                  </td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="form-floating mb-3 md-3 mt-0">
+                        <%# <button type="submit" class="btn input-group-text btn-success">Salvar</button> %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
             </div>
-        </div>
-    </main>
-</div>
-
-<script>
-
-
-// ots
-    var x = document.getElementById("vlItem");
-    var defaultVal = x.defaultValue;
-    var currentVal = x.value;
+          </div>
+        </main>
+      </div>
+      <script>
+        // ots
+            var x = document.getElementById("vlItem");
+            var defaultVal = x.defaultValue;
+            var currentVal = x.value;
 
 
-    // keyPress Enter não faz o submit brands marcas
-    var list = document.getElementById('brands');
-    //console.log("List "+list)
-    
-    list.addEventListener("keypress", function () { 
-        console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-        if(event.keyCode == 13){ // 13 é o Enter
-            // event.preventDefault();
-            // quando precionar enter pega o texto da marca e passa como parametro para consulta
-            //list.innerHTML = getBrands("Tra%");
+            // keyPress Enter não faz o submit brands marcas
+            var list = document.getElementById('brands');
+            //console.log("List "+list)
 
-            //console.log("Valor "+list.innerText);
-        }
-    });
-</script>
+            list.addEventListener("keypress", function () {
+                console.log(event.keyCode); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+                if(event.keyCode == 13){ // 13 é o Enter
+                    // event.preventDefault();
+                    // quando precionar enter pega o texto da marca e passa como parametro para consulta
+                    //list.innerHTML = getBrands("Tra%");
+
+                    //console.log("Valor "+list.innerText);
+                }
+            });
+      </script>

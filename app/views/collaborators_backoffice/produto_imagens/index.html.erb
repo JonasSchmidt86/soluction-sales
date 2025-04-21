@@ -29,10 +29,10 @@
                     <div class="col-md-3">
                       <div class="form-floating h-100">
                         <%= form.collection_select(:cod_cor, 
-            Core.select(:cod_cor, :nmcor).where(ativo: true), 
-            :cod_cor, :nmcor, 
-            { include_blank: 'Selecione uma cor', selected: params[:cod_cor] }, 
-            class: "form-control h-100") %>
+                            Core.select(:cod_cor, :nmcor).where(ativo: true), 
+                            :cod_cor, :nmcor, 
+                            { include_blank: 'Selecione uma cor', selected: params[:cod_cor] }, 
+                            class: "form-control h-100") %>
                         <%= form.label :cod_cor, "Cor" %>
                       </div>
                     </div>
@@ -119,55 +119,62 @@
                 </div>
               </div>
             </div>
+            <div class="dataTable-bottom">
+              <div class="dataTable-info"><%= page_entries_info @produto_imagens, entry_name: 'item' %></div>
+              <div class = "text-center">
+                <%= paginate @produto_imagens %>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-  <script>
-    document.querySelectorAll('.imagem-botao').forEach((botao) => {
-      botao.addEventListener('dblclick', function () {
-        const index = botao.getAttribute('data-index');
-        document.getElementById(`abrir-modal-imagens_${index}`).click();
-      });
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  document.querySelectorAll('.imagem-botao').forEach((botao) => {
+    botao.addEventListener('dblclick', function () {
+      const index = botao.getAttribute('data-index');
+      document.getElementById(`abrir-modal-imagens_${index}`).click();
     });
+  });
 
 
-    document.addEventListener("DOMContentLoaded", function () {
-    let carousel = document.querySelector("#carouselImages");
-    let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+  document.addEventListener("DOMContentLoaded", function () {
+  let carousel = document.querySelector("#carouselImages");
+  let carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
 
-    document.querySelectorAll(".open-modal").forEach(function (button) {
-      button.addEventListener("click", function () {
-        let index = this.getAttribute("data-index"); // Pega o índice da imagem clicada
-        let items = document.querySelectorAll("#carouselImages .carousel-item");
+  document.querySelectorAll(".open-modal").forEach(function (button) {
+    button.addEventListener("click", function () {
+      let index = this.getAttribute("data-index"); // Pega o índice da imagem clicada
+      let items = document.querySelectorAll("#carouselImages .carousel-item");
 
-        items.forEach((item) => item.classList.remove("active")); // Remove 'active' de todas as imagens
+      items.forEach((item) => item.classList.remove("active")); // Remove 'active' de todas as imagens
 
-        if (items[index]) {
-          items[index].classList.add("active"); // Define a imagem correta como ativa
-        }
-
-        carouselInstance.to(index); // Muda para a imagem correta no carousel
-      });
-    });
-
-    // Navegação com as setas do teclado (esquerda e direita)
-    document.addEventListener("keydown", function (event) {
-      let activeIndex = [...document.querySelectorAll("#carouselImages .carousel-item")].findIndex(item => item.classList.contains("active"));
-
-      if (event.key === "ArrowRight") { // Setas para a direita
-        if (activeIndex < document.querySelectorAll("#carouselImages .carousel-item").length - 1) {
-          carouselInstance.next(); // Move para a próxima imagem
-        }
+      if (items[index]) {
+        items[index].classList.add("active"); // Define a imagem correta como ativa
       }
 
-      if (event.key === "ArrowLeft") { // Setas para a esquerda
-        if (activeIndex > 0) {
-          carouselInstance.prev(); // Move para a imagem anterior
-        }
-      }
+      carouselInstance.to(index); // Muda para a imagem correta no carousel
     });
-      });
-  </script>
+  });
+
+  // Navegação com as setas do teclado (esquerda e direita)
+  document.addEventListener("keydown", function (event) {
+    let activeIndex = [...document.querySelectorAll("#carouselImages .carousel-item")].findIndex(item => item.classList.contains("active"));
+
+    if (event.key === "ArrowRight") { // Setas para a direita
+      if (activeIndex < document.querySelectorAll("#carouselImages .carousel-item").length - 1) {
+        carouselInstance.next(); // Move para a próxima imagem
+      }
+    }
+
+    if (event.key === "ArrowLeft") { // Setas para a esquerda
+      if (activeIndex > 0) {
+        carouselInstance.prev(); // Move para a imagem anterior
+      }
+    }
+  });
+    });
+</script>

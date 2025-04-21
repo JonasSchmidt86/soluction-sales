@@ -12,6 +12,10 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         if !params[:nrVenda].blank?
             @bills = Contaspagrec.includes(:lancamentos).where(consulta_index, current_collaborator.empresa.cod_empresa)
                         .order(dtvencimento: :asc, cod_contaspagrec: :desc );
+        elsif params[:cod_compra].present? 
+            puts "-----------------------cod Compra---"
+            @bills = Contaspagrec.includes(:lancamentos).where("cod_compra = ? and cod_empresa = ?", params[:cod_compra], current_collaborator.empresa.cod_empresa)
+                        .order(dtvencimento: :asc, cod_contaspagrec: :desc );
         else
 
             per_page = params[:per_page].present? ? params[:per_page].to_i : 30

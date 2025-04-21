@@ -9,7 +9,37 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       @compra = Compra.includes(itenscompra: :produto, contas: {}).find_by(cod_compra: params[:id])
     end
 
+    def consulta_estoque
+      puts "CONSULTA ESTOQUE #{params} "
+
+
+      @cores = Core.select(:nmcor, :cod_cor, :ultimocusto)
+                   .joins(:empresaprodutos)
+                   .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
+                   .order(nmcor: :asc, cod_cor: :asc)
+      if @cores.empty?
+        @cores = Core.select(:nmcor, :cod_cor, :ultimocusto)
+                      .joins(:empresaprodutos).select(:cod_empresa)
+                      .where("cod_produto = ?", params[:id_produto])
+                      .order(valorvenda: :desc)
+                      .limit(1);
+        @cores.each do |core|
+          if(core.cod_empresa != current_collaborator.cod_empresa)
+            core.cod_cor = 1;
+            core.nmcor = "PADRAO";
+          end
+        end
+        puts "RETORNOU #{@cores.size} cores"
+      end
+
+      respond_to do |format|
+        format.json { render json: @cores }
+      end
+    end
+
     def new
+      @compra = Compra.new
+      2.times { @compra.itenscompra.build }
     end
 
     def create
@@ -27,10 +57,14 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         compra.valortotal = params[:compra][:Valor_liquido]&.gsub(',', '.').to_f || 0.0;
 
         compra.arquivoxml = params[:compra][:arquivoxml];
+        unless params[:compra][:arquivoxml].present? 
+          compra.valortotal = params[:compra][:valortotal]&.gsub(',', '.').to_f || 0.0;
+        end
 
         compra.cancelada = false
         # compra.datacancelamento = params[:compra][:datacancelamento];
         compra.datacompra = Date.parse(params[:compra][:datacompra]);
+
         compra.dataemissao = Date.parse(params[:compra][:dataemissao]);
         
         compra.outrasdespesas = (params[:compra][:outrasdespesas].to_f + params[:compra][:vST].to_f + params[:compra][:vSeguro].to_f);
@@ -38,13 +72,19 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         compra.cod_compraempresa = (Compra.select(:cod_compraempresa).where("cod_empresa = ? ", current_collaborator.cod_empresa ).maximum(:cod_compraempresa) + 1);
         compra.cod_funcionario = current_collaborator.cod_funcionario
         compra.cod_empresa = current_collaborator.cod_empresa
-        
-        compra.cod_pessoa = params[:compra][:pessoa_attributes][:id].to_i
-        compra.pessoa.pessoacontato = params[:compra][:pessoa_attributes][:pessoacontato]
-        compra.pessoa.telefonecontato = params[:compra][:pessoa_attributes][:telefonecontato]
-        compra.pessoa.email = params[:compra][:pessoa_attributes][:email]
+        if params[:compra][:cod_pessoa].present?
+          compra.cod_pessoa = params[:compra][:cod_pessoa].to_i
+        else
+          compra.cod_pessoa = params[:compra][:pessoa_attributes][:id].to_i
+        end
 
-        compra.xml_file = XmlFile.find(params[:compra][:xml_file].to_i)
+        compra.pessoa.pessoacontato = params[:compra][:pessoa_attributes][:pessoacontato].try(:upcase) || ""
+        compra.pessoa.telefonecontato = params.dig(:compra, :pessoa_attributes, :telefonecontato).to_s
+        compra.pessoa.email = params.dig(:compra, :pessoa_attributes, :email).to_s
+
+        if params[:compra][:xml_file].present?
+          compra.xml_file = XmlFile.find(params[:compra][:xml_file].to_i)
+        end
 
         if params[:compra][:itenscompra_attributes].present?
           itens = params[:compra][:itenscompra_attributes]
@@ -59,67 +99,72 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           # Agora você pode iterar sobre os itens
           errors = []
           itens.each do |pro_temp|
-            xml_pro = JSON.parse(pro_temp[:pro_xml_temp])
-            proXml = nil;
+            puts "PRO_TEMP: #{pro_temp.inspect}"
+            next if pro_temp["cod_produto"].blank?
 
-            if xml_pro["codigo"].present? && !xml_pro["codigo"].blank?
-              proXml = Produtoxml.find(xml_pro["codigo"])
-            end
+            if pro_temp[:pro_xml_temp].present?
+              xml_pro = JSON.parse(pro_temp[:pro_xml_temp])
+              proXml = nil;
 
-            if !pro_temp["cod_produto"].present? && pro_temp["cod_produto"].blank?
-              error_message = "Informe o produto #{xml_pro["nome"].to_s.upcase}!"
-              return render json: { error: error_message }, status: :not_found
-            end
-            if !pro_temp["cod_cor"].present? && pro_temp["cod_cor"].blank?
-              error_message = "Informe a cor do produto #{xml_pro["nome"].to_s.upcase}!"
-              return render json: { error: error_message }, status: :not_found
-            end
-
-            if proXml.blank?
-              
-              if pro_temp["cod_cor"].present? && pro_temp["cod_produto"].present? && xml_pro["codigo"].blank? && proXml.blank?
-                
-                proXml = Produtoxml.where(cod_cor: pro_temp["cod_cor"].to_i, 
-                                          cod_produto: pro_temp["cod_produto"].to_i,
-                                          codproemissor: xml_pro["codproemissor"]).where(" nome ilike ? ", xml_pro["nome"].to_s.upcase.rstrip).order(:codigo).first
-                
-                puts proXml.blank?
-                # puts proXml.nome
-                # puts proXml.infadicionais.present?
-                # puts xml_pro["infadicionais"]
-                # puts xml_pro["infadicionais"].to_s.rstrip.upcase
-
-                if !proXml.blank?
-                  unless proXml.infadicionais.nil? && (xml_pro["infadicionais"].nil? || xml_pro["infadicionais"].to_s.strip.empty?) ||
-                    proXml.infadicionais.to_s.rstrip.upcase == xml_pro["infadicionais"].to_s.rstrip.upcase
-                    proXml = nil  
-                  end
-                end
-                puts "Passou o unless"
+              if xml_pro["codigo"].present? && !xml_pro["codigo"].blank?
+                proXml = Produtoxml.find(xml_pro["codigo"])
               end
-            end
 
-            if proXml.blank?
-              proXml = Produtoxml.new
-              proXml.codproemissor = xml_pro["codproemissor"]
-              proXml.infadicionais = xml_pro["infadicionais"].to_s.rstrip.upcase if xml_pro["infadicionais"].present?
-              proXml.nome = xml_pro["nome"].to_s.rstrip.upcase if xml_pro["nome"].present?
-              proXml.ucom = xml_pro["ucom"]
-              proXml.ncm = xml_pro["ncm"]
-              proXml.cfop = xml_pro["cfop"]
-              proXml.cest = xml_pro["cest"]
-            end
+              if !pro_temp["cod_produto"].present? && pro_temp["cod_produto"].blank?
+                error_message = "Informe o produto #{xml_pro["nome"].to_s.upcase}!"
+                return render json: { error: error_message }, status: :not_found
+              end
+              if !pro_temp["cod_cor"].present? && pro_temp["cod_cor"].blank?
+                error_message = "Informe a cor do produto #{xml_pro["nome"].to_s.upcase}!"
+                return render json: { error: error_message }, status: :not_found
+              end
 
-            proXml.cod_produto = pro_temp["cod_produto"]
-            proXml.cod_cor = pro_temp["cod_cor"]
-            proXml.cod_pessoa = compra.cod_pessoa
+              if proXml.blank?
+                
+                if pro_temp["cod_cor"].present? && pro_temp["cod_produto"].present? && xml_pro["codigo"].blank? && proXml.blank?
+                  
+                  proXml = Produtoxml.where(cod_cor: pro_temp["cod_cor"].to_i, 
+                                            cod_produto: pro_temp["cod_produto"].to_i,
+                                            codproemissor: xml_pro["codproemissor"]).where(" nome ilike ? ", xml_pro["nome"].to_s.upcase.rstrip).order(:codigo).first
+                  
+                  puts proXml.blank?
+                  # puts proXml.nome
+                  # puts proXml.infadicionais.present?
+                  # puts xml_pro["infadicionais"]
+                  # puts xml_pro["infadicionais"].to_s.rstrip.upcase
 
-            unless proXml.save!
-              error_message = "Erro ao cadastrar novo produtoXML #{xml_pro["nome"].to_s.rstrip.upcase  if xml_pro["nome"].present?}!"
-              return render json: { error: error_message }, status: :not_found
-            else
-              xml_pro["codigo"] = proXml.codigo;
-              puts "\n Produto Salvo! #{proXml.codigo } \n\n"
+                  if !proXml.blank?
+                    unless proXml.infadicionais.nil? && (xml_pro["infadicionais"].nil? || xml_pro["infadicionais"].to_s.strip.empty?) ||
+                      proXml.infadicionais.to_s.rstrip.upcase == xml_pro["infadicionais"].to_s.rstrip.upcase
+                      proXml = nil  
+                    end
+                  end
+                  puts "Passou o unless"
+                end
+              end
+
+              if proXml.blank?
+                proXml = Produtoxml.new
+                proXml.codproemissor = xml_pro["codproemissor"]
+                proXml.infadicionais = xml_pro["infadicionais"].to_s.rstrip.upcase if xml_pro["infadicionais"].present?
+                proXml.nome = xml_pro["nome"].to_s.rstrip.upcase if xml_pro["nome"].present?
+                proXml.ucom = xml_pro["ucom"]
+                proXml.ncm = xml_pro["ncm"]
+                proXml.cfop = xml_pro["cfop"]
+                proXml.cest = xml_pro["cest"]
+              end
+
+              proXml.cod_produto = pro_temp["cod_produto"]
+              proXml.cod_cor = pro_temp["cod_cor"]
+              proXml.cod_pessoa = compra.cod_pessoa
+
+              unless proXml.save!
+                error_message = "Erro ao cadastrar novo produtoXML #{xml_pro["nome"].to_s.rstrip.upcase  if xml_pro["nome"].present?}!"
+                return render json: { error: error_message }, status: :not_found
+              else
+                xml_pro["codigo"] = proXml.codigo;
+                puts "\n Produto Salvo! #{proXml.codigo } \n\n"
+              end
             end
             
             itemCompra = Itemcompra.new
@@ -127,14 +172,16 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itemCompra.cod_compra = compra.cod_compra
             itemCompra.cod_empresa = compra.cod_empresa
             itemCompra.cod_produto = pro_temp["cod_produto"]
-            #itemCompra.icms = pro_temp["icms"] 
+            
+            itemCompra.icms = pro_temp["icms"] 
             itemCompra.ipi = pro_temp["ipi"]&.gsub(',', '.').to_f
+            itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0
+            itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
+
             itemCompra.numeronf = compra.numeronf
             itemCompra.quantidade = pro_temp["quantidade"]
             itemCompra.valorst = pro_temp["icms"]&.gsub(',', '.').to_f || 0.0
-            itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
             itemCompra.cod_cor = pro_temp["cod_cor"]
-            itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0
             itemCompra.cancelado = false
 
             compra.itenscompra << itemCompra;
@@ -222,7 +269,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
     end
 
     def edit
-      compra = Compra.find_by(cod_compra: params[:id])
+      @compra = Compra.find_by(cod_compra: params[:id])
     end
 
     def destroy

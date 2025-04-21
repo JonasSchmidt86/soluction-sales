@@ -1,0 +1,765 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card-body">
+      <div class="row justify-content-center">
+        <div class="">
+          <div class="card mt-3">
+            <% if @compra.errors.any? %>
+              <div class="alert alert-danger alert-dismissible " role="alert">
+                <% @compra.errors.full_messages.each do |message| %>
+                  <ul>
+                    <li><%= message %></li>
+                    ¥                 </ul>
+                <% end %>
+                <% @compra.errors.clear %>
+                <% @compra.pessoa.errors.clear %>
+              </div>
+            <% end %>
+            <div class="card-header bg-primary" >
+              <h4 class="text-center font-weight-light">
+                <%= "#{action_message} Compra"%>
+              </h4>
+            </div>
+            <div class="card-body">
+              <%= form_with(model: [ :collaborators_backoffice, @compra ], local: true) do |compra| %>
+                <div class="col-md-12">
+                  <div class="row my-2 mx-2 align-items-center">
+                    <div class="col-md-9">
+                      <div class="form-floating">
+                        <%= compra.text_field :nome_pessoa, value: @compra.pessoa.nil? ? "" : @compra.pessoa.nome  ,class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder:"Digite para buscar" %>
+                        <%= compra.label :pessoa_nome, class:"" %>
+                        <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                        <%= compra.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), id: "client_link", class:"btn btn-lg btn-info btn-circle" do %>
+                          <i class="fa-brands fa-hire-a-helper"></i>
+                        <% end %>
+                      </div>
+                      <%= render partial: 'collaborators_backoffice/compras/shared/pessoa_modal',
+                                                locals: { form: compra } %>
+                    </div>
+                  </div>
+                  <div class="row my-2 mx-2 align-items-center">
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <%= compra.text_field :datacompra,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                        <%= compra.label :data_compra, class:"" %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <%= compra.text_field :dataemissao,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                        <%= compra.label :data_emissao, class:"" %>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <%= compra.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                        <%= compra.label :numero_nf, class:"" %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row my-2 mx-2">
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <%= compra.text_field :outrasdespesas, 
+                        value: number_to_currency(@compra.outrasdespesas,  unit: "", separator: ",", delimiter: ""),
+                        input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalCompra()" %>
+                        <%= compra.label :outras_despesas, class:"" %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <%= compra.text_field :valorfrete, 
+                        value: number_to_currency(@compra.valorfrete,  unit: "", separator: ",", delimiter: ""),
+                        input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalCompra()" %>
+                        <%= compra.label :valor_frete, class:"" %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating mb-3">
+                        <%= compra.text_field :desconto, 
+                        value: number_to_currency(@compra.desconto,  unit: "", separator: ",", delimiter: ""),
+                        input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalCompra()" %>
+                        <%= compra.label :desconto, class:"" %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating mb-3">
+                        <%= compra.text_field :valortotal,
+                        value: number_to_currency(@compra.valortotal,  unit: "", separator: ",", delimiter: ""),
+                        class: "money2 valor-total-compra form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                        <%= compra.label :valortotal, class:"" %>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Tab panes -->
+                  <!-- Nav tabs -->
+                  <ul class="nav mt-1 mx-3 nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                    </li>
+                  </ul>
+                  <div class="tab-content">
+                    <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                            <thead>
+                              <tr>
+                                <th style="width: 30%;">Nome</th>
+                                <th style="">Cor</th>
+                                <th style="width: 7%;">Qtd</th>
+                                <th style="width: 8%;">Val Ipi</th>
+                                <th style="width: 8%;">Val ST</th>
+                                <th style="width: 8%;">Val Frete</th>
+                                <th style="width: 9%;">valor</th>
+                                <th style="width: 9%;">Total</th>
+                                <%# <th style="width: 3%;"></th> %>
+                              </tr>
+                            </thead>
+                            <tbody id="itenscompra_fields" class='itens' >
+                              <%= compra.fields_for :itenscompra do |item| %>
+                                <%= render partial: "itenscompra_fields", locals: { f: item } %>
+                              <% end %>
+                            </tbody>
+                          </table>
+                          <div class="form-actions">
+                            <%= link_to_add_association 'Adiciona Item', compra, :itenscompra, 
+                                                            force_non_association_create: true,
+                                                            class: 'btn btn-primary', 
+                                                             data: { association_insertion_node: '.itens', 
+                                                                     association_insertion_method: :append} %> <%# append para adicionar no fim da lista prepend para adicionar no inicio da lista%>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+                      <div class="card-body">
+                        <div class="row mb-2">
+                          <div class="col-md-2">
+                            <div class="form-floating mb-3 mb-md-0">
+                              <%= compra.text_field :nmParcela, value: 1, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                              <%= compra.label :parcelas, class:"" %>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <div class="form-floating mb-3">
+                              <%= compra.text_field :first_date, value: post_date(DateTime.now), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                              <%= compra.label :data_pagto, class:"" %>
+                            </div>
+                          </div>
+                          <div class="col-md-2">
+                            <div class="form-floating mb-3">
+                              <%= compra.text_field :interval, value: 30, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                              <%= compra.label :dias, class:"" %>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <div class="form-floating mb-3">
+                              <a href="#" onclick="createBills()" class="btn btn-success">Calcular Parcelas</a>
+                            </div>
+                          </div>
+                        </div>
+                        <table id="tblContas" class="bills table table-sm align-middle table-light table-striped table-hover table-borderless">
+                          <thead>
+                            <tr>
+                              <th class="">Numero</th>
+                              <th class="">Dt Vencimento</th>
+                              <th class="">valor Parcela</th>
+                              <th style="width: 3%;"></th>
+                            </tr>
+                          </thead>
+                          <tbody id = 'conta_fields' class = "contas">
+                            <%= compra.fields_for :contas do |bill| %>
+                              <%= render partial: "conta_fields", locals: { f: bill } %>
+                            <% end %>
+                          </tbody>
+                        </table>
+                        <div class="form-actions">
+                          <%= link_to_add_association 'Adiciona Conta', compra, :contas, 
+                                                        force_non_association_create: true, id:"addConta",
+                                                        class: 'btn btn-primary', 
+                                                         data: { association_insertion_node: '.contas',
+                                                                 association_insertion_method: :append } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="position-fixed bottom-0 end-0 m-4">
+                  <div class="d-block my-3 mx-3">
+                    <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+                      <i class="fa fa-check fa-2x"></i>
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<%= render partial: 'collaborators_backoffice/compras/shared/cores_modal' %>
+<%= render partial: 'layouts/shared/modal_alert' %>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  // ---------------------------------
+
+      document.addEventListener("keypress", function () {
+          //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+          if(event.keyCode == 13){ // 13 é o Enter
+              event.preventDefault();
+          }
+      });
+
+  // -----------------------------------------------------------------
+  // ------------ para baixo da tabela contas  -----------------------
+  // -----------------------------------------------------------------
+
+  function createBills() {
+      let data = []; // Array para armazenar os objetos de parcelas
+
+      const nBills = parseInt(document.getElementById('compra_nmParcela').value);
+      const firstDate = document.getElementById('compra_first_date').value;
+      const interval = parseInt(document.getElementById('compra_interval').value);
+      const totalcompra = parseFloat(document.getElementById('compra_valortotal').value.replace(",", "."));
+
+      // Validação dos campos de entrada
+      if (isNaN(nBills) || nBills <= 0) {
+          console.error('Número de parcelas inválido.');
+          return;
+      }
+
+      if (!firstDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          console.error('Data inicial inválida.');
+          return;
+      }
+
+      if (isNaN(interval) || interval <= 0) {
+          console.error('Intervalo inválido.');
+          return;
+      }
+
+      if (isNaN(totalcompra) || totalcompra <= 0) {
+          console.error('Valor total da compra inválido.');
+          return;
+      }
+
+      // Extrair dia, mês e ano
+      let partes = firstDate.split('/');
+      let dia = partes[0];
+      let mes = partes[1] - 1; // Os meses em JavaScript começam do zero
+      let ano = partes[2];
+
+      // Criar o objeto Date
+      let billDate = new Date(ano, mes, dia);
+
+      const billAmount = totalcompra / nBills;
+
+      // Limpa a tabela antes de adicionar novas linhas
+      $('#conta_fields').empty();
+
+      for (let i = 0; i < nBills; i++) {
+          // Cria uma cópia da data de vencimento
+          const bill = {
+              number: i + 1,
+              dueDate: new Date(billDate), // Cria uma nova instância para evitar referências compartilhadas
+              amount: billAmount
+          };
+
+          data.push(bill);
+          billDate.setDate(billDate.getDate() + interval);
+      }
+
+      data.forEach((bill, index) => {
+          // Adiciona um novo campo para cada conta
+          $('#addConta').trigger('click');
+
+          // Atualiza os campos recém-adicionados com os dados da fatura
+          const row = $('#conta_fields tr').eq(index); // Seleciona a linha recém-adicionada
+          row.find('input[id*=_numeroparcela]').val(bill.number);
+          row.find('input[id*=_dtvencimento]').val(formatDate(bill.dueDate));
+          row.find('input[id*=_valorparcela]').val(parseFloat(bill.amount).toFixed(2).replace('.', ','));
+
+          // Preenche os campos ocultos
+          row.find('input[id*=_cod_empresa]').val(<%= current_collaborator.empresa.id %>);
+          row.find('input[id*=_ativo]').val(true);
+          row.find('input[id*=_quitada]').val(false);
+          row.find('input[id*=_cod_tppagamento]').val(1);
+      });
+
+      // Listener para atualizar parcelas automaticamente ao mudar qualquer valor
+      $('#conta_fields').on('change', 'input[id*=_valorparcela]', function () {
+          const total = totalcompra;
+          let updatedIndex = $(this).closest('tr').index(); // índice da parcela alterada
+          let soma = 0;
+
+          const rows = $('#conta_fields tr');
+          const numParcelas = rows.length;
+
+          // Somar os valores das parcelas até a que foi alterada
+          for (let i = 0; i <= updatedIndex; i++) {
+              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+              if (isNaN(val)) val = 0;
+              soma += val;
+          }
+
+          // Valor restante que precisa ser redistribuído
+          let restante = total - soma;
+          let parcelasRestantes = numParcelas - (updatedIndex + 1);
+
+          if (parcelasRestantes <= 0) return;
+
+          // Valor padrão das parcelas seguintes
+          let novoValor = parseFloat((restante / parcelasRestantes).toFixed(2));
+
+          // Atualiza as parcelas seguintes
+          for (let i = updatedIndex + 1; i < numParcelas; i++) {
+              rows.eq(i).find('input[id*=_valorparcela]').val(novoValor.toFixed(2).replace('.', ','));
+          }
+
+          // Corrigir diferença de centavos na última parcela
+          let totalAtual = 0;
+          for (let i = 0; i < numParcelas; i++) {
+              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+              if (isNaN(val)) val = 0;
+              totalAtual += val;
+          }
+
+          let diff = parseFloat((total - totalAtual).toFixed(2));
+          if (Math.abs(diff) >= 0.01) {
+              let ultimaParcela = rows.eq(numParcelas - 1);
+              let val = parseFloat(ultimaParcela.find('input[id*=_valorparcela]').val().replace(',', '.'));
+              ultimaParcela.find('input[id*=_valorparcela]').val((val + diff).toFixed(2).replace('.', ','));
+          }
+      });
+
+
+  }
+
+
+
+
+
+
+
+  // Função para formatar a data no formato DD/MM/AAAA
+  function formatDate(date) {
+      const day = ("0" + date.getDate()).slice(-2);
+      const month = ("0" + (date.getMonth() + 1)).slice(-2);
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+  }
+
+      // Função para formatar a data no formato 'dd/mm/yyyy'
+      function formatDate(date) {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+      }
+
+      function thisIndex(field) {
+          var name = field.name;
+          var regex = /\[(\d+)\]/;
+          var matches = name.match(regex);
+
+          if (matches && matches.length > 1) {
+              return parseInt(matches[1], 10);
+          } else {
+              return null;
+          }
+      }
+
+      console.log(window.location.origin);
+      let url = window.location.origin + '/collaborators_backoffice/';
+
+      function abrirModal() {
+        const modalEl = document.getElementById('coresModal');
+
+        // Cria (ou recupera) a instância do modal
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        // Abre o modal
+        modal.show();
+
+        // Foca no select quando o modal estiver visível
+        modalEl.addEventListener('shown.bs.modal', function () {
+          document.getElementById('cor_id').focus();
+        }, { once: true });
+      }
+
+
+      $(document).ready(function() {
+          var categorySearch = $('#compra_nome_pessoa'); //document.getElementById('compra_pessoa'); //
+          var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
+          var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
+
+          var selectedPersonCpfCnpjField = $('#compra_pessoa_attributes_cpf_cnpj');
+
+          var link = $('#client_link');
+          var originalHref = link.data('original-href');
+
+          let apiUrl = url+ "buscas/buscar_pessoas";
+
+          // Adiciona um evento de keypress para a tecla Enter
+          categorySearch.on('keydown', function(event) {
+             // console.log(event.key);
+              if (event.key === 'Enter') {
+                  filterOptions();
+              } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+                  // Código 27 corresponde à tecla "ESC"
+                  categorySearch.val(''); // Limpa o campo de busca
+                  selectedPersonIdField.val("");
+                  selectedPersonCpfCnpjField.val("");
+                  resultsList.empty().hide();
+                  link.attr('href', originalHref);
+              }
+          });
+
+          // Adiciona um evento de clique aos itens da lista
+          resultsList.on('click', 'div.list-group-item', function() {
+              var selectedPerson = $(this).text();
+              var selectedPersonId = $(this).data('cod_pessoa');
+
+              // Preenche o campo escondido com o ID da pessoa selecionada
+              selectedPersonIdField.val(selectedPersonId);
+              selectedPersonCpfCnpjField.val($(this).data('cpf_cnpj'));
+
+              buscarPessoaPorCpfCnpj(selectedPersonCpfCnpjField)
+
+              // Atualiza o campo de busca com o nome da pessoa selecionada
+              categorySearch.val(selectedPerson);
+
+              // Limpa a lista de resultados
+              resultsList.empty().hide();
+
+              // Atualiza o link
+              if (!originalHref) {
+                  originalHref = link.attr('href');
+                  link.data('original-href', originalHref);
+              }
+              var newHref = originalHref.replace('cod_pessoa', selectedPersonId);
+              link.attr('href', newHref);
+          });
+
+          function filterOptions() {
+              var query = categorySearch.val().trim().toLowerCase();
+              resultsList.empty();
+
+              $.ajax({
+                  url: apiUrl,
+                  method: 'GET',
+                  data: { entidade: 'Pessoa', query: query },
+                  success: function(data) {
+                      data.forEach(function(person) {
+                          var listItem = $('<div>').text(person.nome);
+                          listItem.addClass('list-group-item');
+                          listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                          listItem.data('cpf_cnpj',   person.cpf_cnpj);
+                          resultsList.append(listItem);
+                          //console.log(person.email);
+                          var data = person;
+                      });
+
+                      // Exibe a lista de resultados
+                      resultsList.show();
+                  },
+                  error: function(err) {
+                      console.error('Erro na requisição AJAX:', err);
+                  }
+              });
+          }
+      });
+
+  // -----------------------------------------------------------------
+  // ------------ para baixo da tabela Produto -----------------------
+  // -----------------------------------------------------------------
+
+      function atualizarCommentIndex(inputField) {
+          if (inputField.value !== null && inputField.value.trim() !== '') {
+
+              inputField.value = inputField.value.replace(/\s/g, '');
+              var index = thisIndex(inputField);
+
+              if ( index != null ) {
+                  var selector = "";
+
+                  if (inputField.type == "text"){
+                      //selector = `compra_itenscompra_attributes_${index}_produto`;
+                  }else {
+                      selector = `compra_itenscompra_attributes_${index}_cod_produto`
+                      selector = `compra_itenscompra_attributes_${index}_cod_produto`
+                  }
+
+                  var commentField = document.getElementById(selector);
+
+                  if ( commentField ){
+                      commentField.value = inputField.value;
+                  }
+                  selectColorProduct(inputField)
+                  inputField = "";
+              }
+          }
+      };
+
+      function selectColorProduct(field) {
+          field.value = field.value.replace(/\s/g, '');
+
+          var index = thisIndex(field);
+          let corSelect = document.getElementById(`compra_itenscompra_attributes_${index}_cod_cor`);
+          var proValor =  document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
+          var proQtd =    document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
+
+  // coloco a cor no index pq caso esteja trocando o item ele precisa estar no index
+          if (corSelect){
+              corSelect.selectedIndex = 0;
+          }
+
+          let apiUrl = url + 'compras/consulta_estoque';
+  // console.log("API URL: " + apiUrl);
+          fetch(apiUrl, {
+              method: 'post',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ id_produto: field.value }) // Converte os dados em JSON
+          })
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Erro ao enviar dados para a API');
+              }
+              return response.json();
+          })
+          .then(data => {
+              var x = document.getElementById("cor_id");
+              x.innerHTML = "";
+
+              var option = document.createElement("option");
+              option.text = "Selecione uma Cor!";
+              option.value = 0;
+              x.add(option)
+
+              if ( data.length === 0 ){
+                  corSelect.value = 1; // 1 é a cor padrão
+
+
+              } else if(data.length === 1 ){
+                  corSelect.value = data[0].cod_cor;
+                  proQtd.value = 1;
+                  proValor.value = parseFloat(data[0].ultimocusto).toFixed(2).replace(".",",");
+                  setValorTotal(field);
+
+              } else if (data.length > 0) {
+                  data.forEach(cor => {
+                      var option = document.createElement("option");
+                      option.text = cor.nmcor;
+                      option.value = cor.cod_cor;
+                      option.setAttribute("data-valor-attribute", cor.ultimocusto);
+                      option.setAttribute("data-quantidade-attribute", cor.quantidade);
+                      x.add(option);
+                  });
+                  abrirModal();
+              }
+          })
+          .catch(error => {
+              console.error('Ocorreu um erro:', error);
+          });
+
+  // --------------------------- SELECIONA COR NO MODAL ---------------------- //
+          var selectCor = document.querySelector("#cor_id");
+  // passa todos os campos cor
+          selectCor.addEventListener("change", (event) => {
+
+              let element = document.getElementById('cor_id');
+              let valor;
+              let quantidade;
+
+              for (var i = 0; i < element.options.length; i++) {
+
+                  if (corSelect.value === null || corSelect.value === undefined || corSelect.value === ''){
+
+                      if (element.options[i].value === element.value) {
+
+                          if (index == thisIndex(corSelect)) {
+                              // Defina a opção como selecionada
+                              valor = element.options[i].getAttribute(`data-valor-attribute`);
+                              quantidade = element.options[i].getAttribute(`data-quantidade-attribute`);
+
+                              if (quantidade <= 0){
+                                  //alert("Quantidade insuficiente para compra!");
+                                  alertModal("Possui " + parseFloat(quantidade).toFixed(0) + " no estoque. Quantidade insuficiente.");
+                              }
+                              corSelect.value = element.value;
+                              proValor.value = parseFloat(valor).toFixed(2).replace(".",",");
+                              proQtd.value = '1';//parseFloat(1).toFixed(0);
+                              setValorTotal(field);
+                              break;
+                          }
+                      }
+                      $('#coresModal').modal('hide');
+                  }
+              }
+          });
+
+      }
+  // --------------------------- FIM COR ---------------------- //
+
+  // ------------- calculas os valores da tela ---------------
+
+      function setValorTotal(field) {
+
+          let index = thisIndex(field);
+          let proIpi = document.getElementById(`compra_itenscompra_attributes_${index}_ipi`);
+          let proIcms = document.getElementById(`compra_itenscompra_attributes_${index}_icms`);
+          let proFrete = document.getElementById(`compra_itenscompra_attributes_${index}_valor_frete`);
+          let proValor = document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
+          let proQtd   = document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
+          let proTotal = document.getElementById(`compra_itenscompra_attributes_${index}_valor_total`);
+
+          let valIpi =   parseFloat(proIpi.value.replace(",",".")) * 100;
+          let valIcms =  parseFloat(proIcms.value.replace(",",".")) * 100;
+          let valFrete = parseFloat(proFrete.value.replace(",",".")) * 100;
+          let valUnit = parseFloat(proValor.value.replace(",",".")) * 100;
+
+  //console.log("PRODUTO = "+valUnit);
+          //var ttProd = (parseFloat( proValor.value ) * parseFloat(proQtd.value)).toFixed(2);
+
+          proTotal.value = ((((parseFloat( valUnit) || 0) + (parseFloat( valIcms) || 0) + (parseFloat( valIpi) || 0) + (parseFloat( valFrete) || 0)  ) * parseFloat(proQtd.value.replace(",","."))) / 100 );
+          proTotal.value = parseFloat(proTotal.value).toFixed(2).replace(".",",");
+
+
+          setTotalCompra();
+          proIpi = "0";
+          proIcms = "0";
+          proFrete = "0";
+          proValor = "0";
+          proQtd   = "1";
+          proTotal = "0";
+          index = "";
+      }
+
+      function setTotalCompra(){
+
+          // Selecione a tabela
+          var tabela = document.getElementById("tblProdutos");
+          var acrescimo = document.getElementById("compra_outrasdespesas").value.replace(",",".");
+          var desconto = document.getElementById( "compra_desconto").value.replace(",",".");
+
+          // Inicialize a variável para armazenar a soma
+          var soma = 0;
+
+          // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
+
+          for (var i = 1; i < tabela.rows.length; i++) {
+
+              var valorUnitarioCell = tabela.rows[i].querySelector(".valor-unitario");
+              var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
+
+              var valorTotalCell = tabela.rows[i].querySelector(".valor-total-compra");
+              var valorTotal = valorTotalCell.value? parseFloat(valorTotalCell.value.replace(",",".")) : 0;
+
+              //console.log("TEXTO - "+valorUnitario)
+
+              var qtdCell = tabela.rows[i].querySelector(".quantidade");
+              var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value.replace(",",".")) : 0;
+
+              // Some o valor unitário à variável de soma
+              // soma += (valorUnitario*qtdProduto);
+              soma += valorTotal;
+          }
+
+          soma += (parseFloat(acrescimo) || 0) - (parseFloat(desconto) || 0);
+          document.getElementById("compra_valortotal").value = soma.toFixed(2).replace(".",",");
+          // Exiba o resultado da soma
+      }
+
+      $(document).on('keydown', '.produto_search', function(event) {
+          if (event.key === 'Enter') {
+              selectProduct(this);
+          } else if (event.key === 'Escape') {
+              // Verifique se o elemento é um input (por exemplo, <input>)
+              if (this.tagName.toLowerCase() === 'input') {
+                  //this.value = "";
+              } else {
+                  // Se for um elemento de texto (por exemplo, <div>)
+                  //this.innerText = "";
+              }
+          }
+      });
+
+      function selectProduct(field) {
+
+          var index = thisIndex(field);
+
+          // Obtém a referência da div pelo id atual
+          var productsListDiv = document.getElementById("products_list");
+
+          // Verifica se a div com id "products_list" existe
+          if (productsListDiv) {
+              // Define o novo id
+              productsListDiv.id = `products_list_${index}`;
+          }
+
+          var selectedProductIdField = document.getElementById(`compra_itenscompra_attributes_${index}_cod_produto`);
+
+          let productsList = $(`#products_list_${index}`);
+
+          let apiUrl = url+ "buscas/buscar_produtos";
+
+          productOptions();
+
+          // Adiciona um evento de clique aos itens da lista
+          productsList.on('click', `div.list-group-item`, function() {
+              let selectedProduct = $(this).data('produto');
+              let selectedProductId = $(this).data('cod_produto');
+              selectedProductIdField.value = ( selectedProductId );
+              field.value =  selectedProduct ;
+
+  //--------------------------------------------------------------------------------------------------------------------------
+              atualizarCommentIndex(selectedProductIdField);
+  //--------------------------------------------------------------------------------------------------------------------------
+              // Limpa a lista de resultados
+              productsList.hide();
+
+          });
+
+          function productOptions() {
+              var query = field.value.trim().toLowerCase();
+              productsList.empty();
+
+              //console.log("productOptions --- ")
+
+              $.ajax({
+                  url: apiUrl,
+                  method: 'GET',
+                  data: { entidade: 'Produto', query: query },
+                  success: function(data) {
+                      productsList.empty();
+                      data.forEach(function(product) {
+                          var listItem = $('<div>').text(product.produto);
+                          listItem.addClass('list-group-item');
+                          listItem.data('cod_produto', product.cod_produto); // Armazena o ID do produto nos dados do item
+                          listItem.data('produto', product.produto);
+                          productsList.append(listItem);
+                      });
+
+                      // Exibe a lista de resultados
+                      productsList.show();
+                  },
+                  error: function(err) {
+                      console.error('Erro na requisição AJAX:', err);
+                  }
+              });
+          }
+      };
+</script>

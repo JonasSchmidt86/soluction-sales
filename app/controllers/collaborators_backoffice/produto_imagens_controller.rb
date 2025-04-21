@@ -26,6 +26,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         @produto_imagens = ProdutoImagem.new
       else
         @produto_imagens = @produto.produto_imagens.ordenadas
+        .page(params[:page])
       end
     end
   end

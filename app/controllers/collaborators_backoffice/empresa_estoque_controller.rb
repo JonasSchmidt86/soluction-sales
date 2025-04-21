@@ -17,12 +17,17 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
             term, "#{term}%"
             )
         end
-        
-        # Adicionando condição para `contem`
-        if params[:contem].present? && params[:contem] == '1'
-            query = query.where.not(empresaproduto: { quantidade: 0 })
-        elsif !params.key?(:contem) || !params.key?(:cod_empresa) || !params.key?(:term) || !params.key?(:cod_produto)
-            query = query.where("empresaproduto.quantidade <= 0")
+        if !params[:contem].present?
+            query = query.where("empresaproduto.quantidade > 0") 
+        else
+            # Adicionando condição para `contem`
+            if params[:contem].present? && params[:contem] == '1'
+                query = query.where.not(empresaproduto: { quantidade: 0 })
+            elsif !params.key?(:contem) || !params.key?(:cod_empresa) || !params.key?(:term) || !params.key?(:cod_produto)
+                query = query.where("empresaproduto.quantidade <= 0")
+            else
+                query = query.where("empresaproduto.quantidade > 0")
+            end
         end
         
         # Adicionando condição para `cod_empresa`

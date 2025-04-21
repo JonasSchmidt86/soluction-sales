@@ -1,0 +1,38 @@
+<tr class="nested-fields">
+  <%= f.hidden_field :cod_produto %>
+  <td class="col-md-2">
+    <%= f.text_field :produto, 
+            class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
+            placeholder: "Pressione Enter para buscar!" %>
+    <div id="products_list" class="position-absolute bg-light rounded form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 48%;"></div>
+  </td>
+  <td class="col-auto">
+    <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
+                { prompt: "Selecione uma Cor" },
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+  </td>
+  <td>
+    <%= f.text_field :quantidade, type: "number", step: "1", class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :ipi, value: number_to_currency(f.object.ipi,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 valor-ipi form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :icms, value: number_to_currency(f.object.icms,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 valor-icms form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_frete, value: number_to_currency(f.object.valor_frete,  unit: "", separator: ",", delimiter: ""),input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 valor-frete form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valorunitario, value: number_to_currency(f.object.valorunitario,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_total, value: number_to_currency(f.object.valor_total,  unit: "", separator: ",", delimiter: ""), class: "money2 valor-total-compra form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+  </td>
+  <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
+  <td class="align-middle fw-semibold">
+    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+      <i class="fa fa-trash-can"></i>
+    <% end %>
+  </td>
+</tr>

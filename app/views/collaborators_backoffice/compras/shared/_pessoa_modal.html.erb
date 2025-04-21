@@ -1,8 +1,8 @@
-<button type="button", class="btn btn-info btn-circle btn-lg", data-bs-toggle="modal",
-  data-bs-target="#vendaModal", data-bs-whatever= <%= "" %> >
+<button type="button" class="btn btn-info btn-circle btn-lg" data-bs-toggle="modal"
+  data-bs-target="#compraModal_<%= 1 %>" data-bs-whatever= <%= ""%>  data-turbo="false" >
   <i class="fas fa-user-plus"></i>
 </button>
-<div class="modal fade" id="vendaModal" data-tor-parent="show">
+<div class="modal fade" id="compraModal_<%= 1 %>" data-tor-parent="show"  data-turbo="false">
   <div class="modal-dialog  modal modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
@@ -121,12 +121,12 @@
       $(document).ready(function() {
 
           // Adiciona um evento de mudança para os inputs de tipo de pessoa
-          $('input[name="venda[pessoa_attributes][tipo]"]').on('change', function() {
+          $('input[name="compra[pessoa_attributes][tipo]"]').on('change', function() {
               const tipoSelecionado = $(this).val(); // Obtém o valor do tipo de pessoa selecionado
               aplicarMascara(tipoSelecionado); // Chama a função para aplicar a máscara com base no tipo de pessoa selecionado
           });
           // Aplica a máscara inicial com base no tipo de pessoa selecionado inicialmente
-          const tipoSelecionadoInicial = $('input[name="venda[pessoa_attributes][tipo]"]:checked').val();
+          const tipoSelecionadoInicial = $('input[name="compra[pessoa_attributes][tipo]"]:checked').val();
           aplicarMascara(tipoSelecionadoInicial);
       });
 
@@ -144,6 +144,7 @@
       }
 
       function buscarPessoaPorCpfCnpj(cpfCnpjInput) {
+        console.log("buscando pessoa por cpf_cnpj URL: ", url)
           //aplicarMascara('F');
           const cpfCnpj = cpfCnpjInput.val();
               $.ajax({
@@ -165,19 +166,19 @@
 
                       aplicarMascara(pessoa.tipo);
 
-                      document.getElementById('venda_pessoa_attributes_cpf_cnpj').value = pessoa.cpf_cnpj;
-                      document.getElementById('venda_pessoa_attributes_rg_ie').value = pessoa.rg_ie;
-                      document.getElementById('venda_pessoa_attributes_nome').value = pessoa.nome;
-                      document.getElementById('venda_pessoa_attributes_telefone').value = pessoa.telefone;
-                      document.getElementById('venda_pessoa_attributes_celular').value = pessoa.celular;
-                      document.getElementById('venda_pessoa_attributes_cep').value = pessoa.cep;
-                      document.getElementById('venda_pessoa_attributes_cod_cidade').value = pessoa.cod_cidade;
-                      document.getElementById('venda_pessoa_attributes_complemento').value = pessoa.complemento;
-                      document.getElementById('venda_pessoa_attributes_endereco').value = pessoa.endereco;
-                      document.getElementById('venda_pessoa_attributes_bairro').value = pessoa.bairro;
-                      document.getElementById('venda_pessoa_attributes_numero').value = pessoa.numero;
-                      document.getElementById('venda_pessoa_attributes_email').value = pessoa.email;
-                      document.getElementById('venda_nome_pessoa').value = pessoa.nome;
+                      document.getElementById('compra_pessoa_attributes_cpf_cnpj').value = pessoa.cpf_cnpj;
+                      document.getElementById('compra_pessoa_attributes_rg_ie').value = pessoa.rg_ie;
+                      document.getElementById('compra_pessoa_attributes_nome').value = pessoa.nome;
+                      document.getElementById('compra_pessoa_attributes_telefone').value = pessoa.telefone;
+                      document.getElementById('compra_pessoa_attributes_celular').value = pessoa.celular;
+                      document.getElementById('compra_pessoa_attributes_cep').value = pessoa.cep;
+                      document.getElementById('compra_pessoa_attributes_cod_cidade').value = pessoa.cod_cidade;
+                      document.getElementById('compra_pessoa_attributes_complemento').value = pessoa.complemento;
+                      document.getElementById('compra_pessoa_attributes_endereco').value = pessoa.endereco;
+                      document.getElementById('compra_pessoa_attributes_bairro').value = pessoa.bairro;
+                      document.getElementById('compra_pessoa_attributes_numero').value = pessoa.numero;
+                      document.getElementById('compra_pessoa_attributes_email').value = pessoa.email;
+                      document.getElementById('compra_nome_pessoa').value = pessoa.nome;
                       document.getElementById('selected_person_id').value = pessoa.cod_pessoa;
                   }
               },
