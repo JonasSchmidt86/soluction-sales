@@ -5,7 +5,6 @@
 <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen">
     <div class="modal-content p-0" style="background: transparent; border: none; position: relative;">
-      
 
       <div class="modal-body p-0">
         <div id="carouselImages" class="carousel slide" data-bs-ride="false">
@@ -13,12 +12,12 @@
             <% (@produto_imagens || []).each_with_index do |imagem, index| %>
               <div class="carousel-item <%= 'active' if index == 0 %>" data-index="<%= index %>">
                 
-                <!-- Container com position relative pra posicionar o botão -->
-                <div style="position: relative;">
-                  <!-- Imagem -->
+                <!-- Container para centralizar a imagem -->
+                <div class="d-flex align-items-center justify-content-center" style="position: relative; height: 100vh;">
+                  <!-- Imagem centralizada -->
                   <%= image_tag(imagem.imagem.presence || asset_path(imagem.imagem),
-                                class: "d-block w-100",
-                                style: "max-height: 100vh; object-fit: contain;") %>
+                                class: "d-block",
+                                style: "max-height: 100vh; max-width: 100%; object-fit: contain;") %>
 
                   <!-- Botão sobre a imagem -->
                   <button type="button"
@@ -35,7 +34,6 @@
 
               </div>
             <% end %>
-
           </div>
 
           <!-- Botões do carrossel -->

@@ -13,10 +13,11 @@
 #     ON UPDATE NO ACTION
 #     ON DELETE NO ACTION;
 
-#   update lancamentoscaixa
-#       set caixa_id = c.id
-#     from caixa as c
-#   where lancamentoscaixa.dataabertura = c.dataabertura;
+#-- já adicionar e o id do caixa tbm já foi adicionado 
+#--   update lancamentoscaixa
+#--       set caixa_id = c.id
+#--     from caixa as c
+#--   where lancamentoscaixa.dataabertura = c.dataabertura;
 
 
 #   alter table funcionarioempresa alter column cod_funcionarioempresa set default nextval('funcionario_codigo_seq'::regclass);
