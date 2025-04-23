@@ -32,7 +32,7 @@
               <div class="row mb-1 g-1">
                 <div class="col-md-2">
                   <div class="form-floating mb-3">
-                    <%= form.text_field :datacompra, value: post_date(DateTime.now), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                    <%= form.text_field :datacompra, value: (@compra.datacompra.blank? ? post_date(DateTime.now) : post_date(@compra.datacompra)), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
                     <%= form.label :data_compra, class:"" %>
                   </div>
                 </div>

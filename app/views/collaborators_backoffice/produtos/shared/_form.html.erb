@@ -126,7 +126,7 @@
                                                 <tr>
                                                     <td><%= post_date item.compra.datacompra %></td>
                                                     <td><%= item.cod_cor %></td>
-                                                    <td><%= item.compra.pessoa.nome %></td>
+                                                    <td class="no-link"  title="Clique para editar" style="cursor: pointer;" ondblclick="window.location='<%= collaborators_backoffice_compra_path(item.compra) %>'" ><%= item.compra.pessoa.nome %></td>
                                                     <td class=""><%= item.quantidade.to_i %></td>
                                                     <td class=""><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
                                                 </tr>

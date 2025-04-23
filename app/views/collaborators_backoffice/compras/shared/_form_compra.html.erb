@@ -45,13 +45,13 @@
                   <div class="row my-2 mx-2 align-items-center">
                     <div class="col-md-2">
                       <div class="form-floating">
-                        <%= compra.text_field :datacompra,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                        <%= compra.text_field :datacompra, value: (@compra.datacompra.blank? ? post_date(DateTime.now) : post_date(@compra.datacompra)), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
                         <%= compra.label :data_compra, class:"" %>
                       </div>
                     </div>
                     <div class="col-md-2">
                       <div class="form-floating">
-                        <%= compra.text_field :dataemissao,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+                        <%= compra.text_field :dataemissao, value:(@compra.dataemissao.blank? ? post_date(DateTime.now) : post_date(@compra.dataemissao)), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
                         <%= compra.label :data_emissao, class:"" %>
                       </div>
                     </div>
