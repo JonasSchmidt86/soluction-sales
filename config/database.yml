@@ -33,23 +33,23 @@ default: &default
 #   host: pgsql.moveisrosa.kinghost.net
 
 development:
- # <<: *default
- # database: moveisrosa
- # username: jonas
- # host: localhost
+  <<: *default
+  database: moveisrosa
+  username: jonas
+  host: localhost
 
   # database: moveisrosa
   # username: jonas
   # password: J0nas1922
   # host: 85.31.231.205
 
-#production:
+production:
   <<: *default
   database: moveisrosa
   username: jonas
   password: J0nas1922
-  #host: localhost
-  host: 85.31.231.205
+  host: localhost
+  #host: 85.31.231.205
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
