@@ -28,8 +28,6 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         @produto_imagens = @produto.produto_imagens.ordenadas
         .page(params[:page])
       end
-    else
-      @produto_imagens = [];
     end
   end
   

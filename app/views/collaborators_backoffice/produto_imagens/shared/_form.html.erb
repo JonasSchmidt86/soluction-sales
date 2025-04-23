@@ -126,13 +126,14 @@
                         </div>
                         <div class="dataTable-bottom">
                           <div class="dataTable-info">
-                            <%# page_entries_info (@produto_imagens || 0), entry_name: 'foto' %>
-                            <%= page_entries_info(@produto_imagens || [], entry_name: 'item') %>
+                            <%= page_entries_info(@produto_imagens, entry_name: 'foto') if @produto_imagens.present? %>
                           </div>
-                          
-
                           <div class = "text-center">
-                            <%= paginate @produto_imagens %>
+                            <% if @produto_imagens.present? %>
+                              <% paginate @produto_imagens %>
+                            <% else %>
+                              Nenhuma foto encontrada.
+                            <% end %>
                           </div>
                         </div>
                       </div>
