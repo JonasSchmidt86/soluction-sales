@@ -21,9 +21,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
     if params[:id].present? && params[:id] == "0"
       @produto = Produto.new
+      @produto_imagens = ProdutoImagem.all
     elsif params[:id].present?
       if @produto.nil?
-        @produto_imagens = ProdutoImagem.new
+        @produto_imagens = ProdutoImagem.all
       else
         @produto_imagens = @produto.produto_imagens.ordenadas
         .page(params[:page])
