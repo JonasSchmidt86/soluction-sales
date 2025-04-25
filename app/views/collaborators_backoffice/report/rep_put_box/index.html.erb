@@ -1,100 +1,83 @@
-
 <div class="card mt-3">
-
-    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"card-header" do %>
-        <h4>Lançamentos de Caixa</h4>
-    <% end %>
-    
-    <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
-          <div class="dataTable-top">
-              <%= form_with(url: collaborators_backoffice_report_put_box_index_path, local: true, method: :get, 
+  <%= link_to collaborators_backoffice_report_put_box_index_path, class:"card-header" do %>
+    <h4>Lançamentos de Caixa</h4>
+  <% end %>
+  <div class="card-body">
+    <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+      <div class="dataTable-top">
+        <%= form_with(url: collaborators_backoffice_report_put_box_index_path, local: true, method: :get, 
                                     class:"dataTable-search") do |form| %>
-
-                <div class="d-flex mb-2 col-md-3">
-
-                  <div class="col-md-2 order-first">
-                    <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
-                  </div> 
-                  
-                  <div class="col-md-10">
-                    <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
-                  </div>
-
-                  <div class="col-md-4">
-                    <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+          <div class="d-flex mb-2 col-md-3">
+            <div class="col-md-2 order-first">
+              <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+            </div>
+            <div class="col-md-10">
+              <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
+            </div>
+            <div class="col-md-4">
+              <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
                         class: "dataTable-input datepicker fallback", placeholder:"Data Inicial" %>
-                  </div>
-                  <div class="col-md-4">
-                    <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+            </div>
+            <div class="col-md-4">
+              <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
                         class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-                  </div>
-                  <div class="col-md-7">
-                    <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
+            </div>
+            <div class="col-md-7">
+              <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
                                                 params[:cod_historico] ), include_blank: "Histórico", class: "form-control") %>
-                  </div>
-
-                  <div class="col-md-4">
-                    <%= select_tag(:cod_operacao, options_for_select(get_operacao(), 
+            </div>
+            <div class="col-md-4">
+              <%= select_tag(:cod_operacao, options_for_select(get_operacao(), 
                                     params[:cod_operacao] ), include_blank: "Todos",
                                     class:"form-control") %>
-                  </div>
-                  
-                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                    <div class="col-md-5">
-                      <%= form.collection_select(:cod_bancoconta, 
+            </div>
+            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <div class="col-md-5">
+                <%= form.collection_select(:cod_bancoconta, 
                               (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
                                 :cod_bancoconta, :nome_banco, {:include_blank => 'CAIXA', selected: params[:cod_bancoconta]}, 
                                 class: "text form-control", readonly: false) %>
-                    </div>
-                  <% end %>
-
-                  <button type='submit', class="btn btn-success btn-circle">Buscar</button>
-
-                  <div class="ms-auto col-md-5 order-last">
-                    <%= form.text_field :valorEntradas, class: "text-bg-info form-control ", readonly: true %>
-                  </div>
-                  <div class="ms-auto col-md-5 order-last ">
-                    <%= form.text_field :valorSaidas, style:"width: 125px;", class: "text-bg-danger form-control ", readonly: true %>
-                  </div>
-
-                </div>
-                
-              <% end %>
+              </div>
+            <% end %>
+            <button type='submit', class="btn btn-success btn-circle">Buscar</button>
+            <div class="ms-auto col-md-5 order-last">
+              <%= form.text_field :valorEntradas, class: "text-bg-info form-control ", readonly: true %>
+            </div>
+            <div class="ms-auto col-md-5 order-last ">
+              <%= form.text_field :valorSaidas, style:"width: 125px;", class: "text-bg-danger form-control ", readonly: true %>
+            </div>
           </div>
-          
-          <div class="dataTable-container">
-
-            <table id="datatablesSimple" class="dataTable-table ">
-              <thead>
-                <tr>
-<%# String columns[] = {"Tipo", "Empresa", "Operador", "Descricao", "Nr Parcela", "Cliente", "Dt Pagto", "Valor"}; %>
-                  <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Tp</a></th>
-                  <th data-sortable="" style="width: 2%;"><a href="#" class="dataTable-sorter">Emp</a></th>
-                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                  <th data-sortable="" style="width: 18%;"><a href="#" class="dataTable-sorter">Historico</a></th>
-                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Parcela</a></th>
-                  <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                  <th data-sortable=""  style="width: 11.5%;"><a href="#" class="dataTable-sorter">Data Pagto</a></th>
-                  <th data-sortable="" style="width: 110px;">Valor Total</th>
-                  <th data-sortable="" style="width: 70px;">Excluir?</th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                <% somaEntradas = 0 %>
-                <% somaSaidas = 0 %>
-                <% @lauches.each do |lauch| %>
-                  <% if lauch.tipo == 'S' %>
-                    <tr class="text-warning">
-                  <% else %>
-                    <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
-                      <tr class="text-info">
+        <% end %>
+      </div>
+      <div class="dataTable-container">
+        <table id="datatablesSimple" class="dataTable-table ">
+          <thead>
+            <tr>
+              <%# String columns[] = {"Tipo", "Empresa", "Operador", "Descricao", "Nr Parcela", "Cliente", "Dt Pagto", "Valor"}; %>
+              <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Tp</a></th>
+              <th data-sortable="" style="width: 2%;"><a href="#" class="dataTable-sorter">Emp</a></th>
+              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+              <th data-sortable="" style="width: 18%;"><a href="#" class="dataTable-sorter">Historico</a></th>
+              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+              <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+              <th data-sortable=""  style="width: 11.5%;"><a href="#" class="dataTable-sorter">Data Pagto</a></th>
+              <th data-sortable="" style="width: 110px;">Valor Total</th>
+              <th data-sortable="" style="width: 70px;">Excluir?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% somaEntradas = 0 %>
+            <% somaSaidas = 0 %>
+            <% @lauches.each do |lauch| %>
+              <% if lauch.tipo == 'S' %>
+                <tr class="text-warning">
+                <% else %>
+                  <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
+                    <tr class="text-info">
                     <% else %>
                       <tr class="">
+                      <% end %>
                     <% end %>
-                  <% end %> 
-                
                     <td class="align-middle"><%# NORMALMENTE RETIRADA QUE SAI COMO ENTRADA NA CONTA %>
                       <% if lauch.tipo == 'E' && !lauch.cod_bancoconta.nil? %>
                         S
@@ -104,17 +87,15 @@
                     </td>
                     <td class="align-middle"><%= lauch.empresa.cod_empresa %> </td>
                     <td class="align-middle"><%= lauch.funcionario.usuario %> </td>
-                    <td class="align-middle"><%= lauch.historico.descricao %></td> <%# historico%>
+                    <td class="align-middle"><%= lauch.historico.descricao %></td>
+ <%# historico%>
                     <td class="align-middle"><%= lauch.nmParcela %> </td>
                     <td class="align-middle"><%= lauch.nmPessoa %></td>
                     <td class="align-middle"><%= post_datetime ((lauch.datapagto? ? lauch.datapagto : "")) %> </td>
                     <td class="align-middle"><%= number_to_currency( lauch.valor, separator: ",", delimiter: "", unit: "")  %></td>
-                    
-                    
                     <% if lauch.tipo == 'S' %>
                       <% somaSaidas += lauch.valor %>
                     <% else %>
-
                       <% if params[:cod_bancoconta].present? %>
                         <% if lauch.tipo == 'E' %>
                           <% somaEntradas += lauch.valor %>
@@ -127,36 +108,30 @@
                         <% else %>
                           <% somaSaidas += lauch.valor %>
                         <% end %>
-                      <% end %> 
-                    <% end %> 
-
-
+                      <% end %>
+                    <% end %>
                     <td class="align-middle">
-
                       <%# somente pode excluir o lançamento se for do mesmo caixa que esta aberto %>
                       <% if ((!lauch.caixa.nil? && !@caixa.nil? ) && (lauch.caixa.id === @caixa.id) ) %>
                         <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch), method: :delete, 
                                     class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
-                            <i class="fa fa-minus"></i>
+                          <i class="fa fa-minus"></i>
                         <% end %>
                       <% else %>
                         <%# Se for funcionario nivel 1 liberado para remover porem se for de caixa diferente ele gera novo lancamento contra o primeiro %>
                         <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                           <%= link_to collaborators_backoffice_report_put_box_destroy_path(lauch, params.permit!), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Lancamento de caixa?"} do %>
-                              <i class="fa fa-minus"></i>
+                            <i class="fa fa-minus"></i>
                           <% end %>
                         <% end %>
                       <% end %>
-
                     </td>
                   </tr>
                 <% end %>
-
               </tbody>
             </table>
           </div>
-
           <div class="position-fixed bottom-0 end-0 m-4">
             <div class="d-block mb-2">
               <button class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-lg"
@@ -166,53 +141,49 @@
                 <i class="fa fa-plus fa-2x"></i>
               </button>
             </div>
-          </div>          
+          </div>
           <%= render partial: 'collaborators_backoffice/report/rep_put_box/shared/lancamentosdiverso_modal', locals: { action_message: 'Modal' } %>
-
           <% if @lauches.respond_to?(:total_pages) %>
             <div class="dataTable-bottom">
               <div class="dataTable-info"><%= page_entries_info @lauches, entry_name: 'item' %></div>
-                  <div class = "text-center">
-                    <%= paginate @lauches %>
-                  </div>
+              <div class = "text-center">
+                <%= paginate @lauches %>
               </div>
             </div>
-          <% else %>
-            <div class="dataTable-bottom">
-              <div class="dataTable-info">
+          </div>
+        <% else %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info">
               <h5>Exibindo <%= @lauches.size %> registros</h5>
-              </div>
-                <div class = "text-center">
-                </div>
             </div>
-          <% end %>
+            <div class = "text-center">
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
-</div>
- 
-<script>
+    <script>
+      function formatarReal(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+      // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+      // document.getElementById("valorEntradas").value = formatarReal(<%= somaEntradas %>);
+      // document.getElementById("valorSaidas").value = formatarReal(<%= somaSaidas %>);
 
-  function formatarReal(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  // document.getElementById("valorEntradas").value = formatarReal(<%= somaEntradas %>);
-  // document.getElementById("valorSaidas").value = formatarReal(<%= somaSaidas %>);
+      document.addEventListener("DOMContentLoaded", function() {
+        function formatarReal(valor) {
+          return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        }
 
-  document.addEventListener("DOMContentLoaded", function() {
-    function formatarReal(valor) {
-      return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    }
+        // Pega os inputs pelo ID
+        let inputEntradas = document.getElementById("valorEntradas");
+        let inputSaidas = document.getElementById("valorSaidas");
 
-    // Pega os inputs pelo ID
-    let inputEntradas = document.getElementById("valorEntradas");
-    let inputSaidas = document.getElementById("valorSaidas");
-
-    if (inputEntradas && inputSaidas) {
-      inputEntradas.value = formatarReal(<%= somaEntradas %>);
-      inputSaidas.value = formatarReal(<%= somaSaidas %>);
-    } else {
-      console.warn("Os campos de entrada e saída não foram encontrados.");
-    }
-  });
-
-</script>
+        if (inputEntradas && inputSaidas) {
+          inputEntradas.value = formatarReal(<%= somaEntradas %>);
+          inputSaidas.value = formatarReal(<%= somaSaidas %>);
+        } else {
+          console.warn("Os campos de entrada e saída não foram encontrados.");
+        }
+      });
+    </script>

@@ -832,3 +832,5 @@
 
 # ALTER FUNCTION public.tgrf_updatecaixa()
 #     OWNER TO jonas;
+
+# DROP TRIGGER IF EXISTS update_estoque ON public.itemcompra;

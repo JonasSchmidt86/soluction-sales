@@ -52,8 +52,14 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
             if the_params[:tipo] == "E"
                 @launch.tipo = 'E'
+                @launch.dataabertura = @caixa.dataabertura;
             else
                 @launch.tipo = 'S'
+                if the_params[:cod_bancoconta].present? && the_params[:cod_bancoconta].to_i > 0
+                    @launch.caixa = nil;
+                else
+                    @launch.dataabertura = @caixa.dataabertura;
+                end
             end
 
             if @launch.save!

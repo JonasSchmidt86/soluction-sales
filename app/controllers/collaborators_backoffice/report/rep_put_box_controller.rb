@@ -34,7 +34,7 @@ class CollaboratorsBackoffice::Report::RepPutBoxController < CollaboratorsBackof
         if params[:cod_bancoconta].present? && !params[:cod_bancoconta].nil? && params[:cod_bancoconta]
             consulta += " and lancamentoscaixa.cod_bancoconta = " + params[:cod_bancoconta].to_s  #+ " and lancamentoscaixa.caixa_id is null "
         else
-            consulta += " and caixa_id is not null "
+            consulta += " and caixa_id is not null AND lancamentoscaixa.dataabertura is not null "
         end
         unless (params[:cliente].blank?)
             consulta += "
