@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   end
 
   namespace :collaborators_backoffice do
+    namespace :report do
+      get 'rep_dre/index'
+    end
     get 'welcome/index'
     post 'welcome/index'
     get 'search', to: 'produtos/search#produtos'

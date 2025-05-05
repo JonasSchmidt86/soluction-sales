@@ -26,7 +26,7 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
     end
 
     def consulta_estoque
-      # puts "CONSULTA ESTOQUE #{params} "x
+      # puts "CONSULTA CORES #{params} "x
       @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
                    .joins(:empresaprodutos)
                    .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)

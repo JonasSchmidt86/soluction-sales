@@ -15,6 +15,10 @@ gem 'nfe-io'
 # -- upload ----
 gem 'carrierwave'
 # --------------
+# -- pdf ------
+gem 'wicked_pdf'
+gem 'wkhtmltopdf-binary'
+# --------------
 
 #Formatador de html
 gem 'htmlbeautifier'

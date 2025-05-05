@@ -65,7 +65,7 @@ private
             if !params[:dataInicial].blank? && !params[:dataFinal].blank?
                 consulta += " and date(dtvencimento) between to_date('" + params[:dataInicial] +"', 'DD/MM/YYYY') and to_date('" + params[:dataFinal] + "', 'DD/MM/YYYY') "
             else
-                consulta += " and date(dtvencimento) between to_date('" + Time.now.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
+                consulta += " and date(dtvencimento) between to_date('" + Time.now.strftime("01/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
             end
 
             if !params[:cliente].blank?
