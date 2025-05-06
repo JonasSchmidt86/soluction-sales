@@ -14,3 +14,26 @@
 //= require activestorage
 //= require jquery
 //= require cocoon
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Quando a página começar a sair
+    window.addEventListener("beforeunload", function () {
+      const spinner = document.getElementById("spinner");
+      if (spinner) spinner.style.display = "flex";
+      document.body.style.cursor = "wait";
+    });
+  
+    // Rails UJS (para links/data-remote)
+    document.addEventListener("ajax:send", function () {
+      const spinner = document.getElementById("spinner");
+      if (spinner) spinner.style.display = "flex";
+      document.body.style.cursor = "wait";
+    });
+  
+    document.addEventListener("ajax:complete", function () {
+      const spinner = document.getElementById("spinner");
+      if (spinner) spinner.style.display = "none";
+      document.body.style.cursor = "default";
+    });
+  });
+  

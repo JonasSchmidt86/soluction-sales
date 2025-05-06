@@ -29,3 +29,22 @@ function formatarReal(valor) {
 
 require("jquery")
 // require("@nathanvda/cocoon")
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Quando a página começar a mudar
+  window.addEventListener("beforeunload", function () {
+    document.getElementById("spinner").style.display = "flex";
+    document.body.style.cursor = "wait";
+  });
+
+  // Para requisições AJAX
+  document.addEventListener("ajax:send", function () {
+    document.getElementById("spinner").style.display = "flex";
+    document.body.style.cursor = "wait";
+  });
+
+  document.addEventListener("ajax:complete", function () {
+    document.getElementById("spinner").style.display = "none";
+    document.body.style.cursor = "default";
+  });
+});
