@@ -1,0 +1,41 @@
+<div class="card mt-3">
+  <%= link_to collaborators_backoffice_report_custom_reports_path, class:"card-header bg-primary" do %>
+    <h4 >Relatórios Personalizados</h4>
+  <% end %>
+  <div class="card-body">
+    <div class="d-flex mb-2 col-md-12">
+      <ul>
+        <% @reports.each do |report| %>
+          <div class="dataTable-loading sortable searchable fixed-columns">
+            <table id="datatablesSimple" class="dataTable-table">
+              <tbody>
+                <tr>
+                  <ul class="dropdown-menu" style="max-width: 35px;">
+                    <th style="min-width: 10%;">
+                      <%= link_to collaborators_backoffice_report_custom_report_path(report.id), method: :get, style: "min-width: 150px", class:"btn btn-info btn-circle" do %>
+                        <%= report.title %>
+                      <% end %>
+                    </th>
+                    <th style="min-width: 70%;">
+                      <%= report.description %>
+                    </th>
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario == 1 %>
+                      <th style="width: 200px">
+                        <%# Se for funcionario nivel 1 liberado para remover porem se for de caixa diferente ele gera novo lancamento contra o primeiro %>
+                        <%= link_to edit_collaborators_backoffice_report_custom_report_path( report.id), class:"btn btn-info btn-circle", data: {confirm: "Deseja Editar?"} do %>
+                          <i class="fa fa-edit", style="width: 35px;"></i> Editar Relatório
+                        <% end %>
+                        <%= link_to collaborators_backoffice_report_custom_report_path( report.id), method: :delete, class:"btn btn-danger btn-circle", data: {confirm: "Deseja Excluir?"} do %>
+                          <i class="fa fa-minus", style="width: 35px;"></i> Excluir Relatório
+                        <% end %>
+                      </th>
+                    <% end %>
+                  </ul>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </ul>
+    </div>
+  </div>

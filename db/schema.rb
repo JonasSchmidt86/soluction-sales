@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_04_28_000000) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_07_194335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -172,6 +172,15 @@ ActiveRecord::Schema[7.1].define(version: 2024_04_28_000000) do
   create_table "cores", primary_key: "cod_cor", id: :bigint, default: nil, force: :cascade do |t|
     t.boolean "ativo"
     t.string "nmcor", limit: 100
+  end
+
+  create_table "custom_reports", force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.text "sql_code"
+    t.json "params_schema"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: nil, force: :cascade do |t|

@@ -1,15 +1,4 @@
 class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackofficeController
-  # def index
-  #   @periodo_inicio = params[:inicio].present? ? Date.parse(params[:inicio]) : Date.today.beginning_of_month
-  #   @periodo_fim = params[:fim].present? ? Date.parse(params[:fim]) : Date.today.end_of_month
-  
-  #   @receitas = Lancamentoscaixa.where("tipo = 'E' and cod_empresa = ? and date(datapagto) between date(?) and date(?)", current_collaborator.cod_empresa, @periodo_inicio, @periodo_fim)
-  #   @despesas = Lancamentoscaixa.where("tipo = 's' and cod_empresa = ? and date(datapagto) between date(?) and date(?)", current_collaborator.cod_empresa, @periodo_inicio, @periodo_fim)
-  
-  #   @total_receitas = @receitas.sum(:valor)
-  #   @total_despesas = @despesas.sum(:valor)
-  #   @lucro_liquido = @total_receitas - @total_despesas
-  # end
   
   def index
 

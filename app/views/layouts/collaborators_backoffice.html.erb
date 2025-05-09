@@ -189,6 +189,11 @@
                         Relatório de DRE
                       <% end %>
                     <% end %>
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                      <%= link_to collaborators_backoffice_report_custom_reports_path, class:"nav-link" do %>
+                        Ots Relatórios
+                      <% end %>
+                    <% end %>
                   </nav>
                 </div>
               </div>
@@ -233,7 +238,7 @@
           campo.addEventListener('blur', function () {
             const valor = campo.value.trim();
             const partes = valor.split('/');
-    console.log(campo.id)
+    // console.log(campo.id)
             if (partes.length === 3) {
               let [dia, mes, ano] = partes.map(p => parseInt(p));
 

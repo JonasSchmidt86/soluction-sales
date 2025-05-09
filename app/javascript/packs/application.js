@@ -15,8 +15,6 @@
 // const images = require.context('../images', true)
 // const imagePath = (name) => images(name, true)
 
-console.log('Hello World from Webpacker')
-
 function formatarReal(valor) {
   return valor.toLocaleString('pt-BR', {
       style: 'currency',
@@ -31,20 +29,32 @@ require("jquery")
 // require("@nathanvda/cocoon")
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Quando a página começar a mudar
+  var iframe = document.getElementById("download_frame");
+  if (iframe) {
+    iframe.addEventListener("load", function() {
+      // Ao carregar o iframe (download iniciado), esconda o spinner:
+      var spinner = document.getElementById("spinner");
+      if (spinner) spinner.style.display = "none";
+      document.body.style.cursor = "default";
+    });
+  }
+
+  // Seu código existente
   window.addEventListener("beforeunload", function () {
-    document.getElementById("spinner").style.display = "flex";
+    var spinner = document.getElementById("spinner");
+    if (spinner) spinner.style.display = "flex";
     document.body.style.cursor = "wait";
   });
 
-  // Para requisições AJAX
   document.addEventListener("ajax:send", function () {
-    document.getElementById("spinner").style.display = "flex";
+    var spinner = document.getElementById("spinner");
+    if (spinner) spinner.style.display = "flex";
     document.body.style.cursor = "wait";
   });
 
   document.addEventListener("ajax:complete", function () {
-    document.getElementById("spinner").style.display = "none";
+    var spinner = document.getElementById("spinner");
+    if (spinner) spinner.style.display = "none";
     document.body.style.cursor = "default";
   });
 });

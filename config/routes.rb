@@ -1,11 +1,5 @@
 Rails.application.routes.draw do
 
-  # namespace :collaborators_backoffice do
-  #   get 'produtoxmls/index'
-  #   get 'produtoxmls/edit'
-  #   get 'produtoxmls/new'
-  # end
-
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
   
@@ -20,7 +14,13 @@ Rails.application.routes.draw do
   namespace :collaborators_backoffice do
     namespace :report do
       get 'rep_dre/index'
+      resources :custom_reports, only: [:index, :edit, :update, :new, :create, :show, :destroy] do
+        member do
+          get :run
+        end
+      end
     end
+    
     get 'welcome/index'
     post 'welcome/index'
     get 'search', to: 'produtos/search#produtos'

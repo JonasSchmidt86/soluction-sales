@@ -6,6 +6,10 @@ ruby '3.2.7'
 
 gem 'webpacker'
 
+#excel ------
+gem 'caxlsx'
+gem 'axlsx_rails'
+
 gem 'rack-cors'
 
 #xml nfe ------

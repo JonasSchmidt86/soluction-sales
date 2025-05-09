@@ -1,0 +1,22 @@
+<div class="container mt-5">
+  <h2>Criar Novo Relatório Personalizado</h2>
+  <%= form_with(model: [ :collaborators_backoffice, :report, @custom_report ], local: true) do |form| %>
+    <div class="mb-3">
+      <%= form.label :title, "Título", class: "form-label" %>
+      <%= form.text_field :title, class: "form-control", placeholder: "Ex: Vendas por Cliente" %>
+    </div>
+    <div class="mb-3">
+      <%= form.label :description, "Descrição", class: "form-label" %>
+      <%= form.text_area :description, rows: 2, class: "form-control", placeholder: "Breve descrição do relatório" %>
+    </div>
+    <div class="mb-3">
+      <%= form.label :sql_code, "SQL", class: "form-label" %>
+      <%= form.text_area :sql_code, rows: 10, class: "form-control font-monospace", placeholder: "Ex: SELECT * FROM vendas WHERE data >= '{{inicio}}' AND data <= '{{fim}}'" %>
+      <div class="form-text">Você pode usar parâmetros como <code>{{inicio}}</code>, <code>{{fim}}</code>, etc.</div>
+    </div>
+    <div class="mt-4">
+      <%= form.submit "Salvar Relatório", class: "btn btn-primary" %>
+      <%= link_to "Voltar", collaborators_backoffice_report_custom_report_path, class: "btn btn-secondary ms-2" %>
+    </div>
+  <% end %>
+</div>
