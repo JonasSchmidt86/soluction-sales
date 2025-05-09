@@ -65,7 +65,7 @@
                   <% xml_content = File.read(file_path, encoding: 'UTF-8') %>
                 <% else %>
                   <% Rails.logger.error "Arquivo não encontrado para o registro #{xml_file.id}. Apagando registro." %>
-                  <%#xml_file.destroy %>
+                  <%xml_file.destroy %>
                   <p>Registro apagado devido à ausência do arquivo.</p>
                 <% end %>
               <% end %>
