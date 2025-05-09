@@ -15,6 +15,9 @@
 // const images = require.context('../images', true)
 // const imagePath = (name) => images(name, true)
 
+import '../stylesheets/application.scss'
+
+
 function formatarReal(valor) {
   return valor.toLocaleString('pt-BR', {
       style: 'currency',
