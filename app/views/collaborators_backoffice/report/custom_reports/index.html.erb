@@ -5,6 +5,9 @@
   <div class="card-body">
     <div class="d-flex mb-2 col-md-12">
       <ul>
+        <%= link_to new_collaborators_backoffice_report_custom_report_path, class:"btn btn-info btn-circle" do %>
+          <i class="fa fa-edit", style="width: 35px;"></i> Novo Relatório
+        <% end %>
         <% @reports.each do |report| %>
           <div class="dataTable-loading sortable searchable fixed-columns">
             <table id="datatablesSimple" class="dataTable-table">
