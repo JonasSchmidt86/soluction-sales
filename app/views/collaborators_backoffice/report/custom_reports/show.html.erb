@@ -26,6 +26,12 @@
             <%= form.text_field :fim, value: (params[:fim].presence || Time.now.strftime("%d/%m/%Y")),
               class: "form-control datepicker fallback", style: "width: 140px;" %>
           </div>
+        <% elsif %>
+          <div class="col-auto">
+            <%= form.label :fim, "Data Final", class: "form-label" %>
+            <%= form.text_field :fim, value: (params[:fim].presence || Time.now.strftime("%d/%m/%Y")),
+              class: "form-control datepicker fallback", style: "width: 140px;" %>
+          </div>
         <% else %>
           <div class="col-auto">
             <%= label_tag param, param.humanize, class: "form-label" %>
