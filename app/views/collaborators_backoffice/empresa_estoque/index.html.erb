@@ -1,192 +1,168 @@
-
-
 <div class="card mt-3 mb-3">
-
-        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header" do %>
-          <h4>Estoque</h4>
-        <% end %>
-    
-        <div class="card-body">
-          <div class="dataTable-wrapper dataTable-loading">
-                <% somaCusto = 0 %>
-                <% somaVenda = 0 %>
-
-                <%= form_with(url: collaborators_backoffice_empresa_estoque_index_path, local: true, method: :get, 
+  <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header" do %>
+    <h4>Estoque</h4>
+  <% end %>
+  <div class="card-body">
+    <div class="dataTable-wrapper dataTable-loading">
+      <% somaCusto = 0 %>
+      <% somaVenda = 0 %>
+      <%= form_with(url: collaborators_backoffice_empresa_estoque_index_path, local: true, method: :get, 
                                     class:"col dataTable-search") do |form| %>
-
-                  <div class="d-flex mb-2 col-md-6">
-
-                    <div class="col-md-1">
-                      <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
-                    </div>
-
-                    <div class="col-md-2">
-                      <div class="mb-2">
-                          <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Empresa..." %>
-                      </div> 
-                    </div>
-
-                    <div class="col-md-7">
-                      <div class="mb-2">
-                          <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto..." %>
-                      </div> 
-                    </div>
-
-                    <div class="col-md-8">
-                      <div class="mb-2">
-                        <% checked = params[:contem] == '1' ? true : false %>
-                        <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
-                        <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
-
-                        <button type="submit" class="btn btn-success btn-circle">Buscar</button>
-                      </div>
-                    </div>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>  
-                      <div class="col-md-3 ml-auto">
-                        <div class="form-floating">
-                          <%= form.text_field :valorVenda, class: "money2 text-bg-info form-control ", readonly: true %>
-                          <%= form.label :valor_venda, class:"" %>
-                      </div>
-                    </div>
-                      <div class="col-md-3 ml-auto  order-last">
-                        <div class="form-floating">
-                          <%= form.text_field :valorCusto, class: "money2 text-bg-warning form-control ", readonly: true %>
-                          <%= form.label :custo, class:"" %>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-
+        <div class="d-flex mb-2 col-md-6">
+          <div class="col-md-1">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+          </div>
+          <div class="col-md-2">
+            <div class="mb-2">
+              <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Empresa..." %>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="mb-2">
+              <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto..." %>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="mb-2">
+              <% checked = params[:contem] == '1' ? true : false %>
+              <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
+              <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
+              <button type="submit" class="btn btn-success btn-circle">Buscar</button>
+            </div>
+          </div>
+          <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+            <div class="col-md-3 ml-auto">
+              <div class="form-floating">
+                <%= form.text_field :valorVenda, class: "money2 text-bg-info form-control ", readonly: true %>
+                <%= form.label :valor_venda, class:"" %>
+              </div>
+            </div>
+            <div class="col-md-3 ml-auto  order-last">
+              <div class="form-floating">
+                <%= form.text_field :valorCusto, class: "money2 text-bg-warning form-control ", readonly: true %>
+                <%= form.label :custo, class:"" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <div class="dataTable-container">
+        <table id="report-stock" class="table table-bordered table-striped table-hover table-sm">
+          <thead class="table-primary">
+            <tr>
+              <th data-sortable="true" style="width: 3%;">Emp..</th>
+              <th data-sortable="true" style="width: 7%;">Codigo</th>
+              <th data-sortable="true">Nome</th>
+              <th data-sortable="true" style="width: 20%;">Cor</th>
+              <th data-sortable="true" style="width: 7%;">Qtd</th>
+              <th data-sortable="true" style="width: 8%;">Vl Venda</th>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <th data-sortable="true" style="width: 8%;">Custo</th>
+                <th data-sortable="true" style="width: 55px;">Desativar</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @empresa_produtos.each do |estoque| %>
+              <tr>
+                <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
+                <td class="align-middle "><%= estoque.full_codigo %> </td>
+                <td class="align-middle "><%= estoque.produto.nome %> </td>
+                <td class="align-middle "><%= estoque.cor.nmcor %> </td>
+                <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
+                <td class="align-middle "><%= "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> </td>
+                <% if estoque.quantidade > 0 %>
+                  <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
+                  <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
                 <% end %>
-
-
-              <div class="dataTable-container">
-
-              <table id="datatablesSimple" class="dataTable-table table-striped mb-5">
-                <thead>
-                  <tr>
-                    <th data-sortable="" style="width: 3%;">Emp..</th>
-                    <th data-sortable="" style="width: 7%;">Codigo</th>
-                    <th data-sortable="">Nome</th>
-                    <th data-sortable="" style="width: 20%;">Cor</th>
-                    <th data-sortable="" style="width: 7%;">Qtd</th>
-                    <th data-sortable="" style="width: 8%;">Vl Venda</th>
-
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <th data-sortable="" style="width: 8%;">Custo</th>
-                      <th data-sortable="" style="width: 55px;">Desativar</th>
-                    <% end %>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                  <% @empresa_produtos.each do |estoque| %>
-                    <tr>
-                      <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
-                      <td class="align-middle "><%= estoque.full_codigo %> </td>
-                      <td class="align-middle "><%= estoque.produto.nome %> </td>
-                      <td class="align-middle "><%= estoque.cor.nmcor %> </td>
-                      <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
-                      <td class="align-middle "><%= "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> </td>
-
-                      <% if estoque.quantidade > 0 %>
-                        <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
-                        <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
-                      <% end %>
-
-                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-
-
-                      <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
-                      
-                      <td class="align-middle">
-
-
-                        <div class="dropdown">
-                          <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                          </button>
-
-                          <%# <ul class="dropdown-menu position-absolute" style="z-index: 1050;"> %>
-                          <ul class="dropdown-menu position-fixed" style="top: 100px; left: 50px; z-index: 1050;">
-
-                            <li>
-                              <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque.cod_produto, "produto"), 
+                <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                  <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                  <td class="align-middle">
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                        <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                      </button>
+                      <%# <ul class="dropdown-menu position-absolute" style="z-index: 1050;"> %>
+                      <ul class="dropdown-menu position-fixed" style="top: 100px; left: 50px; z-index: 1050;">
+                        <li>
+                          <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque.cod_produto, "produto"), 
                                           class: "dropdown-item text-primary", 
                                           data: { confirm: "Deseja editar o valor do Produto?" } do %>
-                                <i class="fas fa-edit me-2"></i> Editar
-                              <% end %>
-                            </li>
-                            <li>
-                              <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), 
+                            <i class="fas fa-edit me-2"></i> Editar
+                          <% end %>
+                        </li>
+                        <li>
+                          <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), 
                                           method: :delete, 
                                           class: "dropdown-item text-danger", 
                                           data: { confirm: "Deseja remover o estoque da empresa?" } do %>
-                                <i class="fas fa-trash me-2"></i> Remover
-                              <% end %>
-                            </li>
-                          </ul>
-                        </div>
-
-
-                      </td> 
-                      <% end %>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-        </div>
-        
-        <% if @empresa_produtos.respond_to?(:total_pages) %>
-          <div class="dataTable-bottom">
-            <div class="dataTable-info"><%= page_entries_info @empresa_produtos, entry_name: 'item' %></div>
-              <div class = "text-center">
-                <%= paginate @empresa_produtos %>
-              </div>
-            </div>
-        <% else %>
-          <div class="dataTable-bottom mb-9">
-            <div class="dataTable-info">
-            <h5>Exibindo <%= @empresa_produtos.size %> registros</h5>
-            </div>
-              <div class = "text-center">
-              </div>
+                            <i class="fas fa-trash me-2"></i> Remover
+                          <% end %>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if @empresa_produtos.respond_to?(:total_pages) %>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @empresa_produtos, entry_name: 'item' %></div>
+          <div class = "text-center">
+            <%= paginate @empresa_produtos %>
           </div>
-        <% end %>
+        </div>
+      <% else %>
+        <div class="dataTable-bottom mb-9">
+          <div class="dataTable-info">
+            <h5>Exibindo <%= @empresa_produtos.size %> registros</h5>
+          </div>
+          <div class = "text-center">
+          </div>
+        </div>
+      <% end %>
     </div>
-</div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      var contemCheckbox = $('#contem-checkbox');
+      var estoqueLabel = $('.estoque-label');
 
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+      // Restaurar o estado do checkbox ao recarregar a página
+      var storedState = localStorage.getItem('contemCheckboxChecked');
+      if (storedState !== null) {
+        contemCheckbox.prop('checked', storedState === 'true');
+        updateLabel();
+      }
 
-<script>
-  $(document).ready(function() {
-    var contemCheckbox = $('#contem-checkbox');
-    var estoqueLabel = $('.estoque-label');
+      contemCheckbox.change(function() {
+        updateLabel();
 
-    // Restaurar o estado do checkbox ao recarregar a página
-    var storedState = localStorage.getItem('contemCheckboxChecked');
-    if (storedState !== null) {
-      contemCheckbox.prop('checked', storedState === 'true');
-      updateLabel();
-    }
+        // Salvar o estado do checkbox no armazenamento local
+        localStorage.setItem('contemCheckboxChecked', $(this).prop('checked'));
+      });
 
-    contemCheckbox.change(function() {
-      updateLabel();
-
-      // Salvar o estado do checkbox no armazenamento local
-      localStorage.setItem('contemCheckboxChecked', $(this).prop('checked'));
+      function updateLabel() {
+        var novoTexto = contemCheckbox.prop('checked') ? 'Com Estoque' : 'Sem Estoque';
+        estoqueLabel.text(novoTexto);
+      }
     });
 
-    function updateLabel() {
-      var novoTexto = contemCheckbox.prop('checked') ? 'Com Estoque' : 'Sem Estoque';
-      estoqueLabel.text(novoTexto);
+    function formatarReal(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
-  });
-
-  function formatarReal(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
-  document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
-</script>
+    // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+    document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
+    document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#report-stock').DataTable({
+          "paging": false,  // Desabilita a paginação
+          "searching": false, // Permite a pesquisa na tabela (opcional)
+          "ordering": true,  // Habilita ordenação nas colunas (opcional)
+          "info": false}); // Habilita ordenação nas colunas (opcional)
+      });
+  </script>

@@ -19,3 +19,8 @@ Rails.application.config.assets.precompile += %w( collaborators_backoffice.css c
 # /lib/assets
 Rails.application.config.assets.precompile += %w( style.css scripts.js)
 Rails.application.config.assets.precompile += %w( cocoon.js )
+
+Rails.application.config.assets.paths += [
+  Rails.root.join('node_modules'),
+  Rails.root.join('vendor/assets/javascripts')
+]

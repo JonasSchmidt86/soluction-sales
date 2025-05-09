@@ -3,7 +3,7 @@
     <h4 ><%= @report.title %></h4>
   <% end %>
   <div class="card-body">
-    <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario == 1 %>
+    <% if current_collaborator.funcionario.super_admin? %>
       <%= link_to edit_collaborators_backoffice_report_custom_report_path( @report.id), class:"btn btn-info btn-circle", data: {confirm: "Deseja Editar?"} do %>
         <i class="fa fa-edit", style="width: 35px;"></i> Editar Relatório
       <% end %>
@@ -26,11 +26,19 @@
             <%= form.text_field :fim, value: (params[:fim].presence || Time.now.strftime("%d/%m/%Y")),
               class: "form-control datepicker fallback", style: "width: 140px;" %>
           </div>
-        <% elsif %>
+        <% elsif field_name == 'cod_empresa' %>
           <div class="col-auto">
-            <%= form.label :fim, "Data Final", class: "form-label" %>
-            <%= form.text_field :fim, value: (params[:fim].presence || Time.now.strftime("%d/%m/%Y")),
-              class: "form-control datepicker fallback", style: "width: 140px;" %>
+            <%= form.label :cod_empresa, "Empresa", class: "form-label" %>
+            <%= select_tag(
+              :cod_empresa, 
+              options_from_collection_for_select(
+                Empresa.where(ativo: true).order(:cod_empresa), 
+                "cod_empresa", 
+                "nome",
+                params[:cod_empresa] || current_collaborator.empresa.try(:cod_empresa)
+              ), 
+              class: "form-control"
+            ) %>
           </div>
         <% else %>
           <div class="col-auto">
@@ -45,12 +53,12 @@
     <% end %>
     <% if @results.present? %>
       <div class="table-responsive mt-3">
-        <table class="table table-bordered table-striped table-sm">
+        <table id="report-custom", class="table table-bordered table-striped table-hover table-sm">
           <thead class="table-light">
             <tr>
               <th><%=  %></th>
               <% @results.columns.each do |col| %>
-                <th><%= col.titleize %></th>
+                <th data-sortable="true"><%= col.titleize %></th>
               <% end %>
             </tr>
           </thead>
@@ -68,21 +76,54 @@
               </tr>
             <% end %>
           </tbody>
-        </table>
-        <%= link_to "Exportar para Excel",
-          run_collaborators_backoffice_report_custom_report_path(@report, request.query_parameters.merge(format: :xlsx)),
-          target: "download_target",
-          id: "btn_download_excel",
-          class: "btn btn-success mt-3" %>
-        <iframe id="download_frame" name="download_frame" style="display:none;"></iframe>
-        <div class="alert alert-danger mt-3">
-          <strong>Quantidade:</strong> <%= @results.length %>
+          <button id="export-excel" class="btn btn-success mt-3" data-filename="<%= @report.title.parameterize.underscore %>.xlsx">
+            Exportar para Excel
+          </button>
+          <iframe id="download_frame" name="download_frame" style="display:none;"></iframe>
         </div>
-      </div>
-    <% elsif @error.present? %>
-      <div class="alert alert-danger mt-3">
-        <strong>Erro:</strong> <%= @error %>
-      </div>
-    <% end %>
+      <% elsif @error.present? %>
+        <div class="alert alert-danger mt-3">
+          <strong>Erro:</strong> <%= @error %>
+        </div>
+      <% end %>
+    </div>
   </div>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const btn = document.getElementById("export-excel");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          const table = document.querySelector("table");
+          if (!table) return alert("Tabela não encontrada!");
+
+          const filename = btn.getAttribute("data-filename") || "relatorio.xlsx";
+          const wb = XLSX.utils.table_to_book(table, { sheet: "Relatório" });
+          XLSX.writeFile(wb, filename);
+        });
+      }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      $('#report-custom').DataTable({
+        "paging": false,  // Desabilita a paginação
+        "searching": true, // Permite a pesquisa na tabela (opcional)
+        "ordering": true,   // Habilita ordenação nas colunas (opcional)
+        "language": {
+          "sProcessing":   "Processando...",
+          "sLengthMenu":   "Mostrar _MENU_ registros por página",
+          "sZeroRecords":  "Nenhum registro encontrado",
+          "sInfo":         "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+          "sInfoEmpty":    "Mostrando 0 até 0 de 0 registros",
+          "sInfoFiltered": "(filtrado de _MAX_ registros no total)",
+          "sInfoPostFix":  "",
+          "sSearch":       "Buscar:",
+          "sUrl":          "",
+          "oPaginate": {
+            "sFirst":    "Primeiro",
+            "sPrevious": "Anterior",
+            "sNext":     "Próximo",
+            "sLast":     "Último"
+        },
+      }});
+    });
+  </script>

@@ -37,6 +37,11 @@ class Funcionario < ApplicationRecord
       end
     end
 
+    def super_admin?
+      permissao.nivel == 1 && cod_funcionario == 1
+    end
+
+
     paginates_per 30
 
 end

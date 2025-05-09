@@ -46,39 +46,12 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
       
         raise "Apenas SELECTs são permitidos." unless sql.strip.downcase.start_with?("select")
       
-        results = ActiveRecord::Base.connection.exec_query(sql)
-        @results       = results
-        @result_columns = results.columns
-        @result_rows    = results.rows
-      
-        respond_to do |format|
-          format.html { render :show }   # GET sem format=xlsx
-          format.xlsx do                  # GET com format=xlsx
-            package = Axlsx::Package.new
-            wb = package.workbook
+        @results = ActiveRecord::Base.connection.exec_query(sql)
 
-            # 1) Define um estilo para o cabeçalho
-            header_style = wb.styles.add_style(
-              bg_color: "FFDFDFDF",           # cor de fundo (cinza claro)
-              fg_color: "FF000000",           # cor do texto (preto)
-              b: true,                        # negrito
-              alignment: { horizontal: :center },
-              border: { style: :thin, color: "FF000000" }
-            )
+        flash[:notice] = "Relatório executado com sucesso."
+        render :show
 
-
-            wb.add_worksheet(name: "Relatório") do |sheet|
-              uppercase_headers = @result_columns.map(&:upcase)
-              sheet.add_row uppercase_headers, style: header_style
-              
-              @result_rows.each { |r| sheet.add_row r }
-            end
-            send_data package.to_stream.read,
-              filename:    "relatorio_#{@report.title.parameterize}.xlsx",
-              type:        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-              disposition: "attachment"
-          end
-        end
+        # redirect_to collaborators_backoffice_report_custom_report_path(@report, params), notice: "Relatório executado com sucesso."
       rescue => e
         @error = "Erro: #{e.message}"
         render :show

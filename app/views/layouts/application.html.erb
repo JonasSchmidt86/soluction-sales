@@ -4,13 +4,18 @@
     <title>MRStore</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <%= stylesheet_link_tag    'application' %>
+    <%= stylesheet_link_tag 'application' %>
     <%= favicon_link_tag 'mrosa.png' %>
+    <!-- Adicionando o CSS do DataTables -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Adicionando o JavaScript do jQuery -->
     <%= javascript_include_tag 'https://code.jquery.com/jquery-3.6.4.min.js', integrity: 'sha384-oT/Jyewd+NxCAzRrH/nIdN0xLv4nTdyZnS4ZoZn4R5lnN1zo3wZvL+QKcmEjxOKv', crossorigin: 'anonymous' %>
+    <!-- Adicionando o JavaScript do DataTables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
   </head>
   <body class="bg-black">
-    <%= javascript_include_tag 'application'%>
-    <br>
     <%= yield %>
+    <%= javascript_include_tag 'application' %> <!-- Incluindo outros scripts do seu projeto -->
   </body>
 </html>
