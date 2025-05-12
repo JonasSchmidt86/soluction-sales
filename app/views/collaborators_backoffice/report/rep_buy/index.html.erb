@@ -55,16 +55,16 @@
         </div>
       <% end %>
       <div class="dataTable-loading sortable searchable fixed-columns">
-        <table id="datatablesSimple" class="dataTable-table">
-          <thead>
+        <table id="report-buy" class="table table-bordered table-striped table-hover table-sm">
+          <thead class="table-primary">
             <tr>
-              <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
-              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
-              <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-              <th data-sortable="" style="width: 7%;"><a href="#" class="dataTable-sorter">NrCompra/NFe</a></th>
-              <th data-sortable="" style="width: 150px;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-              <th data-sortable="" style="width: 150px;">Valor Total</th>
-              <th data-sortable="" style="width: 45px"></th>
+              <th data-sortable="true"  style="width: 10%;">Data Venda</th>
+              <%# <th data-sortable="true" style="width: 10%;" >Empresa</th> %>
+              <th data-sortable="true">                     Cliente</th>
+              <th data-sortable="true" style="width: 7%;">  NrCompra/NFe</th>
+              <th data-sortable="true" style="width: 150px;">Colaborador</th>
+              <th data-sortable="true" style="width: 150px;">Valor Total</th>
+              <th data-sortable="false" style="width: 45px"></th>
             </tr>
           </thead>
           <tbody>
@@ -77,9 +77,6 @@
                   <tr class="">
                   <% end %>
                   <td class="align-middle"><%= post_date (buy.datacompra? ? buy.datacompra : "") %> </td>
-                  <td class="align-middle">
-                    <div class="text-truncate" style="width: 150px" ><%= buy.empresa.nome %></div>
-                  </td>
                   <td class="align-middle"><%= buy.pessoa.nome %></td>
                   <td class="align-middle"><%= buy.compra_nfe %> </td>
                   <td class="align-middle">
@@ -149,4 +146,12 @@
       // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
       document.getElementById("valortotal").value = formatarReal(<%= somaVendas %>);
       document.getElementById("valorPago").value = formatarReal(<%= somaRecebida %>);
+
+      document.addEventListener('DOMContentLoaded', function() {
+        $('#report-buy').DataTable({
+          "paging": false,  // Desabilita a paginação
+          "searching": false, // Permite a pesquisa na tabela (opcional)
+          "ordering": true,  // Habilita ordenação nas colunas (opcional)
+          "info": false}); // Habilita ordenação nas colunas (opcional)
+      });
   </script>
