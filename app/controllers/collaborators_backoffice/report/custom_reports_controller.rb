@@ -4,8 +4,13 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
     before_action :custom_report_params, only: [:update]
 
     def index
-        @reports = CustomReport.all
+      puts "Acesso liberado para o colaborador com cod_funcionario #{current_collaborator.cod_funcionario}"
+      if current_collaborator.cod_funcionario == 1
+        @reports = CustomReport.all.order(id: :asc);
+      else
+        @reports = CustomReport.where("upper(sql_code) NOT LIKE '%UPDATE%'");
       end
+    end
     
       def show
         if @report.nil?
@@ -36,25 +41,29 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
       def run
         @report = CustomReport.find(params[:id])
         sql = @report.sql_code.dup
-      
-        # substitui {{param}} pelos params…
-        params.each do |k,v|
-          next if v.blank?
-          placeholder = "{{#{k}}}"
-          sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
-        end
-      
-        raise "Apenas SELECTs são permitidos." unless sql.strip.downcase.start_with?("select")
-      
-        @results = ActiveRecord::Base.connection.exec_query(sql)
+        begin
+          # substitui {{param}} pelos params…
+          params.each do |k,v|
+            next if v.blank?
+            placeholder = "{{#{k}}}"
+            sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
+          end
+        
+          unless current_collaborator.cod_funcionario == 1
+            raise "Apenas SELECTs são permitidos." unless sql.strip.downcase.start_with?("select")
+          else
+            puts "Acesso liberado para o colaborador com cod_funcionario 1"
+          end
+        
+          @results = ActiveRecord::Base.connection.exec_query(sql)
 
-        flash[:notice] = "Relatório executado com sucesso."
-        render :show
-
-        # redirect_to collaborators_backoffice_report_custom_report_path(@report, params), notice: "Relatório executado com sucesso."
-      rescue => e
-        @error = "Erro: #{e.message}"
-        render :show
+        rescue => e
+          @error = "Erro: #{e.message}"
+          render :show
+          return;
+        end      
+          flash[:notice] = "Relatório executado com sucesso."
+          render :show
       end      
       
       def new

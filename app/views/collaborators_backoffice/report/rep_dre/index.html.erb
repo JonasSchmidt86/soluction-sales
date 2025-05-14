@@ -24,7 +24,7 @@
       <% lucro_bruto = mes.receita_bruta.to_f - mes.custo_total.to_f %>
       <table class="table table-bordered ">
         <tr>
-          <th>Receita Bruta</th>
+          <th>Receita Bruta - <%= Date.new(2023, mes.mes.to_i).strftime("%B") %></th>
           <td><%= number_to_currency(mes.receita_bruta, unit: "R$ ", format: "%u%n") %></td>
         </tr>
         <tr>
@@ -53,16 +53,17 @@
           <% total_entradas = 0 %>
           <% total_saidas = 0 %>
           <% lancamentos_do_mes.each do |lc| %>
-            <%# puts "LANCAMENTOS DO MES TOTAL === #{lc.descricao}" %>
-            <% total ||= 0 %>
-            <% total_outros += (lc.tipo == 'E' ? lc.total : -lc.total) %>
-            <% total_entradas += (lc.tipo == 'E' ? lc.total : 0) %>
-            <% total_saidas += (lc.tipo == 'S' ? lc.total : 0) %>
-            <tr>
-              <td><%= lc.descricao %></td>
-              <td><%= lc.tipo == 'E' ? 'Receita' : 'Despesa' %></td>
-              <td><%= number_to_currency(lc.total, unit: "R$ ", format: "%u%n") %></td>
-            </tr>
+            <% if lc.mes.to_i == mes.mes.to_i%>
+              <% total ||= 0 %>
+              <% total_outros += (lc.tipo == 'E' ? lc.total : -lc.total) %>
+              <% total_entradas += (lc.tipo == 'E' ? lc.total : 0) %>
+              <% total_saidas += (lc.tipo == 'S' ? lc.total : 0) %>
+              <tr>
+                <td><%= lc.descricao %></td>
+                <td><%= lc.tipo == 'E' ? 'Receita' : 'Despesa' %></td>
+                <td><%= number_to_currency(lc.total, unit: "R$ ", format: "%u%n") %></td>
+              </tr>
+            <% end %>
           <% end %>
           <tr class="table-secondary">
             <th colspan="2">Entradas</th>

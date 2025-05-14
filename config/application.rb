@@ -38,6 +38,7 @@ module SoluctionSales
 
     # config.i18n.default_locale = :"pt-BR"
     config.i18n.default_locale = 'pt-BR'
+    config.i18n.default_locale = :'pt-BR'
     config.i18n.available_locales = [:en, 'pt-BR']
 
     # Settings in config/environments/* take precedence over those specified here.
