@@ -19,13 +19,17 @@
       </div>
     <% end %>
     <%# form  acima %>
+    <% total_geral = 0 %>
+    <% custo_total = 0 %>
     <% @vendas.each do |mes| %>
+      <% total_geral += mes.receita_bruta.to_f + mes.acrescimo.to_f %>
+      <% custo_total += mes.custo_total.to_f %>
       <% mes_formatado = mes.mes %>
-      <% lucro_bruto = mes.receita_bruta.to_f - mes.custo_total.to_f %>
+      <% lucro_bruto = mes.receita_bruta.to_f - mes.custo_total.to_f  + mes.acrescimo.to_f%>
       <table class="table table-bordered ">
         <tr>
-          <th>Receita Bruta - <%= Date.new(2023, mes.mes.to_i).strftime("%B") %></th>
-          <td><%= number_to_currency(mes.receita_bruta, unit: "R$ ", format: "%u%n") %></td>
+          <th>Receita Bruta - <%= Date.new(2025, mes.mes.to_i).strftime("%B") %></th>
+          <td><%= number_to_currency((mes.receita_bruta + mes.acrescimo.to_f), unit: "R$ ", format: "%u%n") %></td>
         </tr>
         <tr>
           <th>Custo dos Produtos Vendidos</th>
@@ -35,53 +39,69 @@
           <th>Lucro Bruto</th>
           <td><strong><%= number_to_currency(lucro_bruto, unit: "R$ ", format: "%u%n") %></strong></td>
         </tr>
-      </tbody>
-    </table>
-    <% lancamentos_do_mes = @lancamentos.select { |l| l[0]. != mes.mes } %>
-    <% if lancamentos_do_mes.any? %>
-      <h5>Outras Receitas e Despesas</h5>
-      <table class="table table-sm table-striped table-bordered">
-        <thead>
-          <tr>
-            <th>Histórico</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% total_outros = 0 %>
-          <% total_entradas = 0 %>
-          <% total_saidas = 0 %>
-          <% lancamentos_do_mes.each do |lc| %>
-            <% if lc.mes.to_i == mes.mes.to_i%>
-              <% total ||= 0 %>
-              <% total_outros += (lc.tipo == 'E' ? lc.total : -lc.total) %>
-              <% total_entradas += (lc.tipo == 'E' ? lc.total : 0) %>
-              <% total_saidas += (lc.tipo == 'S' ? lc.total : 0) %>
-              <tr>
-                <td><%= lc.descricao %></td>
-                <td><%= lc.tipo == 'E' ? 'Receita' : 'Despesa' %></td>
-                <td><%= number_to_currency(lc.total, unit: "R$ ", format: "%u%n") %></td>
-              </tr>
-            <% end %>
-          <% end %>
-          <tr class="table-secondary">
-            <th colspan="2">Entradas</th>
-            <th><%= number_to_currency( total_entradas, unit: "R$ ", format: "%u%n") %></th>
-          </tr>
-          <tr class="table-secondary">
-            <th colspan="2">Saidas</th>
-            <th><%= number_to_currency( total_saidas, unit: "R$ ", format: "%u%n") %></th>
-          </tr>
-          <tr class="table-secondary">
-            <th colspan="2">Resultado Operacional</th>
-            <th><%= number_to_currency( total_outros, unit: "R$ ", format: "%u%n") %></th>
-          </tr>
-        </tbody>
       </table>
-    <% else %>
-      <p class="text-muted">Sem outras receitas ou despesas neste mês.</p>
+      <% lancamentos_do_mes = @lancamentos.select { |l| l[0]. != mes.mes } %>
+      <% if lancamentos_do_mes.any? %>
+        <h5>Outras Receitas e Despesas</h5>
+        <table class="table table-sm table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>Histórico</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% total_outros = 0 %>
+            <% total_entradas = 0 %>
+            <% total_saidas = 0 %>
+            <% lancamentos_do_mes.each do |lc| %>
+              <% if lc.mes.to_i == mes.mes.to_i%>
+                <% total ||= 0 %>
+                <% total_outros += (lc.tipo == 'E' ? lc.total : -lc.total) %>
+                <% total_entradas += (lc.tipo == 'E' ? lc.total : 0) %>
+                <% total_saidas += (lc.tipo == 'S' ? lc.total : 0) %>
+                <tr>
+                  <td><%= lc.descricao %></td>
+                  <td><%= lc.tipo == 'E' ? 'Receita' : 'Despesa' %></td>
+                  <td><%= number_to_currency(lc.total, unit: "R$ ", format: "%u%n") %></td>
+                </tr>
+              <% end %>
+            <% end %>
+            <tr class="table-secondary">
+              <th colspan="2">Entradas</th>
+              <th><%= number_to_currency( total_entradas, unit: "R$ ", format: "%u%n") %></th>
+            </tr>
+            <tr class="table-secondary">
+              <th colspan="2">Saidas</th>
+              <th><%= number_to_currency( total_saidas, unit: "R$ ", format: "%u%n") %></th>
+            </tr>
+            <tr class="table-secondary">
+              <th colspan="2">Resultado Operacional</th>
+              <th><%= number_to_currency( total_outros, unit: "R$ ", format: "%u%n") %></th>
+            </tr>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">Sem outras receitas ou despesas neste mês.</p>
+      <% end %>
+      <% if mes == @vendas.last %>
+        <h5>Resultado Final</h5>
+        <table class="table table-bordered ">
+          <tr>
+            <th>Receita Bruta Total</th>
+            <td><%= number_to_currency(total_geral, unit: "R$ ", format: "%u%n") %></td>
+          </tr>
+          <tr>
+            <th>Custo dos Produtos Vendidos</th>
+            <td><%= number_to_currency(custo_total, unit: "R$ ", format: "%u%n") %></td>
+          </tr>
+          <tr>
+            <th>Lucro Bruto</th>
+            <td><strong><%= number_to_currency((total_geral - custo_total), unit: "R$ ", format: "%u%n") %></strong></td>
+          </tr>
+        </table>
+      <% end %>
     <% end %>
-  <% end %>
-</div>
+  </div>
 </div>
