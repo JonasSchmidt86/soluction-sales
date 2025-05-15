@@ -85,7 +85,7 @@
       <% else %>
         <p class="text-muted">Sem outras receitas ou despesas neste mês.</p>
       <% end %>
-      <% if mes == @vendas.last %>
+      <% if mes == @vendas.last && mes != @vendas.first %>
         <h5>Resultado Final</h5>
         <table class="table table-bordered ">
           <tr>
