@@ -834,3 +834,132 @@
 #     OWNER TO jonas;
 
 # DROP TRIGGER IF EXISTS update_estoque ON public.itemcompra;
+
+
+# -- FUNCTION PARA ATUALIZAR O ESTOQUE REAL E RETORNAR O VALOR DO ESTOQUE REAL
+
+# -- FUNCTION: public.atualizar_e_consultar_produto(bigint, bigint, bigint)
+
+# -- DROP FUNCTION IF EXISTS public.function_update_produto_consulta(bigint, bigint, bigint);
+
+# CREATE OR REPLACE FUNCTION public.function_update_produto_consulta(
+# 	p_cod_empresa bigint,
+# 	p_cod_produto bigint,
+# 	p_cod_cor bigint)
+#     RETURNS TABLE(cod_produto bigint, cod_cor bigint, nome character varying, nmcor character varying, quantidade numeric, est_real numeric) 
+#     LANGUAGE 'plpgsql'
+#     COST 100
+#     VOLATILE PARALLEL UNSAFE
+#     ROWS 1000
+
+# AS $BODY$
+# BEGIN
+#   -- Atualiza a quantidade com base na função function_estoquereal
+#   UPDATE empresaproduto 
+#   SET quantidade = COALESCE(function_estoquereal(p_cod_empresa, p_cod_produto, p_cod_cor), 0)
+#   WHERE empresaproduto.cod_empresa = p_cod_empresa
+#     AND empresaproduto.cod_produto = p_cod_produto
+#     AND empresaproduto.cod_cor = p_cod_cor;
+
+#   -- Retorna os dados atualizados
+#   RETURN QUERY
+#   SELECT
+#     e.cod_produto,
+#     e.cod_cor,
+#     p.nome,
+#     c.nmcor,
+#     e.quantidade,
+#     function_estoquereal(e.cod_empresa, e.cod_produto, e.cod_cor)
+#   FROM
+#     empresaproduto AS e
+#     JOIN produto AS p ON p.cod_produto = e.cod_produto
+#     JOIN cores AS c ON c.cod_cor = e.cod_cor
+#   WHERE e.cod_empresa = p_cod_empresa
+#     AND e.cod_produto = p_cod_produto
+#     AND e.cod_cor = p_cod_cor;
+# END;
+# $BODY$;
+
+# -- selects para colocar no site
+# Estoque real do produto
+# Traz o estoque do produto cadastrado e o estoque real do produto (Soma todas as entradas do produto e subtrai todas as saídas do produto)
+# SELECT
+#   sub.cod_produto,
+#   sub.cod_cor,
+#   sub.nome,
+#   sub.nmcor,
+#   sub.quantidade,
+#   sub.est_real
+# FROM (
+#   SELECT
+#     e.cod_produto,
+#     e.cod_cor,
+#     p.nome,
+#     c.nmcor,
+#     e.quantidade,
+#     function_estoquereal(e.cod_empresa, e.cod_produto, e.cod_cor) AS est_real
+#   FROM
+#     empresaproduto AS e
+#     JOIN produto AS p ON p.cod_produto = e.cod_produto
+#     JOIN cores AS c ON c.cod_cor = e.cod_cor
+#   WHERE e.cod_empresa = {{cod_empresa}}
+#     and e.cod_produto = {{cod_produto}}
+# ) AS sub
+# -- WHERE
+#   -- sub.quantidade != 0 OR sub.est_real != 0
+# ORDER BY
+#   sub.cod_cor asc, sub.nome;
+
+## Cliente com 1 Venda 
+## Relatorio de venda de clientes que realizaram 1(uma) compra dentro do periodo informado!
+
+# SELECT 
+#   p.nome, 
+#   p.telefone,
+#   p.celular,
+#   p.endereco, 
+#   TO_CHAR(v.datavenda, 'DD/MM/YYYY') AS data_venda, 
+#   REPLACE(
+#     REPLACE(
+#       REPLACE(
+#         TO_CHAR(v.valortotal, 'FM999G999999D00'),
+#         '.', 'X'
+#       ),
+#       ',', '.'
+#     ),
+#     'X', ','
+#   ) AS valortotal_Venda
+# FROM pessoa p
+# JOIN venda v ON v.cod_pessoa = p.cod_pessoa
+# WHERE v.datavenda BETWEEN DATE {{inicio}} AND DATE {{fim}}
+#   AND v.cod_empresa = {{cod_empresa}}
+#   and v.tipo <> 'T'
+#   AND v.cod_pessoa IN (
+#     SELECT v2.cod_pessoa
+#     FROM venda v2
+#     WHERE v2.datavenda BETWEEN TO_DATE({{inicio}}, 'DD/MM/YYYY') AND TO_DATE({{fim}}, 'DD/MM/YYYY')
+#       AND v2.cod_empresa = {{cod_empresa}}
+#     GROUP BY v2.cod_pessoa
+#     HAVING COUNT(*) = 1
+#   )
+# ORDER BY v.datavenda;
+
+## Aniversariantes
+## Busca aniversariantes do mês atual que realizada compras após a data informada.
+# SELECT DISTINCT
+#   p.nome,
+#   p.telefone,
+#   p.celular,
+#   p.endereco,
+#   TO_CHAR(p.dtnascimento, 'DD/MM/yyyy') AS aniversario
+# FROM pessoa p
+# JOIN venda v ON v.cod_pessoa = p.cod_pessoa
+# WHERE EXTRACT(MONTH FROM p.dtnascimento) = EXTRACT(MONTH FROM CURRENT_DATE)
+#   AND v.datavenda >= DATE {{inicio}}
+#   and v.cod_empresa = {{cod_empresa}}
+# ORDER BY aniversario asc, p.nome;
+
+
+## UPDATE ESTOQUE COM O ESTOQUE REAL
+## FEITO PARA SER EXECUTADO APENAS PELO JONAS, PARA ATUALIZAR O ESTOQUE DA CONSULTA COM O ESTOQUE REAL
+# SELECT * FROM function_update_produto_consulta({{cod_empresa}}::BIGINT, {{cod_produto}}::BIGINT, {{cod_cor}}::BIGINT);
