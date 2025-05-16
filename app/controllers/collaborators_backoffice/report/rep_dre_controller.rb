@@ -11,9 +11,9 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
 
     vendas_totais = Venda
       .where(cod_empresa: current_collaborator.cod_empresa)
-      .where(tipo: 'V')
+      .where("tipo <> 'T'")
       .where(cancelada: false)
-      .where("venda.datavenda BETWEEN to_date(?, 'DD/MM/YYYY') AND to_date(?, 'DD/MM/YYYY')", params[:dataInicial], params[:dataFinal])
+      .where("date(venda.datavenda) BETWEEN to_date(?, 'DD/MM/YYYY') AND to_date(?, 'DD/MM/YYYY')", params[:dataInicial], params[:dataFinal])
       .group("extract(month from venda.datavenda)")
       .select(
         Arel.sql("extract(month from venda.datavenda) AS mes"),
@@ -21,10 +21,11 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
         Arel.sql("SUM(venda.acrescimo) AS acrescimo"),
         Arel.sql("SUM(venda.desconto) AS desconto")
       )
+
     itens_totais = Venda
       .joins(:itensvenda)
       .where(cod_empresa: current_collaborator.cod_empresa)
-      .where(tipo: 'V')
+      .where("tipo <> 'T'")
       .where(cancelada: false)
       .where("venda.datavenda BETWEEN to_date(?, 'DD/MM/YYYY') AND to_date(?, 'DD/MM/YYYY')", params[:dataInicial], params[:dataFinal])
       .group("extract(month from venda.datavenda)")
@@ -33,7 +34,7 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
         Arel.sql("SUM(itemvenda.valorunitario * itemvenda.quantidade) AS receita_bruta"),
         Arel.sql("SUM(itemvenda.valororiginal * itemvenda.quantidade) AS custo_total")
       )
-      
+
     vendas_hash = vendas_totais.index_by { |v| v.mes.to_i }
     itens_hash = itens_totais.index_by { |i| i.mes.to_i }
 
@@ -49,7 +50,9 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
         receita_bruta: item&.receita_bruta.to_f,
         custo_total: item&.custo_total.to_f
       )
+      
     end
+    puts " ------------------#{ vendas_totais.to_sql } ------------------ \n #{@vendas.inspect } ------------------ "
 
     @lancamentos = Lancamentoscaixa.joins(:historico)
       .where("lancamentoscaixa.cancelada = false 
@@ -62,8 +65,9 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
         Arel.sql("extract('month'from lancamentoscaixa.datapagto) AS mes"),
         Arel.sql("tiposhistoricoscaixa.descricao"),
         Arel.sql("lancamentoscaixa.tipo"),
+        
         Arel.sql("SUM(valor) AS total")
-      )
+      ).where("lancamentoscaixa.cod_tphitorico != 16 ")
   end
 
 end

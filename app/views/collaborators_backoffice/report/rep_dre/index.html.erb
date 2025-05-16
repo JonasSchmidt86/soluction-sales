@@ -22,14 +22,17 @@
     <% total_geral = 0 %>
     <% custo_total = 0 %>
     <% @vendas.each do |mes| %>
-      <% total_geral += mes.receita_bruta.to_f + mes.acrescimo.to_f %>
+      <% puts "\n" %>
+      <% puts "mes = #{@vendas.inspect }" %>
+      <% puts "\n" %>
+      <% total_geral += mes.total.to_f %>
       <% custo_total += mes.custo_total.to_f %>
       <% mes_formatado = mes.mes %>
-      <% lucro_bruto = mes.receita_bruta.to_f - mes.custo_total.to_f  + mes.acrescimo.to_f%>
+      <% lucro_bruto = (mes.total.to_f - mes.custo_total) %>
       <table class="table table-bordered ">
         <tr>
           <th>Receita Bruta - <%= Date.new(2025, mes.mes.to_i).strftime("%B") %></th>
-          <td><%= number_to_currency((mes.receita_bruta + mes.acrescimo.to_f), unit: "R$ ", format: "%u%n") %></td>
+          <td><%= number_to_currency((mes.total), unit: "R$ ", format: "%u%n") %></td>
         </tr>
         <tr>
           <th>Custo dos Produtos Vendidos</th>

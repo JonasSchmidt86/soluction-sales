@@ -4,7 +4,6 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
     before_action :custom_report_params, only: [:update]
 
     def index
-      puts "Acesso liberado para o colaborador com cod_funcionario #{current_collaborator.cod_funcionario}"
       if current_collaborator.cod_funcionario == 1
         @reports = CustomReport.all.order(id: :asc);
       else
