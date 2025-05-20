@@ -190,6 +190,22 @@
                                 <p class="text-start text-uppercase">
                                   CFOP: 
                                   <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:cfop] %></span></p>
+                                <% unless form_itens.object.pro_xml_temp[:cod_produto].present? %>
+                                  <%= form_itens.hidden_field :index, value:form_itens.index, id:"data-index" %>
+                                  <button 
+                                  type="button" 
+                                  class="btn btn-sm btn-outline-primary mt-2"
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#modalNovoProduto"
+                                  data-nome="<%= form_itens.object.pro_xml_temp[:nome] %>"
+                                  data-ucom="<%= form_itens.object.pro_xml_temp[:ucom] %>"
+                                  data-ncm="<%= form_itens.object.pro_xml_temp[:ncm] %>"
+                                  data-cfop="<%= form_itens.object.pro_xml_temp[:cfop] %>"
+                                  data-index="<%= form_itens.index %>"
+                                  onclick="abrirModal(this)">
+                                    Cadastrar Produto
+                                  </button>
+                                <% end %>
                               </td>
                               <td class="align-middle">
                                 <%= form_itens.hidden_field :pro_xml_temp, value: form_itens.object.pro_xml_temp.to_json %>
@@ -437,306 +453,379 @@
     </div>
   </main>
 </div>
+<%= render partial: 'collaborators_backoffice/produtoxmls/shared/produtoNovo_modal', locals: { action_message: 'Modal' } %>
 <%= render partial: 'layouts/shared/modal_alert' %>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
-  let url = window.location.origin + '/collaborators_backoffice/';
+  // abre o modal de cadastro de produto
+  // e preenche os campos com os dados do produto
+    let indexAtual = null;
+    function abrirModal(botao) {
+      indexAtual = botao.dataset.index;
 
-  $(document).ready(function() {
-  $('#xml_compra').submit(function(event) {
-      event.preventDefault(); // Impede o envio padrão do formulário
+      document.getElementById('modal_nome').value = botao.dataset.nome || '';
+      document.getElementById('modal_ucom').value = botao.dataset.ucom || '';
+      document.getElementById('modal_ncm').value = botao.dataset.ncm || '';
+      document.getElementById('modal_cfop').value = botao.dataset.cfop || '';
 
-      var formData = $(this).serialize(); // Serializa os dados do formulário
+      // (Re)abre o modal manualmente se necessário
+      const modal = new bootstrap.Modal(document.getElementById('modalNovoProduto'));
+      modal.show();
+    }
 
-      $.ajax({
-          url: url+'compras',
-          type: 'POST',
-          dataType: 'json',
-          data: formData,
-          success: function(response) {
-              // Manipular a resposta JSON em caso de sucesso
-              if (response.message) {
-                  // Se a resposta contém uma mensagem de sucesso
-                  $.bootstrapGrowl(response.message, {
-                      ele: 'body',
-                      type: 'success',
-                      offset: { from: 'top', amount: 60 },
-                      align: 'center',
-                      width: 250,
-                      delay: 4000,
-                      allow_dismiss: false,
-                      stackup_spacing: 40,
-                  });
-                  if (response.compra_url) {
-                      window.location.href = response.compra_url;
-                  }
-              } else if (response.error) {
-                  // Se a resposta contém uma mensagem de erro
-                  alertModal(response.error);
-              } else {
-                  // Se a resposta não contém nem mensagem de sucesso nem de erro
-                  alertModal("Ocorreu um erro inesperado ao processar sua solicitação.");
-              }
-              $('#xml_compra').html(response);
+      function salvarProduto() {
+        event.preventDefault();
+        console.log("salvando produto");
+
+        const campos = {
+          nome: document.getElementById('modal_nome').value,
+          ucom: document.getElementById('modal_ucom').value,
+          ncm: document.getElementById('modal_ncm').value,
+          cfop: document.getElementById('modal_cfop').value,
+          cest: document.getElementById('modal_cest').value,
+          brands: document.getElementById('modal_brands').value,
+          cod_margem: document.getElementById('cod_margem').value,
+          grupo: document.getElementById('grupo').value,
+          index: indexAtual
+        };
+        console.log(campos);
+
+        // Captura o token CSRF da <meta> tag no layout
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        $.ajax({
+          url: '/collaborators_backoffice/compras/cadastrar_produto',
+          method: 'post',
+          data: {query: campos },
+          headers: {
+            'X-CSRF-Token': csrfToken // <- Aqui está o segredo!
           },
-          error: function(xhr, status, error) {
-              // Manipular a resposta de erro do AJAX
-              var errorMessage = "Ocorreu um erro ao processar sua solicitação.";
-              if (xhr.responseJSON && xhr.responseJSON.error) {
-                  errorMessage = xhr.responseJSON.error;
-              }
-              alertModal(errorMessage);
+          success: function(data) {
+              console.log(data);
+
+              $(`#compra_itenscompra_attributes_${indexAtual}_cod_produto`).val(data.cod_produto);
+              $(`#compra_itenscompra_attributes_${indexAtual}_produto`).val(data.nome);
+
+              // Fechar o modal
+              const modalEl = document.getElementById('modalNovoProduto');
+              const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+              modalInstance.hide();
+              $('.modal-backdrop').remove();
+              $('body').removeClass('modal-open'); // remove overflow hidden
+
+          },
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            if (response?.errors) {
+              alert("Erro ao salvar produto:\n" + response.errors.join("\n"));
+            } else if (response?.erro) {
+              alert("Erro: " + response.erro);
+            } else {
+              alert("Erro inesperado.");
+            }
           }
-      });
-  });
-  });
-
-
-  document.addEventListener("keypress", function () {
-      //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-      if(event.keyCode == 13){ // 13 é o Enter
-          event.preventDefault();
-      }
-  });
-
-  function thisIndex(field) {
-      var name = field.name;
-      var regex = /\[(\d+)\]/;
-      var matches = name.match(regex);
-
-      if (matches && matches.length > 1) {
-          return parseInt(matches[1], 10);
-      } else {
-          return null;
-      }
-  }
-
-  $(document).on('keydown', '.produto_search', function(event) {
-
-      let productsList = $(`#products_list_${thisIndex(this)}`);
-      if (event.key === 'Enter') {
-          selectProduct(this);
-      } else if (event.key === 'Escape') {
-          productsList.empty();
-          productsList.hide();
-      }
-  });
-
-  function selectProduct(field) {
-
-      var index = thisIndex(field);
-
-      // Obtém a referência da div pelo id atual
-      var productsListDiv = document.getElementById(`products_list_$(index)`);
-
-      // Verifica se a div com id "products_list" existe
-      if (productsListDiv) {
-          // Define o novo id
-          productsListDiv.id = `products_list_${index}`;
+        });
       }
 
-      var selectedProductIdField = document.getElementById(`compra_itenscompra_attributes_${index}_cod_produto`);
 
-      let productsList = $(`#products_list_${index}`);
+      ///  ------------------  AJAX para salvar o arquivo XML e criar a compra  -------------------
+        let url = window.location.origin + '/collaborators_backoffice/';
 
-      let apiUrl = url+ "buscas/buscar_produtos";
+        $(document).ready(function() {
+        $('#xml_compra').submit(function(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
 
-      productOptions();
+            var formData = $(this).serialize(); // Serializa os dados do formulário
 
-      // Adiciona um evento de clique aos itens da lista
-      productsList.on('click', `div.list-group-item`, function() {
-          let selectedProduct = $(this).data('produto');
-          let selectedProductId = $(this).data('cod_produto');
-          console.log(index)
-          field.value =  selectedProduct ;
-          selectedProductIdField.value = selectedProductId;
-          // Limpa a lista de resultados
-          productsList.hide();
+            $.ajax({
+                url: url+'compras',
+                type: 'POST',
+                dataType: 'json',
+                data: formData,
+                success: function(response) {
+                    // Manipular a resposta JSON em caso de sucesso
+                    if (response.message) {
+                        // Se a resposta contém uma mensagem de sucesso
+                        $.bootstrapGrowl(response.message, {
+                            ele: 'body',
+                            type: 'success',
+                            offset: { from: 'top', amount: 60 },
+                            align: 'center',
+                            width: 250,
+                            delay: 4000,
+                            allow_dismiss: false,
+                            stackup_spacing: 40,
+                        });
+                        if (response.compra_url) {
+                            window.location.href = response.compra_url;
+                        }
+                    } else if (response.error) {
+                        // Se a resposta contém uma mensagem de erro
+                        alertModal(response.error);
+                    } else {
+                        // Se a resposta não contém nem mensagem de sucesso nem de erro
+                        alertModal("Ocorreu um erro inesperado ao processar sua solicitação.");
+                    }
+                    $('#xml_compra').html(response);
+                },
+                error: function(xhr, status, error) {
+                    // Manipular a resposta de erro do AJAX
+                    var errorMessage = "Ocorreu um erro ao processar sua solicitação.";
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    alertModal(errorMessage);
+                }
+            });
+        });
+        });
 
-      });
 
-      function productOptions() {
-          var query = field.value.trim().toLowerCase();
-          productsList.empty();
+        document.addEventListener("keypress", function () {
+            //console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+            if(event.keyCode == 13){ // 13 é o Enter
+                event.preventDefault();
+            }
+        });
 
-          $.ajax({
-              url: apiUrl,
-              method: 'GET',
-              data: { entidade: 'Produto', query: query },
-              success: function(data) {
-                  productsList.empty();
-                  data.forEach(function(product) {
-                      var listItem = $('<div>').text(product.produto);
-                      listItem.addClass('list-group-item');
-                      listItem.data('cod_produto', product.cod_produto); // Armazena o ID do produto nos dados do item
-                      listItem.data('produto', product.produto);
-                      productsList.append(listItem);
-                  });
+        function thisIndex(field) {
+            var name = field.name;
+            var regex = /\[(\d+)\]/;
+            var matches = name.match(regex);
 
-                  // Exibe a lista de resultados
-                  productsList.show();
-              },
-              error: function(err) {
-                  console.error('Erro na requisição AJAX:', err);
-              }
-          });
-      }
-  };
-  //  ---------------- valor total dos itens quando alterado a quantidade ou o valor unitario  ----
-  function setValorTotal(field) {
+            if (matches && matches.length > 1) {
+                return parseInt(matches[1], 10);
+            } else {
+                return null;
+            }
+        }
 
-      let index = thisIndex(field);
+        $(document).on('keydown', '.produto_search', function(event) {
 
-      let proValor = document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
-      let proQtd   = document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
+            let productsList = $(`#products_list_${thisIndex(this)}`);
+            if (event.key === 'Enter') {
+                selectProduct(this);
+            } else if (event.key === 'Escape') {
+                productsList.empty();
+                productsList.hide();
+            }
+        });
 
-      let valorst = document.getElementById(`compra_itenscompra_attributes_${index}_icms`);
+        function selectProduct(field) {
 
-      let proIpi = document.getElementById(`compra_itenscompra_attributes_${index}_ipi`);
-      let proFrete = document.getElementById(`compra_itenscompra_attributes_${index}_valor_frete`);
-      let proDesconto = document.getElementById(`compra_itenscompra_attributes_${index}_desconto`);
-      let custoUnitFinal = document.getElementById(`compra_itenscompra_attributes_${index}_custoFinal`);
-      let proTotal = document.getElementById(`compra_itenscompra_attributes_${index}_valorTotal`);
+            var index = thisIndex(field);
 
-   console.log("total= "+proTotal.value)
+            // Obtém a referência da div pelo id atual
+            var productsListDiv = document.getElementById(`products_list_$(index)`);
 
-      proTotal.value = 0;
+            // Verifica se a div com id "products_list" existe
+            if (productsListDiv) {
+                // Define o novo id
+                productsListDiv.id = `products_list_${index}`;
+            }
 
-      console.log("Index = "+index);
+            var selectedProductIdField = document.getElementById(`compra_itenscompra_attributes_${index}_cod_produto`);
 
-      proIpi = proIpi.value ? parseFloat(proIpi.value.replace(",", ".")) : 0;
-      proFrete = proFrete.value ? parseFloat(proFrete.value.replace(",", ".")) : 0;
-      valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
-      proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
+            let productsList = $(`#products_list_${index}`);
 
-      vlUni = (proIpi + proFrete + valorst - proDesconto) / proQtd.value
+            let apiUrl = url+ "buscas/buscar_produtos";
 
-   console.log("vlUni = " + vlUni);
+            productOptions();
 
-      let custoFinalUnit = parseFloat(vlUni) + parseFloat(proValor.value.replace(",","."));
+            // Adiciona um evento de clique aos itens da lista
+            productsList.on('click', `div.list-group-item`, function() {
+                let selectedProduct = $(this).data('produto');
+                let selectedProductId = $(this).data('cod_produto');
+                //console.log(index)
+                field.value =  selectedProduct ;
+                selectedProductIdField.value = selectedProductId;
+                // Limpa a lista de resultados
+                productsList.hide();
 
-      custoUnitFinal.value = parseFloat(custoFinalUnit).toFixed(2).replace(".",",");
+            });
 
-      let total = ((vlUni *proQtd.value) + parseFloat(proValor.value.replace(",",".")) * proQtd.value);
+            function productOptions() {
+                var query = field.value.trim().toLowerCase();
+                productsList.empty();
 
-   console.log("total= "+ total)
-   console.log("total= "+ proTotal.value)
+                $.ajax({
+                    url: apiUrl,
+                    method: 'GET',
+                    data: { entidade: 'Produto', query: query },
+                    success: function(data) {
+                        productsList.empty();
+                        data.forEach(function(product) {
+                            var listItem = $('<div>').text(product.produto);
+                            listItem.addClass('list-group-item');
+                            listItem.data('cod_produto', product.cod_produto); // Armazena o ID do produto nos dados do item
+                            listItem.data('produto', product.produto);
+                            productsList.append(listItem);
+                        });
 
-      proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
+                        // Exibe a lista de resultados
+                        productsList.show();
+                    },
+                    error: function(err) {
+                        console.error('Erro na requisição AJAX:', err);
+                    }
+                });
+            }
+        };
+        //  ---------------- valor total dos itens quando alterado a quantidade ou o valor unitario  ----
+        function setValorTotal(field) {
 
-  // console.log(proTotal.value)
+            let index = thisIndex(field);
 
-      proValor = "";
-      proQtd   = "";
-      proTotal = "";
-      index = "";
-   setTotalCompra();
-  }
+            let proValor = document.getElementById(`compra_itenscompra_attributes_${index}_valorunitario`);
+            let proQtd   = document.getElementById(`compra_itenscompra_attributes_${index}_quantidade`);
 
-  // fim valor total item \
-  function setTotalCompra() {
-      // Selecione a tabela
+            let valorst = document.getElementById(`compra_itenscompra_attributes_${index}_icms`);
 
-      var tabela = document.getElementById("tblProducts");
-      var desconto = document.getElementById("compra_desconto").value.replace(",",".");
-      var seguro = document.getElementById("compra_vSeguro").value.replace(",",".");
-      var outrasdespesas = document.getElementById("compra_outrasdespesas").value.replace(",",".");
-      var valorfrete = document.getElementById("compra_valorfrete").value.replace(",",".");
-      var vIPI = document.getElementById("compra_vIPI").value.replace(",",".");
+            let proIpi = document.getElementById(`compra_itenscompra_attributes_${index}_ipi`);
+            let proFrete = document.getElementById(`compra_itenscompra_attributes_${index}_valor_frete`);
+            let proDesconto = document.getElementById(`compra_itenscompra_attributes_${index}_desconto`);
+            let custoUnitFinal = document.getElementById(`compra_itenscompra_attributes_${index}_custoFinal`);
+            let proTotal = document.getElementById(`compra_itenscompra_attributes_${index}_valorTotal`);
 
-      var valor_liquido = document.getElementById("compra_Valor_liquido");
-      var totalProduto = document.getElementById("compra_tt_produto");
-      var totalST = document.getElementById("compra_vST");
+         console.log("total= "+proTotal.value)
 
-      // Inicialize a variável para armazenar a soma
-      var soma = 0;
-      var somaST = 0;
+            proTotal.value = 0;
 
-      // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
-      for (var i = 1; i < tabela.rows.length; i++) {
-          soma += parseFloat(tabela.rows[i].querySelector(".valorTotal").value.replace(",","."));
-          somaST += parseFloat(tabela.rows[i].querySelector(".valorST").value.replace(",","."));
-      }
+            console.log("Index = "+index);
 
-      totalProduto.value = soma.toFixed(2).replace(".",",");
-      totalST.value = somaST.toFixed(2).replace(".",",");
+            proIpi = proIpi.value ? parseFloat(proIpi.value.replace(",", ".")) : 0;
+            proFrete = proFrete.value ? parseFloat(proFrete.value.replace(",", ".")) : 0;
+            valorst = valorst.value ? parseFloat(valorst.value.replace(",", ".")) : 0;
+            proDesconto = proDesconto.value ? parseFloat(proDesconto.value.replace(",", ".")) : 0;
 
-      // soma = soma + parseFloat(valorfrete) + parseFloat(outrasdespesas) + parseFloat(seguro) - parseFloat(desconto);
+            vlUni = (proIpi + proFrete + valorst - proDesconto) / proQtd.value
 
-      console.log("Soma = " + soma);
+         console.log("vlUni = " + vlUni);
 
-      valor_liquido.value = soma.toFixed(2).replace(".",",");
-      // Exiba o resultado da soma
-  }
-  // fim total compra
+            let custoFinalUnit = parseFloat(vlUni) + parseFloat(proValor.value.replace(",","."));
 
-  // ------------ BUSCA PESSOAS ------------- //
+            custoUnitFinal.value = parseFloat(custoFinalUnit).toFixed(2).replace(".",",");
 
-  $(document).ready(function() {
-      var categorySearch = $('#compra_frete_pessoa'); //document.getElementById('venda_pessoa'); //
-      var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
-      var selectedPersonIdField = $('#selected_frete_person_id'); // insere o codigo da pessoa no campo hiden
+            let total = ((vlUni *proQtd.value) + parseFloat(proValor.value.replace(",",".")) * proQtd.value);
 
-      let apiUrl = url+ "buscas/buscar_pessoas";
+         console.log("total= "+ total)
+         console.log("total= "+ proTotal.value)
 
-      // Adiciona um evento de keypress para a tecla Enter
-      categorySearch.on('keydown', function(event) {
-         // console.log(event.key);
-          if (event.key === 'Enter') {
-              filterOptions();
-          } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
-              // Código 27 corresponde à tecla "ESC"
-              categorySearch.val(''); // Limpa o campo de busca
-              selectedPersonIdField.val("");
-              resultsList.empty();
-              resultsList.hide();
+            proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
 
-          }
-      });
+        // console.log(proTotal.value)
 
-      // Adiciona um evento de clique aos itens da lista
-      resultsList.on('click', 'div.list-group-item', function() {
-          var selectedPerson = $(this).text();
-          var selectedPersonId = $(this).data('cod_pessoa');
+            proValor = "";
+            proQtd   = "";
+            proTotal = "";
+            index = "";
+         setTotalCompra();
+        }
 
-          // Preenche o campo escondido com o ID da pessoa selecionada
-          selectedPersonIdField.val(selectedPersonId);
+        // fim valor total item \
+        function setTotalCompra() {
+            // Selecione a tabela
 
-          // Atualiza o campo de busca com o nome da pessoa selecionada
-          categorySearch.val(selectedPerson);
+            var tabela = document.getElementById("tblProducts");
+            var desconto = document.getElementById("compra_desconto").value.replace(",",".");
+            var seguro = document.getElementById("compra_vSeguro").value.replace(",",".");
+            var outrasdespesas = document.getElementById("compra_outrasdespesas").value.replace(",",".");
+            var valorfrete = document.getElementById("compra_valorfrete").value.replace(",",".");
+            var vIPI = document.getElementById("compra_vIPI").value.replace(",",".");
 
-          // Limpa a lista de resultados
-          resultsList.empty();
-          resultsList.hide();
-      });
+            var valor_liquido = document.getElementById("compra_Valor_liquido");
+            var totalProduto = document.getElementById("compra_tt_produto");
+            var totalST = document.getElementById("compra_vST");
 
-      function filterOptions() {
-          var query = categorySearch.val().trim().toLowerCase();
-          resultsList.empty();
+            // Inicialize a variável para armazenar a soma
+            var soma = 0;
+            var somaST = 0;
 
-          $.ajax({
-              url: apiUrl,
-              method: 'GET',
-              data: { entidade: 'Pessoa', query: query },
-              success: function(data) {
-                  data.forEach(function(person) {
-                      var listItem = $('<div>').text(person.nome);
-                      listItem.addClass('list-group-item');
-                      listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
-                      listItem.data('cpf_cnpj',   person.cpf_cnpj);
-                      resultsList.append(listItem);
-                      //console.log(person.email);
-                      var data = person;
-                  });
+            // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
+            for (var i = 1; i < tabela.rows.length; i++) {
+                soma += parseFloat(tabela.rows[i].querySelector(".valorTotal").value.replace(",","."));
+                somaST += parseFloat(tabela.rows[i].querySelector(".valorST").value.replace(",","."));
+            }
 
-                  // Exibe a lista de resultados
-                  resultsList.show();
-              },
-              error: function(err) {
-                  console.error('Erro na requisição AJAX:', err);
-              }
-          });
-      }
-  });
-  // -------- Fim Busca pessoas ---------//
+            totalProduto.value = soma.toFixed(2).replace(".",",");
+            totalST.value = somaST.toFixed(2).replace(".",",");
+
+            // soma = soma + parseFloat(valorfrete) + parseFloat(outrasdespesas) + parseFloat(seguro) - parseFloat(desconto);
+
+            console.log("Soma = " + soma);
+
+            valor_liquido.value = soma.toFixed(2).replace(".",",");
+            // Exiba o resultado da soma
+        }
+        // fim total compra
+
+        // ------------ BUSCA PESSOAS ------------- //
+
+        $(document).ready(function() {
+            var categorySearch = $('#compra_frete_pessoa'); //document.getElementById('venda_pessoa'); //
+            var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
+            var selectedPersonIdField = $('#selected_frete_person_id'); // insere o codigo da pessoa no campo hiden
+
+            let apiUrl = url+ "buscas/buscar_pessoas";
+
+            // Adiciona um evento de keypress para a tecla Enter
+            categorySearch.on('keydown', function(event) {
+               // console.log(event.key);
+                if (event.key === 'Enter') {
+                    filterOptions();
+                } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+                    // Código 27 corresponde à tecla "ESC"
+                    categorySearch.val(''); // Limpa o campo de busca
+                    selectedPersonIdField.val("");
+                    resultsList.empty();
+                    resultsList.hide();
+
+                }
+            });
+
+            // Adiciona um evento de clique aos itens da lista
+            resultsList.on('click', 'div.list-group-item', function() {
+                var selectedPerson = $(this).text();
+                var selectedPersonId = $(this).data('cod_pessoa');
+
+                // Preenche o campo escondido com o ID da pessoa selecionada
+                selectedPersonIdField.val(selectedPersonId);
+
+                // Atualiza o campo de busca com o nome da pessoa selecionada
+                categorySearch.val(selectedPerson);
+
+                // Limpa a lista de resultados
+                resultsList.empty();
+                resultsList.hide();
+            });
+
+            function filterOptions() {
+                var query = categorySearch.val().trim().toLowerCase();
+                resultsList.empty();
+
+                $.ajax({
+                    url: apiUrl,
+                    method: 'GET',
+                    data: { entidade: 'Pessoa', query: query },
+                    success: function(data) {
+                        data.forEach(function(person) {
+                            var listItem = $('<div>').text(person.nome);
+                            listItem.addClass('list-group-item');
+                            listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                            listItem.data('cpf_cnpj',   person.cpf_cnpj);
+                            resultsList.append(listItem);
+                            //console.log(person.email);
+                            var data = person;
+                        });
+
+                        // Exibe a lista de resultados
+                        resultsList.show();
+                    },
+                    error: function(err) {
+                        console.error('Erro na requisição AJAX:', err);
+                    }
+                });
+            }
+        });
+        // -------- Fim Busca pessoas ---------//
 </script>

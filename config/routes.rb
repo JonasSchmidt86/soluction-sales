@@ -63,6 +63,8 @@ Rails.application.routes.draw do
     # rotas do javascript - ajax
     post 'vendas/consulta_estoque', to: 'vendas#consulta_estoque'
     post 'compras/consulta_estoque', to: 'compras#consulta_estoque'
+    post 'compras/cadastrar_produto', to: 'compras#cadastrar_produto'
+
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'

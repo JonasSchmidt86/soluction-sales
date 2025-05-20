@@ -9,6 +9,33 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       @compra = Compra.includes(itenscompra: :produto, contas: {}).find_by(cod_compra: params[:id])
     end
 
+    def cadastrar_produto
+      puts "retornou aqui  #{params}----------- \n\n"
+
+      @produto = Produto.new
+      @produto.cod_produto = Produto.last.cod_produto + 1
+      @produto.nome = params[:query][:nome].to_s.upcase
+      @produto.ucom = params[:query][:ucom].to_s.upcase
+      @produto.cfop = params[:query][:cfop].to_s.upcase
+      @produto.ncm = params[:query][:ncm].to_s.upcase
+      @produto.cest = params[:query][:cest].to_s.upcase
+
+      begin
+        @produto.marca = params[:query][:brands].to_i
+        @produto.grupo = params[:query][:grupo].to_i
+        @produto.cod_margem = params[:query][:cod_margem].to_i
+      rescue ActiveRecord::RecordNotFound => e
+        render json: { erro: "Registro não encontrado: #{e.message}" }, status: :not_found and return
+      end
+
+      if @produto.save
+        render json: @produto
+      else
+        render json: { errors: @produto.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+
+
     def consulta_estoque
       puts "CONSULTA ESTOQUE #{params} "
 
@@ -299,7 +326,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
     end    
 
     private 
-    
+
     def set_compra
       @compra = Compra.find(params[:id])
     end

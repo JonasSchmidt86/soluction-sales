@@ -42,22 +42,3 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Seu código existente
-  window.addEventListener("beforeunload", function () {
-    var spinner = document.getElementById("spinner");
-    if (spinner) spinner.style.display = "flex";
-    document.body.style.cursor = "wait";
-  });
-
-  document.addEventListener("ajax:send", function () {
-    var spinner = document.getElementById("spinner");
-    if (spinner) spinner.style.display = "flex";
-    document.body.style.cursor = "wait";
-  });
-
-  document.addEventListener("ajax:complete", function () {
-    var spinner = document.getElementById("spinner");
-    if (spinner) spinner.style.display = "none";
-    document.body.style.cursor = "default";
-  });
-});
