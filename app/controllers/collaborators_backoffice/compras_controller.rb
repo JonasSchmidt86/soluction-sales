@@ -127,7 +127,10 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           errors = []
           itens.each do |pro_temp|
             puts "PRO_TEMP: #{pro_temp.inspect}"
-            next if pro_temp["cod_produto"].blank?
+            if pro_temp["cod_produto"].blank?
+              error_message = "Informe o produto!"
+              return render json: { error: error_message }, status: :not_found
+            end
 
             if pro_temp[:pro_xml_temp].present?
               xml_pro = JSON.parse(pro_temp[:pro_xml_temp])
@@ -279,6 +282,11 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             compra.contas << conta
           end
 
+      end
+      
+      if compra.contas.size <= 0
+        error_message = "Informe a forma de pagamento!"
+        return render json: { error: error_message }, status: :not_found
       end
 
       if compra.save!

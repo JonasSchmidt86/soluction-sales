@@ -43,7 +43,7 @@
         <% else %>
           <div class="col-auto">
             <%= label_tag param, param.humanize, class: "form-label" %>
-            <%= text_field_tag param, params[param], class: "form-control", placeholder: param.humanize, style: "width: 180px;", required: true %>
+            <%= text_field_tag param, params[param], class: "text form-control", placeholder: param.humanize, style: "width: 180px;", required: true %>
           </div>
         <% end %>
       <% end %>

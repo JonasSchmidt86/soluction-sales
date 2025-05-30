@@ -21,6 +21,8 @@ class Compra < ApplicationRecord
 
     has_one :xml_file, autosave: true
 
+    validates :itenscompra, :contas, :collaborator, :empresa, :pessoa, presence: true
+
     # after_save :atualizar_codigo_no_xml_file
     
     def compra_nfe

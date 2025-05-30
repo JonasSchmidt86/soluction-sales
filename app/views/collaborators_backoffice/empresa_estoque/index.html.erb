@@ -28,6 +28,11 @@
               <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
               <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
               <button type="submit" class="btn btn-success btn-circle">Buscar</button>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <button id="export-excel" class="btn btn-success" data-filename="<%= "relatorio" %>.xlsx">
+                  Exportar para Excel
+                </button>
+              <% end %>
             </div>
           </div>
           <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -127,6 +132,7 @@
     </div>
   </div>
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
     $(document).ready(function() {
       var contemCheckbox = $('#contem-checkbox');
@@ -165,4 +171,18 @@
           "ordering": true,  // Habilita ordenação nas colunas (opcional)
           "info": false}); // Habilita ordenação nas colunas (opcional)
       });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const btn = document.getElementById("export-excel");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          const table = document.querySelector("table");
+          if (!table) return alert("Tabela não encontrada!");
+
+          const filename = btn.getAttribute("data-filename") || "relatorio.xlsx";
+          const wb = XLSX.utils.table_to_book(table, { sheet: "Relatório" });
+          XLSX.writeFile(wb, filename);
+        });
+      }
+    });
   </script>

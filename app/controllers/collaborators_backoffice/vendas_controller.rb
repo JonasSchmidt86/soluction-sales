@@ -10,12 +10,12 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
   
     def consulta_estoque
       # puts "CONSULTA ESTOQUE #{params} "x
-      @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
+      @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade, :ultimocusto)
                    .joins(:empresaprodutos)
                    .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
                    .order(quantidade: :desc, nmcor: :asc, cod_cor: :asc)
       if @cores.empty?
-        @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
+        @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade, :ultimocusto)
                       .joins(:empresaprodutos).select(:cod_empresa)
                       .where("cod_produto = ?", params[:id_produto])
                       .order(valorvenda: :desc)
@@ -25,6 +25,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
             core.cod_cor = 1;
             core.nmcor = "PADRAO";
             core.quantidade = 0;
+            core.ultimocusto = 0;
           end
         end
       end
@@ -49,6 +50,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       @sale.acrescimo = params[:venda][:acrescimo].gsub(',', '.').to_f;
       @sale.desconto = params[:venda][:desconto].gsub(',', '.').to_f;
       @sale.valortotal =  params[:venda][:valortotal].gsub(',', '.').to_f;
+      @sale.tipo =params[:venda][:tipo] if params[:venda][:tipo].present?;
 
       # varrer itens para validar valores quebrados
        ## ver como vai pegar o params certo para cada item
@@ -130,7 +132,17 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       @sale.cod_vendaempresa = Venda.select(:cod_vendaempresa).where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
       @sale.cod_empresa = current_collaborator.cod_empresa
       @sale.cod_funcionario = current_collaborator.cod_funcionario
-      @sale.tipo = 'V'
+      if @sale.tipo.nil? || @sale.tipo.blank?
+        @sale.tipo = 'V'
+      elsif @sale.tipo == 'T'
+        @sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: @sale.pessoa&.cod_pessoa)&.cod_empresa 
+        if @sale.cod_empresa_transferida.nil?
+          @sale.errors.add(:base, "Transferência sem Empresa de Destino!")
+          render :new
+          return
+        end
+      end
+      
       @sale.cancelada = false
       @sale.datanf = nil
 

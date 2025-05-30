@@ -21,27 +21,34 @@
               </h4>
             </div>
             <div class="card-body">
-              <%= form_with(model: [ :collaborators_backoffice, @sale ], local: true) do |sale| %>
-                <div class="col-md-12">
+              <%= form_with(model: [ :collaborators_backoffice, @sale ], class:"col-md-12", local: true) do |sale| %>
+                <div class="">
                   <div class="row my-2 mx-2 align-items-center">
-                    <div class="col-md-9">
-                      <div class="form-floating">
-                        <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder:"Digite para buscar" %>
-                        <%= sale.label :pessoa_nome, class:"" %>
-                        <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                    <!-- Campo de busca -->
+                    <div class="col-md-7">
+                      <div class="form-floating w-100">
+                        <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
+                        <%= sale.label :nome_pessoa, "Pessoa" %>
+                        <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-1" style="display: none; z-index: 100; width: 100%;"></div>
                         <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
                       </div>
                     </div>
-                    <div class="col-md-2">
-                      <div class="form-floating">
-                        <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), id: "client_link", class:"btn btn-lg btn-info btn-circle" do %>
-                          <i class="fa-brands fa-hire-a-helper"></i>
-                        <% end %>
-                        <%= render partial: 'collaborators_backoffice/vendas/shared/pessoa_modal',
-                                                locals: { form: sale } %>
+                    <!-- Botão -->
+                    <div class="col-md-1 d-flex">
+                      <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), id: "client_link", class: "btn btn-lg btn-info btn-circle" do %>
+                        <i class="fa-brands fa-hire-a-helper"></i>
+                      <% end %>
+                      <%= render partial: 'collaborators_backoffice/vendas/shared/pessoa_modal', locals: { form: sale } %>
+                    </div>
+                    <!-- Select de tipo -->
+                    <div class="col-md-3 ">
+                      <div class="form-floating w-100 ms-4">
+                        <%= sale.select :tipo, [['Venda', 'V'], ['Transferência', 'T']], {}, class: "form-select border-top-0 border-start-0 border-end-0 border-dark", id: "tipo" %>
+                        <%= sale.label :tipo, "Tipo" %>
                       </div>
                     </div>
                   </div>
+                  <!-- Campos adicionais -->
                   <div class="row my-2 mx-2 align-items-center">
                     <div class="col-md-2">
                       <div class="form-floating">
@@ -453,6 +460,8 @@
   // -----------------------------------------------------------------
   // ------------ para baixo da tabela Produto -----------------------
   // -----------------------------------------------------------------
+  // pegar o tipo da venda e se for transferencia pegar o preço de custo
+      let tipo_selected = document.getElementById('tipo');
 
       function atualizarCommentIndex(inputField) {
           if (inputField.value !== null && inputField.value.trim() !== '') {
@@ -525,7 +534,14 @@
               } else if(data.length === 1 ){
                   corSelect.value = data[0].cod_cor;
                   proQtd.value = 1;
-                  proValor.value = data[0].valorvenda;
+
+                  if (document.getElementById('tipo').value === 'T') {
+                    option.setAttribute("data-valor-attribute", data[0].ultimocusto);
+                    proValor.value = data[0].ultimocusto;
+                  } else {
+                    option.setAttribute("data-valor-attribute", data[0].valorvenda);
+                    proValor.value = data[0].valorvenda;
+                  }
                   setValorTotal(field);
 
               } else if (data.length > 0) {
@@ -533,7 +549,12 @@
                       var option = document.createElement("option");
                       option.text = [cor.nmcor, cor.quantidade.replace('.0','')].join(' - ');
                       option.value = cor.cod_cor;
-                      option.setAttribute("data-valor-attribute", cor.valorvenda);
+                      console.log("tipo => "+ document.getElementById('tipo').value)
+                      if (document.getElementById('tipo').value === 'T') {
+                        option.setAttribute("data-valor-attribute", cor.ultimocusto);
+                      } else {
+                        option.setAttribute("data-valor-attribute", cor.valorvenda);
+                      }
                       option.setAttribute("data-quantidade-attribute", cor.quantidade);
                       x.add(option);
                   });
