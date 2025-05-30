@@ -127,8 +127,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           errors = []
           itens.each do |pro_temp|
             puts "PRO_TEMP: #{pro_temp.inspect}"
+
             if pro_temp["cod_produto"].blank?
-              error_message = "Informe o produto!"
+              error_message = "Informe o produto! #{JSON.parse(pro_temp[:pro_xml_temp])["nome"].to_s.upcase}!"
               return render json: { error: error_message }, status: :not_found
             end
 
