@@ -35,10 +35,15 @@ Rails.application.routes.draw do
     end
     
     resources :produto_imagens, only: [:index, :create, :edit, :destroy]
+    resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
 
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :funcionarios, only: [:index, :edit, :update, :new, :create, :destroy]
-    resources :empresa_estoque, only: [:index, :edit, :destroy, :update]
+    resources :empresa_estoque, only: [:index, :edit, :destroy, :update] do
+      collection do
+        get 'by_color/:cor_id', to: 'empresa_estoque#by_color', as: :by_color
+      end
+    end
     
     resources :caixa, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]

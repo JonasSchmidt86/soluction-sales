@@ -1,0 +1,87 @@
+<%# ------------------------------------------------------ %>
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="row justify-content-center">
+      <div class="">
+        <div class="card mb-4 shadow">
+          <div class="card-header bg-primary text-white">
+            <div class="d-flex align-items-center">
+              <h4 class="mb-0">Cores Cadastradas</h4>
+              <%= link_to 'Nova Cor', new_collaborators_backoffice_core_path, class: 'btn btn-light ms-auto' %>
+            </div>
+          </div>
+          <div class="card-body">
+            <% if flash[:notice] %>
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= flash[:notice] %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <% elsif flash[:alert] %>
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= flash[:alert] %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <% end %>
+            <div class="mb-3">
+              <%= form_with url: collaborators_backoffice_cores_path, method: :get, local: true do %>
+                <div class="input-group">
+                  <%= text_field_tag :term, params[:term], placeholder: "Buscar cor...", class: "text form-control" %>
+                  <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i> Buscar
+                  </button>
+                  <%= link_to 'Limpar', collaborators_backoffice_cores_path, class: 'btn btn-secondary' %>
+                </div>
+              <% end %>
+            </div>
+            <table class="table table-bordered table-hover table-striped">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center" style="width: 10%;">Código</th>
+                  <th>Nome da Cor</th>
+                  <th class="text-center" style="width: 10%;">Ativo</th>
+                  <th class="text-center" style="width: 15%;">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @cores.each do |cor| %>
+                  <tr>
+                    <td class="text-center"><%= cor.cod_cor %></td>
+                    <td><%= cor.nmcor %></td>
+                    <td class="text-center">
+                      <% if cor.ativo %>
+                        <span class="badge bg-success">Sim</span>
+                      <% else %>
+                        <span class="badge bg-danger">Não</span>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <%= link_to edit_collaborators_backoffice_core_path(cor), class: 'btn btn-sm btn-warning me-1' do %>
+                        <i class="fa fa-edit"></i>
+                      <% end %>
+                      <%= link_to collaborators_backoffice_core_path(cor), method: :delete, data: { confirm: 'Deseja realmente excluir?' }, class: 'btn btn-sm btn-danger me-1' do %>
+                        <i class="fa fa-trash-can"></i>
+                      <% end %>
+                      <%= link_to by_color_collaborators_backoffice_empresa_estoque_index_path(cor.id), class: 'btn btn-sm btn-info' do %>
+                        <i class="fas fa-list-ol"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+            <% if @cores.respond_to?(:total_pages) %>
+              <div class="dataTable-bottom">
+                <div class="dataTable-info"><%= page_entries_info @cores, entry_name: 'cor' %></div>
+                <div class = "text-center">
+                  <%= paginate @cores %>
+                </div>
+              </div>
+            <% else %>
+              <h5>Exibindo <%= @cores.size %> registros</h5>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -17,8 +17,22 @@
 # systemctl start nginx.service
 # sudo systemctl start puma
 
+## ---------------------------------------------------------------------------------
+## ---------------------------------------------------------------------------------
+# para enviar arquivo local para o servidor
+# scp moveisrosa_683ddf8151df7.sql root@85.31.231.205:/home/jonas/
 
+#para receber arquivo do servidor -- o ponto no final indica o diretório atual
+# scp root@85.31.231.205:/home/jonas/custom_reports.sql . 
 
+# restaura o backup do banco de dados
+# psql -U postgres -d moveisrosa -f moveisrosa_683ddf8151df7.sql  
+
+## executa 1 sql salvo nesse caso um backup de uma tabela
+#psql -U postgres -d moveisrosa -f custom_reports.sql 
+
+## ---------------------------------------------------------------------------------
+## ---------------------------------------------------------------------------------
 
 # Ignore bundler config.
  /.bundle

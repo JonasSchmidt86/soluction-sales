@@ -12,4 +12,7 @@ class Core < ApplicationRecord
     def to_s
         nmcor;
     end
+    
+    paginates_per 30;
+
 end

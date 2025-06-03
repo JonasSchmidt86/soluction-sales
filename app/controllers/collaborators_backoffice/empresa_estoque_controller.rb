@@ -48,6 +48,30 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         end
     end
 
+    def by_color
+        @cor = Core.find(params[:cor_id])
+
+        query = Empresaproduto.includes(:produto, :cor)
+                                .joins(:produto)
+                                .order("produto.nome ASC, empresaproduto.cod_empresa ASC")
+                                .where(empresaproduto: { ativo: true, cod_cor: @cor.id })
+
+        if params[:cod_empresa].present?
+            query = query.where(empresaproduto: { cod_empresa: params[:cod_empresa] })
+        end
+
+        if params[:per_page] == 'Todas'
+            @empresa_produtos = query
+        else
+            per_page = params[:per_page].to_i > 0 ? params[:per_page].to_i : 30
+            @empresa_produtos = query.page(params[:page]).per(per_page)
+        end
+        # forma para passar parametros para o index ou qualquer outra view
+        params[:term] = @empresa_produtos.first&.produto&.nome if @empresa_produtos.any?
+        render :index
+    end
+
+
     def update
         @empresa_produto.valorvenda = params[:estoque][:valorvenda].gsub(',', '.').to_f;
         if @empresa_produto.save!
