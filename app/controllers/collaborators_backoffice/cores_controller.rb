@@ -3,12 +3,15 @@ class CollaboratorsBackoffice::CoresController < CollaboratorsBackofficeControll
 
   def index
     if params[:term].present?
-      @cores = Core.where("LOWER(nmcor) ILIKE ?", "%#{params[:term].downcase}%")
-                 .order(:nmcor)
-                 .page(params[:page])
-  else
-    @cores = Core.order(:nmcor).page(params[:page])
-  end
+      term = params[:term].strip
+      @cores = Core.where(
+        'cod_cor::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR nmcor ILIKE :like_query',
+        query: term,
+        like_query: "%#{term}%"
+      ).order(:cod_cor, :nmcor).page(params[:page])
+    else
+      @cores = Core.order(:nmcor).page(params[:page])
+    end
   end
 
   def show
