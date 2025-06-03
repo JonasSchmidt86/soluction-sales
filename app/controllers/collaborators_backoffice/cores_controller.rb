@@ -18,7 +18,7 @@ class CollaboratorsBackoffice::CoresController < CollaboratorsBackofficeControll
   end
 
   def new
-    @cor = Core.new
+    @cor = Core.new(ativo: true)
   end
 
   def edit
@@ -43,8 +43,16 @@ class CollaboratorsBackoffice::CoresController < CollaboratorsBackofficeControll
   end
 
   def destroy
-    @cor.destroy
-    redirect_to collaborators_backoffice_cores_path, notice: 'Cor excluída com sucesso.'
+    if @cor.destroy
+      redirect_to collaborators_backoffice_cores_path, notice: 'Cor excluída com sucesso.'
+    else
+      # Supondo que a exclusão falhou por restrição de associação
+      if @cor.update(ativo: false)
+        redirect_to collaborators_backoffice_cores_path, notice: 'Cor está associada a produtos e foi marcada como inativa.'
+      else
+        redirect_to collaborators_backoffice_cores_path, alert: 'Não foi possível excluir ou desativar a cor.'
+      end
+    end
   end
 
   private

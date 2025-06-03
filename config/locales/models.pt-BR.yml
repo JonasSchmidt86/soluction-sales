@@ -9,6 +9,9 @@
         other: Usuários
 
     attributes:
+      core:
+          nmcor: Nome da cor
+          ativo: Ativo
       collaborator:
         id: Código
         email: Email
@@ -43,6 +46,12 @@
           has_one: Não é possível excluir o registro pois existe um %{record} dependente
           has_many: Não é possível excluir o registro pois existem %{record} dependentes
     date:
+      formats:
+        default: "%d/%m/%Y"
+        day_names: ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"]
+        abbr_day_names: ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
+        month_names: [~, "janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+        abbr_month_names: [~, "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
       abbr_day_names:
       - dom
       - seg

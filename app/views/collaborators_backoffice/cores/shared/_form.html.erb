@@ -20,7 +20,7 @@
       <% end %>
       <%= form_with(model: [:collaborators_backoffice, cor], local: true) do |f| %>
         <div class="mb-3">
-          <%= f.label :nmcor, 'Nome da Cor', class: 'form-label' %>
+          <%= f.label :nmcor, class: 'form-label' %>
           <%= f.text_field :nmcor, class: 'text form-control', maxlength: 100, placeholder: 'Digite o nome da cor', required: true %>
         </div>
         <div class="form-check mb-3">

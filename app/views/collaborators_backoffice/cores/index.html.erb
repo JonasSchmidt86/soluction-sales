@@ -39,7 +39,7 @@
                   <th class="text-center" style="width: 10%;">Código</th>
                   <th>Nome da Cor</th>
                   <th class="text-center" style="width: 10%;">Ativo</th>
-                  <th class="text-center" style="width: 15%;">Ações</th>
+                  <th class="text-center" style="width: 5%;">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -55,15 +55,39 @@
                       <% end %>
                     </td>
                     <td class="text-center">
-                      <%= link_to edit_collaborators_backoffice_core_path(cor), class: 'btn btn-sm btn-warning me-1' do %>
-                        <i class="fa fa-edit"></i>
-                      <% end %>
-                      <%= link_to collaborators_backoffice_core_path(cor), method: :delete, data: { confirm: 'Deseja realmente excluir?' }, class: 'btn btn-sm btn-danger me-1' do %>
-                        <i class="fa fa-trash-can"></i>
-                      <% end %>
-                      <%= link_to by_color_collaborators_backoffice_empresa_estoque_index_path(cor.id), class: 'btn btn-sm btn-info' do %>
-                        <i class="fas fa-list-ol"></i>
-                      <% end %>
+                      <div class="dropdown">
+                        <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li>
+                            <%= link_to edit_collaborators_backoffice_core_path(cor), class: 'dropdown-item' do %>
+                              <i class="fa fa-edit me-1"></i> Editar
+                            <% end %>
+                          </li>
+                          <li>
+                            <% if cor.ativo? %>
+                              <%= link_to collaborators_backoffice_core_path(cor), method: :delete, data: { confirm: 'Deseja realmente excluir?' }, class: 'dropdown-item' do %>
+                                <i class="fa fa-trash-can me-1"></i> Excluir
+                              <% end %>
+                            <% else %>
+                              <%= link_to collaborators_backoffice_core_path(cor, core: { ativo: true }), method: :patch, data: { confirm: 'Deseja ativar esta cor?' }, class: 'dropdown-item' do %>
+                                <i class="fa fa-check"></i> Ativar
+                              <% end %>
+                            <% end %>
+                          </li>
+                          <li>
+                            <%= link_to by_color_collaborators_backoffice_empresa_estoque_index_path(cor.id), class: 'dropdown-item' do %>
+                              <i class="fas fa-list-ol me-1"></i> Estoque por Cor
+                            <% end %>
+                          </li>
+                          <li>
+                            <%= link_to collaborators_backoffice_produto_imagens_path(cod_cor: cor.id), class: 'dropdown-item' do %>
+                              <i class="fas fa-images me-1"></i> Imagens
+                            <% end %>
+                          </li>
+                        </ul>
+                      </div>
                     </td>
                   </tr>
                 <% end %>

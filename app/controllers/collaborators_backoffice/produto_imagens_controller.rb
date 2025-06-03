@@ -6,13 +6,19 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   
   def index
     # @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
-    query = params[:term]
-    @produto_imagens = ProdutoImagem.joins(:produto)
-                      .where('produto_imagens.cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR 
-                              produto.nome ILIKE :query', query: "%#{query}%")
-                      .where(params[:cod_cor].present? ? ["cod_cor = ?", params[:cod_cor]] : nil)
-                      .order(:cod_produto, :cod_cor)
-                      .page(params[:page])
+
+    if params[:cod_cor].present?
+      @produto_imagens = Core.find(params[:cod_cor]).produto_imagens
+                        .page(params[:page])
+    else
+      query = params[:term]
+      @produto_imagens = ProdutoImagem.joins(:produto)
+                        .where('produto_imagens.cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR 
+                                produto.nome ILIKE :query', query: "%#{query}%")
+                        .where(params[:cod_cor].present? ? ["cod_cor = ?", params[:cod_cor]] : nil)
+                        .order(:cod_produto, :cod_cor)
+                        .page(params[:page])
+    end
 
   end
 
