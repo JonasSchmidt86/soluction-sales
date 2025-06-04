@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   end
 
   namespace :collaborators_backoffice do
+    get 'grupos/index'
+    get 'grupos/new'
+    get 'grupos/edit'
     namespace :report do
       get 'rep_dre/index'
       resources :custom_reports, only: [:index, :edit, :update, :new, :create, :show, :destroy] do
@@ -36,6 +39,9 @@ Rails.application.routes.draw do
     
     resources :produto_imagens, only: [:index, :create, :edit, :destroy]
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
+    
+    resources :marcas
+    resources :grupos, param: :cod_grupo
 
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :funcionarios, only: [:index, :edit, :update, :new, :create, :destroy]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_04_172935) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -52,7 +52,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "assistencia", primary_key: "codigo", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "assistencia", primary_key: "codigo", force: :cascade do |t|
     t.date "datadevolucao"
     t.date "dataenvio"
     t.string "descricaoproblema", limit: 255
@@ -63,12 +63,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_funcionario", null: false
   end
 
-  create_table "banco", primary_key: "cod_banco", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "banco", primary_key: "cod_banco", id: :bigint, default: -> { "nextval('banco_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nomebanco", limit: 255
     t.string "telefone", limit: 255
   end
 
-  create_table "bancocheques", primary_key: "cod_dadoscheque", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "bancocheques", primary_key: "cod_dadoscheque", id: :bigint, default: -> { "nextval('dadoscheque_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.date "dataemissao"
     t.date "diavencimento"
     t.string "numerocheque", limit: 255
@@ -84,7 +84,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_emissor"
   end
 
-  create_table "bancoconta", primary_key: "cod_bancoconta", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "bancoconta", primary_key: "cod_bancoconta", id: :bigint, default: -> { "nextval('bancoconta_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "agencia", limit: 255
     t.bigint "cod_empresa"
     t.string "contacorrente", limit: 255
@@ -116,7 +116,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_funcionariofechamento"
   end
 
-  create_table "cidade", primary_key: "cod_cidade", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "cidade", primary_key: "cod_cidade", id: :bigint, default: -> { "nextval('cidade_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nome", limit: 255
     t.bigint "cod_estado"
     t.bigint "cod_municipio"
@@ -183,7 +183,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo"
     t.string "cpf_cnpj", limit: 14
     t.string "endereco", limit: 150
@@ -222,13 +222,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_venda", null: false
   end
 
-  create_table "estado", primary_key: "cod_estado", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "estado", primary_key: "cod_estado", id: :bigint, default: -> { "nextval('estado_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nomeestado", limit: 255
     t.string "sigla", limit: 2
     t.bigint "cod_estado_ibge"
   end
 
-  create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: -> { "nextval('formaspagamento_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.decimal "acrescimo", precision: 18, scale: 2, default: "0.0"
     t.boolean "ativo"
     t.date "datacadastro"
@@ -283,12 +283,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_funcionario", null: false
   end
 
-  create_table "grupo", primary_key: "cod_grupo", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "grupo", primary_key: "cod_grupo", id: :bigint, default: -> { "nextval('grupo_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nomegrupo", limit: 100
     t.bigint "cod_margem"
+    t.boolean "ativo", default: true
   end
 
-  create_table "imagem", primary_key: "cod_image", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "imagem", primary_key: "cod_image", id: :bigint, default: -> { "nextval('imagem_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.binary "imgproduto", null: false
     t.string "nome", limit: 50
     t.integer "version", null: false
@@ -345,7 +346,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.index ["cod_pessoa"], name: "fkl_pessoa"
   end
 
-  create_table "lancamentosdiversos", primary_key: "cod_lancamento", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "lancamentosdiversos", primary_key: "cod_lancamento", id: :bigint, default: -> { "nextval('lancamentos_diversos_sequence'::regclass)" }, force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.date "datainicio"
     t.date "datavencimento"
@@ -367,11 +368,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_funcionario"
   end
 
-  create_table "marca", primary_key: "cod_marca", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "marca", primary_key: "cod_marca", id: :bigint, default: -> { "nextval('marca_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nome", limit: 200
   end
 
-  create_table "parametros", primary_key: "cod_parametro", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "parametros", primary_key: "cod_parametro", id: :bigint, default: -> { "nextval('parametro_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo", null: false
     t.date "dataencerramento"
     t.string "descricao", limit: 40
@@ -379,7 +380,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.bigint "cod_empresa"
   end
 
-  create_table "parametrosempresa", primary_key: "cod_parametroempresa", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "parametrosempresa", primary_key: "cod_parametroempresa", id: :bigint, default: -> { "nextval('parametro_empresa_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "imprimenota"
     t.boolean "imprimepromissoria"
     t.boolean "imprimerecibo"
@@ -388,7 +389,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.boolean "etiqueta", default: false
   end
 
-  create_table "permissao", primary_key: "cod_permissao", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "permissao", primary_key: "cod_permissao", id: :bigint, default: -> { "nextval('permissao_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "descricao", limit: 50
     t.integer "nivel"
   end
@@ -467,12 +468,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_151728) do
     t.string "cest", limit: 15
   end
 
-  create_table "tiposhistoricoscaixa", primary_key: "cod_tphitorico", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "tiposhistoricoscaixa", primary_key: "cod_tphitorico", id: :bigint, default: -> { "nextval('tphistorico_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo"
     t.string "descricao", limit: 100
   end
 
-  create_table "tiposlancamento", primary_key: "cod_tppagamento", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "tiposlancamento", primary_key: "cod_tppagamento", id: :bigint, default: -> { "nextval('tiposlancamento_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo"
     t.boolean "cadastracheque"
     t.bigint "cod_empresa"

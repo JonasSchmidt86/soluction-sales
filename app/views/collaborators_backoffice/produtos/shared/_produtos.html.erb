@@ -1,97 +1,90 @@
 <div class="card mt-4">
-  <%= link_to collaborators_backoffice_produtos_path, class:"card-header" do %>
-    <h4>Produtos</h4>
-  <% end %>
-  <div class="card-body" style="" >
+  <div class="card-header bg-primary d-flex align-items-center">
+    <h4 class="text-white mb-0">Produtos</h4>
+    <div class="ms-auto">
+      <%= link_to new_collaborators_backoffice_produto_path, class: "btn btn-light" do %>
+        <i class="fa fa-plus"></i> Novo
+      <% end %>
+    </div>
+  </div>
+  <div class="card-body">
     <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+      <!-- 🔍 Área de Busca -->
       <div class="dataTable-top row">
-        <%= form_with(url: collaborators_backoffice_search_path, local: true, method: :get, 
-                                  class:"dataTable-search col-md-6  ") do |form| %>
+        <%= form_with(url: collaborators_backoffice_search_path, method: :get, local: true, class: "dataTable-search ") do |form| %>
           <div class="input-group">
-            <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto...", id:"text" %>
-            <button class="btn input-group-text btn-success btn-circle" id="">Buscar</button>
-            <div class="ms-1">
-              <%= link_to new_collaborators_backoffice_produto_path(), class:"btn btn-success btn-circle" do %>
-                <i class="fa fa-plus"></i>
-              <% end %>
-            </div>
+            <%= form.text_field :term, value: params[:term], class: "text form-control", placeholder: "Nome do produto..." %>
+            <button class="btn btn-success" type="submit">
+              <i class="fa fa-search"></i>
+            </button>
+            <%= link_to 'Limpar', collaborators_backoffice_produtos_path, class: 'btn btn-secondary' %>
           </div>
         <% end %>
       </div>
+      <!-- 📊 Tabela -->
       <div class="dataTable-container" style="min-height: 70vh;">
-        <table id="tblProdutos" class="table table-sm table-hover align-middle table-striped" >
-          <thead class="table-primary">
+        <table id="tblProdutos" class="table table-bordered table-hover table-striped">
+          <thead class="table-light">
             <tr>
-              <th data-sortable="true" style="width: 5%;">Codigo</th>
-              <th data-sortable="true">Nome</th>
-              <th data-sortable="true" style="width: 10.886288%;">NCm</th>
-              <th data-sortable="false" style="width: 55px;">
-              </th>
+              <th style="width: 5%;">Código</th>
+              <th>Nome</th>
+              <th style="width: 10%;">NCM</th>
+              <th style="width: 55px;"></th>
             </tr>
           </thead>
           <tbody>
             <% @produtos.each do |produto| %>
-              <% if (!produto.ativo) %>
-                <tr class="" style="background-color: #FA625E;">
-                <% else %>
-                  <tr >
-                  <% end %>
-                  <td class="align-middle"><%= produto.cod_produto %> </td>
-                  <td class="align-middle" title="Clique para editar" onclick="window.location='<%= edit_collaborators_backoffice_produto_path(produto) %>'" style="cursor: pointer;"><%= produto.nome %> </td>
-                  <td class="align-middle"><%= produto.ncm %> </td>
-                  <td class="align-middle">
-                    <div class="dropdown" >
-                      <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
-                        <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                      </button>
-                      <ul class="dropdown-menu" style="max-width: 35px;">
-                        <li>
-                          <%= link_to edit_collaborators_backoffice_produto_path(produto), class:"dropdown-item btn btn-info btn-circle" do %>
-                            <i class="fa fa-edit", style="width: 35px;"></i> Editar
-                          <% end %>
-                        </li>
-                        <li>
-                          <%= link_to edit_collaborators_backoffice_produto_imagen_path(id: produto.cod_produto), class: "dropdown-item btn btn-info btn-circle", title: "Gerenciar Imagens" do %>
-                            <i class="fa fa-images", style="width: 35px;"></i>Add Imagens
-                          <% end %>
-                        </li>
-                        <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                          <li>
-                            <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
-                                            class:"dropdown-item btn btn-danger btn-circle", data: {confirm: "Deseja remover produto?"} do %>
-                              <i class="fa fa-trash-can", style="width: 35px;"></i>Excluir
-                            <% end %>
-                          </li>
+              <tr class="<%= 'bg-danger text-white' unless produto.ativo %>">
+                <td class="align-middle"><%= produto.cod_produto %></td>
+                <td class="align-middle" 
+                    onclick="window.location='<%= edit_collaborators_backoffice_produto_path(produto) %>'" 
+                    style="cursor: pointer;" 
+                    title="Clique para editar">
+                  <%= produto.nome %>
+                </td>
+                <td class="align-middle"><%= produto.ncm %></td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                      <li>
+                        <%= link_to edit_collaborators_backoffice_produto_path(produto), class: "dropdown-item" do %>
+                          <i class="fa fa-edit me-2"></i> Editar
                         <% end %>
-                      </ul>
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+                      </li>
+                      <li>
+                        <%= link_to edit_collaborators_backoffice_produto_imagen_path(id: produto.cod_produto), class: "dropdown-item" do %>
+                          <i class="fa fa-images me-2"></i> Imagens
+                        <% end %>
+                      </li>
+                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                        <li>
+                          <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
+                              data: { confirm: "Deseja remover este produto?" }, 
+                              class: "dropdown-item text-danger" do %>
+                            <i class="fa fa-trash me-2"></i> Excluir
+                          <% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <!-- 🔻 Rodapé -->
+      <div class="dataTable-bottom d-flex justify-content-between align-items-center">
+        <div class="dataTable-info">
+          <%= page_entries_info @produtos, entry_name: 'produto' %>
         </div>
-        <div class="dataTable-bottom">
-          <div class="dataTable-info"><%= page_entries_info @produtos, entry_name: 'item' %></div>
-          <div class = "text-center">
-            <%= paginate @produtos %>
-          </div>
+        <div>
+          <%= paginate @produtos %>
         </div>
       </div>
     </div>
   </div>
-  <script>
-    function rowClick(event, url) {
-      // Verifica se o clique foi dentro de um elemento com a classe "no-link"
-      if (!event.target.closest(".no-link")) {
-        window.location = url;
-      }
-    }
-    document.addEventListener('DOMContentLoaded', function() {
-      $('#tblProdutos').DataTable({
-        "paging": false,  // Desabilita a paginação
-        "searching": false, // Permite a pesquisa na tabela (opcional)
-        "ordering": true,  // Habilita ordenação nas colunas (opcional)
-        "info": false}); // Habilita ordenação nas colunas (opcional)
-    });
-  </script>
+</div>

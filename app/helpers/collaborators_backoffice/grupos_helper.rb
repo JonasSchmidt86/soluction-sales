@@ -1,0 +1,2 @@
+module CollaboratorsBackoffice::GruposHelper
+end

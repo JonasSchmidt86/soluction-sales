@@ -10,6 +10,14 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     if params[:cod_cor].present?
       @produto_imagens = Core.find(params[:cod_cor]).produto_imagens
                         .page(params[:page])
+    elsif params[:cod_marca].present?
+      @marca = Marca.find_by(cod_marca: params[:cod_marca])
+      @produto_imagens = @marca.produto_imagens
+                        .page(params[:page])
+    elsif params[:cod_grupo].present?
+      @grupo = Grupo.find_by(cod_grupo: params[:cod_grupo])
+      @produto_imagens = @grupo.produto_imagens
+                        .page(params[:page])
     else
       query = params[:term]
       @produto_imagens = ProdutoImagem.joins(:produto)
