@@ -57,7 +57,10 @@ Rails.application.routes.draw do
     
     resources :lancamentosdiversos, only: [:index, :edit, :update, :new, :create, :destroy]
 
-    resources :vendas, only: [:index, :edit, :new, :create, :destroy]
+    resources :vendas, only: [:index, :edit, :new, :create, :destroy] do
+      patch :atualizar_vendedor, on: :member
+    end
+    
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]

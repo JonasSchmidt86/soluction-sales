@@ -199,11 +199,25 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       else
         render json: { status: 'not_found' }
       end
+    end
 
+    def atualizar_vendedor
+      @venda = Venda.find(params[:id])
+      @venda.funcionario = Funcionario.find_by(cod_funcionario: params[:cod_funcionario])
+
+      if @venda.save!
+        redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda), notice: "Vendedor atualizado com sucesso."
+      else
+        redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda), alert: "Erro ao atualizar vendedor."
+      end
     end
 
     private 
     
+    def vendedor_params
+      params.require(:venda).permit(:cod_funcionario)
+    end
+
     def set_venda
       @sale = Venda.find(params[:id])
     end

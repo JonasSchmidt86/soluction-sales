@@ -129,11 +129,20 @@
                             <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                           <% end %>
                         </li>
+                        <li>
+                          <button class="dropdown-item btn btn-warning btn-circle" data-bs-toggle="modal" data-bs-target="#modalVendedor<%= sale.id %>">
+                            <i class="fa fa-user-edit"></i> Alterar Vendedor
+                          </button>
+                        </li>
                       <% end %>
                     </ul>
                   </div>
                 </td>
               </tr>
+              <!-- Modal para alterar vendedor fica separado para não ficar dentro da tabela que faz não aparecer o modal -->
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <%= render partial: 'vendedor_modal', locals: { venda: sale } %>
+              <% end %>
             <% end %>
           </tbody>
         </table>

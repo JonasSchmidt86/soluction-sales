@@ -1,0 +1,23 @@
+<div class="modal fade" id="modalVendedor<%= venda.id %>" tabindex="-1" aria-labelledby="modalLabel<%= venda.id %>" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalLabel<%= venda.id %>">
+          Alterar Vendedor - Venda <%= venda.cod_vendaempresa %>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body ms-2 me-2">
+        <%= form_with url: atualizar_vendedor_collaborators_backoffice_venda_path(venda), method: :patch, local: true do |form| %>
+          <div class="mt-3">
+            <%= form.collection_select :cod_funcionario, Funcionario.joins(:funcionarioempresas).where(funcionarioempresas: { cod_empresa: current_collaborator.cod_empresa, ativo: true }).where(ativo: true, datademissao: nil).select(:cod_funcionario, :usuario), :cod_funcionario, :usuario, { prompt: "Selecione o Vendedor" }, class: "form-select" %>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <%= form.submit "Salvar", class: "btn btn-success" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

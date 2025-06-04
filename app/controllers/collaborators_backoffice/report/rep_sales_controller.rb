@@ -23,6 +23,12 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             end
         end
 
+        if params[:codigo_venda].present?
+            @sales = Venda.includes(empresa: {}, funcionario: {}, pessoa: {}, itensvenda: :produto, contas: :lancamentos).where(cod_venda: params[:codigo_venda].to_i )
+                                        .order(datavenda: :desc);
+            return;
+        end
+
         # tipo T é transferencia 
         consulta += " and tipo <> 'T' and venda.cancelada = false "
         if params[:per_page].present? && params[:per_page].to_i === 0
