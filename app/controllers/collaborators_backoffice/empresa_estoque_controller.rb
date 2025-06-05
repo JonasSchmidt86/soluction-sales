@@ -8,6 +8,15 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
                                 .joins(:produto)
                                 .order("produto.nome ASC, empresaproduto.cod_empresa ASC")
                                 .where(empresaproduto: { ativo: true })
+                                # .where(produtos: { cod_marca: params[:cod_marca] }) if params[:cod_marca].present?
+                                # .where(produtos: { cod_grupo: params[:cod_grupo] }) if params[:cod_grupo].present?
+        
+        if params[:cod_marca].present?
+            query = query.where(produto: { cod_marca: params[:cod_marca] })
+        end
+        if params[:cod_grupo].present?
+            query = query.where(produto: { cod_grupo: params[:cod_grupo] })
+        end
         
         # Adicionando condição para `term`
         if params[:term].present?
