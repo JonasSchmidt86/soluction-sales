@@ -7,7 +7,7 @@ class Empresa < ApplicationRecord
     has_many :collaborators # um para muitos
 
     has_many :funcionarios, :class_name => 'Funcionario', :through => :funcionariosempresa
-
+    has_many :whatsapp_contacts, foreign_key: 'empresa_id', primary_key: 'cod_empresa'
     has_many :vendas, :class_name => 'Venda', :foreign_key => 'cod_venda', inverse_of: :empresa
     
     has_many :lancamentos, :class_name => 'LancamentosCaixa', :foreign_key => 'cod_lancamentocaixa', inverse_of: :empresa

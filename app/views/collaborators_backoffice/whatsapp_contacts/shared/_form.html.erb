@@ -1,0 +1,53 @@
+<div class="card mt-3 shadow">
+  <div class="card-header bg-primary text-white">
+    <div class="d-flex align-items-center">
+      <h4 class="mb-0">
+        <%= @whatsapp_contact.new_record? ? "Novo Contato WhatsApp" : "Editando Contato WhatsApp" %>
+      </h4>
+      <%= link_to 'Voltar', collaborators_backoffice_whatsapp_contacts_path, class: 'btn btn-light ms-auto' %>
+    </div>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: [:collaborators_backoffice, @whatsapp_contact], local: true) do |form| %>
+      <% if @whatsapp_contact.errors.any? %>
+        <div class="alert alert-danger">
+          <h5><%= pluralize(@whatsapp_contact.errors.count, "erro") %> impediram o salvamento:</h5>
+          <ul>
+            <% @whatsapp_contact.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+      <div class="mb-3">
+        <%= form.label :empresa_id, "Empresa" %>
+        <%= form.collection_select :empresa_id, Empresa.all, :cod_empresa, :nome, { prompt: "Selecione" }, class: "form-select" %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :funcionario_id, "Funcionário" %>
+        <%= form.collection_select :funcionario_id, Funcionario.all, :cod_funcionario, :usuario, { prompt: "Selecione" }, class: "form-select" %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :display_name, "Nome Exibido" %>
+        <%= form.text_field :display_name, class: "form-control" %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :whatsapp_number, "Número WhatsApp" %>
+        <%= form.text_field :whatsapp_number, class: "form-control", placeholder: "(99) 99999-9999" %>
+      </div>
+      <div class="text-end">
+        <%= form.submit 'Salvar', class: "btn btn-success" %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :photo, "Foto do Contato" %>
+        <%= form.file_field :photo, class: "form-control" %>
+        <% if @whatsapp_contact.photo.attached? %>
+          <div class="mt-2">
+            <p>Foto atual:</p>
+            <%= image_tag @whatsapp_contact.photo.variant(resize_to_limit: [100, 100]), class: "img-thumbnail" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

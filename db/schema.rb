@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_04_172935) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_09_183507) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -519,6 +519,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_04_172935) do
     t.index ["cod_pessoa"], name: "fkv_pessoa"
   end
 
+  create_table "whatsapp_contacts", force: :cascade do |t|
+    t.bigint "empresa_id", null: false
+    t.bigint "funcionario_id", null: false
+    t.string "whatsapp_number", null: false
+    t.string "display_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["empresa_id"], name: "index_whatsapp_contacts_on_empresa_id"
+  end
+
   create_table "xml_files", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -624,6 +634,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_04_172935) do
   add_foreign_key "venda", "frete", column: "cod_frete", primary_key: "cod_frete", name: "fk_frete"
   add_foreign_key "venda", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
   add_foreign_key "venda", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
+  add_foreign_key "whatsapp_contacts", "empresa", primary_key: "cod_empresa"
+  add_foreign_key "whatsapp_contacts", "funcionario", primary_key: "cod_funcionario"
   add_foreign_key "xml_files", "compra", primary_key: "cod_compra"
   add_foreign_key "xml_files", "empresa", primary_key: "cod_empresa"
   add_foreign_key "xml_files", "pessoa", primary_key: "cod_pessoa"

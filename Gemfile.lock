@@ -380,6 +380,7 @@ DEPENDENCIES
   devise
   htmlbeautifier
   httparty
+  image_processing (~> 1.2)
   jbuilder (~> 2.5)
   jquery_mask_rails (~> 0.1.0)
   kaminari

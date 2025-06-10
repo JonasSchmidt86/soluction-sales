@@ -9,6 +9,7 @@ Rails.application.routes.draw do
 
   namespace :users_backoffice do
     get 'welcome/index'
+    resources :whatsapp_contacts, only: [:index, :show]
   end
 
   namespace :collaborators_backoffice do
@@ -36,7 +37,6 @@ Rails.application.routes.draw do
         get :estoque
       end
     end
-    
     resources :produto_imagens, only: [:index, :create, :edit, :destroy]
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
     
@@ -64,6 +64,7 @@ Rails.application.routes.draw do
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
+    resources :whatsapp_contacts #, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
       post 'import/:id', on: :member, to: 'xml_files#import', as: :import
     end
@@ -105,7 +106,11 @@ Rails.application.routes.draw do
 
   # get 'welcome/index'
   get 'inicio', to: 'site/welcome#index' # inicio é o nome que vai aparecer www....com/inicio
+
+  # leva para o index do backoffice do colaborador
+  # root to: 'collaborators_backoffice/welcome#index'
   
-  root to: 'collaborators_backoffice/welcome#index'
+  # leva para o index do backoffice do usuario
+  root to: 'site/welcome#index'
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

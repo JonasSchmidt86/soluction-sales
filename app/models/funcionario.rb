@@ -9,6 +9,8 @@ class Funcionario < ApplicationRecord
     #ativo = true
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :funcionario
+  
+    has_many :whatsapp_contacts, foreign_key: 'funcionario_id', primary_key: 'cod_funcionario'
 
     belongs_to :permissao, :class_name => 'Permissao', :foreign_key => 'cod_permissao', optional: true
 
