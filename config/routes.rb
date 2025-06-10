@@ -3,10 +3,6 @@ Rails.application.routes.draw do
 
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
-  
-  namespace :site do
-    get 'welcome/index'
-  end
 
   namespace :users_backoffice do
     get 'welcome/index'

@@ -2,8 +2,8 @@
 <section class="hero-section">
   <div class="container text-center">
     <h1 class="display-3 fw-bold mb-4">Móveis Rosa Store</h1>
-    <p class="lead mb-5">Há 5 anos transformando casas em lares com móveis e decoração de qualidade</p>
-    <a href="#contato" class="btn btn-primary btn-lg">Fale Conosco</a>
+    <p class="lead mb-5">Há 30 anos transformando casas em lares com móveis e decoração de qualidade</p>
+    <a href="#equipe" class="btn btn-primary btn-lg">Fale Conosco</a>
   </div>
 </section>
 <!-- Sobre Nós Section -->
@@ -11,15 +11,23 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-6 mb-4 mb-lg-0">
-        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80" alt="Sobre Nós" class="img-fluid rounded shadow">
+        <%# <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80" alt="Sobre Nós" class="img-fluid rounded shadow"> %>
+        <%= image_tag( "Sobre_loja.jpeg",
+                      alt: "Sobre Nós",
+                      class: "img-fluid rounded shadow"
+
+                    ) %>
       </div>
       <div class="col-lg-6">
         <h2 class="section-title text-start">Sobre Nossa Empresa</h2>
-        <p class="mb-4">A Móveis Rosa Store é uma empresa de Toledo com 5 anos de experiência no mercado de móveis e decoração. Oferecemos produtos de alta qualidade que transformam ambientes com estilo e conforto. Nossa equipe de profissionais está comprometida em proporcionar a melhor experiência aos nossos clientes.</p>
+        <p class="mb-4">Móveis Rosa Store é sinônimo de tradição, qualidade e bom gosto. Desde 1996, levamos móveis e decorações que transformam ambientes e realizam sonhos. <br>
+          <br>
+          São quase 30 anos de história, sempre com o compromisso de oferecer produtos de excelência e atendimento de confiança.
+          Com seis lojas localizadas nas cidades de Toledo, Marechal Cândido Rondon, Nova Santa Rosa, Maripá, Porto Mendes e Assis, seguimos crescendo com você, valorizando cada detalhe que faz da sua casa um verdadeiro lar.</p>
         <div class="row mt-4">
           <div class="col-md-6 mb-3">
             <div class="d-flex align-items-center">
-              <i class="fas fa-check-circle text-primary me-3 fs-4"></i>
+              <i class="fas fa-check-circle text-dark me-3 fs-4"></i>
               <div>
                 <h5 class="mb-1">Qualidade</h5>
                 <p class="mb-0 text-muted">Produtos de excelência</p>
@@ -28,7 +36,7 @@
           </div>
           <div class="col-md-6 mb-3">
             <div class="d-flex align-items-center">
-              <i class="fas fa-headset text-primary me-3 fs-4"></i>
+              <i class="fas fa-headset text-dark me-3 fs-4"></i>
               <div>
                 <h5 class="mb-1">Suporte</h5>
                 <p class="mb-0 text-muted">Atendimento personalizado</p>
@@ -37,7 +45,7 @@
           </div>
           <div class="col-md-6 mb-3">
             <div class="d-flex align-items-center">
-              <i class="fas fa-rocket text-primary me-3 fs-4"></i>
+              <i class="fas fa-rocket text-dark me-3 fs-4"></i>
               <div>
                 <h5 class="mb-1">Inovação</h5>
                 <p class="mb-0 text-muted">Soluções modernas</p>
@@ -46,12 +54,62 @@
           </div>
           <div class="col-md-6 mb-3">
             <div class="d-flex align-items-center">
-              <i class="fas fa-shield-alt text-primary me-3 fs-4"></i>
+              <i class="fas fa-shield-alt text-dark me-3 fs-4"></i>
               <div>
                 <h5 class="mb-1">Confiança</h5>
                 <p class="mb-0 text-muted">Segurança garantida</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Missão, Visão e Valores Section -->
+<section id="missao-visao-valores" class="py-5 bg-light">
+  <div class="container">
+    <h2 class="section-title text-center mb-5">Missão, Visão e Valores</h2>
+    <div class="row mb-5">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+              <i class="fas fa-bullseye fa-2x"></i>
+            </div>
+            <h3 class="card-title h4 mb-3 text-danger">Missão</h3>
+            <p class="card-text">Transformar lares e vidas com móveis de qualidade, criando ambientes acolhedores que inspiram conforto e bem estar a família.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+              <i class="fas fa-eye fa-2x"></i>
+            </div>
+            <h3 class="card-title h4 mb-3 text-danger">Visão</h3>
+            <p class="card-text">Ser reconhecida como a melhor loja no segmento de móveis na região de atuação. Visão até 2027.</p>
+            <p class="card-text"><strong>Entrega extraordinária:</strong> Proporcionar uma experiência única e encantadora ao cliente.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+              <i class="fas fa-heart fa-2x"></i>
+            </div>
+            <h3 class="card-title h4 mb-3 text-danger">Valores</h3>
+            <ul class="list-unstyled text-start">
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Honestidade:</strong> Agir com base na verdade de forma ética, sem enganar ou omitir.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Compromisso com o lar do cliente:</strong> Cada móvel entregue é parte de um sonho realizado.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Espírito de colaboração:</strong> Trabalhar em equipe afim de buscar soluções e objetivos comuns.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Respeito:</strong> Tratar ao próximo com dignidade, empatia e consideração.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Fé:</strong> Acreditar no extraordinário.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Desenvolvimento contínuo:</strong> Buscar constantemente o aprimoramento pessoal e profissional.</li>
+              <li class="mb-2"><i class="fas fa-check-circle text-dark me-2"></i> <strong>Autorresponsabilidade:</strong> Assumir a responsabilidade pelas próprias ações, decisões e resultados.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -79,7 +137,7 @@
                 <p class="card-text"><%= truncate(produto.nome, length: 100) %></p>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="text-success fw-bold">R$ <%= number_to_currency(produto.empresaprodutos.map(&:valorvenda).compact.max, unit: "") %></span>
-                  <a href="#" class="btn btn-sm btn-outline-primary">Saiba mais</a>
+                  <a href="#" class="btn btn-sm btn-outline-dark">Saiba mais</a>
                 </div>
               </div>
             </div>
@@ -96,8 +154,8 @@
 <!-- Equipe Section -->
 <section id="equipe" class="py-5">
   <div class="container">
-    <h2 class="section-title text-center">Nossa Equipe</h2>
-    <p class="text-center mb-5">Conheça os profissionais que fazem a diferença</p>
+    <h2 class="section-title text-center ">Fale Conosco</h2>
+    <p class="text-center mb-5 ">Conheça os profissionais que fazem a diferença</p>
     <div class="row justify-content-center">
       <% if @colaboradores.present? %>
         <% @colaboradores.each do |colab| %>
@@ -132,70 +190,6 @@
           <p>Nenhum colaborador disponível no momento.</p>
         </div>
       <% end %>
-    </div>
-  </div>
-</section>
-<!-- Contato Section -->
-<section id="contato" class="py-5 bg-light">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <h2 class="section-title text-center">Fale Conosco</h2>
-        <p class="text-center mb-5">Entre em contato para dúvidas, pedidos e orçamentos</p>
-        <div class="card shadow border-0">
-          <div class="card-body p-5">
-            <form>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="nome" class="form-label">Nome</label>
-                  <input type="text" class="form-control" id="nome" placeholder="Seu nome">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="email" class="form-label">Email</label>
-                  <input type="email" class="form-control" id="email" placeholder="seu@email.com">
-                </div>
-              </div>
-              <div class="mb-3">
-                <label for="assunto" class="form-label">Assunto</label>
-                <input type="text" class="form-control" id="assunto" placeholder="Assunto da mensagem">
-              </div>
-              <div class="mb-4">
-                <label for="mensagem" class="form-label">Mensagem</label>
-                <textarea class="form-control" id="mensagem" rows="5" placeholder="Sua mensagem"></textarea>
-              </div>
-              <div class="text-center">
-                <button type="submit" class="btn btn-primary px-5">Enviar Mensagem</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="row mt-5">
-          <div class="col-md-4 text-center mb-4 mb-md-0">
-            <div class="bg-white p-4 h-100 rounded shadow-sm">
-              <i class="fas fa-map-marker-alt text-primary fs-3 mb-3"></i>
-              <h5>Endereço</h5>
-              <p class="mb-0">Toledo<br>
-                Paraná - Brasil</p>
-            </div>
-          </div>
-          <div class="col-md-4 text-center mb-4 mb-md-0">
-            <div class="bg-white p-4 h-100 rounded shadow-sm">
-              <i class="fas fa-phone text-primary fs-3 mb-3"></i>
-              <h5>Telefone</h5>
-              <p class="mb-0">(00) 00000-0000<br>
-                (00) 00000-0000</p>
-            </div>
-          </div>
-          <div class="col-md-4 text-center">
-            <div class="bg-white p-4 h-100 rounded shadow-sm">
-              <i class="fas fa-envelope text-primary fs-3 mb-3"></i>
-              <h5>Email</h5>
-              <p class="mb-0">contato@moveisrosastore.com<br>
-                vendas@moveisrosastore.com</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
