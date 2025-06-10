@@ -1,0 +1,46 @@
+<section id="destaques">
+  <h2>Produtos em Destaque</h2>
+  <div class="produtos">
+    <% @produtos.each do |produto| %>
+      <% if produto.produto_imagens.any? %>
+        <div class="produto-card">
+          <h3><%= produto.nome.capitalize %></h3>
+          <%= image_tag produto.produto_imagens.first.imagem.variant(resize_to_limit: [150, 150]) %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</section>
+<section id="produtos">
+  <h2>Todos os Produtos</h2>
+  <!-- Mesmo esquema que você já fez -->
+</section>
+<section id="apresentacao">
+  <h2>Sobre a Loja</h2>
+  <p>Conteúdo sobre a missão, visão, espaço físico, etc.</p>
+</section>
+<section id="colaboradores">
+  <h2>Colaboradores</h2>
+  <!-- Nome, foto e WhatsApp dos colaboradores -->
+</section>
+<section id="parceiros">
+  <h2>Parceiros</h2>
+  <!-- Logos ou nomes dos parceiros -->
+</section>
+<section id="Contatos">
+  <h2>Contatos</h2>
+  <% @whatsapp_contacts.each do |contato| %>
+    <% if !contato.photo.present? %>
+      <% mensagem = "Olá, quero mais informações sobre a empresa " + contato.display_name.capitalize %>
+      <% url_whatsapp = "https://wa.me/#{contato.whatsapp_number}?text=#{URI.encode_www_form_component(mensagem)}" %>
+      <%= image_tag contato.photo.variant(resize_to_limit: [150, 150]),
+        ondblclick: "window.open('#{url_whatsapp}', '_blank')" %>
+    <% else %>
+      <br>
+      <% mensagem = "Olá, Gostaria de atendimento." %>
+      <a href="https://wa.me/<%= contato.whatsapp_number %>?text=<%= URI.encode_www_form_component(mensagem) %>" target="_blank" rel="noopener noreferrer">
+        <%= contato.display_name %>
+      </a>
+    <% end %>
+  <% end %>
+</section>

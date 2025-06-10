@@ -35,8 +35,9 @@
         <%= form.label :whatsapp_number, "Número WhatsApp" %>
         <%= form.text_field :whatsapp_number, class: "form-control", placeholder: "(99) 99999-9999" %>
       </div>
-      <div class="text-end">
-        <%= form.submit 'Salvar', class: "btn btn-success" %>
+      <div class="mb-3">
+        <%= form.label :email, "Email" %>
+        <%= form.email_field :email, class: "form-control", placeholder: "contato@exemplo.com" %>
       </div>
       <div class="mb-3">
         <%= form.label :photo, "Foto do Contato" %>
@@ -47,6 +48,9 @@
             <%= image_tag @whatsapp_contact.photo.variant(resize_to_limit: [100, 100]), class: "img-thumbnail" %>
           </div>
         <% end %>
+      </div>
+      <div class="text-end">
+        <%= form.submit 'Salvar', class: "btn btn-success" %>
       </div>
     <% end %>
   </div>

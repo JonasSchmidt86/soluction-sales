@@ -60,7 +60,7 @@ class CollaboratorsBackoffice::WhatsappContactsController < CollaboratorsBackoff
   end
 
   def whatsapp_contact_params
-    params.require(:whatsapp_contact).permit(:empresa_id, :funcionario_id, :display_name, :whatsapp_number, :photo)
+    params.require(:whatsapp_contact).permit(:empresa_id, :funcionario_id, :display_name, :whatsapp_number, :email, :photo)
   end
 
 end

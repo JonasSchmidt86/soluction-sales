@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  root 'home#index'
 
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
@@ -105,12 +106,12 @@ Rails.application.routes.draw do
   end
 
   # get 'welcome/index'
-  get 'inicio', to: 'site/welcome#index' # inicio é o nome que vai aparecer www....com/inicio
+  # get 'inicio', to: 'site/welcome#index' # inicio é o nome que vai aparecer www....com/inicio
 
   # leva para o index do backoffice do colaborador
   # root to: 'collaborators_backoffice/welcome#index'
   
   # leva para o index do backoffice do usuario
-  root to: 'site/welcome#index'
+  # root to: 'site/welcome#index'
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

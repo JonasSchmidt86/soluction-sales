@@ -1,0 +1,188 @@
+<!-- Hero Section com imagem de fundo -->
+<section class="hero-section">
+  <div class="container text-center">
+    <h1 class="display-3 fw-bold mb-4">Transforme seu Negócio</h1>
+    <p class="lead mb-5">Soluções inovadoras que impulsionam o crescimento da sua empresa</p>
+    <a href="#contato" class="btn btn-primary btn-lg">Fale Conosco</a>
+  </div>
+</section>
+<!-- Sobre Nós Section -->
+<section id="sobre" class="py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80" alt="Sobre Nós" class="img-fluid rounded shadow">
+      </div>
+      <div class="col-lg-6">
+        <h2 class="section-title text-start">Sobre Nossa Empresa</h2>
+        <p class="mb-4">Somos especializados em oferecer soluções de alta qualidade que atendem às necessidades específicas do seu negócio. Nossa equipe de profissionais qualificados está comprometida em entregar resultados excepcionais.</p>
+        <div class="row mt-4">
+          <div class="col-md-6 mb-3">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-check-circle text-primary me-3 fs-4"></i>
+              <div>
+                <h5 class="mb-1">Qualidade</h5>
+                <p class="mb-0 text-muted">Produtos de excelência</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-headset text-primary me-3 fs-4"></i>
+              <div>
+                <h5 class="mb-1">Suporte</h5>
+                <p class="mb-0 text-muted">Atendimento personalizado</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-rocket text-primary me-3 fs-4"></i>
+              <div>
+                <h5 class="mb-1">Inovação</h5>
+                <p class="mb-0 text-muted">Soluções modernas</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-shield-alt text-primary me-3 fs-4"></i>
+              <div>
+                <h5 class="mb-1">Confiança</h5>
+                <p class="mb-0 text-muted">Segurança garantida</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Produtos Section -->
+<section id="produtos" class="py-5 bg-light">
+  <div class="container">
+    <h2 class="section-title text-center">Nossos Produtos</h2>
+    <p class="text-center mb-5">Conheça nossas soluções exclusivas para o seu negócio</p>
+    <div class="row">
+      <% @produtos.each do |produto| %>
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <% if produto.imagem_url.present? %>
+              <%= image_tag produto.imagem_url, class: "card-img-top", alt: produto.nome %>
+            <% else %>
+              <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="<%= produto.nome %>">
+            <% end %>
+            <div class="card-body">
+              <h5 class="card-title"><%= produto.nome %></h5>
+              <p class="card-text"><%= truncate(produto.descricao || produto.nome, length: 100) %></p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-success fw-bold">R$ <%= number_to_currency(produto.preco || 0, unit: "") %></span>
+                <a href="#" class="btn btn-sm btn-outline-primary">Saiba mais</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+<!-- Equipe Section -->
+<section id="equipe" class="py-5">
+  <div class="container">
+    <h2 class="section-title text-center">Nossa Equipe</h2>
+    <p class="text-center mb-5">Conheça os profissionais que fazem a diferença</p>
+    <div class="row">
+      <% @colaboradores.each do |colab| %>
+        <div class="col-md-3 mb-4">
+          <div class="card text-center h-100">
+            <div class="p-3">
+              <% if colab.foto_url.present? %>
+                <%= image_tag colab.foto_url, class: "rounded-circle img-fluid mx-auto", style: "width: 150px; height: 150px; object-fit: cover;" %>
+              <% else %>
+                <img src="https://via.placeholder.com/150" class="rounded-circle img-fluid mx-auto" style="width: 150px; height: 150px; object-fit: cover;">
+              <% end %>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title mb-1"><%= colab.nome %></h5>
+              <p class="text-muted mb-3"><%= colab.funcao %></p>
+              <div class="d-flex justify-content-center">
+                <% if colab.whatsapp.present? %>
+                  <a href="https://wa.me/<%= colab.whatsapp %>" class="btn btn-success btn-sm me-2" target="_blank">
+                    <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                  </a>
+                <% end %>
+                <a href="#" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-envelope me-1"></i> Email
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+<!-- Contato Section -->
+<section id="contato" class="py-5 bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h2 class="section-title text-center">Fale Conosco</h2>
+        <p class="text-center mb-5">Entre em contato para dúvidas, pedidos e orçamentos</p>
+        <div class="card shadow border-0">
+          <div class="card-body p-5">
+            <form>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="nome" class="form-label">Nome</label>
+                  <input type="text" class="form-control" id="nome" placeholder="Seu nome">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" placeholder="seu@email.com">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="assunto" class="form-label">Assunto</label>
+                <input type="text" class="form-control" id="assunto" placeholder="Assunto da mensagem">
+              </div>
+              <div class="mb-4">
+                <label for="mensagem" class="form-label">Mensagem</label>
+                <textarea class="form-control" id="mensagem" rows="5" placeholder="Sua mensagem"></textarea>
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary px-5">Enviar Mensagem</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row mt-5">
+          <div class="col-md-4 text-center mb-4 mb-md-0">
+            <div class="bg-white p-4 h-100 rounded shadow-sm">
+              <i class="fas fa-map-marker-alt text-primary fs-3 mb-3"></i>
+              <h5>Endereço</h5>
+              <p class="mb-0">Av. Principal, 1000<br>
+                Centro - Sua Cidade</p>
+            </div>
+          </div>
+          <div class="col-md-4 text-center mb-4 mb-md-0">
+            <div class="bg-white p-4 h-100 rounded shadow-sm">
+              <i class="fas fa-phone text-primary fs-3 mb-3"></i>
+              <h5>Telefone</h5>
+              <p class="mb-0">(00) 00000-0000<br>
+                (00) 00000-0000</p>
+            </div>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="bg-white p-4 h-100 rounded shadow-sm">
+              <i class="fas fa-envelope text-primary fs-3 mb-3"></i>
+              <h5>Email</h5>
+              <p class="mb-0">contato@suaempresa.com<br>
+                suporte@suaempresa.com</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
