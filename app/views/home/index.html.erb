@@ -160,7 +160,7 @@
                 <% if colab.photo.attached? %>
                   <%= image_tag url_for(colab.photo), class: "rounded-circle img-fluid mx-auto", style: "width: 150px; height: 150px; object-fit: cover;" %>
                 <% else %>
-                  <%= image_tag "mrosa.png", class: "rounded-circle img-fluid mx-auto", style: "width: 150px; height: 150px; object-fit: cover;" %>
+                  <img src="/images/mrosa.png" class="rounded-circle img-fluid mx-auto" style="width: 150px; height: 150px; object-fit: cover;">
                 <% end %>
               </div>
               <div class="card-body">
