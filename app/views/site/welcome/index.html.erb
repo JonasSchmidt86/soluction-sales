@@ -1,13 +1,40 @@
-<h1>Site::Welcome#index</h1>
-<p>Find me in app/views/site/welcome/index.html.erb</p>
-
-
+<h1>Bem-vindo à nossa loja</h1>
+<h2>Produtos</h2>
+<div class="produtos">
+  <% @whatsapp_contacts.each do |contato| %>
+    <% @produtos.each do |produto| %>
+      <div class="produto-card">
+        <h3><%= produto.nome %></h3>
+        <% if produto.produto_imagens.any? %>
+          <% mensagem = "Olá, quero mais informações sobre o produto " + produto.nome.capitalize %>
+          <% url_whatsapp = "https://wa.me/#{contato.whatsapp_number}?text=#{URI.encode_www_form_component(mensagem)}" %>
+          <%= image_tag produto.produto_imagens.first.imagem.variant(resize_to_limit: [300, 300]),
+        ondblclick: "window.open('#{url_whatsapp}', '_blank')" %>
+        <% end %>
+        <p><%= produto.nome %></p>
+      </div>
+    <% end %>
+  </div>
+  <h2>Contato via WhatsApp</h2>
+  <ul>
+    <li>
+      <%= contato.display_name %>:
+      <% mensagem = "Olá, quero mais informações sobre o produto X" %>
+      <a href="https://wa.me/<%= contato.whatsapp_number %>?text=<%= URI.encode_www_form_component(mensagem) %>" target="_blank" rel="noopener noreferrer">
+        Enviar mensagem
+      </a>
+    </li>
+  </ul>
+<% end %>
+<h2>Instagram</h2>
+<a href="<%= "https://www.instagram.com/mrosa_store" %>" target="_blank" rel="noopener noreferrer">
+  Nosso Instagram
+</a>
 <% if user_signed_in? %>
   <p>Usuario Logado <%= current_user.email %></p>
 <% else %>
   <p>Usuario Não Logado </p>
 <% end %>
-
 <% if collaborator_signed_in? %>
   <p>Colaborador Logado <%= current_collaborator.email %></p>
 <% else %>

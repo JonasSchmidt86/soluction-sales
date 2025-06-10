@@ -43,13 +43,13 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
       bypass_sign_in(@collaborator) # quando troca a senha não precisa refazer o login
 
       if params_collaborator[:cod_empresa]
-        redirect_to root_path, notice: "Você trocou de empresa!"
+        redirect_to collaborators_backoffice_welcome_index_path, notice: "Você trocou de empresa!"
       else
-        redirect_to root_path, notice: "Colaborador atualizado com sucesso!"
+        redirect_to collaborators_backoffice_welcome_index_path, notice: "Colaborador atualizado com sucesso!"
       end
       
     else 
-      redirect_to root_path, notice: "ERRO"
+      redirect_to collaborators_backoffice_welcome_index_path, notice: "ERRO"
     end
 
   end

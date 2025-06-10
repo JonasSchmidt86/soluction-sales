@@ -6,10 +6,6 @@ class Produto < ApplicationRecord
     alias_attribute :cod_grupo, :grupo
     alias_attribute :cod_marca, :marca
   
-    # Active Storage para múltiplas imagens
-    # has_many_attached :imagens, service: :produtos_storage
-      
-  
     # Associações corretas
     belongs_to :cod_grupo, foreign_key: 'grupo', primary_key: 'cod_grupo', class_name: 'Grupo' #, optional: true
     belongs_to :cod_marca, foreign_key: 'marca', primary_key: 'cod_marca', class_name: 'Marca' #, optional: true
