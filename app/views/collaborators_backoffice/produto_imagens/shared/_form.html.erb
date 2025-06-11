@@ -127,13 +127,19 @@
                         <div class="dataTable-bottom">
                           <% if @produto_imagens.present? %>
                             <div class="dataTable-info">
-                              <%= page_entries_info(@produto_imagens, entry_name: 'foto') if @produto_imagens.present? %>
+                              <% if @produto_imagens.respond_to?(:total_pages) %>
+                                <%= page_entries_info(@produto_imagens, entry_name: 'foto') %>
+                              <% else %>
+                                Exibindo <%= @produto_imagens.size %> foto(s)
+                              <% end %>
                             </div>
-                            <div class = "text-center">
-                              <%= paginate @produto_imagens %>
+                            <div class="text-center">
+                              <% if @produto_imagens.respond_to?(:total_pages) %>
+                                <%= paginate @produto_imagens %>
+                              <% end %>
                             </div>
                           <% else %>
-                            <div class = "text-center">
+                            <div class="text-center">
                               Nenhuma foto encontrada.
                             </div>
                           <% end %>
