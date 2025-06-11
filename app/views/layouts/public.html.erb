@@ -169,6 +169,20 @@
         color: white;
         text-decoration: none;
       }
+      
+      /* Alinhamento da logo em dispositivos móveis */
+      @media (max-width: 991px) {
+        .navbar-brand {
+          margin-right: auto;
+          margin-left: 0;
+          text-align: left;
+        }
+        
+        .navbar > .container {
+          display: flex;
+          justify-content: flex-start;
+        }
+      }
     </style>
   </head>
   <body>
@@ -176,9 +190,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
         <a class="navbar-brand" href="#">
-          <a class="navbar-brand" href="#">
-            <img src="/images/logo.png" alt="Móveis Rosa Store" height="40">
-          </a>
+          <img src="/images/logo.png" alt="Móveis Rosa Store" height="40">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -210,7 +222,7 @@
               <a href="https://www.facebook.com/mr.moveisrosa"><i class="fab fa-facebook-f"></i></a>
               <a href="https://www.instagram.com/mrosa_store"><i class="fab fa-instagram"></i></a>
               <% url_whatsapp = "https://wa.me/45999967722" %>
-              <a href=<%= url_whatsapp %>><i class="fab fa-whatsapp"></i></a>
+              <a href=<%= url_whatsapp %>><i class="fab fa-whatsapp" target="_blank"></i></a>
             </div>
           </div>
           <div class="col-md-4 mb-4 mb-md-0">
@@ -235,7 +247,7 @@
             </div>
           </footer>
           <!-- Back to top button -->
-          <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+          <a href="javascript:void(0);" id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
           <!-- WhatsApp float button -->
           <a href="https://wa.me/45999967722" class="whatsapp-float" target="_blank">
             <i class="fab fa-whatsapp"></i>
@@ -278,6 +290,15 @@
                     behavior: 'smooth'
                   });
                 }
+              });
+            });
+            
+            // Back to top button functionality
+            document.getElementById('backToTop').addEventListener('click', function(e) {
+              e.preventDefault();
+              window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
               });
             });
           </script>
