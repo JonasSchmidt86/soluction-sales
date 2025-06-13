@@ -53,6 +53,8 @@ pt-BR:
       send_instructions: "Você receberá um e-mail com instruções sobre como desbloquear sua conta, em poucos minutos."
       send_paranoid_instructions: "Se a sua conta existir, você receberá um e-mail com instruções sobre como desbloqueá-la, em poucos minutos."
       unlocked: "Sua conta foi desbloqueada com sucesso. Faça login para continuar."
+  routes:
+    collaborators_backoffice: "colaborador"
   errors:
     messages:
       already_confirmed: "já foi confirmado, por favor, efetue login"

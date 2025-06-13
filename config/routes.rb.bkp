@@ -34,6 +34,7 @@ Rails.application.routes.draw do
         get :estoque
       end
     end
+    resources :menu_permissions
     resources :produto_imagens, only: [:index, :create, :edit, :destroy]
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
     
@@ -68,8 +69,6 @@ Rails.application.routes.draw do
     resources :collaborators do
       post :reset_password, on: :member
     end
-    
-    resources :cadinternalframes
 
     resources :notas_fiscais, only: :index
     root to: 'notas_fiscais#index'

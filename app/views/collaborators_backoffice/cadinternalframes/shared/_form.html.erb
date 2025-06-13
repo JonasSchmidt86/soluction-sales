@@ -1,0 +1,49 @@
+<%= form_with(model: [:collaborators_backoffice, @cadinternalframe], local: true) do |form| %>
+  <% if @cadinternalframe.errors.any? %>
+    <div class="alert alert-danger">
+      <h5><%= pluralize(@cadinternalframe.errors.count, "erro") %> encontrado:</h5>
+      <ul>
+        <% @cadinternalframe.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="form-group">
+    <%= form.label :cod_frame, "Código" %>
+    <%= form.number_field :cod_frame, class:"form-control", readonly: @cadinternalframe.persisted? %>
+  </div>
+  <div class="form-group">
+    <%= form.label :jmenu, "Menu" %>
+    <%= form.text_field :jmenu, class:"form-control", maxlength: 100 %>
+  </div>
+  <div class="form-group">
+    <%= form.label :nminternalframe, "Nome Interno" %>
+    <%= form.text_field :nminternalframe, class:"form-control", maxlength: 100 %>
+  </div>
+  <div class="form-group">
+    <%= form.label :tituloframe, "Título" %>
+    <%= form.text_field :tituloframe, class:"form-control", maxlength: 100 %>
+  </div>
+  <div class="form-group">
+    <%= form.label :tamanhomenu, "Tamanho do Menu" %>
+    <%= form.number_field :tamanhomenu, class:"form-control" %>
+  </div>
+  <div class="form-group">
+    <%= form.label :url, "URL" %>
+    <% if @available_routes.present? %>
+      <%= form.select :url, 
+          options_for_select(@available_routes.map { |r| ["#{r[:name]} (#{r[:path]})", r[:path]] }, @cadinternalframe.url),
+          { include_blank: "Selecione uma rota ou digite manualmente" },
+          { class: "form-control" } %>
+      <small class="form-text text-muted">Selecione uma rota disponível ou digite manualmente abaixo</small>
+      <%# form.text_field :url, class:"form-control mt-2", placeholder: "Ou digite a URL manualmente" %>
+    <% else %>
+      <%= form.text_field :url, class:"form-control" %>
+    <% end %>
+  </div>
+  <div class="form-group mt-3">
+    <%= form.submit "Salvar", class:"btn btn-primary" %>
+    <%= link_to "Voltar", collaborators_backoffice_cadinternalframes_path, class:"btn btn-secondary" %>
+  </div>
+<% end %>

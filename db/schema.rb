@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_10_203701) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_12_205748) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -102,6 +102,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_10_203701) do
     t.string "nminternalframe", limit: 100, null: false
     t.integer "tamanhomenu"
     t.string "tituloframe", limit: 100, null: false
+    t.string "url"
   end
 
   create_table "caixa", force: :cascade do |t|
