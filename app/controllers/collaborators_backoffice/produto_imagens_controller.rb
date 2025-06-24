@@ -1,12 +1,9 @@
-
 class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackofficeController
 
   before_action :set_produto, only: [:create]
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
   def index
-    # @produto_imagens = ProdutoImagem.all.order(created_at: :desc).page(params[:page])
-
     if params[:cod_cor].present?
       @produto_imagens = Core.find(params[:cod_cor]).produto_imagens
                         .page(params[:page])
@@ -27,9 +24,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
                         .order(:cod_produto, :cod_cor)
                         .page(params[:page])
     end
-
   end
-
 
   def edit
     @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
@@ -45,6 +40,27 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       end
     end
   end
+
+  def get_cor_data
+    puts "AQUI $#{params[:cod_cor].present?}"
+    if params[:cod_produto].present? && params[:cod_cor].present?
+      
+      empresa_produto = Empresaproduto.where(cod_produto: params[:cod_produto], cod_cor: params[:cod_cor], cod_empresa: current_collaborator.empresa.cod_empresa).first
+      puts "AQUI $#{empresa_produto.inspect}"
+      if empresa_produto
+        render json: {
+          descricao: empresa_produto.produto.descricao,
+          valor_site: empresa_produto.valor_site,
+          publicado: empresa_produto.publicado
+        }
+      puts "AQUI $#{empresa_produto}"
+      else
+        render json: { error: 'Dados não encontrados' }, status: 404
+      end
+    else
+      render json: { error: 'Parâmetros inválidos' }, status: 400
+    end
+  end
   
   def create
     if params[:cod_cor].present?
@@ -53,29 +69,41 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       @cor = Core.first
     end
   
-    # Verifique se as imagens estão presentes
     if params[:imagens].present?
       if @produto.blank?
         redirect_to edit_collaborators_backoffice_produto_imagen_path(0,params.to_unsafe_h), notice: 'Produto não encontrado!'
         return
       end
+      
+      # Atualizar campos na tabela empresaproduto
+      if params[:cod_cor].present?
+        empresa_produto = Empresaproduto.find_by(cod_produto: @produto.cod_produto, cod_cor: params[:cod_cor], cod_empresa: current_collaborator.empresa.cod_empresa)
+        if empresa_produto
+          valor_formatado = params[:valor_site].gsub('.', '').gsub(',', '.')   # troca vírgula por ponto
+          empresa_produto.valor_site = valor_formatado.to_f
+          # empresa_produto.valor_site = params[:valor_site].to_f if params[:valor_site].present?
+          puts "AQUI "
+          puts "AQUI #{params[:descricao]}"
+          @produto.descricao = params[:descricao] if params[:descricao].present?
+          @produto.save!
+          empresa_produto.produto = @produto
+          empresa_produto.publicado = params[:publicado] == '1' if params[:publicado].present?
+          empresa_produto.save!
+        end
+      end
+      
       params[:imagens].each do |imagem|
         next if imagem.blank?
 
-        # Crie a instância de ProdutoImagem
         produto_imagem = ProdutoImagem.new
         produto_imagem.produto = @produto
         produto_imagem.cor = @cor
 
-        # Gere o nome do arquivo com base no nome do produto
-        
         nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}_#{imagem.original_filename.split('.').first}.#{imagem.original_filename}"
         
-        # Abrir a imagem com MiniMagick
         imagem_processada = MiniMagick::Image.read(imagem.tempfile)
-        imagem_processada.resize "1920x1080" # Ajuste as dimensões conforme necessário
+        imagem_processada.resize "1920x1080"
 
-        # Anexando a imagem ao modelo
         produto_imagem.imagem.attach(
             io: StringIO.open(imagem_processada.to_blob),
             filename: nome_imagem,
@@ -83,12 +111,8 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
             key: nome_imagem
           )
 
-        # produto_imagem.imagem.attach(io: imagem.tempfile, filename: nome_imagem, key: nome_imagem)
-
         @produto.produto_imagens << produto_imagem
-        
         produto_imagem.save
-
       end
 
       if params[:path].present? 
@@ -103,13 +127,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       redirect_to path, alert: 'Nenhuma imagem foi selecionada!'
     end
   rescue ActiveRecord::Rollback => e
-    # Caso ocorra um erro, redireciona com a mensagem de erro
     redirect_to collaborators_backoffice_produto_imagens_path, alert: "Falha ao salvar imagens: #{e.message}"
   end
 
-  # para apagar o registro de produto_imagem com todas as imagens junto
   def destroy
-    # Remove a imagem do ActiveStorage antes de excluir o registro
     @produto_imagem.imagem.purge if @produto_imagem.imagem.attached?
 
     if params[:term].present?
@@ -153,8 +174,4 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     @produto_imagem = ProdutoImagem.find(params[:id]);
     @produto = @produto_imagem.produto;
   end
-  
-  # def produto_imagem_params
-  #   params.require(:produto_imagem).permit(:imagens, :cod_produto, :cod_cor, :grupo, :principal);
-  # end
 end

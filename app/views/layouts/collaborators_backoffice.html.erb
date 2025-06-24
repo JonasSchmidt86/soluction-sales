@@ -119,42 +119,7 @@
                 </a>
                 <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
                   <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                      Vendas
-                    <% end %>
-                    <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
-                      Pessoas
-                    <% end %>
-                    <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
-                      Produtos
-                    <% end %>
-                    <%= link_to collaborators_backoffice_marcas_path, class: "nav-link" do %>
-                      Marcas
-                    <% end %>
-                    <%= link_to collaborators_backoffice_grupos_index_path, class: "nav-link" do %>
-                      Grupos
-                    <% end %>
-                    <%= link_to collaborators_backoffice_cores_path, class: "nav-link" do %>
-                      Cores
-                    <% end %>
-                    <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
-                      Lembretes
-                    <% end %>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
-                        Funcionário
-                      <% end %>
-                    <% end %>
-                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                      Contas pagar/Receber
-                    <% end %>
-                    <%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
-                      whatsapp Contact
-                    <% end %>
-                    <%= link_to collaborators_backoffice_cadinternalframes_path, class: "nav-link" do %>
-                      <div class="sb-nav-link-icon"><i class="fas fa-window-restore"></i></div>
-                      Cadastro de Layouts
-                    <% end %>
+                    <%= render 'layouts/shared/menu_lateral' %>
                   </nav>
                 </div>
                 <!-- Compras -->

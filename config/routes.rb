@@ -34,7 +34,11 @@ Rails.application.routes.draw do
         get :estoque
       end
     end
-    resources :produto_imagens, only: [:index, :create, :edit, :destroy]
+    resources :produto_imagens, only: [:index, :create, :edit, :destroy] do
+      collection do
+        get :get_cor_data
+      end
+    end
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
     
     resources :marcas
@@ -90,8 +94,6 @@ Rails.application.routes.draw do
     get 'sales/index'
     get 'report_put_box', to: 'report/rep_put_box#index', as: 'report_put_box_index'
     delete '/report_put_box/:id', to: 'report/rep_put_box#destroy', as: 'report_put_box_destroy'
-    #  get 'collaborator/index'
-    #  get 'collaborator/edit:id', to: 'collaborators#edit'
   end
 
   resources :produtos do
@@ -102,14 +104,4 @@ Rails.application.routes.draw do
       end
     end
   end
-
-  # get 'welcome/index'
-  # get 'inicio', to: 'site/welcome#index' # inicio é o nome que vai aparecer www....com/inicio
-
-  # leva para o index do backoffice do colaborador
-  # root to: 'collaborators_backoffice/welcome#index'
-  
-  # leva para o index do backoffice do usuario
-  # root to: 'site/welcome#index'
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

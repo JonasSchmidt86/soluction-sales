@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_12_205748) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_13_201322) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -212,6 +212,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_12_205748) do
     t.decimal "qtdfiscal", precision: 18, scale: 2, default: "0.0"
     t.string "cest", limit: 15
     t.boolean "ativo", default: true
+    t.decimal "valor_site", precision: 18, scale: 2, default: "0.0"
+    t.boolean "publicado", default: false
   end
 
   create_table "entrega", primary_key: "cod_entrega", id: :bigint, default: -> { "nextval('entrega_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -439,6 +441,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_12_205748) do
     t.bigint "cfop"
     t.boolean "ativo", default: true, null: false
     t.string "cest", limit: 15
+    t.text "descricao"
   end
 
   create_table "produto_imagens", force: :cascade do |t|
