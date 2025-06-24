@@ -30,10 +30,12 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     @produto = params[:id].present? ? Produto.find(params[:id]) : Produto.new
     if params[:id].present? && params[:id] == "0"
       @produto = Produto.new
-      @produto_imagens = ProdutoImagem.all
+      @produto_imagens = ProdutoImagem.all.ordenadas
+        .page(params[:page])
     elsif params[:id].present?
       if @produto.nil?
-        @produto_imagens = ProdutoImagem.all
+        @produto_imagens = ProdutoImagem.all.ordenadas
+        .page(params[:page])
       else
         @produto_imagens = @produto.produto_imagens.ordenadas
         .page(params[:page])
@@ -42,18 +44,15 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   end
 
   def get_cor_data
-    puts "AQUI $#{params[:cod_cor].present?}"
     if params[:cod_produto].present? && params[:cod_cor].present?
-      
       empresa_produto = Empresaproduto.where(cod_produto: params[:cod_produto], cod_cor: params[:cod_cor], cod_empresa: current_collaborator.empresa.cod_empresa).first
-      puts "AQUI $#{empresa_produto.inspect}"
       if empresa_produto
         render json: {
           descricao: empresa_produto.produto.descricao,
           valor_site: empresa_produto.valor_site,
-          publicado: empresa_produto.publicado
+          publicado: empresa_produto.publicado,
+          name: empresa_produto.produto.titulo
         }
-      puts "AQUI $#{empresa_produto}"
       else
         render json: { error: 'Dados não encontrados' }, status: 404
       end
@@ -65,8 +64,8 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   def create
     if params[:cod_cor].present?
       @cor = Core.find(params[:cod_cor])
-    else 
-      @cor = Core.first
+    else
+      @cor = Core.find_by(cod_cor: 1) # Default to first color if not provided
     end
   
     if params[:imagens].present?
@@ -81,10 +80,9 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         if empresa_produto
           valor_formatado = params[:valor_site].gsub('.', '').gsub(',', '.')   # troca vírgula por ponto
           empresa_produto.valor_site = valor_formatado.to_f
-          # empresa_produto.valor_site = params[:valor_site].to_f if params[:valor_site].present?
-          puts "AQUI "
-          puts "AQUI #{params[:descricao]}"
+
           @produto.descricao = params[:descricao] if params[:descricao].present?
+          @produto.titulo = params[:name] if params[:name].present?
           @produto.save!
           empresa_produto.produto = @produto
           empresa_produto.publicado = params[:publicado] == '1' if params[:publicado].present?

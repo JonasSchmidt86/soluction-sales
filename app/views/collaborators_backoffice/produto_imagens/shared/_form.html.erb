@@ -33,7 +33,7 @@
                       <div class="row mb-3">
                         <div class="col-md-2">
                           <div class="form-floating mb-3 mb-md-0">
-                            <%= form.text_field :cod_produto, readonly: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"text" %>
+                            <%= form.text_field :cod_produto, readonly: true, value: (@produto.blank? ? nil : @produto.cod_produto), class: "text form-control", placeholder:"Codigo", id:"cod_produto" %>
                             <%= form.label :codigo_produto, class:"" %>
                           </div>
                         </div>
@@ -47,18 +47,28 @@
                         <div class="col-md-6">
                           <div class="form-floating">
                             <%= form.text_field :nome, disabled: true, value: (!@produto.blank? ? @produto.nome : nil), class: "text form-control", placeholder:"Produto", id:"text" %>
-                            <%= form.label :name, class:"" %>
+                            <%= form.label :nome, class:"" %>
                           </div>
                         </div>
-                        <div class="col-md-6">
-                          <%= form.label :valor_site, "Valor" %>
-                          <%= form.text_field :valor_site, class: "money2 form-control", id: "campo_valor_site" %>
+                        <div class="col-md-6 mt-3">
+                          <div class="form-floating">
+                            <%= form.text_field :name, class: "text form-control", id: "campo_titulo"  %>
+                            <%= form.label :titulo %>
+                          </div>
                         </div>
-                        <div class="form-group">
-                          <%= form.label :descricao, "Descrição" %>
-                          <%= form.text_area :descricao, class: "form-control", rows: 3, id: "campo_descricao" %>
+                        <div class="col-md-6 mt-3">
+                          <div class="form-floating">
+                            <%= form.text_field :valor_site, class: "money2 form-control", id: "campo_valor_site" %>
+                            <%= form.label :valor_site %>
+                          </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mt-3">
+                          <div class="form-floating">
+                            <%= form.text_area :descricao, class: "form-control", style: "height: 200px;", rows: 30, id: "campo_descricao" %>
+                            <%= form.label :descricao, "Descrição" %>
+                          </div>
+                        </div>
+                        <div class="form-group mt-3">
                           <div class="form-check">
                             <%= form.check_box :publicado, class: "form-check-input", id: "campo_publicado" %>
                             <%= form.label :publicado, "Publicado", class: "form-check-label" %>
@@ -131,8 +141,28 @@
                             </div>
                           <% end %>
                         </div>
+                        <div class="dataTable-bottom">
+                          <div class="dataTable-info">
+                            <%= page_entries_info @produto_imagens, entry_name: 'foto' %>
+                          </div>
+                          <div class = "text-center">
+                            <%= paginate @produto_imagens %>
+                          </div>
+                        </div>
                       </div>
                     <% end %>
+                    <!-- Modal com Carousel para navegar entre imagens -->
+                    <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
+                    <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Estoque' } %>
+                  </div>
+                </div>
+                <div class="mt-0 mb-3">
+                  <div class="d-grid">
+                    <div class="col-md-9 col-sm-9  offset-md-3">
+                      <div id="setTime">
+                      </div
+                  </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -144,36 +174,132 @@
   </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function() {
+    // ---- 1️⃣ Abertura de Modal por Duplo Clique ----
+    document.querySelectorAll('.imagem-botao').forEach(botao => {
+      botao.addEventListener('dblclick', function() {
+        const index = this.getAttribute('data-index');
+        const trigger = document.getElementById(`abrir-modal-imagens_${index}`);
+        if (trigger) trigger.click();
+      });
+    });
+
+    // ---- 2️⃣ Prevenir Enter em toda a Página ----
+    document.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+      }
+    });
+
+    // ---- 3️⃣ Auto Complete de Produtos ----
+    const productsList = $("#products_list");
+    const urlBase = window.location.origin + '/collaborators_backoffice/';
+
+    $(document).on('keydown', '.produto_search', function(event) {
+      if (event.key === 'Enter') {
+        selectProduct(this);
+      } else if (event.key === 'Escape') {
+        productsList.empty().hide();
+      }
+    });
+
+    function selectProduct(field) {
+      const selectedProductIdField = document.getElementById('produto');
+      const apiUrl = urlBase + "buscas/buscar_produtos";
+      const query = field.value.trim().toLowerCase();
+
+      if (!query) return;
+
+      $.ajax({
+        url: apiUrl,
+        method: 'GET',
+        data: { entidade: 'Produto', query },
+        success: function(data) {
+          if (data.length === 1) {
+            // Redireciona direto se só 1 resultado
+            window.location.href = `/collaborators_backoffice/produto_imagens/${data[0].cod_produto}/edit`;
+          } else {
+            productsList.empty();
+
+            data.forEach(product => {
+              $('<div>')
+                .addClass('list-group-item')
+                .data('cod_produto', product.cod_produto)
+                .data('produto', product.produto)
+                .text(product.produto)
+                .appendTo(productsList);
+            });
+
+            productsList.show();
+          }
+        },
+        error: function(err) {
+          console.error('Erro na requisição AJAX:', err);
+        }
+      });
+    }
+
+    // ---- 4️⃣ Click nas opções de produto ----
+    $(document).on('click', '.list-group-item', function() {
+      const selectedProductId = $(this).data('cod_produto');
+      window.location.href = `/collaborators_backoffice/produto_imagens/${selectedProductId}/edit`;
+    });
+
+    // ---- 5️⃣ Controle do Carrossel de Imagens ----
+    const carousel = document.querySelector('#carouselImages');
+    if (carousel) {
+      const carouselInstance = new bootstrap.Carousel(carousel, { interval: false });
+
+      document.querySelectorAll('.open-modal').forEach(button => {
+        button.addEventListener('click', function() {
+          const index = this.getAttribute("data-index");
+          const items = document.querySelectorAll('#carouselImages .carousel-item');
+          items.forEach(item => item.classList.remove("active"));
+          if (items[index]) {
+            items[index].classList.add("active");
+          }
+          carouselInstance.to(index);
+        });
+      });
+
+      document.addEventListener("keydown", function(event) {
+        const items = [...document.querySelectorAll('#carouselImages .carousel-item')];
+        const activeIndex = items.findIndex(item => item.classList.contains("active"));
+        if (event.key === "ArrowRight" && activeIndex < items.length - 1) {
+          carouselInstance.next();
+        } else if (event.key === "ArrowLeft" && activeIndex > 0) {
+          carouselInstance.prev();
+        }
+      });
+    }
+
+    // ---- 6️⃣ Carregar Dados por Cor ----
     const selectCor = document.getElementById('select_cor');
-    const codProdutoField = document.querySelector('input[name="cod_produto"]');
+    const codProdutoField = document.getElementById('cod_produto');
 
     if (selectCor && codProdutoField) {
-
       selectCor.addEventListener('change', function() {
-
         const codCor = this.value;
         const codProduto = codProdutoField.value;
 
-        if (codCor && codProduto) {
+        if (!codCor || !codProduto) return;
 
-          fetch(`<%= get_cor_data_collaborators_backoffice_produto_imagens_path %>?cod_produto=${codProduto}&cod_cor=${codCor}`)
-            .then(response => response.json())
-            .then(data => {
-              if (data.error) {
-                console.error('Erro:', data.error);
-              } else {
-                // Preenche os campos com os dados da cor
-
-                document.getElementById('campo_valor_site').value = parseFloat(data.valor_site).toFixed(2).replace(".",",") || '';
-                document.getElementById('campo_descricao').value = data.descricao || '';
-                document.getElementById('campo_publicado').checked = data.publicado || false;
-              }
-            })
-            .catch(error => {
-              console.error('Erro na requisição:', error);
-            });
-        }
+        fetch(`<%= get_cor_data_collaborators_backoffice_produto_imagens_path %>?cod_produto=${codProduto}&cod_cor=${codCor}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              console.error('Erro:', data.error);
+              return;
+            }
+            document.getElementById('campo_valor_site').value = parseFloat(data.valor_site).toFixed(2).replace(".", ",") || '';
+            document.getElementById('campo_descricao').value = data.descricao || '';
+            document.getElementById('campo_publicado').checked = data.publicado || false;
+            document.getElementById('campo_titulo').value = data.name || '';
+            // console.log('Dados carregados com sucesso:', data.name);
+          })
+          .catch(error => {
+            console.error('Erro na requisição:', error);
+          });
       });
     }
   });

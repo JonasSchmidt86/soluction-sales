@@ -128,11 +128,18 @@
                     ) %>
               </div>
               <div class="card-body">
-                <h5 class="card-title"><%= produto.nome %></h5>
-                <p class="card-text"><%= truncate(produto.nome, length: 100) %></p>
+                <h5 class="card-title">
+                  <p class="card-text"><%= truncate(produto.titulo.capitalize, length: 50) %></p>
+                </h5>
+                <p class="card-text"><%= truncate(produto.descricao.capitalize, length: 100) %></p>
                 <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-success fw-bold">R$ <%= number_to_currency(produto.empresaprodutos.map(&:valorvenda).compact.max, unit: "") %></span>
-                  <a href="#" class="btn btn-sm btn-outline-dark">Tenho interesse</a>
+                  <span class="text-success fw-bold">R$ <%= number_to_currency(produto.empresaprodutos.map(&:valor_site).compact.max, unit: "") %></span>
+                  <button type="button" 
+                        class="btn btn-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#lojaModal<%= produto.cod_produto %>">
+                    Tenho interesse
+                  </button>
                 </div>
               </div>
             </div>
@@ -146,6 +153,14 @@
     </div>
   </div>
 </section>
+
+<!-- Modais dos produtos (renderizados apenas uma vez) -->
+<% if @produtos.present? %>
+  <% @produtos.each do |produto| %>
+    <%= render partial: 'whatsapp_modal', locals: { produto: produto } %>
+  <% end %>
+<% end %>
+
 <!-- Equipe Section -->
 <section id="equipe" class="py-5">
   <div class="container">

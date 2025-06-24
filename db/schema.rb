@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_13_201322) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_24_172926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -442,6 +442,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_13_201322) do
     t.boolean "ativo", default: true, null: false
     t.string "cest", limit: 15
     t.text "descricao"
+    t.string "titulo", limit: 100
   end
 
   create_table "produto_imagens", force: :cascade do |t|
