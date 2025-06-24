@@ -21,10 +21,10 @@ class Produto < ApplicationRecord
     # Validações
     validates :cod_produto, presence: true, uniqueness: true
     validates :nome, presence: true
-    validates :ncm, presence: true
-    validates :cest, presence: true
-    validates :cfop, presence: true
-    validates :ucom, presence: true
+    validates :ncm, presence: false
+    validates :cest, presence: false
+    validates :cfop, presence: false
+    validates :ucom, presence: false
   
     # Scopes
     scope :ativos, -> { where(ativo: true) }
