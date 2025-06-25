@@ -1,0 +1,83 @@
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4">Nosso Portfólio</h1>
+    <p class="lead">Conheça todos os nossos produtos</p>
+  </div>
+  <div class="row justify-content-center">
+    <% if @produtos.present? %>
+      <% @produtos.each do |produto| %>
+        <% produto.produto_imagens.group_by(&:cod_cor).each do |cod_cor, imagens| %>
+          <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 shadow-sm">
+              <div class="position-relative">
+                <% if imagens.count > 1 %>
+                  <div id="portfolioCarousel<%= produto.cod_produto %>_<%= cod_cor %>" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                      <% imagens.each_with_index do |imagem, index| %>
+                        <div class="carousel-item <%= 'active' if index == 0 %>">
+                          <%= image_tag(imagem.imagem.variant(resize_to_limit: [300, 250]),
+                                class: "card-img-top", 
+                                style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                                data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
+                                ondblclick: "openImageModal(this)" 
+                              ) %>
+                        </div>
+                      <% end %>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#portfolioCarousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#portfolioCarousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="next">
+                      <span class="carousel-control-next-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
+                    </button>
+                  </div>
+                <% else %>
+                  <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [300, 250]),
+                        class: "card-img-top", 
+                        style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                        data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
+                        ondblclick: "openImageModal(this)" 
+                      ) %>
+                <% end %>
+                <div class="position-absolute top-0 end-0 m-2">
+                  <span class="badge bg-primary"><%= produto.cod_produto %></span>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title"><%= truncate(produto.titulo&.capitalize, length: 40) %></h5>
+                <p class="card-text flex-grow-1"><%= truncate(produto.descricao&.capitalize, length: 80) %></p>
+                <div class="mt-auto">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-success fw-bold">R$ <%= number_to_currency(produto.valor_site_por_cor(cod_cor), unit: "") %></span>
+                    <small class="text-muted"><%= imagens.count %> foto<%= 's' if imagens.count > 1 %></small>
+                  </div>
+                  <div class="d-grid gap-2">
+                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-primary btn-sm">
+                      Ver Detalhes
+                    </a>
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#portfolioModal<%= produto.cod_produto %>_<%= cod_cor %>">
+                      <i class="fab fa-whatsapp me-1"></i>Tenho Interesse
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% else %>
+      <div class="col-12 text-center">
+        <p class="lead">Nenhum produto disponível no momento.</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+<%= render partial: 'home/shared/image_modal' %>
+<!-- Modais para WhatsApp -->
+<% if @produtos.present? %>
+  <% @produtos.each do |produto| %>
+    <% produto.produto_imagens.group_by(&:cod_cor).each do |cod_cor, imagens| %>
+      <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: produto, cod_cor: cod_cor, modal_id: "portfolioModal#{produto.cod_produto}_#{cod_cor}" } %>
+    <% end %>
+  <% end %>
+<% end %>

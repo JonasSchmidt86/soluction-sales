@@ -115,7 +115,12 @@
 <section id="produtos" class="py-5 bg-light">
   <div class="container">
     <h2 class="section-title text-center">Nossos Produtos</h2>
-    <p class="text-center mb-5">Conheça nossa linha exclusiva de móveis e decoração para sua casa</p>
+    <p class="text-center mb-3">Conheça nossa linha exclusiva de móveis e decoração para sua casa</p>
+    <div class="text-center mb-5">
+      <a href="<%= portfolio_path %>" class="btn btn-outline-primary">
+        <i class="fas fa-th me-2"></i>Ver Todos os Produtos
+      </a>
+    </div>
     <div class="row justify-content-center">
       <% if @produtos.present? %>
         <% @produtos.each do |produto| %>
@@ -130,7 +135,7 @@
                           <div class="carousel-item <%= 'active' if index == 0 %>">
                             <%= image_tag(imagem.imagem.variant(resize_to_limit: [220, 180]),
                                   class: "rounded mx-auto d-block", 
-                                  style: "max-width: 220px; height: 180px; object-fit: contain; cursor: pointer;",
+                                  style: "max-width: 220px; height: 180px; object-fit: contain; cursor: zoom-in;",
                                   data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
                                   ondblclick: "openImageModal(this)" 
                                 ) %>
@@ -147,7 +152,7 @@
                   <% else %>
                     <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [220, 180]),
                           class: "rounded mx-auto d-block", 
-                          style: "max-width: 220px; height: 180px; object-fit: contain; cursor: pointer;",
+                          style: "max-width: 220px; height: 180px; object-fit: contain; cursor: zoom-in;",
                           data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
                           ondblclick: "openImageModal(this)" 
                         ) %>
@@ -165,7 +170,7 @@
                     <% end %>
                   </div>
                   <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-success fw-bold">R$ <%= number_to_currency(produto.empresaprodutos.map(&:valor_site).compact.max, unit: "") %></span>
+                    <span class="text-success fw-bold">R$ <%= number_to_currency(produto.valor_site_por_cor(cod_cor), unit: "") %></span>
                     <% produto_url = produto_url(produto.cod_produto, cod_cor) %>
                     <button type="button" 
                           class="btn btn-primary" 
@@ -192,7 +197,7 @@
 <% if @produtos.present? %>
   <% @produtos.each do |produto| %>
     <% produto.produto_imagens.group_by(&:cod_cor).each do |cod_cor, imagens| %>
-      <%= render partial: 'whatsapp_modal', locals: { produto: produto, cod_cor: cod_cor } %>
+      <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: produto, cod_cor: cod_cor, modal_id: "lojaModal#{produto.cod_produto}_#{cod_cor}" } %>
     <% end %>
   <% end %>
 <% end %>
@@ -238,7 +243,6 @@
     </div>
   </div>
 </section>
-
 <!-- Modal para ampliar imagem -->
 <div class="modal fade" id="imageModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -258,55 +262,56 @@
     </div>
   </div>
 </div>
-
 <script>
-let currentImages = [];
-let currentIndex = 0;
+  let currentImages = [];
+  let currentIndex = 0;
 
-function openImageModal(element) {
-  currentImages = JSON.parse(element.dataset.images);
-  currentIndex = parseInt(element.dataset.index);
-  document.getElementById('modalImage').src = currentImages[currentIndex];
-  
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  
-  if (currentImages.length > 1) {
-    prevBtn.style.display = 'block';
-    nextBtn.style.display = 'block';
-  } else {
-    prevBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
-  }
-  
-  new bootstrap.Modal(document.getElementById('imageModal')).show();
-}
+  function openImageModal(element) {
+    currentImages = JSON.parse(element.dataset.images);
+    currentIndex = parseInt(element.dataset.index);
+    document.getElementById('modalImage').src = currentImages[currentIndex];
 
-function changeImage(direction) {
-  currentIndex += direction;
-  
-  if (currentIndex < 0) {
-    currentIndex = currentImages.length - 1;
-  } else if (currentIndex >= currentImages.length) {
-    currentIndex = 0;
-  }
-  
-  document.getElementById('modalImage').src = currentImages[currentIndex];
-}
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-function toggleDescription(id) {
-  const shortDesc = document.getElementById('desc-short-' + id);
-  const fullDesc = document.getElementById('desc-full-' + id);
-  const toggle = document.getElementById('toggle-' + id);
-  
-  if (shortDesc.style.display === 'none') {
-    shortDesc.style.display = 'inline';
-    fullDesc.style.display = 'none';
-    toggle.textContent = '...mais';
-  } else {
-    shortDesc.style.display = 'none';
-    fullDesc.style.display = 'inline';
-    toggle.textContent = ' menos';
+    if (currentImages.length > 1) {
+      prevBtn.style.display = 'block';
+      nextBtn.style.display = 'block';
+    } else {
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
   }
-}
+
+  function changeImage(direction) {
+    currentIndex += direction;
+
+    if (currentIndex < 0) {
+      currentIndex = currentImages.length - 1;
+    } else if (currentIndex >= currentImages.length) {
+      currentIndex = 0;
+    }
+
+    document.getElementById('modalImage').src = currentImages[currentIndex];
+  }
+
+  function toggleDescription(id) {
+    const shortDesc = document.getElementById('desc-short-' + id);
+    const fullDesc = document.getElementById('desc-full-' + id);
+    const toggle = document.getElementById('toggle-' + id);
+
+    if (shortDesc.style.display === 'none') {
+      shortDesc.style.display = 'inline';
+      fullDesc.style.display = 'none';
+      toggle.textContent = '...mais';
+    } else {
+      shortDesc.style.display = 'none';
+      fullDesc.style.display = 'inline';
+      toggle.textContent = ' menos';
+    }
+  }
 </script>
+
+<%= render partial: 'home/shared/image_modal' %>

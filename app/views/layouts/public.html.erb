@@ -169,7 +169,7 @@
         color: white;
         text-decoration: none;
       }
-      
+
       /* Alinhamento da logo em dispositivos móveis */
       @media (max-width: 991px) {
         .navbar-brand {
@@ -177,7 +177,7 @@
           margin-left: 0;
           text-align: left;
         }
-        
+
         .navbar > .container {
           display: flex;
           justify-content: flex-start;
@@ -189,7 +189,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href=<%= root_path %>>
           <img src="/images/logo.png" alt="Móveis Rosa Store" height="40">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -203,26 +203,26 @@
             <li class="nav-item ms-2">
               <%= link_to collaborators_backoffice_welcome_index_path, class: "btn btn-outline-light btn-sm rounded-pill px-3" do %>
                 <i class="fas fa-user-lock me-1"></i> Área Restrita
-              <% end %>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-    <%= yield %>
-    <!-- Footer -->
-    <footer>
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 mb-4 mb-md-0">
-            <h5 class="mb-4">Sobre Nós</h5>
-            <p>Móveis Rosa Store
-              Desde 1996, transformando lares com estilo, conforto e sofisticação. Presente em 6 cidades, unimos design e qualidade para criar espaços únicos.</p>
-            <div class="social-icons mt-4">
-              <a href="https://www.facebook.com/mr.moveisrosa"><i class="fab fa-facebook-f"></i></a>
-              <a href="https://www.instagram.com/mrosa_store"><i class="fab fa-instagram"></i></a>
-              <% url_whatsapp = "https://wa.me/45999967722" %>
-              <a href=<%= url_whatsapp %>><i class="fab fa-whatsapp" target="_blank"></i></a>
+      <% end %>
+    </li>
+  </ul>
+</div>
+</div>
+</nav>
+<%= yield %>
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h5 class="mb-4">Sobre Nós</h5>
+        <p>Móveis Rosa Store
+          Desde 1996, transformando lares com estilo, conforto e sofisticação. Presente em 6 cidades, unimos design e qualidade para criar espaços únicos.</p>
+        <div class="social-icons mt-4">
+          <a href="https://www.facebook.com/mr.moveisrosa"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.instagram.com/mrosa_store"><i class="fab fa-instagram"></i></a>
+          <% url_whatsapp = "https://wa.me/45999967722" %>
+          <a href=<%= url_whatsapp %>><i class="fab fa-whatsapp" target="_blank"></i></a>
             </div>
           </div>
           <div class="col-md-4 mb-4 mb-md-0">
@@ -243,64 +243,64 @@
         <hr class="my-4 bg-light">
         <div class="text-center">
           <p>&copy; <%= Time.now.year %> Móveis Rosa Store. Todos os direitos reservados.</p>
-              </div>
-            </div>
-          </footer>
-          <!-- Back to top button -->
-          <a href="javascript:void(0);" id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
-          <!-- WhatsApp float button -->
-          <a href="https://wa.me/45999967722" class="whatsapp-float" target="_blank">
-            <i class="fab fa-whatsapp"></i>
-          </a>
-          <!-- jQuery (necessário para alguns componentes do Bootstrap) -->
-          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-          <!-- Bootstrap JS Bundle with Popper -->
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-          <script>
-            // Navbar scroll effect
-            window.addEventListener('scroll', function() {
-              const navbar = document.querySelector('.navbar');
-              if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-              } else {
-                navbar.classList.remove('scrolled');
-              }
+          </div>
+        </div>
+      </footer>
+      <!-- Back to top button -->
+      <a href="javascript:void(0);" id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+      <!-- WhatsApp float button -->
+      <a href="https://wa.me/45999967722" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+      <!-- jQuery (necessário para alguns componentes do Bootstrap) -->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <!-- Bootstrap JS Bundle with Popper -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+          const navbar = document.querySelector('.navbar');
+          if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+          } else {
+            navbar.classList.remove('scrolled');
+          }
 
-              // Back to top button
-              const backToTop = document.querySelector('.back-to-top');
-              if (window.scrollY > 300) {
-                backToTop.classList.add('show');
-              } else {
-                backToTop.classList.remove('show');
-              }
-            });
+          // Back to top button
+          const backToTop = document.querySelector('.back-to-top');
+          if (window.scrollY > 300) {
+            backToTop.classList.add('show');
+          } else {
+            backToTop.classList.remove('show');
+          }
+        });
 
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-              anchor.addEventListener('click', function(e) {
-                e.preventDefault();
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function(e) {
+            e.preventDefault();
 
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
 
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                  window.scrollTo({
-                    top: targetElement.offsetTop - 80,
-                    behavior: 'smooth'
-                  });
-                }
-              });
-            });
-            
-            // Back to top button functionality
-            document.getElementById('backToTop').addEventListener('click', function(e) {
-              e.preventDefault();
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
               window.scrollTo({
-                top: 0,
+                top: targetElement.offsetTop - 80,
                 behavior: 'smooth'
               });
-            });
-          </script>
-        </body>
-      </html>
+            }
+          });
+        });
+
+        // Back to top button functionality
+        document.getElementById('backToTop').addEventListener('click', function(e) {
+          e.preventDefault();
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      </script>
+    </body>
+  </html>

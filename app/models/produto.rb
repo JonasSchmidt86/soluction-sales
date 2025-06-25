@@ -26,10 +26,21 @@ class Produto < ApplicationRecord
     validates :cfop, presence: false
     validates :ucom, presence: false
   
+    def valor_site_por_cor(cod_cor)
+      registros = empresaprodutos.select { |ep| ep.cod_cor.to_i == cod_cor.to_i && ep.valor_site.to_f > 0 }
+      registros.map(&:valor_site).max
+    end
+
     # Scopes
     scope :ativos, -> { where(ativo: true) }
     scope :inativos, -> { where(ativo: false) }
-  
+    scope :com_imagem_e_publicado, -> {
+      joins(:produto_imagens, :empresaprodutos)
+        .where('empresaprodutos.cod_produto = produto_imagens.cod_produto AND empresaprodutos.cod_cor = produto_imagens.cod_cor')
+        .where(empresaprodutos: { publicado: true })
+        .distinct
+  }
+
     # Métodos de busca
     def self.search(query)
       where("cod_produto LIKE ? OR nome LIKE ?", "%#{query}%", "%#{query}%")

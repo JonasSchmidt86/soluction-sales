@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root 'home#index'
   get 'produto/:cod_produto/:cod_cor', to: 'home#produto', as: 'produto'
+  get 'portfolio', to: 'home#portfolio'
 
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
