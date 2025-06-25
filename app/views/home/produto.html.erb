@@ -1,0 +1,72 @@
+<div class="container py-5">
+  <div class="row">
+    <div class="col-md-6">
+      <% imagens = @produto.produto_imagens %>
+      <% if imagens.present? %>
+        <% if imagens.count > 1 %>
+          <div id="produtoCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <% imagens.each_with_index do |imagem, index| %>
+                <div class="carousel-item <%= 'active' if index == 0 %>">
+                  <%= image_tag(imagem.imagem, class: "d-block w-100", style: "height: 400px; object-fit: contain;") %>
+                </div>
+              <% end %>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#produtoCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#produtoCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        <% else %>
+          <%= image_tag(imagens.first.imagem, class: "img-fluid", style: "width: 100%; height: 400px; object-fit: contain;") %>
+        <% end %>
+      <% else %>
+        <div class="text-center p-5 bg-light">
+          <p class="text-muted">Nenhuma imagem disponível</p>
+        </div>
+      <% end %>
+    </div>
+    <div class="col-md-6">
+      <h1 class="mb-3"><%= @produto.titulo&.capitalize %></h1>
+      <p class="text-muted mb-2">Código: <%= @produto.cod_produto %></p>
+      <p class="text-muted mb-4">Cor: <%= @cod_cor %></p>
+      <div class="mb-4">
+        <%= simple_format(@produto.descricao&.capitalize) %>
+      </div>
+      <div class="mb-4">
+        <h3 class="text-success">R$ <%= number_to_currency(@produto.empresaprodutos.map(&:valor_site).compact.max, unit: "") %></h3>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#interesseModal">
+        <i class="fab fa-whatsapp me-2"></i>Tenho Interesse
+      </button>
+      <a href="<%= root_path %>" class="btn btn-outline-secondary btn-lg ms-2">
+        Voltar aos Produtos
+      </a>
+    </div>
+  </div>
+</div>
+<!-- Modal de Interesse -->
+<div class="modal fade" id="interesseModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Fale Conosco</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Escolha com quem gostaria de conversar:</p>
+        <% WhatsappContact.all.each do |contato| %>
+          <div class="d-grid gap-2 mb-2">
+            <% mensagem = "👋 Oi! Estou interessado(a) no produto #{@produto.titulo&.capitalize} (#{@produto.cod_produto}). Veja: #{request.original_url}" %>
+            <% url_whatsapp = "https://wa.me/#{contato.whatsapp_number.gsub(/\D/, "")}?text=#{URI.encode_www_form_component(mensagem)}" %>
+            <a href="<%= url_whatsapp %>" class="btn btn-success" target="_blank">
+              <i class="fab fa-whatsapp me-2"></i><%= contato.display_name %>
+            </a>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

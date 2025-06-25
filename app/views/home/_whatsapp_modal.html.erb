@@ -1,4 +1,4 @@
-<div class="modal fade" id="lojaModal<%=produto.cod_produto%>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="lojaModal<%=produto.cod_produto%>_<%= cod_cor %>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
@@ -11,7 +11,8 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <span><%= loja.display_name %></span>
               <% if defined?(produto) && produto %>
-                <% mensagem = "👋 Oi! Estou interessado(a) no produto #{produto.titulo&.capitalize}(#{produto.cod_produto}) e quero saber mais detalhes. Você poderia me informar?" %>
+                <% produto_link = produto_url(produto.cod_produto, cod_cor) %>
+                <% mensagem = "👋 Oi! Estou interessado(a) no produto #{produto.titulo&.capitalize}(#{produto.cod_produto}). Veja mais detalhes: #{produto_link}" %>
               <% else %>
                 <% mensagem = "👋 Oi! Gostaria de saber mais informações sobre os produtos disponíveis." %>
               <% end %>
