@@ -11,7 +11,7 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <span><%= loja.display_name %></span>
               <% if defined?(produto) && produto %>
-                <% mensagem = "👋 Oi! Estou interessado(a) no produto #{produto.titulo.capitalize}(#{produto.cod_produto}) e quero saber mais detalhes. Você poderia me informar?" %>
+                <% mensagem = "👋 Oi! Estou interessado(a) no produto #{produto.titulo&.capitalize}(#{produto.cod_produto}) e quero saber mais detalhes. Você poderia me informar?" %>
               <% else %>
                 <% mensagem = "👋 Oi! Gostaria de saber mais informações sobre os produtos disponíveis." %>
               <% end %>
