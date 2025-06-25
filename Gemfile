@@ -7,6 +7,7 @@ ruby '3.2.7'
 gem 'webpacker'
 
 gem 'image_processing', '~> 1.2'
+gem "ruby-vips"
 
 gem 'rack-cors'
 

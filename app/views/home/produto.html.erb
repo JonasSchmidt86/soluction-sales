@@ -55,6 +55,12 @@
     </div>
   </div>
 </div>
+<style>
+p:first-letter {
+  text-transform: uppercase;
+}
+</style>
+
 <%= render partial: 'home/shared/image_modal' %>
 <!-- Modal de Interesse -->
 <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: @produto, cod_cor: @cod_cor, modal_id: "interesseModal" } %>

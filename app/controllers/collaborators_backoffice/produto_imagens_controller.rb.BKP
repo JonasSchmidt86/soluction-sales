@@ -65,21 +65,22 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     if params[:cod_cor].present?
       @cor = Core.find(params[:cod_cor])
     else
-      @cor = Core.find_by(cod_cor: 1) # Cor padrão
+      @cor = Core.find_by(cod_cor: 1) # Default to first color if not provided
     end
-
+  
     if params[:imagens].present?
       if @produto.blank?
-        redirect_to edit_collaborators_backoffice_produto_imagen_path(0, params.to_unsafe_h), notice: 'Produto não encontrado!'
+        redirect_to edit_collaborators_backoffice_produto_imagen_path(0,params.to_unsafe_h), notice: 'Produto não encontrado!'
         return
       end
-
-      # ---- Atualização de dados do produto e empresa_produto ----
+      
+      # Atualizar campos na tabela empresaproduto
       if params[:cod_cor].present?
         empresa_produto = Empresaproduto.find_by(cod_produto: @produto.cod_produto, cod_cor: params[:cod_cor], cod_empresa: current_collaborator.empresa.cod_empresa)
         if empresa_produto
-          valor_formatado = params[:valor_site].gsub('.', '').gsub(',', '.')
+          valor_formatado = params[:valor_site].gsub('.', '').gsub(',', '.')   # troca vírgula por ponto
           empresa_produto.valor_site = valor_formatado.to_f
+
           @produto.descricao = params[:descricao] if params[:descricao].present?
           @produto.titulo = params[:name] if params[:name].present?
           @produto.save!
@@ -88,9 +89,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
           empresa_produto.save!
         end
       end
-      # ---- Fim atualizações ----
-
-      # ---- Processamento e Salva Imagem ----
+      
       params[:imagens].each do |imagem|
         next if imagem.blank?
 
@@ -98,35 +97,28 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         produto_imagem.produto = @produto
         produto_imagem.cor = @cor
 
-        nome_base = @produto.nome.split(' ')[0..1].join(' ')
-        extensao_arquivo = File.extname(imagem.original_filename).downcase
-        nome_imagem = "#{nome_base}_#{File.basename(imagem.original_filename, extensao_arquivo)}.jpeg"
-
-        imagem_minimagick = MiniMagick::Image.read(imagem.tempfile)
-
-        # Se for HEIC, converter para JPEG
-        if imagem.content_type == 'image/heic' || extensao_arquivo == '.heic'
-          imagem_minimagick.format 'jpeg'
-        end
-
-        # Redimensiona para o padrão desejado
-        imagem_minimagick.resize "1920x1080"
+        nome_imagem = "#{@produto.nome.split(' ')[0..1].join(' ')}_#{imagem.original_filename.split('.').first}.#{imagem.original_filename}"
+        
+        imagem_processada = MiniMagick::Image.read(imagem.tempfile)
+        imagem_processada.resize "1920x1080"
 
         produto_imagem.imagem.attach(
-          io: StringIO.new(imagem_minimagick.to_blob),
-          filename: nome_imagem,
-          content_type: 'image/jpeg'
-        )
+            io: StringIO.open(imagem_processada.to_blob),
+            filename: nome_imagem,
+            content_type: imagem.content_type,
+            key: nome_imagem
+          )
+
         @produto.produto_imagens << produto_imagem
         produto_imagem.save
       end
-      # ---- Fim processamento ----
 
-      path = if params[:path].present?
-              edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto)
-            else
-              collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto)
-            end
+      if params[:path].present? 
+        path = edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto)
+      else
+        path = collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto)
+      end
+
       redirect_to path, notice: 'Imagens associadas ao produto foram salvas com sucesso!'
 
     else
@@ -135,7 +127,6 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   rescue ActiveRecord::Rollback => e
     redirect_to collaborators_backoffice_produto_imagens_path, alert: "Falha ao salvar imagens: #{e.message}"
   end
-
 
   def destroy
     @produto_imagem.imagem.purge if @produto_imagem.imagem.attached?
