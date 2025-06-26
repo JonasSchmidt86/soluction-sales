@@ -18,21 +18,31 @@
                 <div class="card-body">
                   <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :get, class: "row g-2 align-items-stretch mb-3") do |form| %>
                     <!-- Campo de busca (term) -->
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                       <div class="form-floating h-100">
                         <%= form.text_field :term, value: params[:term], class: "form-control h-100", placeholder: "Nome produto...", id: "text" %>
                         <%= form.label :term, "Produto" %>
                       </div>
                     </div>
                     <!-- Select de cor -->
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                       <div class="form-floating h-100">
                         <%= form.collection_select(:cod_cor, 
-                            Core.select(:cod_cor, :nmcor).where(ativo: true), 
+                            Core.select(:cod_cor, :nmcor).where(ativo: true).order(nmcor: :asc), 
                             :cod_cor, :nmcor, 
                             { include_blank: 'Selecione uma cor', selected: params[:cod_cor] }, 
                             class: "form-control h-100") %>
                         <%= form.label :cod_cor, "Cor" %>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating h-100">
+                        <%= form.collection_select(:cod_marca, 
+                            Marca.select(:cod_marca, :nome).order(nome: :asc), 
+                            :cod_marca, :nome, 
+                            { include_blank: 'Selecione uma marca', selected: params[:cod_marca] }, 
+                            class: "form-control h-100") %>
+                        <%= form.label :cod_marca, "Marca" %>
                       </div>
                     </div>
                     <!-- Botão Buscar -->
