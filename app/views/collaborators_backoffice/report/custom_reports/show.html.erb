@@ -40,6 +40,34 @@
               class: "form-control"
             ) %>
           </div>
+        <% elsif field_name == 'filtro_grupo' %>
+          <div class="col-auto">
+            <%= form.label :cod_grupo, "Grupo", class: "form-label" %>
+            <%= select_tag(
+              :cod_grupo, 
+              options_from_collection_for_select(
+                Grupo.where(ativo: true).order(:cod_grupo), 
+                "cod_grupo", 
+                "nomegrupo",
+                params[:cod_grupo]
+              ), 
+              class: "form-control", style: "width: 180px;" , include_blank: "Selecione..."
+            ) %>
+          </div>
+        <% elsif field_name == 'filtro_marca' %>
+          <div class="col-auto">
+            <%= form.label :cod_marca, "Marca", class: "form-label" %>
+            <%= select_tag(
+              :cod_marca, 
+              options_from_collection_for_select(
+                Marca.all.order(:nome), 
+                "cod_marca", 
+                "nome",
+                params[:cod_marca]
+              ), 
+              class: "form-control", style: "width: 180px;" , include_blank: "Selecione..."
+            ) %>
+          </div>
         <% else %>
           <div class="col-auto">
             <%= label_tag param, param.humanize, class: "form-label" %>

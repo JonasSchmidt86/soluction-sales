@@ -40,30 +40,47 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
       def run
         @report = CustomReport.find(params[:id])
         sql = @report.sql_code.dup
+
         begin
-          # substitui {{param}} pelos params…
-          params.each do |k,v|
+          # Filtro opcional para a marca
+          filtro_marca = ""
+          if params[:cod_marca].present?
+            filtro_marca = "AND p.marca = #{ActiveRecord::Base.connection.quote(params[:cod_marca])}"
+          end
+          sql.gsub!("{{filtro_marca}}", filtro_marca)
+
+          # Filtro opcional para a grupo
+          filtro_grupo = ""
+          if params[:cod_grupo].present?
+            filtro_grupo = "AND p.grupo = #{ActiveRecord::Base.connection.quote(params[:cod_grupo])}"
+          end
+          sql.gsub!("{{filtro_grupo}}", filtro_grupo)
+
+          # Substituições simples para demais placeholders
+          params.each do |k, v|
             next if v.blank?
             placeholder = "{{#{k}}}"
             sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
           end
-        
+
+          # Verificação de SELECT para não permitir comandos perigosos
           unless current_collaborator.cod_funcionario == 1
             raise "Apenas SELECTs são permitidos." unless sql.strip.downcase.start_with?("select")
-          else
-            puts "Acesso liberado para o colaborador com cod_funcionario 1"
           end
-        
+
+          # Executa
           @results = ActiveRecord::Base.connection.exec_query(sql)
 
         rescue => e
           @error = "Erro: #{e.message}"
           render :show
-          return;
-        end      
-          flash[:notice] = "Relatório executado com sucesso."
-          render :show
-      end      
+          return
+        end
+
+        flash[:notice] = "Relatório executado com sucesso."
+        render :show
+      end
+
       
       def new
         @custom_report = CustomReport.new
