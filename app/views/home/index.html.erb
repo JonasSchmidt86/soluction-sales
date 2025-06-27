@@ -244,24 +244,7 @@
   </div>
 </section>
 <!-- Modal para ampliar imagem -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body text-center position-relative">
-        <img id="modalImage" src="" class="img-fluid" style="max-width: 100%; height: auto;">
-        <button id="prevBtn" class="btn btn-primary position-absolute top-50 start-0 translate-middle-y" onclick="changeImage(-1)" style="display: none;">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <button id="nextBtn" class="btn btn-primary position-absolute top-50 end-0 translate-middle-y" onclick="changeImage(1)" style="display: none;">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<%= render partial: 'home/shared/image_modal' %>
 <script>
   let currentImages = [];
   let currentIndex = 0;
@@ -313,11 +296,9 @@
     }
   }
 </script>
-
 <style>
-.card-text p:first-letter {
-  text-transform: uppercase;
-}
+  .card-text p:first-letter {
+    text-transform: uppercase;
+  }
 </style>
-
 <%= render partial: 'home/shared/image_modal' %>
