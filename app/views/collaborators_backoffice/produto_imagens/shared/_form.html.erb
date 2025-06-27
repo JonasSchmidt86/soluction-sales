@@ -88,9 +88,9 @@
                             <button type="submit" class="btn btn-success w-100">Salvar</button>
                           </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-3 mt-3">
+                        <div class="mt-3" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
                           <% (@produto_imagens || []).each_with_index do |imagem, index| %>
-                            <div class="position-relative image-container" style="display: inline-block;">
+                            <div class="position-relative image-container">
                               <div class="dropdown position-relative">
                                 <button class="btn p-0 border-0 imagem-botao"
                                         data-index="<%= index %>"
@@ -98,10 +98,10 @@
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
                                         aria-expanded="false" 
-                                        style="position: relative; caret-color: transparent;">
+                                        style="position: relative; caret-color: transparent; width: 100%;">
                                   <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
-                                    style: "max-width: 220px; height: 180px; object-fit: contain;" 
+                                    style: "height: 180px; object-fit: contain;" 
                                   ) %>
                                 </button>
                                 <ul class="dropdown-menu position-absolute" 
