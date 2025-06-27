@@ -1,15 +1,13 @@
 <div class="modal fade" id="produtoModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header bg-primary text-white">
         <h5 class="modal-title" id="exampleModalLabel">Adicionando Produto</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body me-2 ms-2 mt-3">
         <div class="container-fluid">
-
-            <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto } %>
-        
+          <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto } %>
         </div>
       </div>
     </div>

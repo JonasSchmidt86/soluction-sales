@@ -1,124 +1,107 @@
-                            
 <div class="modal fade" id="launchPartialModal<%= bill.cod_contaspagrec %>" data-tor-parent="static">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-    
       <%= form_with(model: [ :collaborators_backoffice, Lancamentoscaixa.new ], method: :post, local: true) do |form| %>
-<%# -------------------------------------- %>
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Pagamento Parcial conta <%= bill.nmParcela %></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-<%# -------------------------------------- %>
-      <div class="modal-body">
-        <form>
-          <div class="row g3">
-            <div class="col">
-              <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="recipient-name" value= "<%= bill.nmPessoa %>" readonly>
-                <label for="recipient-name" class="col-form-label">Pessoa</label>
+        <%# -------------------------------------- %>
+        <div class="modal-header text-center bg-primary text-white">
+          <h5 class="modal-title" id="exampleModalLabel">Pagamento Parcial conta <%= bill.nmParcela %></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <%# -------------------------------------- %>
+        <div class="modal-body px-4 mt-3">
+          <form>
+            <div class="row g3">
+              <div class="col">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" id="recipient-name" value= "<%= bill.nmPessoa %>" readonly>
+                  <label for="recipient-name" class="col-form-label">Pessoa</label>
+                </div>
               </div>
-            </div>
-            <div class="col">
-              <div class="form-floating mb-3 ">
-                <input type="text" class="form-control" id="vl_devido" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
-                <label for="recipient-name" class="col-form-label">Valor Devido:</label>
+              <div class="col">
+                <div class="form-floating mb-3 ">
+                  <input type="text" class="form-control" id="vl_devido" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
+                  <label for="recipient-name" class="col-form-label">Valor Devido:</label>
+                </div>
               </div>
-            </div>
-            <div class="col">
-              <div class="form-floating mb-3 ">
-              
-                <%= form.collection_select(:cod_bancoconta, (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
+              <div class="col">
+                <div class="form-floating mb-3 ">
+                  <%= form.collection_select(:cod_bancoconta, (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
                                             :cod_bancoconta, :nome_banco, {:prompt => 'CAIXA'}, 
                                                 class: "form-control", readonly: false) %>
-                <label for="destino">Destino/Banco</label> 
+                  <label for="destino">Destino/Banco</label>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
-<%# -------------------------------------- %>
-        <div class="row g-3">
-          <div class="col-md">
-            <div class="form-floating">
-              
-              <%= form.text_field :valor, value:"",placeholder: "Valor_pagar", class: "form-control money2", id:"valorpagar" %>
-              <label for="valorpagar">Valor Pagar</label> 
-
+          </form>
+          <%# -------------------------------------- %>
+          <div class="row g-3">
+            <div class="col-md">
+              <div class="form-floating">
+                <%= form.text_field :valor, value:"",placeholder: "Valor_pagar", class: "form-control money2", id:"valorpagar" %>
+                <label for="valorpagar">Valor Pagar</label>
+              </div>
             </div>
-          </div>
-          <div class="col-md">
-            <div class="form-floating">
-
-              <div class="row">
-                <div class="col g-2">
-                  <div class="form-floating mb-3">
-
-                    <div class="d-grid">
-                      <div class=" dataTable-input form-check form-switch">
-                        <label id="lb_bill_status" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
-                        <%# form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
-
-                        <%= form.check_box :quitada, { checked: params[:quitada] || false, class: "col-md-5 form-check-input", type: "checkbox", id: "quitada" } %>
-
-                        <%# filtros da pesquisa, para retornar na mesma pg %>
-                        <%= form.hidden_field :contaspagrec,  value: bill.cod_contaspagrec %>
-                        <%= form.hidden_field :tipo_conta,  value: tipe_bill_true(params[:tipo_conta]) %>
-                        <%= form.hidden_field :status_bill,  value: params[:status_bill] %>
-                        <%= form.hidden_field :nrVenda,  value: params[:nrVenda] %>
-                        <%= form.hidden_field :cliente,  value: params[:cliente] %>
-                        <%= form.hidden_field :dataInicial,  value: params[:dataInicial] %>
-                        <%= form.hidden_field :dataFinal,  value: params[:dataFinal] %>
-
-
-                        <%# form.hidden_field :params_bills,  value: request.query_parameters %>
+            <div class="col-md">
+              <div class="form-floating">
+                <div class="row">
+                  <div class="col g-2">
+                    <div class="form-floating mb-3">
+                      <div class="d-grid">
+                        <div class=" dataTable-input form-check form-switch">
+                          <label id="lb_bill_status" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
+                          <%# form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
+                          <%= form.check_box :quitada, { checked: params[:quitada] || false, class: "col-md-5 form-check-input", type: "checkbox", id: "quitada" } %>
+                          <%# filtros da pesquisa, para retornar na mesma pg %>
+                          <%= form.hidden_field :contaspagrec,  value: bill.cod_contaspagrec %>
+                          <%= form.hidden_field :tipo_conta,  value: tipe_bill_true(params[:tipo_conta]) %>
+                          <%= form.hidden_field :status_bill,  value: params[:status_bill] %>
+                          <%= form.hidden_field :nrVenda,  value: params[:nrVenda] %>
+                          <%= form.hidden_field :cliente,  value: params[:cliente] %>
+                          <%= form.hidden_field :dataInicial,  value: params[:dataInicial] %>
+                          <%= form.hidden_field :dataFinal,  value: params[:dataFinal] %>
+                          <%# form.hidden_field :params_bills,  value: request.query_parameters %>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                </div>
-                <div class="col-md g-2">
-                  <div class="form-floating mb-3">
-                    <div class="d-grid col-md">
-                      <button type="submit" class="btn btn-success" id="gravar">Salvar</button>
+                  <div class="col-md g-2">
+                    <div class="form-floating mb-3">
+                      <div class="d-grid col-md">
+                        <button type="submit" class="btn btn-success" id="gravar">Salvar</button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-<%# -------------------------------------- %>
-      <% end %>
-    </div>
-    <div class="modal-footer">
+          <%# -------------------------------------- %>
+        <% end %>
+      </div>
+      <div class="modal-footer">
         <%# <button type="submit" class="btn btn-success btn-block">Salvar</button> %>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
     </div>
   </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-
-//  var label1 = document.getElementById("lb_bill_status");
-//  var check_status = document.getElementById("quitada");
-//
-//  check_status.onclick = function () {
-//      console.log("CLICOU ")
-//      console.log(check_status.value);
-//      label1.innerHTML = "";
-//      
-//      if (check_status.checked) {
-//          check_status.value = 1;
-//          label1.innerHTML = "Total";
-//          console.log("TOTAL")
-//      } else {
-//          check_status.value = 0;
-//          label1.innerHTML = "Parcial";
-//          console.log("Partial")
-//      }
-//  };
-
-
-</script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    //  var label1 = document.getElementById("lb_bill_status");
+    //  var check_status = document.getElementById("quitada");
+    //
+    //  check_status.onclick = function () {
+    //      console.log("CLICOU ")
+    //      console.log(check_status.value);
+    //      label1.innerHTML = "";
+    //
+    //      if (check_status.checked) {
+    //          check_status.value = 1;
+    //          label1.innerHTML = "Total";
+    //          console.log("TOTAL")
+    //      } else {
+    //          check_status.value = 0;
+    //          label1.innerHTML = "Parcial";
+    //          console.log("Partial")
+    //      }
+    //  };
+  </script>

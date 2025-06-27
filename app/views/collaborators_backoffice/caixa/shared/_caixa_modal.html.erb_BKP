@@ -1,20 +1,24 @@
-<div class="modal fade" id="lembreteModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="caixaModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="exampleModalLabel">Adicionando Lembretes</h5>
+      <div class="modal-header text-center bg-primary text-white">
+        <h5 class="modal-title" id="exampleModalLabel">Abrindo Caixa</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <%= form_with(model: [ :collaborators_backoffice, Lembrete.new ], local: true) do |form| %>
-        <div class="modal-body px-4 mt-3">
+        <div class="modal-body px-4">
           <div class="form-floating mb-3 ">
             <%= form.text_field :descricao, class: "form-control", placeholder:"Descrição", id:"recipient-name"%>
             <%= form.label :descricao, class:"col-form-label", for:"recipient-name"  %>
           </div>
           <div class="form-floating mb-3">
-            <%= form.collection_select(:cod_empresasolicitada, Empresa.where("ativo = ?", true), :cod_empresa, :nome,{:prompt => ''}, 
+            <%= form.collection_select(:cod_empresasolicitada, Empresa.where("ativo = ? ", true), :cod_empresa, :nome,{:prompt => ''}, 
                     class: "form-control") %>
-            <%= form.label :empresa_solicitada, class:"" %>
+            <%= form.label :empresasolicitada, class:"" %>
+          </div>
+          <div class="form-floating mb-3 ">
+            <%= form.text_field :datacadastro, class: "form-control datepickerTable", placeholder:"Data", id:"recipient-name" %>
+            <%= form.label :datacadastro, class:"col-form-label", for:"recipient-name"  %>
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-success btn-block">Salvar</button>

@@ -1,215 +1,185 @@
-
-<div class="card mt-4 ">
-
-    <%= link_to collaborators_backoffice_report_sales_path, class:"card-header" do %>
-        <h4>Histórico de vendas cliente</h4>
-    <% end %>
-    
-    <div class="card-body">
-        <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
-          
-              <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get) do |form| %>
-
-                <div class="d-flex mb-2 col-md-8 align-items-center">
-          
-                  <div class="col-md-1">
-                    <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
-                  </div> 
-                  
-                  <div class="col-md-4">
-                    <%= form.text_field :term, class:"text dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
-                  </div>
-
-                  <div class="col-md-2">
-                    <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
+<div class="card mt-3 ">
+  <%= link_to collaborators_backoffice_report_sales_path, class:"card-header text-center bg-primary text-white" do %>
+    <h4>Histórico de vendas cliente</h4>
+  <% end %>
+  <div class="card-body">
+    <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+      <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get) do |form| %>
+        <div class="d-flex mb-2 col-md-8 align-items-center">
+          <div class="col-md-1">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+          </div>
+          <div class="col-md-4">
+            <%= form.text_field :term, class:"text dataTable-input", value:params[:term],placeholder:"Pessoa...", id:"text" %>
+          </div>
+          <div class="col-md-2">
+            <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
                         class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
-                  </div>
-                  
-                  <div class="col-md-2">
-                    <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
+          </div>
+          <div class="col-md-2">
+            <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
                         class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-                  </div>
-
-                  <div class="me-0 cod-mb-1">
-                    <button type='submit', class="btn btn-success btn-circle">Buscar</button>
-                  </div>
-                  
-                  <%# <div class="mb-1 col-md-1 order-5 "> %>
-                  <div class="me-3 col-md-1 order-5 ">
-                    <%= link_to new_collaborators_backoffice_venda_path,
+          </div>
+          <div class="me-0 cod-mb-1">
+            <button type='submit', class="btn btn-success btn-circle">Buscar</button>
+          </div>
+          <%# <div class="mb-1 col-md-1 order-5 "> %>
+          <div class="me-3 col-md-1 order-5 ">
+            <%= link_to new_collaborators_backoffice_venda_path,
                                 class:"btn btn-success btn-circle", data: {confirm: "Nova Venda?"} do %>
-                        <i class="fa fa-plus"></i>
-                    <% end %>
-                  </div>
-                  
-                  <div class="ms-auto col-md-2  order-last ">
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <div class="form-floating">    
-                        <%= form.text_field :valorCusto, class: "text-bg-info form-control ", readonly: true %>
-                        <%= form.label :custo, class:"" %>
-                      </div>
-                    <% end %>
-                  </div>
-
-                  <div class="ms-auto col-md-2 order-last ">
-                    <div class="form-floating">
-                      <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
-                      <%= form.label :total_vendas, class:"" %>
-                    </div>
-                  </div>
-                  <div class="me-1 ms-auto col-md-2  order-last ">
-                    <div class="form-floating">
-                      <%= form.text_field :valorDevido, class: "text-bg-warning form-control ", readonly: true %>
-                      <%= form.label :valor_Devido, class:"" %>
-                    </div>
-                  </div>
-
-
-                </div>
-                
-              <% end %>
-
-            <div class="dataTable-container">
-
-              <table id="datatablesSimple" class="dataTable-table">
-                <thead>
-                  <tr>
-                    <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
-                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
-                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                    <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
-                    <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                    <th data-sortable="" style="width: 150px;">Valor Total</th>
-                    <th data-sortable="" style="">Info</th>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                <% somaTotal = 0 %>
-                <% somaDevido = 0 %>
-                <% somaCusto = 0 %>
-
-                    <% @sales.each do |sale| %>
-                      <% if sale.cancelada %>
-                        <tr class="" style="background-color: #FA625E;">
-                      <% else %>
-                        <tr class="">
-                        
-                        <% somaTotal += (sale.valortotal || 0) %>
-                        <% somaDevido += (sale.valorDevido || 0) %>
-                        <% somaCusto += (sale.valorCusto || 0) %>
-                      <% end %>
-                          <td class="align-middle"><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
-                          <td class="align-middle"><%= sale.empresa.nome %> </td>
-                          <td class="align-middle"><%= sale.pessoa.nome %></td>
-                          <td class="align-middle"><%= sale.venda_nfe %> </td>
-                          <td class="align-middle"><%= sale.funcionario.usuario %> </td>
-                          <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
-
-                          <td class="align-middle">
-                            <button type="button" onclick="MudarEstado('minhaDiv<%= sale %>')" class = "btn btn-info btn-circle"><i class="fa fa-info"></i></button>
-                          </td>
-
-                        </tr>
-                        <tr id="minhaDiv<%= sale %>" style="display: none;">
-                          <td colspan="7" class="align-middle">
-                            <div class="dataTable-container">
-                              <table id="datatablesSimple" class="dataTable-table table-striped">
-                                <thead>
-                                  <tr>
-                                    <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
-                                    <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
-                                    <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
-                                    <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
-                                    <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
-                                    <th data-sortable="" style="width: 110px;">Valor Total</th>
-                                    <th data-sortable="" style="width: 110px;">Valor Pago</th>
-                                    <th data-sortable="" style="width: 50px;">Lançamentos</th>
-                                  </tr>
-                                </thead>
-                                
-                                <tbody>
-                                
-                                  <% sale.contas.order("numeroparcela").each do |bill| %>
-                                      <% if (!bill.ativo) %>
-                                          <tr class="nested-fields text-danger">
-                                          <td><%= ("Cancelada") %> </td>
-                                      <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
-                                          <tr class="nested-fields ext-warning">
-                                          <td><%= ("Vencida") %> </td>
-                                      <% else %>
-                                          <tr class="nested-fields">
-                                          <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
-                                      <% end %> 
-                                      
-                                      <td class="align-middle"><%= bill.nmCollaborator %> </td>
-                                      <td class="align-middle"><%= bill.nmParcela %> </td>
-                                      <td class="align-middle"><%= bill.nmPessoa %> </td>
-                                      <td class="align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                                      <td class="align-middle"><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
-                                      <td class="align-middle"><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
-                                      <td class="align-middle">
-                                        <% if !bill.lancamentos.blank? %>
-                                          <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                                        <% end %>
-                                      </td>
-                                    </tr>
+              <i class="fa fa-plus"></i>
+            <% end %>
+          </div>
+          <div class="ms-auto col-md-2  order-last ">
+            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <div class="form-floating">
+                <%= form.text_field :valorCusto, class: "text-bg-info form-control ", readonly: true %>
+                <%= form.label :custo, class:"" %>
+              </div>
+            <% end %>
+          </div>
+          <div class="ms-auto col-md-2 order-last ">
+            <div class="form-floating">
+              <%= form.text_field :valortotal, class: "text-bg-success form-control ", readonly: true %>
+              <%= form.label :total_vendas, class:"" %>
+            </div>
+          </div>
+          <div class="me-1 ms-auto col-md-2  order-last ">
+            <div class="form-floating">
+              <%= form.text_field :valorDevido, class: "text-bg-warning form-control ", readonly: true %>
+              <%= form.label :valor_Devido, class:"" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <div class="dataTable-container">
+        <table id="datatablesSimple" class="dataTable-table">
+          <thead>
+            <tr>
+              <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Data Venda</a></th>
+              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
+              <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
+              <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
+              <th data-sortable="" style="width: 150px;">Valor Total</th>
+              <th data-sortable="" style="">Info</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% somaTotal = 0 %>
+            <% somaDevido = 0 %>
+            <% somaCusto = 0 %>
+            <% @sales.each do |sale| %>
+              <% if sale.cancelada %>
+                <tr class="" style="background-color: #FA625E;">
+                <% else %>
+                  <tr class="">
+                    <% somaTotal += (sale.valortotal || 0) %>
+                    <% somaDevido += (sale.valorDevido || 0) %>
+                    <% somaCusto += (sale.valorCusto || 0) %>
+                  <% end %>
+                  <td class="align-middle"><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
+                  <td class="align-middle"><%= sale.empresa.nome %> </td>
+                  <td class="align-middle"><%= sale.pessoa.nome %></td>
+                  <td class="align-middle"><%= sale.venda_nfe %> </td>
+                  <td class="align-middle"><%= sale.funcionario.usuario %> </td>
+                  <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                  <td class="align-middle">
+                    <button type="button" onclick="MudarEstado('minhaDiv<%= sale %>')" class = "btn btn-info btn-circle"><i class="fa fa-info"></i></button>
+                  </td>
+                </tr>
+                <tr id="minhaDiv<%= sale %>" style="display: none;">
+                  <td colspan="7" class="align-middle">
+                    <div class="dataTable-container">
+                      <table id="datatablesSimple" class="dataTable-table table-striped">
+                        <thead>
+                          <tr>
+                            <th data-sortable=""  style="width: 2%;"><a href="#" class="dataTable-sorter">Pago?</a></th>
+                            <th data-sortable="" style="width: 12%;"><a href="#" class="dataTable-sorter">Colaborador</a></th>
+                            <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
+                            <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
+                            <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
+                            <th data-sortable="" style="width: 110px;">Valor Total</th>
+                            <th data-sortable="" style="width: 110px;">Valor Pago</th>
+                            <th data-sortable="" style="width: 50px;">Lançamentos</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% sale.contas.order("numeroparcela").each do |bill| %>
+                            <% if (!bill.ativo) %>
+                              <tr class="nested-fields text-danger">
+                                <td><%= ("Cancelada") %> </td>
+                              <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
+                                <tr class="nested-fields ext-warning">
+                                  <td><%= ("Vencida") %> </td>
+                                <% else %>
+                                  <tr class="nested-fields">
+                                    <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
                                   <% end %>
-                                </tbody>
-                              </table>
-                              <table id="datatablesSimple" class="dataTable-table table-striped table-borderless">
-                                <thead>
-                                  <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
-                                  <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
-                                  <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
-                                  <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
-                                  <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
-                                </thead>
-                                <tbody>
-                                  <% sale.itensvenda.order(:cod_item).each do |item| %>
-                                    <tr>
-                                      <td class="align-middle"><%= item.full_codigo %> </td>
-                                      <td class="align-middle"><%= item.produto.nome %> </td>
-                                      <td class="align-middle"><%= item.cor.nmcor %> </td>
-                                      <td class="align-middle"><%= item.quantidade.to_i %> </td>
-                                      <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
-                                    </tr>
-                                  <% end %>
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
-
-                    <% end %>
-
+                                  <td class="align-middle"><%= bill.nmCollaborator %> </td>
+                                  <td class="align-middle"><%= bill.nmParcela %> </td>
+                                  <td class="align-middle"><%= bill.nmPessoa %> </td>
+                                  <td class="align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
+                                  <td class="align-middle"><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
+                                  <td class="align-middle"><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
+                                  <td class="align-middle">
+                                    <% if !bill.lancamentos.blank? %>
+                                      <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                                    <% end %>
+                                  </td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                          <table id="datatablesSimple" class="dataTable-table table-striped table-borderless">
+                            <thead>
+                              <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
+                              <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
+                              <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
+                              <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
+                              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
+                            </thead>
+                            <tbody>
+                              <% sale.itensvenda.order(:cod_item).each do |item| %>
+                                <tr>
+                                  <td class="align-middle"><%= item.full_codigo %> </td>
+                                  <td class="align-middle"><%= item.produto.nome %> </td>
+                                  <td class="align-middle"><%= item.cor.nmcor %> </td>
+                                  <td class="align-middle"><%= item.quantidade.to_i %> </td>
+                                  <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
                 </tbody>
               </table>
-          </div>
-        <div class="dataTable-bottom">
-          <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
+            </div>
+            <div class="dataTable-bottom">
+              <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
               <div class = "text-center">
                 <%= paginate @sales %>
               </div>
+            </div>
           </div>
         </div>
-        
-    </div>
-</div>
-
- <script>
- function MudarEstado(el) {
-      var display = document.getElementById(el).style.display;
-      if(display == "none")
-          document.getElementById(el).removeAttribute("style");
-      else
-          document.getElementById(el).style.display = 'none';
-  }
-  function formatarReal(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
-  document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
-  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
-</script>
+      </div>
+      <script>
+        function MudarEstado(el) {
+             var display = document.getElementById(el).style.display;
+             if(display == "none")
+                 document.getElementById(el).removeAttribute("style");
+             else
+                 document.getElementById(el).style.display = 'none';
+         }
+         function formatarReal(valor) {
+           return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+         }
+         // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+         document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
+         document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
+         document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
+      </script>

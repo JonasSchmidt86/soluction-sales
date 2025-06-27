@@ -1,13 +1,12 @@
 <div class="card">
   <div class="card-header">
-    <h5 class="card-title mb-0">Imagens do Produto</h5>
+    <h5 class="card-header text-center bg-primary text-white">Imagens do Produto</h5>
   </div>
   <div class="card-body">
     <%= form_for [:collaborators_backoffice, @produto, ProdutoImagem.new], url: collaborators_backoffice_produto_imagens_path(@produto), html: { multipart: true, class: 'mb-4' } do |f| %>
       field
       <%= f.submit 'Adicionar Imagem', class: 'btn btn-primary' %>
     <% end %>
-
     <% ProdutoImagem.grupos_disponiveis.each do |grupo| %>
       <div class="mb-4">
         <h6 class="text-muted mb-3"><%= grupo.titleize %></h6>
@@ -40,7 +39,6 @@
     <% end %>
   </div>
 </div>
-
 <% content_for :javascript do %>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -51,7 +49,7 @@
           onEnd: function(evt) {
             const itemId = evt.item.dataset.sortableItem;
             const newOrder = Array.from(evt.to.children).indexOf(evt.item) + 1;
-            
+
             fetch(`/collaborators_backoffice/produtos/<%= @produto.id %>/imagens/${itemId}/update_ordem`, {
               method: 'PATCH',
               headers: {

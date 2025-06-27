@@ -1,239 +1,219 @@
 <br>
 <div id="layoutAuthentication_content">
-    <main>
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-7">
-                    <div class="card shadow-lg border-0 rounded-lg mt-5">
-                    
-                        <% if @funcionario.errors.any? %>
-                            <div class="alert alert-danger alert-dismissible " role="alert">
-    
-                                <% @funcionario.errors.full_messages.each do |message| %>
-                                    <ul>
-                                        <li><%= message %></li>
-                                    </ul>
-                                <% end %>
-                            </div>
-                        <% end %> 
-
-                        <div class="card-header">
-                            <h3 class="text-center font-weight-light my-4"><%= "#{action_message} Funcionario!"%> </h3>
-                        </div>
-                            
-                        <div class="card-body">
-                        
-                            <%= form_with(model: [ :collaborators_backoffice, @funcionario ], local: true) do |fun| %>
-                            
-                                <div class="col-md-12">
-                                    <div class="form-floating mb-3">
-                                        <%= fun.text_field :pessoa_nome, id:"pessoa_search", class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                                        <%= fun.label :pessoa, class:"" %>
-                                        <div id="results_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
-                                        <%= fun.hidden_field :cod_pessoa, id: 'selected_person_id' %>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="form-floating mb-3">
-                                        <%= fun.text_field :usuario, class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                                        <%= fun.label :usuario, class:"" %>
-                                    </div>
-                                </div>
-
-                                <%# model para localizar pessoa para adicionar ao funcionario  %>
-
-
-                                <div class="item form-group form-floating mb-3">
-                                    <div class="col-md-6 col-sm-6 " role="group">
-                                    <%# tira a marcaçao do radio btn-group-toggle %>
-                                        <div id="ativo" class="btn-group btn-group-toggle" data-toggle="buttons">
-                                            <label class="btn <%= ativo_select(true) %>" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                                <%= fun.radio_button :ativo, 
+  <main>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-7">
+          <div class="card shadow-lg border-0 rounded-lg mt-5">
+            <% if @funcionario.errors.any? %>
+              <div class="alert alert-danger alert-dismissible " role="alert">
+                <% @funcionario.errors.full_messages.each do |message| %>
+                  <ul>
+                    <li><%= message %></li>
+                  </ul>
+                <% end %>
+              </div>
+            <% end %>
+            <div class="">
+              <h3 class="card-header text-center bg-primary text-white"><%= "#{action_message} Funcionario!"%> </h3>
+            </div>
+            <div class="card-body">
+              <%= form_with(model: [ :collaborators_backoffice, @funcionario ], local: true) do |fun| %>
+                <div class="col-md-12">
+                  <div class="form-floating mb-3">
+                    <%= fun.text_field :pessoa_nome, id:"pessoa_search", class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                    <%= fun.label :pessoa, class:"" %>
+                    <div id="results_list" class="position-absolute bg-light rounded p-2 mt-2" style="display: none; z-index: 100;"></div>
+                    <%= fun.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-floating mb-3">
+                    <%= fun.text_field :usuario, class: "text form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                    <%= fun.label :usuario, class:"" %>
+                  </div>
+                </div>
+                <%# model para localizar pessoa para adicionar ao funcionario  %>
+                <div class="item form-group form-floating mb-3">
+                  <div class="col-md-6 col-sm-6 " role="group">
+                    <%# tira a marcaçao do radio btn-group-toggle %>
+                    <div id="ativo" class="btn-group btn-group-toggle" data-toggle="buttons">
+                      <label class="btn <%= ativo_select(true) %>" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                        <%= fun.radio_button :ativo, 
                                                     true,
                                                 "data-parsley-multiple":"ativo" %> &nbsp; Ativo &nbsp;
-                                            </label>
-                                            <label class="btn <%= ativo_select(false) %> " data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                                <%= fun.radio_button :ativo, 
+                      </label>
+                      <label class="btn <%= ativo_select(false) %> " data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                        <%= fun.radio_button :ativo, 
                                                     false,
                                                         "data-parsley-multiple":"ativo" %> &nbsp; Inativo &nbsp;
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <script>
-                                    var labels = document.querySelectorAll('div#ativo label');
-                                    labels.forEach((label) => {
-                                        label.addEventListener('click', () => {
-                                            label.classList.remove('btn-default');
-                                            label.classList.add('btn-primary'); 
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <script>
+                  var labels = document.querySelectorAll('div#ativo label');
+                  labels.forEach((label) => {
+                      label.addEventListener('click', () => {
+                          label.classList.remove('btn-default');
+                          label.classList.add('btn-primary');
 
-                                            labels.forEach((lbl) => {
-                                                if(lbl !== label){
-                                                    lbl.classList.remove('btn-primary');
-                                                    lbl.classList.add('btn-default');
-                                                };
-                                            });
-                                        });
-                                    });
-                                </script>
-
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <div class="form-floating mb-3 mb-md-0">
-                                            <div class="form-floating mb-3 ">
-                                                <%= fun.text_field :datacontrato, value: (l(@funcionario.datacontrato) unless @funcionario.datacontrato.blank?),
+                          labels.forEach((lbl) => {
+                              if(lbl !== label){
+                                  lbl.classList.remove('btn-primary');
+                                  lbl.classList.add('btn-default');
+                              };
+                          });
+                      });
+                  });
+                </script>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-floating mb-3 mb-md-0">
+                      <div class="form-floating mb-3 ">
+                        <%= fun.text_field :datacontrato, value: (l(@funcionario.datacontrato) unless @funcionario.datacontrato.blank?),
                                                 class: "form-control datepicker" %>
-                                                <%= fun.label :data_Contrato, class:"" %>
-                                            </div> 
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <div class="form-floating mb-3 ">
-                                                <%= fun.text_field :datademissao, value: (l(@funcionario.datademissao) unless @funcionario.datademissao.blank?),
+                        <%= fun.label :data_Contrato, class:"" %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <div class="form-floating mb-3 ">
+                        <%= fun.text_field :datademissao, value: (l(@funcionario.datademissao) unless @funcionario.datademissao.blank?),
                                                     class: "form-control datepicker" %>
-                                                <%= fun.label :data_demissao, class:"" %>
-                                            </div> 
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-floating mb-3 ">
-                                    <%= fun.text_field :salario, class: "form-control", placeholder:"E-mail Colaborador", id:"valor", onkeyup:"formatarMoeda()" %>
-                                    <%= fun.label :salario, class:"" %>
-                                </div> 
-
-                                <div class="form-floating mb-3">
-                                    <%= fun.collection_select(:cod_permissao, Permissao.all , :cod_permissao, :descricao,
+                        <%= fun.label :data_demissao, class:"" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-floating mb-3 ">
+                  <%= fun.text_field :salario, class: "form-control", placeholder:"E-mail Colaborador", id:"valor", onkeyup:"formatarMoeda()" %>
+                  <%= fun.label :salario, class:"" %>
+                </div>
+                <div class="form-floating mb-3">
+                  <%= fun.collection_select(:cod_permissao, Permissao.all , :cod_permissao, :descricao,
                                             {:prompt => 'Selecione a permissão'}, class: "form-control") %>
-                                    <%=fun.label :permissao, class:"" %>
-                                </div> 
-
-                                <!-- comentado para não trazer os dados dos colaboradores  -->
-                                <%# <div id = 'collaborator'>
+                  <%=fun.label :permissao, class:"" %>
+                </div>
+                <!-- comentado para não trazer os dados dos colaboradores  -->
+                <%# <div id = 'collaborator'>
                                     <%= fun.fields_for :collaborator do |collaborator| % >
                                         <%= render partial: "collaborator_fields", locals: { c: collaborator } % > <!-- f é uma variavel opbjeto answer questoes -->
                                     <% end % >
                                 </div> %>
-                                <table id="tblContas" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
-                                    <thead>
-                                        <tr>
-                                            <th >Empresa</th>
-                                            <th style="width: 50px;" >Ativo</th>
-                                            <th style="width: 50px;" ></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id = 'funcionarioempresas_field' class = "empresas">
-                                        <%= fun.fields_for :funcionarioempresas do |emp| %>
-                                            <%= render partial: "funcionarioempresa_fields", locals: { f: emp } %> 
-                                        <% end %>
-                                    </tbody>
-                                </table>    
-
-                                <div class="form-actions">
-                                    <%= link_to_add_association 'Adiciona Empresa', fun, :funcionarioempresas,
+                <table id="tblContas" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                  <thead>
+                    <tr>
+                      <th >Empresa</th>
+                      <th style="width: 50px;" >Ativo</th>
+                      <th style="width: 50px;" ></th>
+                    </tr>
+                  </thead>
+                  <tbody id = 'funcionarioempresas_field' class = "empresas">
+                    <%= fun.fields_for :funcionarioempresas do |emp| %>
+                      <%= render partial: "funcionarioempresa_fields", locals: { f: emp } %>
+                    <% end %>
+                  </tbody>
+                </table>
+                <div class="form-actions">
+                  <%= link_to_add_association 'Adiciona Empresa', fun, :funcionarioempresas,
                                             force_non_association_create: true,
                                              class: 'btn btn-primary',
                                              data: { association_insertion_node: '.empresas', 
                                                      association_insertion_method: :append } %>
-                                </div>
-
-
-                                <div class="mt-4 mb-0">
-                                    <div class="d-grid">
-                                        <div class="col-md-9 col-sm-9  offset-md-3">
-                                            <button type="submit" class="btn btn-success btn-block">Salvar</button>
-                                            <%= link_to 'Cancelar', collaborators_backoffice_funcionarios_path, 
-                                                class:'btn btn-primary btn-block'  %>
-                                        </div>
-                                    </div>
-                                </div>
-                            <% end %>
-
-                        </div>
-                    </div>
                 </div>
+                <div class="mt-4 mb-0">
+                  <div class="d-grid">
+                    <div class="col-md-9 col-sm-9  offset-md-3">
+                      <button type="submit" class="btn btn-success btn-block">Salvar</button>
+                      <%= link_to 'Cancelar', collaborators_backoffice_funcionarios_path, 
+                                                class:'btn btn-primary btn-block'  %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
             </div>
+          </div>
         </div>
-    </main>
-
+      </div>
+    </div>
+  </main>
 </div>
-
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
-// ---------------------------------
+  // ---------------------------------
 
-    document.addEventListener("keypress", function () { 
-        console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-        if(event.keyCode == 13){ // 13 é o Enter
-            event.preventDefault();
-        }
-    });
+      document.addEventListener("keypress", function () {
+          console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+          if(event.keyCode == 13){ // 13 é o Enter
+              event.preventDefault();
+          }
+      });
 
-    let url = window.location.origin + '/collaborators_backoffice/';
+      let url = window.location.origin + '/collaborators_backoffice/';
 
-// ----------------------------------
-    $(document).ready(function() {
-        var categorySearch = $('#pessoa_search'); // 
-        var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
-        var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
-        
-        let apiUrl = url+ "buscas/buscar_pessoas";
+  // ----------------------------------
+      $(document).ready(function() {
+          var categorySearch = $('#pessoa_search'); //
+          var resultsList = $('#results_list'); // cria a lista de pessoas abaixo do input
+          var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
 
-        // Adiciona um evento de keypress para a tecla Enter
-        categorySearch.on('keydown', function(event) {
-           // console.log(event.key);
-            if (event.key === 'Enter') {
-                filterOptions();
-            } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
-                // Código 27 corresponde à tecla "ESC"
-                categorySearch.val(''); // Limpa o campo de busca
-                resultsList.empty();
-                resultsList.hide();
-                selectedPersonIdField.val("");
-            }
-        });
-        
-        // Adiciona um evento de clique aos itens da lista
-        resultsList.on('click', 'div.list-group-item', function() {
-            var selectedPerson = $(this).text();
-            var selectedPersonId = $(this).data('cod_pessoa');
+          let apiUrl = url+ "buscas/buscar_pessoas";
 
-            // Preenche o campo escondido com o ID da pessoa selecionada
-            selectedPersonIdField.val(selectedPersonId);
+          // Adiciona um evento de keypress para a tecla Enter
+          categorySearch.on('keydown', function(event) {
+             // console.log(event.key);
+              if (event.key === 'Enter') {
+                  filterOptions();
+              } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+                  // Código 27 corresponde à tecla "ESC"
+                  categorySearch.val(''); // Limpa o campo de busca
+                  resultsList.empty();
+                  resultsList.hide();
+                  selectedPersonIdField.val("");
+              }
+          });
 
-            // Atualiza o campo de busca com o nome da pessoa selecionada
-            categorySearch.val(selectedPerson);
+          // Adiciona um evento de clique aos itens da lista
+          resultsList.on('click', 'div.list-group-item', function() {
+              var selectedPerson = $(this).text();
+              var selectedPersonId = $(this).data('cod_pessoa');
 
-            // Limpa a lista de resultados
-            resultsList.empty();
-            resultsList.hide();
-        });
+              // Preenche o campo escondido com o ID da pessoa selecionada
+              selectedPersonIdField.val(selectedPersonId);
 
-        function filterOptions() {
-            var query = categorySearch.val().trim().toLowerCase();
-            resultsList.empty();
+              // Atualiza o campo de busca com o nome da pessoa selecionada
+              categorySearch.val(selectedPerson);
 
-            $.ajax({
-                url: apiUrl,
-                method: 'GET',
-                data: { entidade: 'Pessoa', query: query },
-                success: function(data) {
-                    data.forEach(function(person) {
-                        var listItem = $('<div>').text(person.nome);
-                        listItem.addClass('list-group-item');
-                        listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
-                        resultsList.append(listItem);
-                    });
+              // Limpa a lista de resultados
+              resultsList.empty();
+              resultsList.hide();
+          });
 
-                    // Exibe a lista de resultados
-                    resultsList.show();
-                },
-                error: function(err) {
-                    console.error('Erro na requisição AJAX:', err);
-                }
-            });
-        }
-    });
+          function filterOptions() {
+              var query = categorySearch.val().trim().toLowerCase();
+              resultsList.empty();
 
+              $.ajax({
+                  url: apiUrl,
+                  method: 'GET',
+                  data: { entidade: 'Pessoa', query: query },
+                  success: function(data) {
+                      data.forEach(function(person) {
+                          var listItem = $('<div>').text(person.nome);
+                          listItem.addClass('list-group-item');
+                          listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
+                          resultsList.append(listItem);
+                      });
+
+                      // Exibe a lista de resultados
+                      resultsList.show();
+                  },
+                  error: function(err) {
+                      console.error('Erro na requisição AJAX:', err);
+                  }
+              });
+          }
+      });
 </script>

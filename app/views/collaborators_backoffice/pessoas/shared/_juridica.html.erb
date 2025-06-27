@@ -1,119 +1,109 @@
 <div class="row mb-2 g-2">
-
-    <div class="col-md-3">
-        <div class="form-floating">
-            <%= form.text_field :cpf_cnpj,id:"cpf_cnpj_jur", class: "pessoa_cpf_cnpj cnpj form-control", placeholder:"CNPJ" %>
-            <%= form.label :cnpj, class:"" %>
-        </div>
+  <div class="col-md-3">
+    <div class="form-floating">
+      <%= form.text_field :cpf_cnpj,id:"cpf_cnpj_jur", class: "pessoa_cpf_cnpj cnpj form-control", placeholder:"CNPJ" %>
+      <%= form.label :cnpj, class:"" %>
     </div>
-    <div class="col-md-3">
-        <div class="form-floating">
-            <%= form.text_field :rg_ie, class: "form-control", placeholder:"Inscricão Estadual" %>
-            <%= form.label :inscricão_estadual, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-3">
+    <div class="form-floating">
+      <%= form.text_field :rg_ie, class: "form-control", placeholder:"Inscricão Estadual" %>
+      <%= form.label :inscricão_estadual, class:"" %>
     </div>
-    
+  </div>
 </div>
-
 <div class="row  my-2 text-wrap g-2">
-    <div class="col-md-6">
-        <div class="form-floating">
-            <%= form.text_field :nome, class: "text form-control", placeholder:"Nome" %>
-            <%= form.label :nome, class:"" %>
-        </div>
+  <div class="col-md-6">
+    <div class="form-floating">
+      <%= form.text_field :nome, class: "text form-control", placeholder:"Nome" %>
+      <%= form.label :nome, class:"" %>
     </div>
-    <div class="col-md-6">
-        <div class="form-floating">
-            <%= form.text_field :apelido, class: "text form-control", placeholder:"Fantasia" %>
-            <%= form.label :fantasia, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating">
+      <%= form.text_field :apelido, class: "text form-control", placeholder:"Fantasia" %>
+      <%= form.label :fantasia, class:"" %>
     </div>
+  </div>
 </div>
 <div class="row my-1 text-wrap g-2">
-    <div class="col-md-3">
-        <div class="form-floating mb-3">
-            <%= form.text_field :telefone, class: "form-control phone", placeholder:"Telefone" %>
-            <%= form.label :telefone, class:"" %>
-        </div>
+  <div class="col-md-3">
+    <div class="form-floating mb-3">
+      <%= form.text_field :telefone, class: "form-control phone", placeholder:"Telefone" %>
+      <%= form.label :telefone, class:"" %>
     </div>
-    <div class="col-md-3">
-        <div class="form-floating">
-            <%= form.text_field :celular, class: "form-control phone_with_ddd", placeholder:"Celular" %>
-            <%= form.label :celular, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-3">
+    <div class="form-floating">
+      <%= form.text_field :celular, class: "form-control phone_with_ddd", placeholder:"Celular" %>
+      <%= form.label :celular, class:"" %>
     </div>
-    <div class="col-md-3">
-        <div class="form-floating">
-            <%= form.text_field :dtnascimento, class: "form-control fallback datepicker", placeholder:"Data Abertura" %>
-            <%= form.label :data_abertura, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-3">
+    <div class="form-floating">
+      <%= form.text_field :dtnascimento, class: "form-control fallback datepicker", placeholder:"Data Abertura" %>
+      <%= form.label :data_abertura, class:"" %>
     </div>
+  </div>
 </div>
-
 <hr class="my-2">
-
 <div class="row mt-3 text-wrap g-2">
-    <div class="col-md-2">
-        <div class="form-floating">
-            <%= form.text_field :cep, class: "cep form-control", placeholder:"CEP" %>
-            <%= form.label :cep, class:"" %>
-        </div>
+  <div class="col-md-2">
+    <div class="form-floating">
+      <%= form.text_field :cep, class: "cep form-control", placeholder:"CEP" %>
+      <%= form.label :cep, class:"" %>
     </div>
-   <div class="col-md-4">
-        <div class="form-floating">
-        <%= form.collection_select(:cod_cidade, Cidade.all.order(:nome), :cod_cidade, :nome, 
+  </div>
+  <div class="col-md-4">
+    <div class="form-floating">
+      <%= form.collection_select(:cod_cidade, Cidade.all.order(:nome), :cod_cidade, :nome, 
                         { :prompt => 'Não informado' }, { class: "form-control" }) %>
-            <%= form.label :cidade, class: "" %>
-        </div>
+      <%= form.label :cidade, class: "" %>
     </div>
-    <div class="col-md-6">
-        <div class="form-floating">
-            <%= form.text_field :complemento, class: "text form-control", placeholder:"Complemento" %>
-            <%= form.label :complemento, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-6">
+    <div class="form-floating">
+      <%= form.text_field :complemento, class: "text form-control", placeholder:"Complemento" %>
+      <%= form.label :complemento, class:"" %>
     </div>
+  </div>
 </div>
 <div class="row my-2 text-wrap g-2">
-   <div class="col-md-6">
-        <div class="form-floating">
-            <%= form.text_field :endereco, class: "text form-control", placeholder:"Endereço" %>
-            <%= form.label :endereço, class:"" %>
-        </div>
+  <div class="col-md-6">
+    <div class="form-floating">
+      <%= form.text_field :endereco, class: "text form-control", placeholder:"Endereço" %>
+      <%= form.label :endereço, class:"" %>
     </div>
-   <div class="col-md-4">
-        <div class="form-floating">
-            <%= form.text_field :bairro, class: "text form-control", placeholder:"Bairro" %>
-            <%= form.label :bairro, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-4">
+    <div class="form-floating">
+      <%= form.text_field :bairro, class: "text form-control", placeholder:"Bairro" %>
+      <%= form.label :bairro, class:"" %>
     </div>
-    <div class="col-md-2">
-        <div class="form-floating">
-            <%= form.text_field :numero, class: "numero form-control", placeholder:"Numero" %>
-            <%= form.label :numero, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-2">
+    <div class="form-floating">
+      <%= form.text_field :numero, class: "numero form-control", placeholder:"Numero" %>
+      <%= form.label :numero, class:"" %>
     </div>
+  </div>
 </div>
-
 <hr class="my-2">
-
 <div class="row mt-3 text-wrap g-2">
-   <div class="col-md-4">
-        <div class="form-floating">
-            <%= form.text_field :pessoacontato, class: "text form-control", placeholder:"representante" %>
-            <%= form.label :representante, class:"" %>
-        </div>
+  <div class="col-md-4">
+    <div class="form-floating">
+      <%= form.text_field :pessoacontato, class: "text form-control", placeholder:"representante" %>
+      <%= form.label :representante, class:"" %>
     </div>
-   <div class="col-md-2">
-        <div class="form-floating">
-            <%= form.text_field :telefonecontato, class: "form-control phone_with_ddd", placeholder:"Telefone repres." %>
-            <%= form.label :telefone_repres, class:"" %>
-        </div>
+  </div>
+  <div class="col-md-2">
+    <div class="form-floating">
+      <%= form.text_field :telefonecontato, class: "form-control phone_with_ddd", placeholder:"Telefone repres." %>
+      <%= form.label :telefone_repres, class:"" %>
     </div>
-   
+  </div>
 </div>
-
 <script>
-
   var check = document.getElementById("pessoa_registradoscpc");
   check.onclick = function () {
     var label = document.getElementById("label_scpc");
@@ -123,5 +113,4 @@
         label.innerHTML  = "Sem Registro";
     }
   };
-
 </script>

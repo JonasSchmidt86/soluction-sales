@@ -1,170 +1,158 @@
 <div id="layoutAuthentication_content">
-    <div class="card-body">
-
-        <div class="row justify-content-center">
-            <div class="">
-                <div class="card mt-3">
-                    <% if @pessoa.errors.any? %>
-                        <div class="alert alert-danger alert-dismissible " role="alert">
-                            <% @pessoa.errors.full_messages.each do |message| %>
-                                <ul>
-                                    <li><%= message %></li>
-                                </ul>
-                            <% end %>
-                            <% @pessoa.errors.clear %>
-                        </div>
-                    <% end %> 
-                                        
-                    <div class="card-header bg-primary" >
-                        <h4 class="text-center font-weight-light">
-                            <%= "#{action_message} cadastro de pessoa!"%> 
-                        </h4>
-                    </div>
-                    <div class="card-body">
-
-                        <%= form_with(model: [ :collaborators_backoffice, @pessoa ], id:"form_pessoa", local: true) do |form| %>
-                            <div class="col-md-12 ">
-
-                                <div class="d-flex row align-items-center  g-2">
-                                    <div class="col-md-2 form-check form-check-inline">
-                                        <h5><%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (@pessoa.tipo.blank? ? 'F' : @pessoa.tipo.to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %></h5>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="form-floating">
-                                            <%= form.text_field :datacadastro, value: ( @pessoa.datacadastro.blank? ? post_date(DateTime.now) : l(@pessoa.datacadastro) ), class: "form-control", readonly: true  %>
-                                            <%= form.label :data_cadastro, class:"" %>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr class="my-3">
-
-                                <%# render partial: 'collaborators_backoffice/pessoas/shared/fisica', locals: { form: form }, display: "none;" %>
-                                <div id="pessoaFisica" style="display: none;">
-                                    <%= render partial: 'collaborators_backoffice/pessoas/shared/fisica', locals: { form: form } %>
-                                </div>
-                                <div id="pessoaJuridica" style="display: none;">
-                                    <%= render partial: 'collaborators_backoffice/pessoas/shared/juridica', locals: { form: form } %>
-                                </div>           
-<%# Botao de salvar fixo na lateral direita da pg %>
-
-                            </div>
-
-                            <div class="position-fixed bottom-0 end-0 m-4">
-                                <div class="d-block mb-2">
-                                    <%= link_to new_collaborators_backoffice_pessoa_path, class:"btn btn-primary rounded-circle p-2" do %>
-                                    <i class="fa fa-plus fa-2x"></i>
-                                    <% end %>
-                                </div>
-
-                                <div class="d-block">
-                                    <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
-                                    <i class="fa fa-check fa-2x"></i>
-                                    </button>
-                                </div>
-                            </div>  
-
-                        <% end %>
-                    </div>
-                </div>
+  <div class="card-body">
+    <div class="row justify-content-center">
+      <div class="">
+        <div class="card mt-3">
+          <% if @pessoa.errors.any? %>
+            <div class="alert alert-danger alert-dismissible " role="alert">
+              <% @pessoa.errors.full_messages.each do |message| %>
+                <ul>
+                  <li><%= message %></li>
+                </ul>
+              <% end %>
+              <% @pessoa.errors.clear %>
             </div>
+          <% end %>
+          <div class="card-header text-center bg-primary text-white" >
+            <h3 class="">
+              <%= "#{action_message} cadastro de pessoa!"%>
+            </h3>
+          </div>
+          <div class="card-body">
+            <%= form_with(model: [ :collaborators_backoffice, @pessoa ], id:"form_pessoa", local: true) do |form| %>
+              <div class="col-md-12 ">
+                <div class="d-flex row align-items-center  g-2">
+                  <div class="col-md-2 form-check form-check-inline">
+                    <h5><%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (@pessoa.tipo.blank? ? 'F' : @pessoa.tipo.to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %></h5>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-floating">
+                      <%= form.text_field :datacadastro, value: ( @pessoa.datacadastro.blank? ? post_date(DateTime.now) : l(@pessoa.datacadastro) ), class: "form-control", readonly: true  %>
+                      <%= form.label :data_cadastro, class:"" %>
+                    </div>
+                  </div>
+                </div>
+                <hr class="my-3">
+                <%# render partial: 'collaborators_backoffice/pessoas/shared/fisica', locals: { form: form }, display: "none;" %>
+                <div id="pessoaFisica" style="display: none;">
+                  <%= render partial: 'collaborators_backoffice/pessoas/shared/fisica', locals: { form: form } %>
+                </div>
+                <div id="pessoaJuridica" style="display: none;">
+                  <%= render partial: 'collaborators_backoffice/pessoas/shared/juridica', locals: { form: form } %>
+                </div>
+                <%# Botao de salvar fixo na lateral direita da pg %>
+              </div>
+              <div class="position-fixed bottom-0 end-0 m-4">
+                <div class="d-block mb-2">
+                  <%= link_to new_collaborators_backoffice_pessoa_path, class:"btn btn-primary rounded-circle p-2" do %>
+                    <i class="fa fa-plus fa-2x"></i>
+                  <% end %>
+                </div>
+                <div class="d-block">
+                  <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+                    <i class="fa fa-check fa-2x"></i>
+                  </button>
+                </div>
+              </div>
+            <% end %>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    function desabilitarRadioButtons() {
-  // Seleciona todos os campos de radio button com o atributo name="tipo"
-    const radioButtons = document.querySelectorAll('input[name="pessoa[tipo]"]');
-    
-    // Verifica se o ID da pessoa não é nulo
-    <% if @pessoa.id.present? %>
-    if (<%= @pessoa.id %> !== null) {
-        // Itera sobre todos os campos de radio button e desabilita cada um
-        radioButtons.forEach(function(radioButton) {
-        radioButton.disabled = true;
-        });
-    }
-    <% end %>
-    }
+  function desabilitarRadioButtons() {
+    // Seleciona todos os campos de radio button com o atributo name="tipo"
+  const radioButtons = document.querySelectorAll('input[name="pessoa[tipo]"]');
 
-    // Chama a função quando o conteúdo do documento é carregado
-    document.addEventListener("DOMContentLoaded", function() {
-    desabilitarRadioButtons();
-    });
+  // Verifica se o ID da pessoa não é nulo
+  <% if @pessoa.id.present? %>
+  if (<%= @pessoa.id %> !== null) {
+      // Itera sobre todos os campos de radio button e desabilita cada um
+      radioButtons.forEach(function(radioButton) {
+      radioButton.disabled = true;
+      });
+  }
+  <% end %>
+  }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        let tipoPessoaInputs = document.querySelectorAll('input[name="pessoa[tipo]"]');
-        const pessoaFisicaDiv = document.getElementById("pessoaFisica");
-        const pessoaJuridicaDiv = document.getElementById("pessoaJuridica");
-        const form = document.getElementById("form_pessoa"); // Substitua "seu-formulario" pelo ID do seu formulário
+  // Chama a função quando o conteúdo do documento é carregado
+  document.addEventListener("DOMContentLoaded", function() {
+  desabilitarRadioButtons();
+  });
 
-        // Função para mostrar ou ocultar as divs com base no tipo de pessoa selecionado
-        function toggleDivs(tipoSelecionado) {
-            if (tipoSelecionado === "F") {
-                pessoaFisicaDiv.style.display = 'block';
-                pessoaJuridicaDiv.style.display = 'none';
-            } else {
-                pessoaFisicaDiv.style.display = 'none';
-                pessoaJuridicaDiv.style.display = 'block';
-            }
-        }
+  document.addEventListener("DOMContentLoaded", function() {
+      let tipoPessoaInputs = document.querySelectorAll('input[name="pessoa[tipo]"]');
+      const pessoaFisicaDiv = document.getElementById("pessoaFisica");
+      const pessoaJuridicaDiv = document.getElementById("pessoaJuridica");
+      const form = document.getElementById("form_pessoa"); // Substitua "seu-formulario" pelo ID do seu formulário
 
-        // Verifica o tipo de pessoa selecionado ao carregar a página e ajusta a exibição das divs
-        let tipoSelecionadoInicial = document.querySelector('input[name="pessoa[tipo]"]:checked').value;
-        toggleDivs(tipoSelecionadoInicial);
+      // Função para mostrar ou ocultar as divs com base no tipo de pessoa selecionado
+      function toggleDivs(tipoSelecionado) {
+          if (tipoSelecionado === "F") {
+              pessoaFisicaDiv.style.display = 'block';
+              pessoaJuridicaDiv.style.display = 'none';
+          } else {
+              pessoaFisicaDiv.style.display = 'none';
+              pessoaJuridicaDiv.style.display = 'block';
+          }
+      }
 
-        // Adiciona evento de mudança ao campo de seleção de tipo de pessoa
-        tipoPessoaInputs.forEach(function(input) {
-            input.addEventListener("change", function() {
-                const tipoSelecionado = this.value;
-                toggleDivs(tipoSelecionado);
-            });
-        });
+      // Verifica o tipo de pessoa selecionado ao carregar a página e ajusta a exibição das divs
+      let tipoSelecionadoInicial = document.querySelector('input[name="pessoa[tipo]"]:checked').value;
+      toggleDivs(tipoSelecionadoInicial);
 
-        // Adiciona evento de submit ao formulário
-        form.addEventListener("submit", function(event) {
-            // Verifica qual div está oculta e a remove antes de enviar o formulário
-            if (pessoaFisicaDiv.style.display === 'none') {
-                pessoaFisicaDiv.remove();
-            } else if (pessoaJuridicaDiv.style.display === 'none') {
-                pessoaJuridicaDiv.remove();
-            }
-            // Continua com o envio normal do formulário
-        });
-    });
+      // Adiciona evento de mudança ao campo de seleção de tipo de pessoa
+      tipoPessoaInputs.forEach(function(input) {
+          input.addEventListener("change", function() {
+              const tipoSelecionado = this.value;
+              toggleDivs(tipoSelecionado);
+          });
+      });
 
-// ----------------------------------------------------------------
+      // Adiciona evento de submit ao formulário
+      form.addEventListener("submit", function(event) {
+          // Verifica qual div está oculta e a remove antes de enviar o formulário
+          if (pessoaFisicaDiv.style.display === 'none') {
+              pessoaFisicaDiv.remove();
+          } else if (pessoaJuridicaDiv.style.display === 'none') {
+              pessoaJuridicaDiv.remove();
+          }
+          // Continua com o envio normal do formulário
+      });
+  });
 
-    $(document).ready(function() {
-        $('.pessoa_cpf_cnpj').blur(function() {
-            var cpfCnpj = $(this).val();
-            $.ajax({
-                url: 'check_cpf_cnpj',
-                method: 'GET',
-                data: { cpf_cnpj: cpfCnpj },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.redirect_url) {
-                        // Se o CPF/CNPJ existe, redirecione para a página de edição
-                        window.location.href = response.redirect_url;
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Erro:', error);
-                }
-            });
-            console.log(" ACABOU ")
-        });
-    });
+  // ----------------------------------------------------------------
 
-    document.addEventListener("keypress", function () { 
-        console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
-        if(event.keyCode == 13){ // 13 é o Enter
-            event.preventDefault();
-        }
-    });
-    // ----------------------------------------------------------------
-    
+  $(document).ready(function() {
+      $('.pessoa_cpf_cnpj').blur(function() {
+          var cpfCnpj = $(this).val();
+          $.ajax({
+              url: 'check_cpf_cnpj',
+              method: 'GET',
+              data: { cpf_cnpj: cpfCnpj },
+              dataType: 'json',
+              success: function(response) {
+                  if (response.redirect_url) {
+                      // Se o CPF/CNPJ existe, redirecione para a página de edição
+                      window.location.href = response.redirect_url;
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.error('Erro:', error);
+              }
+          });
+          console.log(" ACABOU ")
+      });
+  });
+
+  document.addEventListener("keypress", function () {
+      console.log("-- "+event.key); // se eu clicar 'p' vai me retornar 'p' ao contrário do keycode que retorna o código da tecla
+      if(event.keyCode == 13){ // 13 é o Enter
+          event.preventDefault();
+      }
+  });
+  // ----------------------------------------------------------------
 </script>

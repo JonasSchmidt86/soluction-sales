@@ -1,13 +1,11 @@
-
 <div class="modal fade" id="launchsModal<%= bill.cod_contaspagrec %>" data-tor-parent="show">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-
-      <div class="modal-header">
+      <div class="modal-header text-center bg-primary text-white">
         <h5 class="modal-title" id="exampleModalLabel">Lançamentos</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="container-fluid bd-example-row me-2 ">
+      <div class="container-fluid bd-example-row me-2 mt-2 mb-2">
         <table id="datatablesSimple" class="table table-hover table-striped table-responsive  ">
           <thead class="table-light">
             <tr>
@@ -22,11 +20,11 @@
             <% sorted_lancamentos = bill.lancamentos.sort_by { |lancamento| lancamento.datapagto } %>
             <% sorted_lancamentos.each do |launch| %>
               <tr>
-                  <td><%= launch.funcionario.usuario %></td>
-                  <td><%= launch.historico_descricao %> </td>
-                  <td><%= bill.nmParcela %> </td>
-                  <td><%= post_datetime launch.datapagto %> </td>
-                  <td><%= number_to_currency( launch.valor, separator: ",", delimiter: "", unit: "" ) %> </td>
+                <td><%= launch.funcionario.usuario %></td>
+                <td><%= launch.historico_descricao %> </td>
+                <td><%= bill.nmParcela %> </td>
+                <td><%= post_datetime launch.datapagto %> </td>
+                <td><%= number_to_currency( launch.valor, separator: ",", delimiter: "", unit: "" ) %> </td>
               </tr>
             <% end %>
           </tbody>

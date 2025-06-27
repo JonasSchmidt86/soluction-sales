@@ -12,11 +12,9 @@
               <% end %>
             </div>
           <% end %>
-          <div class="card-header">
-            <h4 class="text-center font-weight-light">
-              <%= "Visualizando Compra"%>
-            </h4>
-          </div>
+          <h4 class="card-header text-center bg-primary text-white">
+            <%= "Visualizando Compra"%>
+          </h4>
           <div class="card-body">
             <%= form_with(model: [:collaborators_backoffice, @compra], local: true) do |form| %>
               <div class="row mt-3 ">

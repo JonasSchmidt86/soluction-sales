@@ -1,134 +1,118 @@
 <div class="card mt-4">
-
-        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header bg-primary" do %>
-          <h4 class:"card-header" > <%= "#{action_message} Valor de venda!" %></h4>
-        <% end %>
-
-        <div class="card-body">
-          <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
-
-            <div class="dataTable-container">
-
-              <table id="datatablesSimple" class="dataTable-table table-striped" style="width: 100%;">
-                <thead>
-                  <tr>
-                    <th data-sortable="" style="width: 3%;">Emp..</th>
-                    <th data-sortable="" style="width: 7%;">Codigo</th>
-                    <th data-sortable="">Nome</th>
-                    <th data-sortable="" style="width: 20%;">Cor</th>
-                    <th data-sortable="" style="width: 7%;">Qtd</th>
-
-                    <th style="width: 100px">Vl Venda</th>
-                    <%# <th data-sortable="" style="width: 8%;">Vl Venda</th> %>
-
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <th data-sortable="" style="width: 8%;">Custo</th>
-                      <th data-sortable="" style="width: 55px;">Grava</th>
-                      <% end %>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                  <% @empresa_produtos.each do |estoque| %>
-                    <tr>
-                      <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
-                      <td class="align-middle "><%= estoque.full_codigo %> </td>
-                      <td class="align-middle "><%= estoque.produto.nome %> </td>
-                      <td class="align-middle "><%= estoque.cor.nmcor %> </td>
-                      <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
-
-                      <td class="align-middle ">
-                        <input type="text" 
+  <%= link_to collaborators_backoffice_empresa_estoque_index_path, class:"card-header text-center bg-primary text-white" do %>
+    <h4> <%= "#{action_message} Valor de venda!" %></h4>
+  <% end %>
+  <div class="card-body">
+    <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+      <div class="dataTable-container">
+        <table id="datatablesSimple" class="dataTable-table table-striped" style="width: 100%;">
+          <thead>
+            <tr>
+              <th data-sortable="" style="width: 3%;">Emp..</th>
+              <th data-sortable="" style="width: 7%;">Codigo</th>
+              <th data-sortable="">Nome</th>
+              <th data-sortable="" style="width: 20%;">Cor</th>
+              <th data-sortable="" style="width: 7%;">Qtd</th>
+              <th style="width: 100px">Vl Venda</th>
+              <%# <th data-sortable="" style="width: 8%;">Vl Venda</th> %>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <th data-sortable="" style="width: 8%;">Custo</th>
+                <th data-sortable="" style="width: 55px;">Grava</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @empresa_produtos.each do |estoque| %>
+              <tr>
+                <td class="align-middle text-center"><%= estoque.cod_empresa %> </td>
+                <td class="align-middle "><%= estoque.full_codigo %> </td>
+                <td class="align-middle "><%= estoque.produto.nome %> </td>
+                <td class="align-middle "><%= estoque.cor.nmcor %> </td>
+                <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
+                <td class="align-middle ">
+                  <input type="text" 
                               input_html= { inputmode: "numeric", pattern: "[0-9]*" }
                               class="money2 form-control form-control-sm editable-valor-venda" 
                               data-id="<%= estoque.id %>" 
                               value="<%= number_with_precision(estoque.valorvenda, precision: 2, separator: ',', delimiter: '') %>">
-
-                      </td>
-
-                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-
-                      <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
-                        <td class="align-middle">
-                          <%= link_to "#", class: "btn btn-success btn-circle salvar-valor", data: { id: estoque.id } do %>
-                            <i class="fa fa-check"></i>
-                          <% end %>
-                        </td> 
-                      <% end %>
-                    </td>
-                  <% end %>
-                </tbody>
-            </table>
-        </div>
-        
-        
+                </td>
+                <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                  <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                  <td class="align-middle">
+                    <%= link_to "#", class: "btn btn-success btn-circle salvar-valor", data: { id: estoque.id } do %>
+                      <i class="fa fa-check"></i>
+                    <% end %>
+                  </td>
+                <% end %>
+              </td>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
-</div>
+  </div>
+  <script>
+    function salvarValor(estoqueId) {
+      const inputField = document.querySelector(`.editable-valor-venda[data-id="${estoqueId}"]`);
 
-<script>
+      if (!inputField) {
+        console.error("Erro: Input não encontrado.");
+        return;
+      }
 
-  function salvarValor(estoqueId) {
-    const inputField = document.querySelector(`.editable-valor-venda[data-id="${estoqueId}"]`);
-    
-    if (!inputField) {
-      console.error("Erro: Input não encontrado.");
-      return;
+      let valor = inputField.value.trim();
+      if (!valor) return;
+
+      // Converte de formato brasileiro para formato numérico (troca vírgula por ponto)
+      const valorFormatado = valor.replace(/\./g, "").replace(",", ".");
+
+      fetch(`/collaborators_backoffice/empresa_estoque/${estoqueId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+        },
+        body: JSON.stringify({ estoque: { valorvenda: valorFormatado, id_compra: estoqueId } }),
+      })
+      .then(response => response.ok ? response.json() : Promise.reject("Erro ao salvar"))
+      .then(data => {
+        $.bootstrapGrowl(data.message, {
+          ele: 'body',
+          type: 'success',
+          offset: { from: 'top', amount: 60 },
+          align: 'center',
+          width: 300,
+          delay: 3000,
+          allow_dismiss: false,
+          stackup_spacing: 40,
+        });
+        console.log("Valor atualizado com sucesso:", data);
+
+      })
+      .catch(error => {
+        $.bootstrapGrowl("Erro ao salvar. Tente novamente.", { type: 'danger' });
+        console.error("Erro:", error);
+      });
     }
 
-    let valor = inputField.value.trim();
-    if (!valor) return;
-
-    // Converte de formato brasileiro para formato numérico (troca vírgula por ponto)
-    const valorFormatado = valor.replace(/\./g, "").replace(",", ".");
-
-    fetch(`/collaborators_backoffice/empresa_estoque/${estoqueId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
-      },
-      body: JSON.stringify({ estoque: { valorvenda: valorFormatado, id_compra: estoqueId } }),
-    })
-    .then(response => response.ok ? response.json() : Promise.reject("Erro ao salvar"))
-    .then(data => {
-      $.bootstrapGrowl(data.message, {
-        ele: 'body',
-        type: 'success',
-        offset: { from: 'top', amount: 60 },
-        align: 'center',
-        width: 300,
-        delay: 3000,
-        allow_dismiss: false,
-        stackup_spacing: 40,
-      });
-      console.log("Valor atualizado com sucesso:", data);
-
-    })
-    .catch(error => {
-      $.bootstrapGrowl("Erro ao salvar. Tente novamente.", { type: 'danger' });
-      console.error("Erro:", error);
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll(".salvar-valor").forEach(button => {
-      button.addEventListener("click", function() {
-        const estoqueId = this.dataset.id;
-        salvarValor(estoqueId); // Chama a função ao clicar no botão
-      });
-    });
-  });
-
-  document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll(".editable-valor-venda").forEach(input => {
-      input.addEventListener("keydown", function(event) {
-        if (event.key === "Enter") {
-          event.preventDefault(); // Evita quebra de linha
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll(".salvar-valor").forEach(button => {
+        button.addEventListener("click", function() {
           const estoqueId = this.dataset.id;
-          salvarValor(estoqueId); // Chama a função ao pressionar Enter
-        }
+          salvarValor(estoqueId); // Chama a função ao clicar no botão
+        });
       });
     });
-  });
 
-</script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll(".editable-valor-venda").forEach(input => {
+        input.addEventListener("keydown", function(event) {
+          if (event.key === "Enter") {
+            event.preventDefault(); // Evita quebra de linha
+            const estoqueId = this.dataset.id;
+            salvarValor(estoqueId); // Chama a função ao pressionar Enter
+          }
+        });
+      });
+    });
+  </script>

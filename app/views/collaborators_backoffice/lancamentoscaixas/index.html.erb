@@ -1,123 +1,100 @@
-
-
 <div class="card mt-3 mb-3">
-
-        <%= link_to collaborators_backoffice_lancamentoscaixas_path, class:"card-header" do %>
-          <h4>Lancamentos</h4>
-        <% end %>
-    
-        <div class="card-body">
-          <div class="dataTable-wrapper dataTable-loading">
-                <% somaCusto = 0 %>
-                <% somaVenda = 0 %>
-
-                <%= form_with(url: collaborators_backoffice_lancamentoscaixas_path, local: true, method: :get, 
+  <%= link_to collaborators_backoffice_lancamentoscaixas_path, class:"card-header text-center bg-primary text-white" do %>
+    <h4>Lancamentos</h4>
+  <% end %>
+  <div class="card-body">
+    <div class="dataTable-wrapper dataTable-loading">
+      <% somaCusto = 0 %>
+      <% somaVenda = 0 %>
+      <%= form_with(url: collaborators_backoffice_lancamentoscaixas_path, local: true, method: :get, 
                                     class:"col dataTable-search") do |form| %>
-
-                  <div class="d-flex mb-2 col-md-6">
-
-                    <div class="col-md-1">
-                      <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
-                    </div>
-
-                    <div class="col-md-2">
-                      <div class="mb-2">
-                          <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Empresa..." %>
-                      </div> 
-                    </div>
-
-                    <div class="col-md-7">
-                      <div class="mb-2">
-                          <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto..." %>
-                      </div> 
-                    </div>
-
-                    <div class="col-md-8">
-                      <div class="mb-2">
-                        <% checked = params[:contem] == '1' ? true : false %>
-                        <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
-                        <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
-
-                        <button type="submit" class="btn btn-success btn-circle">Buscar</button>
-                      </div>
-                    </div>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>  
-                      <div class="col-md-3 ml-auto">
-                        <div class="form-floating">
-                          <%= form.text_field :valorVenda, class: "money2 text-bg-info form-control ", readonly: true %>
-                          <%= form.label :valor_venda, class:"" %>
-                      </div>
-                    </div>
-                      <div class="col-md-3 ml-auto  order-last">
-                        <div class="form-floating">
-                          <%= form.text_field :valorCusto, class: "money2 text-bg-warning form-control ", readonly: true %>
-                          <%= form.label :custo, class:"" %>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-
-                <% end %>
-
-
-              <div class="dataTable-container">
-
-              <table id="datatablesSimple" class="dataTable-table table-striped mb-5">
-                <thead>
-                  <tr>
-                    <th data-sortable="" style="width: 3%;">Tipo E/S</th>
-                    <th data-sortable="">Descrição</th>
-                    <th data-sortable="" style="width: 10%;">Data Lançamento</th>
-                    <th data-sortable="" style="width: 7%;">Valor</th>
-
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <th data-sortable="" style="width: 8%;">Custo</th>
-                      <th data-sortable="" style="width: 55px;">Desativar</th>
-                    <% end %>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                  <% @lancamentos.each do |lauch| %>
-                    <tr>
-                      <td class="align-middle text-center"><%= lauch.tipo %> </td>
-                      <td class="align-middle "><%= lauch.descricao %> </td>
-                      <td class="align-middle "><%= lauch.datapagto %> </td>
-                      <td class="align-middle "><%= lauch.valor %> </td>
-                      
-                      <%# if estoque.quantidade > 0 %>
-                      <%# somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
-                      <%# somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
-                      <%# end %>
-
-                      <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <td class="align-middle fw-semibold"><%# "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
-                      <td class="align-middle">
-                        <%= link_to collaborators_backoffice_lancamentoscaixa_path(lauch), 
+        <div class="d-flex mb-2 col-md-6">
+          <div class="col-md-1">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+          </div>
+          <div class="col-md-2">
+            <div class="mb-2">
+              <%= form.text_field :cod_empresa, value: params[:cod_empresa], class:"text dataTable-input", placeholder:"Empresa..." %>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="mb-2">
+              <%= form.text_field :term, value: params[:term], class:"text dataTable-input", placeholder:"Nome produto..." %>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="mb-2">
+              <% checked = params[:contem] == '1' ? true : false %>
+              <%= form.check_box :contem, checked: checked, class: "btn-check", id: "contem-checkbox", type: "checkbox" %>
+              <label class="btn btn-outline-primary estoque-label" for="contem-checkbox"></label>
+              <button type="submit" class="btn btn-success btn-circle">Buscar</button>
+            </div>
+          </div>
+          <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+            <div class="col-md-3 ml-auto">
+              <div class="form-floating">
+                <%= form.text_field :valorVenda, class: "money2 text-bg-info form-control ", readonly: true %>
+                <%= form.label :valor_venda, class:"" %>
+              </div>
+            </div>
+            <div class="col-md-3 ml-auto  order-last">
+              <div class="form-floating">
+                <%= form.text_field :valorCusto, class: "money2 text-bg-warning form-control ", readonly: true %>
+                <%= form.label :custo, class:"" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <div class="dataTable-container">
+        <table id="datatablesSimple" class="dataTable-table table-striped mb-5">
+          <thead>
+            <tr>
+              <th data-sortable="" style="width: 3%;">Tipo E/S</th>
+              <th data-sortable="">Descrição</th>
+              <th data-sortable="" style="width: 10%;">Data Lançamento</th>
+              <th data-sortable="" style="width: 7%;">Valor</th>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <th data-sortable="" style="width: 8%;">Custo</th>
+                <th data-sortable="" style="width: 55px;">Desativar</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @lancamentos.each do |lauch| %>
+              <tr>
+                <td class="align-middle text-center"><%= lauch.tipo %> </td>
+                <td class="align-middle "><%= lauch.descricao %> </td>
+                <td class="align-middle "><%= lauch.datapagto %> </td>
+                <td class="align-middle "><%= lauch.valor %> </td>
+                <%# if estoque.quantidade > 0 %>
+                <%# somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
+                <%# somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
+                <%# end %>
+                <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                  <td class="align-middle fw-semibold"><%# "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                  <td class="align-middle">
+                    <%= link_to collaborators_backoffice_lancamentoscaixa_path(lauch), 
                                     method: :delete, 
                                     class: "dropdown-item text-danger", 
                                     data: { confirm: "Deseja remover o estoque da empresa?" } do %>
-                          <i class="fas fa-trash me-2"></i> Remover
-                        <% end %>
-                      </td> 
-                      <% end %>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-        </div>
+                      <i class="fas fa-trash me-2"></i> Remover
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
-<script>
-  
-
-//  function formatarReal(valor) {
-//    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-//  }
-//  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-//  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
-//  document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
-</script>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    //  function formatarReal(valor) {
+    //    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    //  }
+    //  // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+    //  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
+    //  document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
+  </script>
