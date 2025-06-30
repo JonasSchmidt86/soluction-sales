@@ -100,11 +100,10 @@
                 <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
                 <td class="align-middle">
                   <div class="dropdown">
-                    <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                    <button type="button" class="btn btn-sm" id="dropdownMenuButton<%= estoque.id %>" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
                       <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                     </button>
-                    <%# <ul class="dropdown-menu position-absolute" style="z-index: 1050;"> %>
-                    <ul class="dropdown-menu position-fixed" style="top: 100px; left: 50px; z-index: 1050;">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton<%= estoque.id %>">
                       <li>
                         <%= link_to edit_collaborators_backoffice_empresa_estoque_path(estoque.cod_produto, "produto"), 
                                           class: "dropdown-item text-primary", 

@@ -189,10 +189,10 @@
       <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
       <%# fim modais  %>
       <%= javascript_include_tag 'application'%>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
       <%= javascript_include_tag 'collaborators_backoffice' %>
       <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
       <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
       <script>
         document.addEventListener("DOMContentLoaded", function () {
           document.querySelectorAll('[data-target]').forEach(function (trigger) {

@@ -22,8 +22,8 @@
         <% end %>
       </div>
       <!-- 📊 Tabela -->
-      <div class="dataTable-container" style="min-height: 70vh;">
-        <table id="tblProdutos" class="table table-bordered table-hover table-striped">
+      <div class="dataTable-container" style="min-height: 70vh; overflow: visible;">
+        <table id="tblProdutos" class="table table-bordered table-hover table-striped" style="overflow: visible;">
           <thead class="table-light">
             <tr>
               <th style="width: 5%;">Código</th>
@@ -45,10 +45,10 @@
                 <td class="align-middle"><%= produto.ncm %></td>
                 <td>
                   <div class="dropdown">
-                    <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-sm" type="button" id="dropdownMenuButton<%= produto.id %>" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="fa fa-ellipsis-v"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuButton<%= produto.id %>">
                       <li>
                         <%= link_to edit_collaborators_backoffice_produto_path(produto), class: "dropdown-item" do %>
                           <i class="fa fa-edit me-2"></i> Editar
