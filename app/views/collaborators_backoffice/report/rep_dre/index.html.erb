@@ -23,6 +23,7 @@
     <%# form  acima %>
     <% total_geral = 0 %>
     <% custo_total = 0 %>
+    <% operaciona_geral = 0 %>
     <% @vendas.each do |mes| %>
       <% puts "\n" %>
       <% puts "mes = #{@vendas.inspect }" %>
@@ -73,6 +74,7 @@
                 </tr>
               <% end %>
             <% end %>
+            <% operaciona_geral += (total_entradas - total_saidas) %>
             <tr class="table-secondary">
               <th colspan="2">Entradas</th>
               <th><%= number_to_currency( total_entradas, unit: "R$ ", format: "%u%n") %></th>
@@ -104,6 +106,10 @@
           <tr>
             <th>Lucro Bruto</th>
             <td><strong><%= number_to_currency((total_geral - custo_total), unit: "R$ ", format: "%u%n") %></strong></td>
+          </tr>
+          <tr>
+            <th>Operacional Total</th>
+            <td><strong><%= number_to_currency((operaciona_geral), unit: "R$ ", format: "%u%n") %></strong></td>
           </tr>
         </table>
       <% end %>
