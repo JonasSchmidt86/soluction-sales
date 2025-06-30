@@ -5,19 +5,23 @@
     <% end %>
   </div>
   <div class="card-body">
-    <%= form_with(url: collaborators_backoffice_report_rep_dre_index_path, local: true, method: :get, class:"col dataTable-search") do |form| %>
-      <div class="d-flex mb-2 col-md-6">
-        <div class="col-md-2">
-          <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")  )),
-                    class: "fallback dataTable-input datepicker", placeholder:"Data Inicial" %>
-        </div>
-        <div class="col-md-2">
-          <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                    class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-        </div>
-        <div class="me-4 col-md-1">
-          <button type='submit', class="btn btn-success btn-circle">Buscar</button>
-        </div>
+    <%= form_with(url: collaborators_backoffice_report_rep_dre_index_path, local: true, method: :get, class: "row g-2 mb-3 align-items-end") do |form| %>
+      <div class="col-auto">
+        <label class="form-label">Data Inicial</label>
+        <%= form.text_field :dataInicial, 
+        value: (params[:dataInicial].present? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")),
+        class: "form-control datepicker", style: "max-width: 115px;",
+        placeholder: "Data Inicial" %>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Data Final</label>
+        <%= form.text_field :dataFinal, 
+        value: (params[:dataFinal].present? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")),
+        class: "form-control datepicker", style: "max-width: 115px;",
+        placeholder: "Data Final" %>
+      </div>
+      <div class="col-12 col-md-auto mt-2">
+        <%= form.submit "Buscar", class: "btn btn-success w-100" %>
       </div>
     <% end %>
     <%# form  acima %>
