@@ -1,7 +1,9 @@
 <div class="card mt-3">
-  <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"card-header text-center bg-primary text-white" do %>
-    <h4>DRE - Demonstrativo de Resultados</h4>
-  <% end %>
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_rep_dre_index_path do %>
+      <h4 class="text-white mb-0">DRE - Demonstrativo de Resultados</h4>
+    <% end %>
+  </div>
   <div class="card-body">
     <%= form_with(url: collaborators_backoffice_report_rep_dre_index_path, local: true, method: :get, class:"col dataTable-search") do |form| %>
       <div class="d-flex mb-2 col-md-6">

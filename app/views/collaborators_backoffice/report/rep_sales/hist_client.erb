@@ -99,87 +99,110 @@
                             <th data-sortable="" style="width: 30px;"><a href="#" class="dataTable-sorter">Parcela</a></th>
                             <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
                             <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
+                            <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Ult Pgto..</a></th>
                             <th data-sortable="" style="width: 110px;">Valor Total</th>
                             <th data-sortable="" style="width: 110px;">Valor Pago</th>
                             <th data-sortable="" style="width: 50px;">Lançamentos</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <% sale.contas.order("numeroparcela").each do |bill| %>
-                            <% if (!bill.ativo) %>
-                              <tr class="nested-fields text-danger">
-                                <td><%= ("Cancelada") %> </td>
-                              <% elsif (bill.dtvencimento < DateTime.now && bill.quitada == false) %>
-                                <tr class="nested-fields ext-warning">
-                                  <td><%= ("Vencida") %> </td>
-                                <% else %>
-                                  <tr class="nested-fields">
-                                    <td><%= (bill.quitada? ? "Liquidada" : "Aberto") %> </td>
-                                  <% end %>
-                                  <td class="align-middle"><%= bill.nmCollaborator %> </td>
-                                  <td class="align-middle"><%= bill.nmParcela %> </td>
-                                  <td class="align-middle"><%= bill.nmPessoa %> </td>
-                                  <td class="align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
-                                  <td class="align-middle"><%= number_to_currency( bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "" )  %></td>
-                                  <td class="align-middle"><%= number_to_currency( bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
-                                  <td class="align-middle">
-                                    <% if !bill.lancamentos.blank? %>
-                                      <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                                    <% end %>
-                                  </td>
-                                </tr>
-                              <% end %>
-                            </tbody>
-                          </table>
-                          <table id="datatablesSimple" class="dataTable-table table-striped table-borderless">
-                            <thead>
-                              <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
-                              <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
-                              <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
-                              <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
-                              <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
-                            </thead>
-                            <tbody>
-                              <% sale.itensvenda.order(:cod_item).each do |item| %>
-                                <tr>
-                                  <td class="align-middle"><%= item.full_codigo %> </td>
-                                  <td class="align-middle"><%= item.produto.nome %> </td>
-                                  <td class="align-middle"><%= item.cor.nmcor %> </td>
-                                  <td class="align-middle"><%= item.quantidade.to_i %> </td>
-                                  <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
-                                </tr>
-                              <% end %>
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-            <div class="dataTable-bottom">
-              <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
-              <div class = "text-center">
-                <%= paginate @sales %>
-              </div>
-            </div>
+                          <% sale.contas.order(:numeroparcela).each do |bill| %>
+                            <% status_label = ''
+                              row_class = ''
+
+                              if !bill.ativo
+                                status_label = 'Cancelada'
+                                row_class += ' text-danger'
+                              elsif bill.dtvencimento < DateTime.now && !bill.quitada
+                                status_label = 'Vencida'
+                                row_class += ' text-warning'
+                              elsif bill.lancamentos.exists?
+                                datapagto = bill.lancamentos.maximum(:datapagto)
+                                if datapagto && (datapagto.to_date - bill.dtvencimento.to_date).to_i >= 15
+                                  status_label = 'Atrasada'
+                                  row_class += ' text-warning'
+                                else
+                                  status_label = bill.quitada? ? 'Liquidada' : 'Aberto'
+                                end
+                              else
+                                status_label = bill.quitada? ? 'Liquidada' : 'Aberto'
+                              end
+                            %>
+                            <tr class="nested-fields <%= row_class %>">
+                              <td class="align-middle"><%= status_label %></td>
+                              <td class="align-middle"><%= bill.nmCollaborator %></td>
+                              <td class="align-middle"><%= bill.nmParcela %></td>
+                              <td class="align-middle"><%= bill.nmPessoa %></td>
+                              <td class="align-middle">
+                                <%= post_date(bill.dtvencimento) if bill.dtvencimento.present? %>
+                              </td>
+                              <td class="align-middle">
+                                <%= post_date(bill.lancamentos.maximum(:datapagto)) if bill.lancamentos.exists? %>
+                              </td>
+                              <td class="align-middle">
+                                <%= number_to_currency(bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "") %>
+                              </td>
+                              <td class="align-middle">
+                                <%= number_to_currency(bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "") %>
+                              </td>
+                              <td class="align-middle">
+                                <% if bill.lancamentos.exists? %>
+                                  <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                                <% end %>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                      <table id="datatablesSimple" class="dataTable-table table-striped table-borderless">
+                        <thead>
+                          <th data-sortable=""  style="width: 10%;"><a href="#" class="dataTable-sorter">Codigo</a></th>
+                          <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
+                          <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
+                          <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
+                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
+                        </thead>
+                        <tbody>
+                          <% sale.itensvenda.order(:cod_item).each do |item| %>
+                            <tr>
+                              <td class="align-middle"><%= item.full_codigo %> </td>
+                              <td class="align-middle"><%= item.produto.nome %> </td>
+                              <td class="align-middle"><%= item.cor.nmcor %> </td>
+                              <td class="align-middle"><%= item.quantidade.to_i %> </td>
+                              <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <div class="dataTable-bottom">
+          <div class="dataTable-info"><%= page_entries_info @sales, entry_name: 'item' %></div>
+          <div class = "text-center">
+            <%= paginate @sales %>
           </div>
         </div>
       </div>
-      <script>
-        function MudarEstado(el) {
-             var display = document.getElementById(el).style.display;
-             if(display == "none")
-                 document.getElementById(el).removeAttribute("style");
-             else
-                 document.getElementById(el).style.display = 'none';
-         }
-         function formatarReal(valor) {
-           return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-         }
-         // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-         document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
-         document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
-         document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
-      </script>
+    </div>
+  </div>
+  <script>
+    function MudarEstado(el) {
+         var display = document.getElementById(el).style.display;
+         if(display == "none")
+             document.getElementById(el).removeAttribute("style");
+         else
+             document.getElementById(el).style.display = 'none';
+     }
+     function formatarReal(valor) {
+       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+     }
+     // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+     document.getElementById("valortotal").value = formatarReal(<%= somaTotal %>);
+     document.getElementById("valorDevido").value = formatarReal(<%= somaDevido %>);
+     document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
+  </script>

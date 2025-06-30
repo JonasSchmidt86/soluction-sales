@@ -49,18 +49,17 @@
       <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#interesseModal">
         <i class="fab fa-whatsapp me-2"></i>Tenho Interesse
       </button>
-      <a href="<%= portfolio_path %>" class="btn btn-outline-secondary btn-lg ms-2">
+      <a href="<%= portfolio_path %>" class="btn btn-outline-secondary btn-lg ms-2 mt-2">
         Voltar aos Produtos
       </a>
     </div>
   </div>
 </div>
 <style>
-p:first-letter {
-  text-transform: uppercase;
-}
+  p:first-letter {
+    text-transform: uppercase;
+  }
 </style>
-
 <%= render partial: 'home/shared/image_modal' %>
 <!-- Modal de Interesse -->
 <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: @produto, cod_cor: @cod_cor, modal_id: "interesseModal" } %>

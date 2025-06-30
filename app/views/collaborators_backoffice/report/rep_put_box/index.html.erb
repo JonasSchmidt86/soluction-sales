@@ -1,50 +1,75 @@
 <div class="card mt-3">
-  <%= link_to collaborators_backoffice_report_put_box_index_path, class:"card-header text-center bg-primary text-white" do %>
-    <h4>Lançamentos de Caixa</h4>
-  <% end %>
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_put_box_index_path do %>
+      <h4 class="text-white mb-0">Relatorio de Lançamentos de Caixa</h4>
+    <% end %>
+    <div class="ms-auto">
+      <button class="btn btn-light", data-bs-toggle="modal", data-bs-target="#modalLancamento">
+        <i class="fa fa-plus"></i> Lançamentos de Caixa
+      </button>
+    </div>
+  </div>
   <div class="card-body">
-    <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+    <div class="">
       <div class="dataTable-top">
-        <%= form_with(url: collaborators_backoffice_report_put_box_index_path, local: true, method: :get, 
-                                    class:"dataTable-search") do |form| %>
-          <div class="d-flex mb-2 col-md-3">
-            <div class="col-md-2 order-first">
-              <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
-            </div>
-            <div class="col-md-10">
-              <%= form.text_field :cliente, class:"text dataTable-input", value:params[:cliente],placeholder:"Cliente...", id:"text" %>
-            </div>
-            <div class="col-md-4">
-              <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.now.strftime("%d/%m/%Y")  )),
-                        class: "dataTable-input datepicker fallback", placeholder:"Data Inicial" %>
-            </div>
-            <div class="col-md-4">
-              <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Date.today.end_of_month.strftime("%d/%m/%Y")  )),
-                        class: "fallback dataTable-input datepicker", placeholder:"Data Final" %>
-            </div>
-            <div class="col-md-7">
-              <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
-                                                params[:cod_historico] ), include_blank: "Histórico", class: "form-control") %>
-            </div>
-            <div class="col-md-4">
-              <%= select_tag(:cod_operacao, options_for_select(get_operacao(), 
-                                    params[:cod_operacao] ), include_blank: "Todos",
-                                    class:"form-control") %>
-            </div>
-            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-              <div class="col-md-5">
-                <%= form.collection_select(:cod_bancoconta, 
-                              (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
-                                :cod_bancoconta, :nome_banco, {:include_blank => 'CAIXA', selected: params[:cod_bancoconta]}, 
-                                class: "text form-control", readonly: false) %>
+        <%= form_with(url: collaborators_backoffice_report_put_box_index_path, local: true, method: :get, class: "mb-3") do |form| %>
+          <div class="container-fluid">
+            <div class="row g-1 align-items-center">
+              <div class="col-auto" style="max-width: 80px;">
+                <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), 
+                      onchange: 'this.form.submit()', class: "form-select form-select-md" %>
               </div>
-            <% end %>
-            <button type='submit', class="btn btn-success btn-circle">Buscar</button>
-            <div class="ms-auto col-md-5 order-last">
-              <%= form.text_field :valorEntradas, class: "text-bg-info form-control ", readonly: true %>
-            </div>
-            <div class="ms-auto col-md-5 order-last ">
-              <%= form.text_field :valorSaidas, style:"width: 125px;", class: "text-bg-danger form-control ", readonly: true %>
+              <div class="col-auto">
+                <%= form.text_field :cliente, class: "form-control form-control-md", 
+                      value: params[:cliente], placeholder: "Cliente..." %>
+              </div>
+              <div class="col-auto">
+                <%= form.text_field :dataInicial, 
+                      value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"), 
+                      class: "form-control form-control-md datepicker", style: "width: 115px;", 
+                      placeholder: "Data Inicial" %>
+              </div>
+              <div class="col-auto">
+                <%= form.text_field :dataFinal, 
+                      value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"), 
+                      class: "form-control form-control-md datepicker", style: "width: 115px;", placeholder: "Data Final" %>
+              </div>
+              <div class="col-auto">
+                <%= select_tag(:cod_historico, 
+                      options_from_collection_for_select(
+                      Tiposhistoricoscaixa.where(ativo: true).order(:cod_tphitorico), 
+                      "cod_tphitorico", "descricao", params[:cod_historico]), include_blank: "Histórico",
+                      class: "form-select form-select-md", style: "width: 150px;" ) %>
+              </div>
+              <div class="col-auto">
+                <%= select_tag(:cod_operacao, 
+                      options_for_select(get_operacao(), params[:cod_operacao]), 
+                      include_blank: "Todos", class: "form-select form-select-md") %>
+              </div>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <div class="col-auto">
+                  <%= form.collection_select(:cod_bancoconta, 
+                        Bancoconta.where(ativo: true, cod_empresa: current_collaborator.cod_empresa).order(:cod_bancoconta), 
+                        :cod_bancoconta, :nome_banco, 
+                        { include_blank: 'CAIXA', selected: params[:cod_bancoconta] }, 
+                        class: "form-select form-select-md", style: "width: 150px;") %>
+                </div>
+              <% end %>
+              <div class="col-auto d-grid" style="width: 130px;">
+                <button type="submit" class="btn btn-success btn-md">Buscar</button>
+              </div>
+              <div class="col-auto ms-auto d-flex gap-2">
+                <div class="form-floating">
+                  <%= form.text_field :valorEntradas, class: "form-control form-control-sm text-bg-info", 
+                      readonly: true, id: "valorEntradas", style: "min-width: 120px;" %>
+                  <%= form.label :valorEntradas, "Entradas" %>
+                </div>
+                <div class="form-floating">
+                  <%= form.text_field :valorSaidas, class: "form-control form-control-sm text-bg-danger", 
+                      readonly: true, id: "valorSaidas", style: "min-width: 120px;" %>
+                  <%= form.label :valorSaidas, "Saídas" %>
+                </div>
+              </div>
             </div>
           </div>
         <% end %>
