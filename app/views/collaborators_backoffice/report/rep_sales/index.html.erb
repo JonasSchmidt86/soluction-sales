@@ -23,14 +23,14 @@
             <div class="col-auto">
               <%= form.text_field :dataInicial,
                     value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
-                    class: "form-control form-control-md datepicker",
+                    class: "form-control form-control-md datepicker fallback",
                     placeholder: "Data Inicial",
                     style: "min-width: 115px; max-width: 115px;" %>
             </div>
             <!-- Data Final -->
             <div class="col-auto">
               <%= form.text_field :dataFinal, value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
-                    class: "form-control form-control-md datepicker", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
+                    class: "form-control form-control-md datepicker fallback", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
             </div>
             <!-- Seletor de colaborador (somente para admin) -->
             <% if current_collaborator.funcionario.permissao.nivel == 1 %>

@@ -26,7 +26,7 @@
               <div class="col-auto">
                 <%= form.text_field :dataInicial, 
                       value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"), 
-                      class: "form-control form-control-md datepicker", style: "width: 115px;", 
+                      class: "form-control form-control-md datepicker fallback", style: "width: 115px;", 
                       placeholder: "Data Inicial" %>
               </div>
               <div class="col-auto">

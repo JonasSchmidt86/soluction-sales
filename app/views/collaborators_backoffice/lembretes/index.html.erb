@@ -1,7 +1,15 @@
 <div class="card mt-2 mb-3">
-  <%= link_to collaborators_backoffice_lembretes_path, class:"card-header text-center bg-primary text-white" do %>
-    <h4>Lembretes</h4>
-  <% end %>
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_lembretes_path, class:"" do %>
+      <h4 class="text-white mb-0">Lembretes</h4>
+    <% end %>
+    <div class="ms-auto">
+      <button type="button", class="btn btn-light", data-bs-toggle="modal",
+                      data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
+        <i class="fa fa-plus"></i> Novo
+      </button>
+    </div>
+  </div>
   <div class="">
   </div>
   <div class="card-body">
@@ -22,10 +30,6 @@
               <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Emp Solicidata</a></th>
               <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
               <th data-sortable="" style="width: 105px;">
-                <button type="button", class="btn btn-success btn-circle", data-bs-toggle="modal",
-                      data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
-                  <i class="fa fa-plus"></i>
-                </button>
               </th>
             </tr>
           </thead>

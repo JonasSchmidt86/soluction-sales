@@ -1,7 +1,14 @@
 <div class="card mt-3">
-  <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class:"card-header text-center bg-primary text-white" do %>
-    <h4>Contas Pag/Rec</h4>
-  <% end %>
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class:"" do %>
+      <h4 class="text-white mb-0">Contas Pag/Rec</h4>
+    <% end %>
+    <div class="ms-auto">
+      <%= link_to "#", class: "btn btn-light" do %>
+        <i class="fa fa-plus"></i> Novo
+      <% end %>
+    </div>
+  </div>
   <div class="card-body">
     <div class="dataTable-wrapper">
       <%= form_with(url: collaborators_backoffice_contas_pag_rec_index_path, local: true, method: :get, 

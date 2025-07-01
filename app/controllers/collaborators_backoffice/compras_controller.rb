@@ -126,6 +126,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           # Agora você pode iterar sobre os itens
           errors = []
           itens.each do |pro_temp|
+            next if pro_temp["cod_produto"].blank?
             puts "PRO_TEMP: #{pro_temp.inspect}"
 
             if pro_temp["cod_produto"].blank?
@@ -270,6 +271,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             contas = contas.values
           end
           contas.each do |bill|
+            next if bill["dtvencimento"].blank? || bill["numeroparcela"].blank? || bill["valorparcela"].blank?
             conta = Contaspagrec.new
 
             conta.cod_empresa = bill["cod_empresa"].to_i

@@ -1,9 +1,16 @@
 <div id="layoutAuthentication_content">
   <main>
     <div class="card mt-3">
-      <%= link_to collaborators_backoffice_pessoas_path, class:"card-header text-center bg-primary text-white" do %>
-        <h4>Pessoas</h4>
-      <% end %>
+      <div class="card-header bg-primary d-flex align-items-center">
+        <%= link_to collaborators_backoffice_pessoas_path, class:"" do %>
+          <h4 class="text-white mb-0">Pessoas</h4>
+        <% end %>
+        <div class="ms-auto">
+          <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-light" do %>
+            <i class="fa fa-plus"></i> Novo
+          <% end %>
+        </div>
+      </div>
       <div class="card-body">
         <%= form_with(url: collaborators_backoffice_pessoas_path, local: true, method: :get, 
                                             class:"dataTable-search") do |form| %>
@@ -64,13 +71,6 @@
               <% end %>
             </tbody>
           </table>
-          <div class="position-fixed bottom-0 end-0 m-4">
-            <div class="d-block my-3 mx-3">
-              <%= link_to new_collaborators_backoffice_pessoa_path, class:"btn btn-primary rounded-circle p-3" do %>
-                <i class="fa fa-plus fa-2x"></i>
-              <% end %>
-            </div>
-          </div>
           <% if @pessoas.respond_to?(:total_pages) %>
             <div class="dataTable-bottom">
               <div class="dataTable-info"><%= page_entries_info @pessoas, entry_name: 'conta' %></div>

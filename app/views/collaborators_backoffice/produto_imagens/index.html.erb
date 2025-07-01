@@ -1,94 +1,96 @@
-<br>
-<div id="layoutAuthentication_content">
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_produto_imagens_path do %>
+      <h4 class="text-white mb-0">Imagens</h4>
+    <% end %>
+    <div class="ms-auto">
+      <%= link_to edit_collaborators_backoffice_produto_imagen_path(0), class: "btn btn-light" do %>
+        <i class="fa fa-plus"></i> Novo
+      <% end %>
+    </div>
+  </div>
   <div class="card-body">
-    <div class="row justify-content-center">
-      <div>
-        <div class="card mb-3 shadow" >
-          <%= link_to collaborators_backoffice_produto_imagens_path, class:"card-header text-center bg-primary text-white" do %>
-            <h5>Imagens</h5>
-          <% end %>
-          <div class="card-body">
-            <!-- Tab panes -->
-            <div class="tab-content">
-              <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                <div class="card-body">
-                  <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :get, class: "row g-2 align-items-stretch mb-3") do |form| %>
-                    <!-- Campo de busca (term) -->
-                    <div class="col-md-3">
-                      <div class="form-floating h-100">
-                        <%= form.text_field :term, value: params[:term], class: "form-control h-100", placeholder: "Nome produto...", id: "text" %>
-                        <%= form.label :term, "Produto" %>
-                      </div>
-                    </div>
-                    <!-- Select de cor -->
-                    <div class="col-md-2">
-                      <div class="form-floating h-100">
-                        <%= form.collection_select(:cod_cor, 
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+        <div class="card-body">
+          <%= form_with(url: collaborators_backoffice_produto_imagens_path, local: true, method: :get, class: "row g-2 align-items-stretch mb-3") do |form| %>
+            <!-- Campo de busca (term) -->
+            <div class="col-md-3">
+              <div class="form-floating h-100">
+                <%= form.text_field :term, value: params[:term], class: "form-control h-100", placeholder: "Nome produto...", id: "text" %>
+                <%= form.label :term, "Produto" %>
+              </div>
+            </div>
+            <!-- Select de cor -->
+            <div class="col-md-2">
+              <div class="form-floating h-100">
+                <%= form.collection_select(:cod_cor, 
                             Core.select(:cod_cor, :nmcor).where(ativo: true).order(nmcor: :asc), 
                             :cod_cor, :nmcor, 
                             { include_blank: 'Selecione uma cor', selected: params[:cod_cor] }, 
                             class: "form-control h-100") %>
-                        <%= form.label :cod_cor, "Cor" %>
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-floating h-100">
-                        <%= form.collection_select(:cod_marca, 
+                <%= form.label :cod_cor, "Cor" %>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-floating h-100">
+                <%= form.collection_select(:cod_marca, 
                             Marca.select(:cod_marca, :nome).order(nome: :asc), 
                             :cod_marca, :nome, 
                             { include_blank: 'Selecione uma marca', selected: params[:cod_marca] }, 
                             class: "form-control h-100") %>
-                        <%= form.label :cod_marca, "Marca" %>
-                      </div>
-                    </div>
-                    <!-- Botão Buscar -->
-                    <div class="col-md-auto d-flex align-items-stretch">
-                      <button type="submit" class="btn btn-success btn-lg w-100">Buscar</button>
-                    </div>
-                    <!-- Link Add Imagens -->
-                    <div class="col-md-auto d-flex align-items-stretch">
-                      <%= link_to edit_collaborators_backoffice_produto_imagen_path(0), title: "Gerenciar Imagens", class: "btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center" do %>
-                        <i class="fa fa-images me-2"></i> Add Imagens
-                      <% end %>
-                    </div>
-                  <% end %>
-                  <hr class="my-2">
-                  <div class="row mb-3">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-5 g-2 mt-3 ">
-                      <% @produto_imagens.each_with_index do |imagem, index| %>
-                        <div class="col position-relative image-container">
-                          <!-- Imagem -->
-                          <div class="col d-flex justify-content-center">
-                            <div class="position-relative image-container">
-                              <div class="dropdown position-relative">
-                                <!-- Botão com imagem -->
-                                <button class="btn p-0 border-0 imagem-botao" 
+                <%= form.label :cod_marca, "Marca" %>
+              </div>
+            </div>
+            <!-- Botão Buscar -->
+            <div class="col-md-auto d-flex align-items-stretch">
+              <button type="submit" class="btn btn-success btn-lg w-100">Buscar</button>
+            </div>
+            <!-- Link Add Imagens -->
+            <div class="col-md-auto d-flex align-items-stretch">
+              <%= link_to edit_collaborators_backoffice_produto_imagen_path(0), title: "Gerenciar Imagens", class: "btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center" do %>
+                <i class="fa fa-images me-2"></i> Add Imagens
+              <% end %>
+            </div>
+          <% end %>
+          <hr class="my-2">
+          <div class="row mb-3">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-5 g-2 mt-3 ">
+              <% @produto_imagens.each_with_index do |imagem, index| %>
+                <div class="col position-relative image-container">
+                  <!-- Imagem -->
+                  <div class="col d-flex justify-content-center">
+                    <div class="position-relative image-container">
+                      <div class="dropdown position-relative">
+                        <!-- Botão com imagem -->
+                        <button class="btn p-0 border-0 imagem-botao" 
                                         type="button" 
                                         data-bs-toggle="dropdown" 
                                         data-bs-popper="none"
                                         aria-expanded="false"
                                         data-index="<%= index %>"
                                         style="position: relative; caret-color: transparent;">
-                                  <%= image_tag(imagem.imagem, 
+                          <%= image_tag(imagem.imagem, 
                                     class: "d-block w-100 rounded", 
                                     style: "max-width: 220px; height: 180px; object-fit: contain;" 
                                   ) %>
-                                </button>
-                                <!-- Dropdown sobre a imagem -->
-                                <ul class="dropdown-menu position-absolute" 
+                        </button>
+                        <!-- Dropdown sobre a imagem -->
+                        <ul class="dropdown-menu position-absolute" 
                                   style="top: 10px; left: 50%; transform: translateX(-50%); z-index: 10;" aria-labelledby="imageDropdown">
-                                  <li>
-                                    <button class="open-modal dropdown-item" 
+                          <li>
+                            <button class="open-modal dropdown-item" 
                                         id="abrir-modal-imagens_<%= index %>" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#imageModal" 
                                       data-index="<%= index %>">
-                                      🔍 Ampliar
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button class="open-modal dropdown-item" 
+                              🔍 Ampliar
+                            </button>
+                          </li>
+                          <li>
+                            <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
                                       data-bs-target="#produto_info" 
@@ -96,55 +98,52 @@
                                       data-produto-id="<%= imagem.produto.id %>"
                                       data-produto-nome="<%= imagem.produto.nome %>"
                                       >
-                                      ℹ️ Informações
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem), 
+                              ℹ️ Informações
+                            </button>
+                          </li>
+                          <li>
+                            <%= link_to "🗑️ Remover", collaborators_backoffice_produto_imagen_path(id: imagem), 
                                       method: :delete, 
                                       data: { confirm: "Tem certeza de que deseja remover esta imagem?" },
                                       class: "dropdown-item text-danger"
                                     %>
-                                  </li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      <% end %>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                  <!-- Modal com Carousel para navegar entre imagens -->
-                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
-                  <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Informações' } %>
                 </div>
-              </div>
-              <div class="mt-0 mb-3">
-                <div class="d-grid">
-                  <div class="col-md-9 col-sm-9  offset-md-3">
-                    <div id="setTime"></div
-                  </div>
-                  </div>
-                </div>
-              </div>
+              <% end %>
             </div>
-            <div class="dataTable-bottom">
-              <div class="dataTable-info">
-                <%= page_entries_info(@produto_imagens, entry_name: 'foto') if @produto_imagens.present? %>
-              </div>
-              <div class = "text-center">
-                <% if @produto_imagens.present? %>
-                  <% paginate @produto_imagens %>
-                <% else %>
-                  Nenhuma foto encontrada.
-                <% end %>
-              </div>
-            </div>
+          </div>
+          <!-- Modal com Carousel para navegar entre imagens -->
+          <%= render partial: 'collaborators_backoffice/produto_imagens/shared/modal_imagens', locals: { action_message: 'Modal' } %>
+          <%= render partial: 'collaborators_backoffice/produto_imagens/shared/form_info', locals: { action_message: 'Informações' } %>
+        </div>
+      </div>
+      <div class="mt-0 mb-3">
+        <div class="d-grid">
+          <div class="col-md-9 col-sm-9  offset-md-3">
+            <div id="setTime"></div
+                  </div>
           </div>
         </div>
       </div>
     </div>
+    <div class="dataTable-bottom">
+      <div class="dataTable-info">
+        <%= page_entries_info(@produto_imagens, entry_name: 'foto') if @produto_imagens.present? %>
+      </div>
+      <div class = "text-center">
+        <% if @produto_imagens.present? %>
+          <% paginate @produto_imagens %>
+        <% else %>
+          Nenhuma foto encontrada.
+        <% end %>
+      </div>
+    </div>
   </div>
+</div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
