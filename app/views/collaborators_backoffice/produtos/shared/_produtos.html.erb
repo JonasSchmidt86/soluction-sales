@@ -61,7 +61,7 @@
                       </li>
                       <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                         <li>
-                          <%= link_to collaborators_backoffice_produto_path(produto), method: :delete, 
+                          <%= link_to collaborators_backoffice_produto_path(produto, page: params[:page]), method: :delete, 
                               data: { confirm: "Deseja remover este produto?" }, 
                               class: "dropdown-item text-danger" do %>
                             <i class="fa fa-trash me-2"></i> Excluir

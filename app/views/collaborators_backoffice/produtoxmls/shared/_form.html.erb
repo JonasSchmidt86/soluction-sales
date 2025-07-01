@@ -1,198 +1,202 @@
-    
-<div class="card-body">
-  <div class="row justify-content-center">
-    <div class="">
-      <div class="card mt-3">
-        <% if @xml_file.compra.errors.any? %>
-          <div class="alert alert-danger alert-dismissible " role="alert">
-            <% @xml_file.compra.errors.full_messages.each do |message| %>
-              <ul>
-                <li><%= message %></li>
-              </ul>
-              <%# DESCOBRIR PQ DEPOIS QUE SALVO O PRODUTO NOVO ELE REMOVE O SCROLL %>
-            <% end %>
-            <% @xml_file.errors.clear %>
-            <% @xml_file.compra.errors.clear %>
-          </div>
-        <% end %>
-        <div class="card-header text-center bg-primary text-white" >
-          <h3>
-            <%= "#{action_message} Importação"%>
-          </h3>
-        </div>
-        <div class="card-body">
-          <!-- Nav tabs -->
-          <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Fornecedor</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Produtos</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="pagto-tab" data-bs-toggle="tab" data-bs-target="#pagto" type="button" role="tab" aria-controls="pagto" aria-selected="false">Pagamentos</button>
-            </li>
-          </ul>
-          <div id="notice"></div>
-          <%= form_with(model: [ :collaborators_backoffice,  @xml_file.compra ], local: true, id:"xml_compra") do |form_buy| %>
-            <% if @xml_file.file.attached? %>
-              <%= form_buy.hidden_field :arquivoxml, value: form_buy.object.arquivoxml %>
-              <%= form_buy.hidden_field :valortotal, value: form_buy.object.valortotal %>
-              <%= form_buy.hidden_field :outrasdespesas, value: form_buy.object.outrasdespesas %>
-              <%= form_buy.hidden_field :desconto, value: form_buy.object.desconto %>
-              <%= form_buy.hidden_field :valorfrete, value: form_buy.object.valorfrete %>
-              <%= form_buy.hidden_field :xml_file, value: @xml_file.id %>
-              <div class="tab-content">
-                <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                  <%#  agora aqui podemos manipular os dados do fornecedor para efetuar a compra %>
-                  <%# dados do xml %>
-                  <div class="row g-2 my-2">
-                    <div class="col-md-6">
-                      <div class="form-floating mb-3 mb-md-0">
-                        <%= form_buy.text_field :arquivoxml, value: @xml_file.file.filename, disabled: true, class: "text form-control", placeholder:"arquivo" %>
-                        <%= form_buy.label :arquivoxml, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-floating">
-                        <%= form_buy.text_field :numeronf, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
-                        <%= form_buy.label :numeroNf, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-floating">
-                        <%= form_buy.text_field :serienf, disabled: false, class: "text form-control", placeholder:"arquivo" %>
-                        <%= form_buy.label :serie, class:"" %>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row g-2 my-2">
-                    <div class="col-md-3">
-                      <div class="form-floating mb-3 mb-md-0">
-                        <%= form_buy.text_field :dataemissao, class: "form-control fallback datepicker", placeholder:"dt emissao", value: form_buy.object.dataemissao.strftime("%d/%m/%Y") %>
-                        <%= form_buy.label :data_emissao, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-floating">
-                        <%= form_buy.text_field :datacompra, class: "fallback datepicker text form-control", placeholder:"Dt Cadastro", value: form_buy.object.datacompra.strftime("%d/%m/%Y") %>
-                        <%= form_buy.label :data_cadastro, class:"" %>
-                      </div>
-                    </div>
-                  </div>
-                  <hr class="my-2">
-                  <%# dados fornecedor %>
-                  <h5 class="my-2">Dados do Fornecedor</h5>
-                  <%= form_buy.fields_for :pessoa do |form_pessoa| %>
-                    <div class="row g-2 my-2">
-                      <div class="col-md-6">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form_pessoa.text_field :nome, disabled: false, class: "text form-control", placeholder:"arquivo" %>
-                          <%= form_pessoa.label :nome, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :cpf_cnpj, class: "cnpj form-control", placeholder:"numero-Nf", id:"text" %>
-                          <%= form_pessoa.label :cnpj, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :rg_ie, class: "form-control ", placeholder:"numero-Nf" %>
-                          <%= form_pessoa.label :inscricao_estadual, class:"" %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row g-2 my-2">
-                      <div class="col-md-6">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :cidade, class: "form-control ", placeholder:"numero-Nf" %>
-                          <%= form_pessoa.label :cidade, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :endereco, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
-                          <%= form_pessoa.label :endereco, class:"" %>
-                        </div>
-                      </div>
-                    </div>
-                    <hr class="my-2">
-                    <h5 class="my-2">Contato Representante</h5>
-                    <div class="row g-2 my-2">
-                      <div class="col-md-6">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form_pessoa.text_field :pessoacontato, disabled: false, class: "text form-control", placeholder:"arquivo" %>
-                          <%= form_pessoa.label :pessoacontato, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :telefonecontato, class: "phone_with_ddd form-control ", placeholder:"numero-Nf" %>
-                          <%= form_pessoa.label :telefonecontato, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_pessoa.text_field :email, class: "form-control ", placeholder:"numero-Nf", type:"email" %>
-                          <%= form_pessoa.label :email, class:"" %>
-                        </div>
-                      </div>
-                    </div>
-                  <% end %>
+<style>
+  .modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+  }
+  body.modal-open {
+    overflow: auto !important;
+  }
+</style>
+<div class="card mt-3">
+  <% if @xml_file.compra.errors.any? %>
+    <div class="alert alert-danger alert-dismissible " role="alert">
+      <% @xml_file.compra.errors.full_messages.each do |message| %>
+        <ul>
+          <li><%= message %></li>
+        </ul>
+      <% end %>
+      <% @xml_file.errors.clear %>
+      <% @xml_file.compra.errors.clear %>
+    </div>
+  <% end %>
+  <div class="card-header text-center bg-primary text-white" >
+    <h3>
+      <%= "#{action_message} Importação"%>
+    </h3>
+  </div>
+  <div class="card-body">
+    <!-- Nav tabs -->
+    <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Fornecedor</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Produtos</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pagto-tab" data-bs-toggle="tab" data-bs-target="#pagto" type="button" role="tab" aria-controls="pagto" aria-selected="false">Pagamentos</button>
+      </li>
+    </ul>
+    <div id="notice"></div>
+    <%= form_with(model: [ :collaborators_backoffice,  @xml_file.compra ], local: true, id:"xml_compra") do |form_buy| %>
+      <% if @xml_file.file.attached? %>
+        <%= form_buy.hidden_field :arquivoxml, value: form_buy.object.arquivoxml %>
+        <%= form_buy.hidden_field :valortotal, value: form_buy.object.valortotal %>
+        <%= form_buy.hidden_field :outrasdespesas, value: form_buy.object.outrasdespesas %>
+        <%= form_buy.hidden_field :desconto, value: form_buy.object.desconto %>
+        <%= form_buy.hidden_field :valorfrete, value: form_buy.object.valorfrete %>
+        <%= form_buy.hidden_field :xml_file, value: @xml_file.id %>
+        <div class="tab-content">
+          <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+            <%#  agora aqui podemos manipular os dados do fornecedor para efetuar a compra %>
+            <%# dados do xml %>
+            <div class="row g-2 my-2">
+              <div class="col-md-6">
+                <div class="form-floating mb-3 mb-md-0">
+                  <%= form_buy.text_field :arquivoxml, value: @xml_file.file.filename, disabled: true, class: "text form-control", placeholder:"arquivo" %>
+                  <%= form_buy.label :arquivoxml, class:"" %>
                 </div>
-                <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
-                <div class="tab-pane" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="1">
-                  <table id="tblProducts" class="dataTable-table my-3" style="height: 100px;" >
-                    <thead>
-                      <tr>
-                        <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Fornecedor</a></th>
-                        <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Sistema</a></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% index = 0 %>
-                      <%= form_buy.fields_for :itenscompra do |form_itens| %>
-                        <tr>
-                          <td class="align-middle">
-                            <%# form_itens.text_field :pro_xml_temp %>
-                            <p class="text-start text-uppercase">
-                              Cod emissor: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:codproemissor] %></span></p>
-                            <p class="text-start text-uppercase">
-                              Nome: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:nome] %></span></p>
-                            <p class="text-start text-uppercase">
-                              Unidade Medida: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ucom] %></span></p>
-                            <p class="text-start text-uppercase">
-                              Quantidade: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object[:quantidade] %></span></p>
-                            <p class="text-start text-uppercase">
-                              Unitario: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( (form_itens.object[:valorunitario] ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
-                            <p class="text-start text-uppercase">
-                              IPI/Tt: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:ipi], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
-                            <p class="text-start text-uppercase">
-                              Vl Frete: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:valor_frete], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
-                            <p class="text-start text-uppercase">
-                              Desconto Total:
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
-                            <p class="text-start text-uppercase">
-                              Valor Total: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((form_itens.object[:valorunitario] * form_itens.object[:quantidade]) + ((form_itens.object[:ipi] + form_itens.object[:valor_frete].to_d) - form_itens.object.pro_xml_temp.desconto) ), precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
-                            <p class="text-start text-uppercase">
-                              NCM: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ncm] %></span></p>
-                            <p class="text-start text-uppercase">
-                              CFOP: 
-                              <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:cfop] %></span></p>
-                            <% unless form_itens.object.pro_xml_temp[:cod_produto].present? %>
-                              <%= form_itens.hidden_field :index, value:form_itens.index, id:"data-index" %>
-                              <button 
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating">
+                  <%= form_buy.text_field :numeronf, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
+                  <%= form_buy.label :numeroNf, class:"" %>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating">
+                  <%= form_buy.text_field :serienf, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                  <%= form_buy.label :serie, class:"" %>
+                </div>
+              </div>
+            </div>
+            <div class="row g-2 my-2">
+              <div class="col-md-3">
+                <div class="form-floating mb-3 mb-md-0">
+                  <%= form_buy.text_field :dataemissao, class: "form-control fallback datepicker", placeholder:"dt emissao", value: form_buy.object.dataemissao.strftime("%d/%m/%Y") %>
+                  <%= form_buy.label :data_emissao, class:"" %>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating">
+                  <%= form_buy.text_field :datacompra, class: "fallback datepicker text form-control", placeholder:"Dt Cadastro", value: form_buy.object.datacompra.strftime("%d/%m/%Y") %>
+                  <%= form_buy.label :data_cadastro, class:"" %>
+                </div>
+              </div>
+            </div>
+            <hr class="my-2">
+            <%# dados fornecedor %>
+            <h5 class="my-2">Dados do Fornecedor</h5>
+            <%= form_buy.fields_for :pessoa do |form_pessoa| %>
+              <div class="row g-2 my-2">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3 mb-md-0">
+                    <%= form_pessoa.text_field :nome, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                    <%= form_pessoa.label :nome, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :cpf_cnpj, class: "cnpj form-control", placeholder:"numero-Nf", id:"text" %>
+                    <%= form_pessoa.label :cnpj, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :rg_ie, class: "form-control ", placeholder:"numero-Nf" %>
+                    <%= form_pessoa.label :inscricao_estadual, class:"" %>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-2 my-2">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :cidade, class: "form-control ", placeholder:"numero-Nf" %>
+                    <%= form_pessoa.label :cidade, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :endereco, class: "text form-control", placeholder:"numero-Nf", id:"text" %>
+                    <%= form_pessoa.label :endereco, class:"" %>
+                  </div>
+                </div>
+              </div>
+              <hr class="my-2">
+              <h5 class="my-2">Contato Representante</h5>
+              <div class="row g-2 my-2">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3 mb-md-0">
+                    <%= form_pessoa.text_field :pessoacontato, disabled: false, class: "text form-control", placeholder:"arquivo" %>
+                    <%= form_pessoa.label :pessoacontato, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :telefonecontato, class: "phone_with_ddd form-control ", placeholder:"numero-Nf" %>
+                    <%= form_pessoa.label :telefonecontato, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_pessoa.text_field :email, class: "form-control ", placeholder:"numero-Nf", type:"email" %>
+                    <%= form_pessoa.label :email, class:"" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
+          <div class="tab-pane" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="1">
+            <table id="tblProducts" class="dataTable-table my-3" style="height: 100px;" >
+              <thead>
+                <tr>
+                  <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Fornecedor</a></th>
+                  <th data-sortable="" style="width: 50%;"><a class="dataTable-sorter">Sistema</a></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% index = 0 %>
+                <%= form_buy.fields_for :itenscompra do |form_itens| %>
+                  <tr>
+                    <td class="align-middle">
+                      <%# form_itens.text_field :pro_xml_temp %>
+                      <p class="text-start text-uppercase">
+                        Cod emissor: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:codproemissor] %></span></p>
+                      <p class="text-start text-uppercase">
+                        Nome: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:nome] %></span></p>
+                      <p class="text-start text-uppercase">
+                        Unidade Medida: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ucom] %></span></p>
+                      <p class="text-start text-uppercase">
+                        Quantidade: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object[:quantidade] %></span></p>
+                      <p class="text-start text-uppercase">
+                        Unitario: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( (form_itens.object[:valorunitario] ) , precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                      <p class="text-start text-uppercase">
+                        IPI/Tt: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:ipi], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                      <p class="text-start text-uppercase">
+                        Vl Frete: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object[:valor_frete], precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                      <p class="text-start text-uppercase">
+                        Desconto Total:
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                      <p class="text-start text-uppercase">
+                        Valor Total: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= number_to_currency( ((form_itens.object[:valorunitario] * form_itens.object[:quantidade]) + ((form_itens.object[:ipi] + form_itens.object[:valor_frete].to_d) - form_itens.object.pro_xml_temp.desconto) ), precision: 2, separator: ",", delimiter: "", unit: "") %></span></p>
+                      <p class="text-start text-uppercase">
+                        NCM: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ncm] %></span></p>
+                      <p class="text-start text-uppercase">
+                        CFOP: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:cfop] %></span></p>
+                      <% unless form_itens.object.pro_xml_temp[:cod_produto].present? %>
+                        <%= form_itens.hidden_field :index, value:form_itens.index, id:"data-index" %>
+                        <button 
                                   type="button" 
                                   class="btn btn-sm btn-outline-primary mt-2"
                                   data-bs-toggle="modal" 
@@ -203,253 +207,250 @@
                                   data-cfop="<%= form_itens.object.pro_xml_temp[:cfop] %>"
                                   data-index="<%= form_itens.index %>"
                                   onclick="abrirModal(this)">
-                                Cadastrar Produto
-                              </button>
-                            <% end %>
-                          </td>
-                          <td class="align-middle">
-                            <%= form_itens.hidden_field :pro_xml_temp, value: form_itens.object.pro_xml_temp.to_json %>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-12">
-                                <div class="form-floating mb-3 mb-md-0">
-                                  <%= form_itens.hidden_field :cod_produto %>
-                                  <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo" %>
-                                  <%# form_itens.label :produto, class:"" %>
-                                  <div id="products_list_<%= index %>" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
-                                  <% index += 1 %>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-10">
-                                <div class="form-floating mb-3 mb-md-0">
-                                  <%= form_itens.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
+                          Cadastrar Produto
+                        </button>
+                      <% end %>
+                    </td>
+                    <td class="align-middle">
+                      <%= form_itens.hidden_field :pro_xml_temp, value: form_itens.object.pro_xml_temp.to_json %>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-12">
+                          <div class="form-floating mb-3 mb-md-0">
+                            <%= form_itens.hidden_field :cod_produto %>
+                            <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo" %>
+                            <%# form_itens.label :produto, class:"" %>
+                            <div id="products_list_<%= index %>" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                            <% index += 1 %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-10">
+                          <div class="form-floating mb-3 mb-md-0">
+                            <%= form_itens.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), 
                                                                                     :cod_cor, :nmcor_cod, {:prompt => 'Selecione uma Cor'},
                                                                                         class: "form-control border-top-0 border-start-0 border-end-0 border-dark" ) %>                                                                                <%# form_itens.text_field :cor, disabled: false, class: "text form-control", placeholder:"arquivo" %>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.number_field :quantidade, step: 1, class: "form-control quantidade", onchange: "setValorTotal(this)" %>
-                                  <%= form_itens.label :quantidade, class:"" %>
-                                </div>
-                              </div>
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorunitario", placeholder:"", onchange: "setValorTotal(this)"  %>
-                                  <%= form_itens.label :valorunitario, class:"" %>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.text_field :ipi, disabled: false, value: (form_itens.object.ipi? ? number_to_currency(form_itens.object.ipi, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
-                                  <%= form_itens.label :valor_ipi, class:"" %>
-                                </div>
-                              </div>
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
-                                  <%= form_itens.label :Icms_10_ST, class:"" %>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.text_field :valor_frete, disabled: false, value: number_to_currency(form_itens.object.valor_frete, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                                  <%= form_itens.label :valor_frete, class:"" %>
-                                </div>
-                              </div>
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <%= form_itens.text_field :desconto, disabled: false, value: number_to_currency(form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                                  <%= form_itens.label :desconto, class:"" %>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="row g-2 my-2">
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d ) %>
-                                  <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
-                                  <%= form_itens.text_field :custoFinal, disabled: true, value: number_to_currency((valorTotal/form_itens.object.quantidade), precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                                  <%= form_itens.label :Custo_Un_Final, class:"" %>
-                                </div>
-                              </div>
-                              <div class="col-md-3">
-                                <div class="form-floating">
-                                  <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
-                                  <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
-                                  <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
-                                  <%= form_itens.label :valor_total, class:"" %>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="tab-pane" id="pagto" role="tabpanel" aria-labelledby="pagto-tab" tabindex="2">
-                  <div class="bg-primary" >
-                    <h2 class="text-center font-weight-light">
-                      Dados NF
-                    </h4>
-                  </div>
-                  <% #xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.number_field :quantidade, step: 1, class: "form-control quantidade", onchange: "setValorTotal(this)" %>
+                            <%= form_itens.label :quantidade, class:"" %>
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorunitario", placeholder:"", onchange: "setValorTotal(this)"  %>
+                            <%= form_itens.label :valorunitario, class:"" %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.text_field :ipi, disabled: false, value: (form_itens.object.ipi? ? number_to_currency(form_itens.object.ipi, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                            <%= form_itens.label :valor_ipi, class:"" %>
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
+                            <%= form_itens.label :Icms_10_ST, class:"" %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.text_field :valor_frete, disabled: false, value: number_to_currency(form_itens.object.valor_frete, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                            <%= form_itens.label :valor_frete, class:"" %>
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <%= form_itens.text_field :desconto, disabled: false, value: number_to_currency(form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                            <%= form_itens.label :desconto, class:"" %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d ) %>
+                            <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                            <%= form_itens.text_field :custoFinal, disabled: true, value: number_to_currency((valorTotal/form_itens.object.quantidade), precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                            <%= form_itens.label :Custo_Un_Final, class:"" %>
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
+                            <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                            <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
+                            <%= form_itens.label :valor_total, class:"" %>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <div class="tab-pane" id="pagto" role="tabpanel" aria-labelledby="pagto-tab" tabindex="2">
+            <div class="bg-primary" >
+              <h2 class="text-center font-weight-light">
+                Dados NF
+              </h4>
+            </div>
+            <% #xml_content = File.read(ActiveStorage::Blob.service.path_for(@xml_file.file.key), encoding: 'UTF-8')
                                             xml_content = File.read(@xml_file.local_file_path, encoding: 'UTF-8')
                                             xml_doc = Nokogiri::XML(xml_content) 
                                             tot_element = xml_doc.xpath('//*[local-name()="ICMSTot"]') 
                                             fat_element = xml_doc.xpath('//*[local-name()="cobr"]') %>
-                  <div class="row">
-                    <div class="col-md-6">
-                      <p class="text-start text-uppercase">
-                        Total Prod: 
-                        <%= form_buy.text_field :tt_produto, value: number_to_currency( ((tot_element.at("vProd")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        Desconto: 
-                        <%= form_buy.text_field :desconto, value: number_to_currency( ((tot_element.at("vDesc")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        Seguro: 
-                        <%= form_buy.text_field :vSeguro, value: number_to_currency( ((tot_element.at("vSeg")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        Icms 10 ST: 
-                        <%= form_buy.text_field :vST, value: number_to_currency( ((tot_element.at("vST")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <hr class="my-2">
-                      <p class="text-start text-uppercase">
-                        Numero Fatura: 
-                        <%= form_buy.text_field :Nr_fatura, value: ((fat_element.at("nFat")&.text).to_i || 0), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                    </div>
-                    <div class="col-md-6">
-                      <p class="text-start text-uppercase">
-                        Frete: 
-                        <%= form_buy.text_field :valorfrete, value: number_to_currency( ((tot_element.at("vFrete")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        outrasdespesas
-                        <%= form_buy.text_field :outrasdespesas, value: number_to_currency( ((tot_element.at("vOutro")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        Total IPI: 
-                        <%= form_buy.text_field :vIPI, value: number_to_currency( ((tot_element.at("vIPI")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
-                      </p>
-                      <p class="text-start text-uppercase">
-                        <span class="form-control border-top-0 border-start-0 border-end-0 border-bottom-0 border-dark" style="font-weight: bold !important;">
-                          <br>
-                          <br>
-                        </span>
-                      </p>
-                      <hr class="my-2">
-                      <p class="text-start text-uppercase">
-                        Valor NF: 
-                        <%= form_buy.text_field :Valor_liquido, value: number_to_currency( ((fat_element.at("vLiq")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                      </p>
-                    </div>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="text-start text-uppercase">
+                  Total Prod: 
+                  <%= form_buy.text_field :tt_produto, value: number_to_currency( ((tot_element.at("vProd")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  Desconto: 
+                  <%= form_buy.text_field :desconto, value: number_to_currency( ((tot_element.at("vDesc")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  Seguro: 
+                  <%= form_buy.text_field :vSeguro, value: number_to_currency( ((tot_element.at("vSeg")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  Icms 10 ST: 
+                  <%= form_buy.text_field :vST, value: number_to_currency( ((tot_element.at("vST")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <hr class="my-2">
+                <p class="text-start text-uppercase">
+                  Numero Fatura: 
+                  <%= form_buy.text_field :Nr_fatura, value: ((fat_element.at("nFat")&.text).to_i || 0), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p class="text-start text-uppercase">
+                  Frete: 
+                  <%= form_buy.text_field :valorfrete, value: number_to_currency( ((tot_element.at("vFrete")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  outrasdespesas
+                  <%= form_buy.text_field :outrasdespesas, value: number_to_currency( ((tot_element.at("vOutro")&.text).to_f || 0 ) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  Total IPI: 
+                  <%= form_buy.text_field :vIPI, value: number_to_currency( ((tot_element.at("vIPI")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true  %>
+                </p>
+                <p class="text-start text-uppercase">
+                  <span class="form-control border-top-0 border-start-0 border-end-0 border-bottom-0 border-dark" style="font-weight: bold !important;">
+                    <br>
+                    <br>
+                  </span>
+                </p>
+                <hr class="my-2">
+                <p class="text-start text-uppercase">
+                  Valor NF: 
+                  <%= form_buy.text_field :Valor_liquido, value: number_to_currency( ((fat_element.at("vLiq")&.text).to_f || 0) , precision: 2, separator: ",", delimiter: "", unit: ""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                </p>
+              </div>
+            </div>
+            <br>
+            <div class="bg-primary" >
+              <h2 class="text-center font-weight-light">
+                Frete
+              </h4>
+            </div>
+            <%= form_buy.fields_for :frete do |form_ff|  %>
+              <div class="row g-2 my-2">
+                <div class="col-md-9">
+                  <div class="form-floating mb-3 mb-md-0">
+                    <%= form_ff.text_field :pessoa, class: "form-control border-top-0 border-start-0 border-end-0 border-dark ", placeholder:"Transportadora", readonly: false  %>
+                    <%= form_ff.label :transportadora, class:"" %>
+                    <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                    <%= form_ff.hidden_field :cod_pessoa, id: 'selected_frete_person_id' %>
                   </div>
-                  <br>
-                  <div class="bg-primary" >
-                    <h2 class="text-center font-weight-light">
-                      Frete
-                    </h4>
-                  </div>
-                  <%= form_buy.fields_for :frete do |form_ff|  %>
-                    <div class="row g-2 my-2">
-                      <div class="col-md-9">
-                        <div class="form-floating mb-3 mb-md-0">
-                          <%= form_ff.text_field :pessoa, class: "form-control border-top-0 border-start-0 border-end-0 border-dark ", placeholder:"Transportadora", readonly: false  %>
-                          <%= form_ff.label :transportadora, class:"" %>
-                          <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
-                          <%= form_ff.hidden_field :cod_pessoa, id: 'selected_frete_person_id' %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_ff.text_field :datacadastro,
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_ff.text_field :datacadastro,
                                                                     value: (form_ff.object.try(:datacadastro).nil? ? post_date(DateTime.now) : form_ff.object.datacadastro),
                                                                     class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark",
                                                                     placeholder: "Dt",
                                                                 readonly: false %>
-                          <%= form_ff.label :dt_cadastro, class:"" %>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row g-2 my-2">
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_ff.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false  %>
-                          <%= form_ff.label :nr_romaneio, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_ff.text_field :datavencimento, class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false   %>
-                          <%= form_ff.label :dt_vencimento, class:"" %>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <%= form_ff.text_field :valor, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false %>
-                          <%= form_ff.label :valor, class:"" %>
-                        </div>
-                      </div>
-                    </div>
-                    <%= form_ff.hidden_field :empresa  %>
-                    <%= form_ff.hidden_field :ativo %>
-                  <% end %>
-                  <br>
-                  <div class="bg-primary" >
-                    <h2 class="text-center font-weight-light">
-                      Contas
-                    </h4>
+                    <%= form_ff.label :dt_cadastro, class:"" %>
                   </div>
-                  <table id="tblContas" class="dataTable-table my-3">
-                    <thead>
-                      <tr>
-                        <th class="">Numero</th>
-                        <th class="">Dt Vencimento</th>
-                        <th class="">valor Parcela</th>
-                        <th style="width: 3%;"></th>
-                      </tr>
-                    </thead>
-                    <tbody id = 'conta_field' class = "contas">
-                      <%= form_buy.fields_for :contas do |bill| %>
-                        <%= render partial: "conta_fields", locals: { f: bill } %>
-                      <% end %>
-                    </tbody>
-                  </table>
-                  <div class="form-actions">
-                    <%= link_to_add_association 'Adiciona Conta', form_buy, :contas, 
+                </div>
+              </div>
+              <div class="row g-2 my-2">
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_ff.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false  %>
+                    <%= form_ff.label :nr_romaneio, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_ff.text_field :datavencimento, class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false   %>
+                    <%= form_ff.label :dt_vencimento, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form_ff.text_field :valor, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false %>
+                    <%= form_ff.label :valor, class:"" %>
+                  </div>
+                </div>
+              </div>
+              <%= form_ff.hidden_field :empresa  %>
+              <%= form_ff.hidden_field :ativo %>
+            <% end %>
+            <br>
+            <div class="bg-primary" >
+              <h2 class="text-center font-weight-light">
+                Contas
+              </h4>
+            </div>
+            <table id="tblContas" class="dataTable-table my-3">
+              <thead>
+                <tr>
+                  <th class="">Numero</th>
+                  <th class="">Dt Vencimento</th>
+                  <th class="">valor Parcela</th>
+                  <th style="width: 3%;"></th>
+                </tr>
+              </thead>
+              <tbody id = 'conta_field' class = "contas">
+                <%= form_buy.fields_for :contas do |bill| %>
+                  <%= render partial: "conta_fields", locals: { f: bill } %>
+                <% end %>
+              </tbody>
+            </table>
+            <div class="form-actions">
+              <%= link_to_add_association 'Adiciona Conta', form_buy, :contas, 
                                                         force_non_association_create: true, id:"addConta",
                                                         class: 'btn btn-primary bills', 
                                                         data: { association_insertion_node: '.contas',
                                                                 association_insertion_method: :append } %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-            <div class="position-fixed bottom-0 end-0 m-4">
-              <div class="d-block my-3 mx-3">
-                <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
-                  <i class="fa fa-check fa-2x"></i>
-                </button>
-              </div>
             </div>
-          <% end %>
+          </div>
         </div>
-        <%# car body %>
+      <% end %>
+      <div class="position-fixed bottom-0 end-0 m-4">
+        <div class="d-block my-3 mx-3">
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+            <i class="fa fa-check fa-2x"></i>
+          </button>
+        </div>
       </div>
-    </div>
+    <% end %>
   </div>
+  <%# car body %>
 </div>
 <%= render partial: 'collaborators_backoffice/produtoxmls/shared/produtoNovo_modal', locals: { action_message: 'Modal' } %>
 <%= render partial: 'layouts/shared/modal_alert' %>
@@ -508,8 +509,14 @@
               const modalEl = document.getElementById('modalNovoProduto');
               const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
               modalInstance.hide();
-              $('.modal-backdrop').remove();
-              $('body').removeClass('modal-open'); // remove overflow hidden
+
+              // Corrige o scroll se necessário
+              modalEl.addEventListener('hidden.bs.modal', function () {
+                // Remove backdrop manualmente se ainda existir
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = 'auto';
+              }, { once: true });
 
           },
           error: function(xhr) {

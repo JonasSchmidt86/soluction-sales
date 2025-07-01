@@ -49,17 +49,16 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     def destroy
         if @produto.itenscompra.blank? && @produto.itensvenda.blank? && @produto.empresaprodutos.blank?
             if @produto.destroy
-                redirect_to collaborators_backoffice_produtos_path(params[:page]) , notice: "Produto Removido!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]) , notice: "Produto Removido!"
             else
-                redirect_to collaborators_backoffice_produtos_path(params[:page]) , notice: "Erro ao remover produto!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]) , notice: "Erro ao remover produto!"
             end
         else
-            puts params[:page]
             @produto.ativo = false;
             if @produto.save
-                redirect_to collaborators_backoffice_produtos_path(params[:page]), notice: "Produto foi desativado!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]), notice: "Produto foi desativado!"
             else 
-                redirect_to collaborators_backoffice_produtos_path(params[:page]), notice: "Produto não pode ser removido!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]), notice: "Produto não pode ser removido!"
             end
         end
     end
