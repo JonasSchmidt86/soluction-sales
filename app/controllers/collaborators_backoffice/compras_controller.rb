@@ -255,6 +255,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           if frete.save!
             # Criar a compra
             compra.cod_frete = frete.cod_frete
+            compra.valortotal += frete.valor
             puts "Frete persistido!"
           end
           
