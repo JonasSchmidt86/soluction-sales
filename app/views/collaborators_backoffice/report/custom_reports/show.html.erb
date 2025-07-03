@@ -78,6 +78,14 @@
       <div class="col-auto">
         <%= submit_tag "Executar Relatório", class: "btn btn-primary" %>
       </div>
+      <div class="col-auto">
+        <button id="export-excel" class="btn btn-success" data-filename="<%= @report.title.parameterize.underscore %>.xlsx">
+          Exportar para Excel
+        </button>
+      </div>
+      <div class="col-auto ms-auto">
+        <input type="text" id="custom-search" class="form-control" placeholder="Buscar na tabela..." style="max-width: 250px;">
+      </div>
     <% end %>
     <% if @results.present? %>
       <div class="table-responsive mt-3">
@@ -104,9 +112,6 @@
               </tr>
             <% end %>
           </tbody>
-          <button id="export-excel" class="btn btn-success mt-3" data-filename="<%= @report.title.parameterize.underscore %>.xlsx">
-            Exportar para Excel
-          </button>
           <iframe id="download_frame" name="download_frame" style="display:none;"></iframe>
         </div>
       <% elsif @error.present? %>
@@ -132,10 +137,11 @@
       }
     });
     document.addEventListener('DOMContentLoaded', function() {
-      $('#report-custom').DataTable({
-        "paging": false,  // Desabilita a paginação
-        "searching": true, // Permite a pesquisa na tabela (opcional)
-        "ordering": true,   // Habilita ordenação nas colunas (opcional)
+      var table = $('#report-custom').DataTable({
+        "paging": false,
+        "searching": true,
+        "ordering": true,
+        "dom": 'rt',
         "language": {
           "sProcessing":   "Processando...",
           "sLengthMenu":   "Mostrar _MENU_ registros por página",
@@ -153,5 +159,9 @@
             "sLast":     "Último"
         },
       }});
+
+      $('#custom-search').on('keyup', function() {
+        table.search(this.value).draw();
+      });
     });
   </script>
