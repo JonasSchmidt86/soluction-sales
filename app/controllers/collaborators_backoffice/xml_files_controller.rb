@@ -128,7 +128,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
             @xml_file.file.attach(blob)
           else
             puts "Blob e XmlFile não existem. Criando normalmente..."
-            @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
+            @xml_file.attach_file_with_custom_service(arquivo, id_nfe['Id'], current_collaborator.empresa)
           end
 
           if cnpj_val
@@ -164,7 +164,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           end
 
           # Associa o arquivo com o serviço personalizado
-          @xml_file.attach_file_with_custom_service(arquivo, id_nfe['Id'], current_collaborator.empresa)
+          # @xml_file.attach_file_with_custom_service(arquivo, id_nfe['Id'], current_collaborator.empresa)
 
           numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
           compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
