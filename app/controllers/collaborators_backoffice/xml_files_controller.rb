@@ -163,16 +163,12 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
             puts "Fornecedor: #{fornecedor.inspect}"
           end
 
-          file_io = arquivo
-          # file_io = @xml_file.file
-          company = current_collaborator.empresa 
-          puts "----------------- #{company}"
           # Associa o arquivo com o serviço personalizado
-          @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
+          @xml_file.attach_file_with_custom_service(arquivo, id_nfe['Id'], current_collaborator.empresa)
 
           numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
           compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
-          puts "---COMPRA SE EXISTE = -------------- #{compra.size}"
+
           if compra.size > 0
             @xml_file.compra = compra.first;
           end
