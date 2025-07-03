@@ -74,8 +74,6 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
         return
       end
       
-      
-      
       arquivos = params[:xml_file][:file].reject(&:blank?) # Remove strings vazias
       
       puts "Arquivos: #{arquivos.size }"
@@ -120,10 +118,17 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
 
           xml_file = XmlFile.joins(file_attachment: :blob).find_by(active_storage_blobs: { filename: id_nfe['Id'] })
           blob = ActiveStorage::Blob.find_by(filename: id_nfe['Id'])
+
           if blob.present? && xml_file.present?
+            puts "Arquivo já foi importado (com vinculação)."
             arquivos_erro << arquivo
-            puts " ------------------ ------------------ Arquivo já foi importado. #{blob.filename}"
-            next;
+            next
+          elsif blob.present? && xml_file.blank?
+            puts "Blob existe mas XmlFile foi deletado. Reanexando..."
+            @xml_file.file.attach(blob)
+          else
+            puts "Blob e XmlFile não existem. Criando normalmente..."
+            @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
           end
 
           if cnpj_val
@@ -162,9 +167,9 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           # file_io = @xml_file.file
           company = current_collaborator.empresa 
           puts "----------------- #{company}"
-        
           # Associa o arquivo com o serviço personalizado
           @xml_file.attach_file_with_custom_service(file_io, id_nfe['Id'], company)
+
           numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
           compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
           puts "---COMPRA SE EXISTE = -------------- #{compra.size}"
@@ -173,7 +178,7 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           end
 puts "----------------- ANTES DE SALVAR -----------------"
           # Se o arquivo XML foi salvo com sucesso, redirecione para a página de listagem
-          if @xml_file.save
+          if @xml_file.save!
             arquivos_salvos << @xml_file
           else
               puts "Erro ao salvar XML: #{xml_file.errors.full_messages.join(', ')}"

@@ -26,18 +26,18 @@ class XmlFile < ApplicationRecord
       existing_blob = ActiveStorage::Blob.find_by(key: custom_key)
   
       if existing_blob
-        # Remove o arquivo existente
-        existing_blob.purge
-      end
-      
-      # Anexa o novo arquivo
-      self.file.attach(
-        io: io,
-        filename: filename,
-        content_type: io.content_type || 'application/octet-stream',
-        service_name: :xml_storage,
-        key: custom_key
-      )      
+        Rails.logger.info("Reusando blob existente com chave: #{custom_key}")
+        self.file.attach(existing_blob)
+      else
+        # Anexa o novo arquivo
+        self.file.attach(
+          io: io,
+          filename: filename,
+          content_type: io.content_type || 'application/octet-stream',
+          service_name: :xml_storage,
+          key: custom_key
+        )  
+      end    
   
       Rails.logger.info("Arquivo anexado com chave: #{custom_key}")
     rescue StandardError => e
