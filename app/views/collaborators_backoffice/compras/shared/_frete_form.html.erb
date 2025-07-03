@@ -1,0 +1,102 @@
+<div class="card-body">
+  <%= f.fields_for :frete do |frete| %>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <%= frete.text_field :nome_transportadora, class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder: "Digite para buscar" %>
+          <%= frete.label :transportadora, class: "" %>
+          <div id="transportadora_results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+          <%= frete.hidden_field :cod_pessoa, id: 'selected_transportadora_id' %>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <%= frete.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+          <%= frete.label :numero_romaneio, class: "" %>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-floating mb-3">
+          <%= frete.text_field :datacadastro, value: Date.current.strftime("%d/%m/%Y"), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+          <%= frete.label :data_cadastro, class: "" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating mb-3">
+          <%= frete.text_field :datavencimento, class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+          <%= frete.label :data_vencimento, class: "" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating mb-3">
+          <%= frete.text_field :valor, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+          <%= frete.label :valor, class: "" %>
+        </div>
+      </div>
+    </div>
+    <%= frete.hidden_field :cod_empresa, value: current_collaborator.empresa.cod_empresa %>
+    <%= frete.hidden_field :ativo, value: true %>
+  <% end %>
+</div>
+<script>
+  $(document).ready(function() {
+    // Usar seletor mais genérico para encontrar o campo
+    var transportadoraSearch = $('input[id*="nome_transportadora"]');
+    var transportadoraResultsList = $('#transportadora_results_list');
+    var selectedTransportadoraIdField = $('#selected_transportadora_id');
+    console.log('Campo cod_pessoa encontrado:', selectedTransportadoraIdField.length);
+    let apiUrl = window.location.origin + '/collaborators_backoffice/buscas/buscar_pessoas';
+
+    console.log('Campo transportadora encontrado:', transportadoraSearch.length);
+    console.log('ID do campo:', transportadoraSearch.attr('id'));
+
+    transportadoraSearch.on('keydown', function(event) {
+      console.log('Tecla pressionada:', event.key);
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        filterTransportadoraOptions();
+      } else if (event.key === 'Escape') {
+        transportadoraSearch.val('');
+        selectedTransportadoraIdField.val('');
+        transportadoraResultsList.empty().hide();
+      }
+    });
+
+    transportadoraResultsList.on('click', 'div.list-group-item', function() {
+      var selectedTransportadora = $(this).text();
+      var selectedTransportadoraId = $(this).data('cod_pessoa');
+
+      selectedTransportadoraIdField.val(selectedTransportadoraId);
+      transportadoraSearch.val(selectedTransportadora);
+      transportadoraResultsList.empty().hide();
+      console.log('Transportadora selecionada - ID:', selectedTransportadoraId, 'Campo preenchido:', selectedTransportadoraIdField.val());
+    });
+
+    function filterTransportadoraOptions() {
+      var query = transportadoraSearch.val().trim().toLowerCase();
+      console.log('Buscando por:', query);
+      transportadoraResultsList.empty();
+
+      $.ajax({
+        url: apiUrl,
+        method: 'GET',
+        data: { entidade: 'Pessoa', query: query },
+        success: function(data) {
+          console.log('Dados recebidos:', data);
+          data.forEach(function(person) {
+            var listItem = $('<div>').text(person.nome);
+            listItem.addClass('list-group-item');
+            listItem.data('cod_pessoa', person.cod_pessoa);
+            transportadoraResultsList.append(listItem);
+          });
+          transportadoraResultsList.show();
+        },
+        error: function(err) {
+          console.error('Erro na requisição AJAX:', err);
+        }
+      });
+    }
+  });
+</script>

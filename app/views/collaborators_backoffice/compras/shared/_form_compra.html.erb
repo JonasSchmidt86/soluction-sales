@@ -103,6 +103,9 @@
                     <li class="nav-item" role="presentation">
                       <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="freight-tab" data-bs-toggle="tab" data-bs-target="#freight" type="button" role="tab" aria-controls="freight" aria-selected="false">Frete</button>
+                    </li>
                   </ul>
                   <div class="tab-content">
                     <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
@@ -129,7 +132,7 @@
                             </tbody>
                           </table>
                           <div class="form-actions">
-                            <%= link_to_add_association 'Adiciona Item', compra, :itenscompra, 
+                            <%= link_to_add_association 'Adiciona Item', compra, :itenscompra,
                                                             force_non_association_create: true,
                                                             class: 'btn btn-primary', 
                                                              data: { association_insertion_node: '.itens', 
@@ -169,6 +172,7 @@
                           <thead>
                             <tr>
                               <th class="">Numero</th>
+                              <th class="">Cat Fina</th>
                               <th class="">Dt Vencimento</th>
                               <th class="">valor Parcela</th>
                               <th style="width: 3%;"></th>
@@ -188,6 +192,9 @@
                                                                  association_insertion_method: :append } %>
                         </div>
                       </div>
+                    </div>
+                    <div class="tab-pane" id="freight" role="tabpanel" aria-labelledby="freight-tab" tabindex="0">
+                      <%= render partial: "collaborators_backoffice/compras/shared/frete_form", locals: { f: compra } %>
                     </div>
                   </div>
                 </div>
@@ -378,7 +385,7 @@
           }
       }
 
-      console.log(window.location.origin);
+      // console.log(window.location.origin);
       let url = window.location.origin + '/collaborators_backoffice/';
 
       function abrirModal() {
