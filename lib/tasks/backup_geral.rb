@@ -27,12 +27,12 @@ File.open(file_path, 'w') do |file|
   # === 1. SQL via ActiveRecord - Produtos ===
   produtos = Produto.where.not(titulo: [nil, '']).where.not(descricao: [nil, ''])
   puts "🔹 Produtos encontrados: #{produtos.count}"
+  connection = ActiveRecord::Base.connection
 
   produtos.find_each do |produto|
     cod_produto = produto.cod_produto
-    titulo     = produto.titulo
-    # descricao_text = produto.descricao.to_s.gsub("\\", "\\\\").gsub("\n", "\\n").gsub("'", "''")
-    descricao  = produto.descricao
+    titulo      = connection.quote(produto.titulo)
+    descricao   = connection.quote(produto.descricao)
 
     sql = <<-SQL
 -- Produto cod_produto=#{cod_produto}
