@@ -30,9 +30,9 @@ File.open(file_path, 'w') do |file|
 
   produtos.find_each do |produto|
     cod_produto = produto.cod_produto
-    titulo     = ActiveRecord::Base.connection.quote(produto.titulo)
-    descricao_text = produto.descricao.to_s.gsub("\\", "\\\\").gsub("\n", "\\n").gsub("'", "''")
-    descricao  = "E'#{descricao_text}'"
+    titulo     = produto.titulo
+    # descricao_text = produto.descricao.to_s.gsub("\\", "\\\\").gsub("\n", "\\n").gsub("'", "''")
+    descricao  = produto.descricao
 
     sql = <<-SQL
 -- Produto cod_produto=#{cod_produto}
