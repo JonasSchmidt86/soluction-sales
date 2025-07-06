@@ -8,7 +8,7 @@ class HomeController < ApplicationController
     # Buscar contatos de WhatsApp ativos com foto
     @colaboradores = WhatsappContact.all.order(:id).select do |contact|
       contact.photo.attached?
-    end.first(4) rescue []
+    end rescue []
   rescue => e
     @produtos = []
     @colaboradores = []

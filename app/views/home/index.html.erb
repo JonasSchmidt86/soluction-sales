@@ -204,12 +204,12 @@
 <!-- Equipe Section -->
 <section id="equipe" class="py-5">
   <div class="container">
-    <h2 class="section-title text-center ">Fale Conosco</h2>
-    <p class="text-center mb-5 ">Conheça os profissionais que fazem a diferença</p>
-    <div class="row justify-content-center">
-      <% if @colaboradores.present? %>
-        <% @colaboradores.each do |colab| %>
-          <div class="col-md-3 mb-4">
+    <h2 class="section-title text-center">Fale Conosco</h2>
+    <p class="text-center mb-5">Conheça os profissionais que fazem a diferença</p>
+    <div class="swiper-container">
+      <div class="swiper-wrapper">
+        <% (@colaboradores * 2).each do |colab| %>
+          <div class="swiper-slide">
             <div class="card text-center h-100">
               <div class="p-3">
                 <% if colab.photo.attached? %>
@@ -221,64 +221,67 @@
               <div class="card-body">
                 <h5 class="card-title mb-1"><%= colab.display_name %></h5>
                 <p class="text-muted mb-3"><%= colab.funcionario.funcao rescue "Atendimento" %></p>
-                <div class="d-flex justify-content-center">
-                  <% mensagem = "Olá " + colab.display_name&.capitalize + "! 👋 Tenho interesse em comprar um produto da sua loja. Pode me ajudar?" %>
-                  <% url_whatsapp = "https://wa.me/#{colab.whatsapp_number.gsub(/\D/, "")}?text=#{URI.encode_www_form_component(mensagem)}" %>
-                  <a href=<%= url_whatsapp %> class="btn btn-success btn-sm me-2" target="_blank">
-                    <i class="fab fa-whatsapp me-1"></i> WhatsApp
-                  </a>
-                  <a href="mailto:<%= colab.email.present? ? colab.email : 'contato@moveisrosastore.com' %>" class="btn btn-outline-primary btn-sm">
+                <% mensagem = "Olá " + colab.display_name&.capitalize + "! 👋 Tenho interesse em comprar um produto da sua loja. Pode me ajudar?" %>
+                <% url_whatsapp = "https://wa.me/#{colab.whatsapp_number.gsub(/\D/, "")}?text=#{URI.encode_www_form_component(mensagem)}" %>
+                <a href="<%= url_whatsapp %>" class="btn btn-success btn-sm me-2" target="_blank">
+                  <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                </a>
+                <% contato = colab.email.present? ? colab.email : 'contato@moveisrosastore.com' %>
+                <% is_instagram = contato.start_with?("http://", "https://") && contato.include?("instagram.com") %>
+                <a href="<%= is_instagram ? contato : "mailto:#{contato}" %>" target="_blank" class="btn btn-sm <%= is_instagram ? 'btn-instagram' : 'btn-outline-primary' %>">
+                  <% if is_instagram %>
+                    <i class="fab fa-instagram me-1"></i> Instagram
+                  <% else %>
                     <i class="fas fa-envelope me-1"></i> Email
-                  </a>
-                </div>
+                  <% end %>
+                </a>
               </div>
             </div>
           </div>
         <% end %>
-      <% else %>
-        <div class="col-12 text-center">
-          <p>Nenhum colaborador disponível no momento.</p>
-        </div>
-      <% end %>
+      </div>
+      <!-- Navigation -->
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
     </div>
   </div>
 </section>
 <!-- Modal para ampliar imagem -->
 <%= render partial: 'home/shared/image_modal' %>
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script>
-  let currentImages = [];
-  let currentIndex = 0;
-
-  function openImageModal(element) {
-    currentImages = JSON.parse(element.dataset.images);
-    currentIndex = parseInt(element.dataset.index);
-    document.getElementById('modalImage').src = currentImages[currentIndex];
-
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-
-    if (currentImages.length > 1) {
-      prevBtn.style.display = 'block';
-      nextBtn.style.display = 'block';
-    } else {
-      prevBtn.style.display = 'none';
-      nextBtn.style.display = 'none';
+  document.addEventListener("DOMContentLoaded", function () {
+  new Swiper(".swiper-container", {
+    slidesPerView: 3,
+    spaceBetween: 5,
+    slidesPerGroup: 1,
+    loop: true,
+    autoplay: {
+      delay: 3000,
+      disableOnInteraction: true,
+    },
+    speed: 700,
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+    breakpoints: {
+      992: { slidesPerView: 3, spaceBetween: 5 },
+      768: { slidesPerView: 2, spaceBetween: 5 },
+      0:   { slidesPerView: 1, spaceBetween: 5 },
+    },
+    on: {
+      reachEnd: function () {
+        this.slideTo(0, 0);
+        this.autoplay.start();
+      }
     }
+  });
+  });
 
-    new bootstrap.Modal(document.getElementById('imageModal')).show();
-  }
-
-  function changeImage(direction) {
-    currentIndex += direction;
-
-    if (currentIndex < 0) {
-      currentIndex = currentImages.length - 1;
-    } else if (currentIndex >= currentImages.length) {
-      currentIndex = 0;
-    }
-
-    document.getElementById('modalImage').src = currentImages[currentIndex];
-  }
 
   function toggleDescription(id) {
     const shortDesc = document.getElementById('desc-short-' + id);
@@ -300,5 +303,41 @@
   .card-text p:first-letter {
     text-transform: uppercase;
   }
+  .swiper-container {
+    width: 100%;
+    padding-bottom: 30px;
+    overflow: hidden;
+    position: relative;
+  }
+  .swiper-slide {
+    display: flex;
+    justify-content: center;
+    width: auto;
+  }
+  .swiper-slide .card {
+    width: 100%;
+    max-width: 300px;
+  }
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: #17a2b8;
+    margin-top: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .swiper-button-next:after,
+  .swiper-button-prev:after {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .btn-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  color: white;
+  border: none;
+  }
+
+  .btn-instagram:hover {
+  opacity: 0.9;
+  color: white;
+  }
 </style>
-<%= render partial: 'home/shared/image_modal' %>
