@@ -1,0 +1,429 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="row justify-content-center">
+        <div class="col-12">
+          <% if @sale.errors.any? %>
+            <div class="alert alert-danger alert-dismissible" role="alert">
+              <% @sale.errors.full_messages.each do |message| %>
+                <ul>
+                  <li><%= message %></li>
+                </ul>
+              <% end %>
+            </div>
+          <% end %>
+          <div class="card-header text-center bg-primary text-white">
+            <h4 class="text-center font-weight-light">
+              Editar Itens da Venda #<%= @sale.cod_vendaempresa %>
+            </h4>
+          </div>
+          <div class="card-body">
+            <%= form_with(model: [:collaborators_backoffice, @sale], url: atualizar_itens_collaborators_backoffice_venda_path(@sale), method: :patch, local: true) do |form| %>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <%= form.text_field :pessoa_nome, value: @sale.pessoa.nome, class: "form-control", readonly: true %>
+                    <%= form.label :pessoa_nome, "Cliente" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form.text_field :datavenda, value: post_date(@sale.datavenda), class: "form-control", readonly: true %>
+                    <%= form.label :datavenda, "Data da Venda" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form.text_field :numeronf, class: "form-control", readonly: true %>
+                    <%= form.label :numeronf, "Número NF" %>
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form.text_field :acrescimo, value: number_to_currency(@sale.acrescimo || 0, unit: "", separator: ",", delimiter: ""), class: "form-control", readonly: true %>
+                    <%= form.label :acrescimo, "Acréscimo" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form.text_field :desconto, value: number_to_currency(@sale.desconto || 0, unit: "", separator: ",", delimiter: ""), class: "form-control", readonly: true %>
+                    <%= form.label :desconto, "Desconto" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <%= form.text_field :valortotal, value: number_to_currency(@sale.valortotal, unit: "", separator: ",", delimiter: ""), class: "form-control text-bg-success", readonly: true %>
+                    <%= form.label :valortotal, "Valor Total" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="text" id="subtotal-produtos" class="form-control" readonly>
+                    <label>Subtotal Produtos</label>
+                  </div>
+                </div>
+              </div>
+              <ul class="nav mt-2 nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+                </li>
+              </ul>
+              <div class="tab-content">
+                <div class="tab-pane border border-top-0 active" id="product" role="tabpanel" aria-labelledby="product-tab">
+                  <div class="card-body">
+                    <div class="alert alert-warning">
+                      <strong>Atenção:</strong> Se alterar valores dos produtos, ajuste também as contas na aba "Contas".
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-striped table-hover">
+                        <thead class="table-dark">
+                          <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th>Cor Atual</th>
+                            <th>Nova Cor</th>
+                            <th>Qtd</th>
+                            <th>Valor Unit.</th>
+                            <th>Acréscimo</th>
+                            <th>Desconto</th>
+                            <th>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <%= form.fields_for :itensvenda do |item_form| %>
+                            <% item = item_form.object %>
+                            <tr>
+                              <%= item_form.hidden_field :id %>
+                              <td><%= item.full_codigo %></td>
+                              <td><%= item.nome_produto %></td>
+                              <td><span class="badge bg-secondary"><%= item.cor.nmcor if item.cor %></span></td>
+                              <td><%= item_form.collection_select(:cod_cor, @cores_disponiveis[item.cod_produto] || [], :cod_cor, :nmcor, { selected: item.cod_cor }, { class: "form-select form-select-sm cod-cor-select" }) %></td>
+                              <td><span class="badge bg-info"><%= item.quantidade %></span></td>
+                              <td><%= item_form.text_field :valorunitario, value: number_to_currency(item.valorunitario, unit: "", separator: ",", delimiter: ""), class: "form-control form-control-sm text-end valor-unitario money2", style: "width: 100px;" %></td>
+                              <td><%= item_form.text_field :valor_acrescimo, value: number_to_currency(item.valor_acrescimo || 0, unit: "", separator: ",", delimiter: ""), class: "form-control form-control-sm text-end valor-acrescimo money2", style: "width: 80px;" %></td>
+                              <td><%= item_form.text_field :valor_desconto, value: number_to_currency(item.valor_desconto || 0, unit: "", separator: ",", delimiter: ""), class: "form-control form-control-sm text-end valor-desconto money2", style: "width: 80px;" %></td>
+                              <td><strong class="text-success valor-total">R$ <%= number_to_currency(item.valor_total, unit: "", separator: ",", delimiter: ".") %></strong></td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane border border-top-0" id="bills" role="tabpanel" aria-labelledby="bills-tab">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                      <div class="alert alert-info flex-grow-1 me-3">
+                        <strong>Dica:</strong> Ajuste os valores das parcelas conforme o novo total da venda.
+                      </div>
+                      <button type="button" class="btn btn-warning" id="recalcular-parcelas">
+                        <i class="fa fa-calculator me-2"></i>Recalcular Parcelas Pendentes
+                      </button>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-striped table-hover">
+                        <thead class="table-dark">
+                          <tr>
+                            <th>Parcela</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <%= form.fields_for :contas, @sale.contas.sort_by(&:numeroparcela) do |conta_form| %>
+                            <% conta = conta_form.object %>
+                            <tr>
+                              <%= conta_form.hidden_field :id %>
+                              <td><%= conta.nmParcela %></td>
+                              <td><%= conta_form.date_field :dtvencimento, value: conta.dtvencimento&.strftime("%Y-%m-%d"), class: "form-control form-control-sm #{'bg-light' if conta.lancamentos.present?}", readonly: conta.lancamentos.present?, style: "width: 150px;" %></td>
+                              <td>
+                                <%= conta_form.text_field :valorparcela, value: number_to_currency(conta.valorparcela, unit: "", separator: ",", delimiter: ""), class: "form-control form-control-sm valor-parcela money2 #{'bg-light' if conta.lancamentos.present?}", readonly: conta.lancamentos.present?, style: "width: 120px; text-align: right;" %>
+                                <% if conta.lancamentos.present? %>
+                                  <small class="text-muted d-block">Possui lançamentos</small>
+                                <% end %>
+                              </td>
+                              <td>
+                                <% if conta.quitada %>
+                                  <span class="badge bg-success">Quitada</span>
+                                <% elsif !conta.ativo %>
+                                  <span class="badge bg-danger">Inativa</span>
+                                <% else %>
+                                  <span class="badge bg-warning">Pendente</span>
+                                <% end %>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mt-4">
+                <div class="col-md-6">
+                  <%= link_to "Cancelar", collaborators_backoffice_report_sales_path, class: "btn btn-secondary" %>
+                </div>
+                <div class="col-md-6 text-end">
+                  <%= form.submit "Salvar Alterações", class: "btn btn-success" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Atualizar valor quando cor muda
+    document.querySelectorAll('select[data-produto]').forEach(function(select) {
+      select.addEventListener('change', function() {
+        const produto = this.dataset.produto;
+        const corSelecionada = this.value;
+        const itemIndex = this.dataset.itemIndex;
+
+        // Buscar valor da cor via AJAX
+        fetch('<%= collaborators_backoffice_vendas_consulta_estoque_path %>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+            id_produto: produto
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const corData = data.find(cor => cor.cod_cor == corSelecionada);
+          if (corData) {
+            const valorInput = document.querySelector(`input[name="venda[itensvenda_attributes][${itemIndex}][valorunitario]"]`);
+            if (valorInput) {
+              valorInput.value = corData.valorvenda.toString().replace('.', ',');
+              atualizarTotalLinha(valorInput);
+            }
+          }
+        });
+      });
+    });
+
+    // Atualizar total quando campos de valor perdem o foco
+    document.querySelectorAll('input[name*="valorunitario"], input[name*="valor_acrescimo"], input[name*="valor_desconto"]').forEach(function(input) {
+      input.addEventListener('blur', function() {
+        atualizarTotalLinha(this);
+      });
+    });
+
+    function atualizarTotalLinha(input) {
+      const row = input.closest('tr');
+      const quantidade = parseInt(row.querySelector('.badge.bg-info').textContent);
+      const valorUnitario = parseFloat(row.querySelector('.valor-unitario').value.replace(/\./g, '').replace(',', '.')) || 0;
+      const acrescimo = parseFloat(row.querySelector('.valor-acrescimo').value.replace(/\./g, '').replace(',', '.')) || 0;
+      const desconto = parseFloat(row.querySelector('.valor-desconto').value.replace(/\./g, '').replace(',', '.')) || 0;
+      
+      const subtotal = quantidade * valorUnitario;
+      const total = subtotal + acrescimo - desconto;
+
+      const totalElement = row.querySelector('strong.text-success');
+      totalElement.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+      // Atualizar total geral dos produtos
+      calcularTotais();
+    }
+
+    // Calcular totais quando parcelas mudam e recalcular próximas ao perder foco
+    setTimeout(function() {
+      document.querySelectorAll('.money2:not([readonly])').forEach(function(input) {
+        if (input.name.includes('valorparcela')) {
+          input.addEventListener('input', calcularTotais);
+          input.addEventListener('blur', function() {
+            setTimeout(() => recalcularProximasParcelas(this), 100);
+          });
+        }
+      });
+    }, 500);
+
+    function recalcularProximasParcelas(inputAtual) {
+      const parcelasPendentes = Array.from(document.querySelectorAll('input[name*="valorparcela"]:not([readonly])'));
+      const indexAtual = parcelasPendentes.indexOf(inputAtual);
+
+      if (indexAtual === -1 || indexAtual === parcelasPendentes.length - 1) return;
+
+      const valorTotalFinal = obterValorTotalFinal();
+      const valorJaPreenchido = calcularValorJaPreenchido(parcelasPendentes, indexAtual);
+      const valorRestante = valorTotalFinal - valorJaPreenchido;
+      const proximasParcelas = parcelasPendentes.slice(indexAtual + 1);
+
+      if (proximasParcelas.length > 0 && valorRestante > 0) {
+        distribuirValorNasParcelas(proximasParcelas, valorRestante);
+        calcularTotais();
+      }
+    }
+
+    function obterValorTotalFinal() {
+      const totalProdutos = obterTotalProdutos();
+      const acrescimo = parseFloat(document.querySelector('input[name="venda[acrescimo]"]').value.replace(/\./g, '').replace(',', '.')) || 0;
+      const desconto = parseFloat(document.querySelector('input[name="venda[desconto]"]').value.replace(/\./g, '').replace(',', '.')) || 0;
+      return totalProdutos + acrescimo - desconto;
+    }
+
+    function calcularValorJaPreenchido(parcelasPendentes, indexAtual) {
+      let valorJaPreenchido = 0;
+
+      // Parcelas quitadas
+      document.querySelectorAll('input[name*="valorparcela"][readonly]').forEach(function(input) {
+        const valor = parseFloat(input.value.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(valor)) valorJaPreenchido += valor;
+      });
+
+      // Parcelas pendentes até a atual
+      for (let i = 0; i <= indexAtual; i++) {
+        const valor = parseFloat(parcelasPendentes[i].value.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(valor)) valorJaPreenchido += valor;
+      }
+
+      return valorJaPreenchido;
+    }
+
+    function distribuirValorNasParcelas(parcelas, valorTotal) {
+      const valorPorParcela = Math.floor((valorTotal / parcelas.length) * 100) / 100;
+      const valorQuebrado = valorTotal - (valorPorParcela * parcelas.length);
+
+      parcelas.forEach(function(input, index) {
+        let valorFinal = valorPorParcela;
+        if (index < 2 && valorQuebrado > 0) {
+          valorFinal += valorQuebrado / Math.min(2, parcelas.length);
+        }
+        // money2 vai formatar automaticamente
+        input.value = valorFinal.toFixed(2).replace('.', ',');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+
+    function calcularTotais() {
+      const totalProdutos = obterTotalProdutos();
+      const valorTotalFinal = obterValorTotalFinal();
+      const totalParcelas = obterTotalParcelas();
+      
+      atualizarSubtotalProdutos(totalProdutos);
+      atualizarStatusParcelas(valorTotalFinal, totalParcelas);
+    }
+    
+    function obterTotalProdutos() {
+      let total = 0;
+      document.querySelectorAll('strong.text-success').forEach(function(element) {
+        const texto = element.textContent.replace('R$ ', '').trim();
+        // Remove pontos de milhares e troca vírgula por ponto
+        const valor = parseFloat(texto.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(valor)) total += valor;
+      });
+      return total;
+    }
+    
+    function obterTotalParcelas() {
+      let total = 0;
+      document.querySelectorAll('input[name*="valorparcela"]').forEach(function(input) {
+        // Remove pontos de milhares e troca vírgula por ponto
+        const valor = parseFloat(input.value.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(valor)) total += valor;
+      });
+      return total;
+    }
+    
+    function atualizarSubtotalProdutos(total) {
+      const subtotalField = document.getElementById('subtotal-produtos');
+      if (subtotalField) {
+        subtotalField.value = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      }
+      
+      // Atualizar valor total da venda
+      const valorTotalField = document.querySelector('input[name="venda[valortotal]"]');
+      if (valorTotalField) {
+        const acrescimo = parseFloat(document.querySelector('input[name="venda[acrescimo]"]').value.replace(/\./g, '').replace(',', '.')) || 0;
+        const desconto = parseFloat(document.querySelector('input[name="venda[desconto]"]').value.replace(/\./g, '').replace(',', '.')) || 0;
+        const valorTotal = total + acrescimo - desconto;
+        valorTotalField.value = valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',');
+      }
+    }
+    
+    function atualizarStatusParcelas(valorFinal, totalParcelas) {
+      const infoElement = document.querySelector('#bills .alert-info');
+      if (!infoElement) return;
+      
+      const diferenca = totalParcelas - valorFinal;
+      const status = Math.abs(diferenca) < 0.01 
+        ? '<span class="text-success">✓ Valores balanceados</span>'
+        : `<span class="text-danger">⚠ Diferença: R$ ${diferenca.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>`;
+      
+      infoElement.innerHTML = `
+        <i class="fa fa-info-circle me-2"></i>
+        <strong>Total Final:</strong> R$ ${valorFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} |
+        <strong>Total Parcelas:</strong> R$ ${totalParcelas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} |
+        ${status}
+      `;
+    }
+
+    // Calcular totais iniciais e de cada linha
+    setTimeout(function() {
+      // Calcular total de cada linha primeiro
+      document.querySelectorAll('tbody tr').forEach(function(row) {
+        const valorUnitarioInput = row.querySelector('.valor-unitario');
+        if (valorUnitarioInput) {
+          atualizarTotalLinha(valorUnitarioInput);
+        }
+      });
+      // Depois calcular totais gerais
+      calcularTotais();
+    }, 100);
+
+    // Botão recalcular parcelas
+    document.getElementById('recalcular-parcelas').addEventListener('click', function() {
+      // Pegar valor total dos produtos
+      let totalProdutos = 0;
+      document.querySelectorAll('strong.text-success').forEach(function(element) {
+        const valor = parseFloat(element.textContent.replace('R$ ', '').replace('.', '').replace(',', '.'));
+        if (!isNaN(valor)) totalProdutos += valor;
+      });
+
+      // Pegar acréscimo e desconto
+      const acrescimo = parseFloat(document.querySelector('input[name="venda[acrescimo]"]').value.replace(',', '.')) || 0;
+      const desconto = parseFloat(document.querySelector('input[name="venda[desconto]"]').value.replace(',', '.')) || 0;
+      const valorTotal = totalProdutos + acrescimo - desconto;
+
+      // Calcular valor já pago (parcelas quitadas)
+      let valorPago = 0;
+      document.querySelectorAll('input[name*="valorparcela"][readonly]').forEach(function(input) {
+        const valor = parseFloat(input.value.replace(',', '.'));
+        if (!isNaN(valor)) valorPago += valor;
+      });
+
+      // Valor restante para dividir entre parcelas pendentes
+      const valorRestante = valorTotal - valorPago;
+
+      // Contar parcelas pendentes (que podem ser editadas)
+      const parcelasPendentes = document.querySelectorAll('input[name*="valorparcela"]:not([readonly])');
+
+      if (parcelasPendentes.length === 0) {
+        alert('Não há parcelas pendentes para recalcular.');
+        return;
+      }
+
+      if (valorRestante <= 0) {
+        alert('Valor já foi totalmente pago. Não há valor para recalcular.');
+        return;
+      }
+
+      if (confirm(`Recalcular ${parcelasPendentes.length} parcela(s) pendente(s) com o valor restante de R$ ${valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}?`)) {
+        distribuirValorNasParcelas(Array.from(parcelasPendentes), valorRestante);
+        calcularTotais();
+      }
+    });
+  });
+</script>

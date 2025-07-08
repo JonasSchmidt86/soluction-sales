@@ -132,6 +132,13 @@
                           <i class="far fa-money-bill-alt", style="width: 35px;"></i> Financeiro
                         <% end %>
                       </li>
+                      <% if current_collaborator.funcionario.permissao.nivel == 1 && !sale.cancelada %>
+                        <li>
+                          <%= link_to editar_itens_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
+                            <i class="fa fa-edit", style="width: 35px;"></i> Editar Itens
+                          <% end %>
+                        </li>
+                      <% end %>
                       <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                         <span class="visually-hidden">Toggle Dropdown</span>
                         <li>

@@ -1,6 +1,6 @@
 <tr class="nested-fields">
   <%= f.hidden_field :cod_produto %>
-  <td class="col-md-3">
+  <td class="col-auto">
     <%= f.text_field :produto, 
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
             placeholder: "Pressione Enter para buscar!" %>
@@ -18,7 +18,13 @@
     <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_total, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+    <%= f.text_field :valor_acrescimo, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_desconto, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_total, class: "valor-total money2 form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
   </td>
   <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
   <td class="align-middle fw-semibold">

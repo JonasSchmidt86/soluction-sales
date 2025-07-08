@@ -1,196 +1,188 @@
-<div id="layoutAuthentication_content">
-  <main>
-    <div class="">
-      <div class="row justify-content-center">
-        <div class="">
-          <div class="card mt-3">
-            <% if @sale.errors.any? %>
-              <div class="alert alert-danger alert-dismissible " role="alert">
-                <% @sale.errors.full_messages.each do |message| %>
-                  <ul>
-                    <li><%= message %></li>
-                    ¥                 </ul>
-                <% end %>
-                <% @sale.errors.clear %>
-                <% @sale.pessoa.errors.clear %>
-              </div>
-            <% end %>
-            <div class="card-header text-center bg-primary text-white" >
-              <h4 class="">
-                <%= "#{action_message} Venda"%>
-              </h4>
+<div class="card mt-3">
+  <% if @sale.errors.any? %>
+    <div class="alert alert-danger alert-dismissible " role="alert">
+      <% @sale.errors.full_messages.each do |message| %>
+        <ul>
+          <li><%= message %></li>
+          ¥                 </ul>
+      <% end %>
+      <% @sale.errors.clear %>
+      <% @sale.pessoa.errors.clear %>
+    </div>
+  <% end %>
+  <div class="card-header text-center bg-primary text-white" >
+    <h4 class="">
+      <%= "#{action_message} Venda"%>
+    </h4>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: [ :collaborators_backoffice, @sale ], class:"col-md-12", local: true) do |sale| %>
+      <div class="">
+        <div class="row my-2 mx-2 align-items-center">
+          <!-- Campo de busca -->
+          <div class="col-md-7">
+            <div class="form-floating w-100">
+              <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
+              <%= sale.label :nome_pessoa, "Pessoa" %>
+              <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-1" style="display: none; z-index: 100; width: 100%;"></div>
+              <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
             </div>
+          </div>
+          <!-- Botão -->
+          <div class="col-md-1 d-flex">
+            <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), id: "client_link", class: "btn btn-lg btn-info btn-circle" do %>
+              <i class="fa-brands fa-hire-a-helper"></i>
+            <% end %>
+            <%= render partial: 'collaborators_backoffice/vendas/shared/pessoa_modal', locals: { form: sale } %>
+          </div>
+          <!-- Select de tipo -->
+          <div class="col-md-3 ">
+            <div class="form-floating w-100 ms-4">
+              <%= sale.select :tipo, [['Venda', 'V'], ['Transferência', 'T']], {}, class: "form-select border-top-0 border-start-0 border-end-0 border-dark", id: "tipo" %>
+              <%= sale.label :tipo, "Tipo" %>
+            </div>
+          </div>
+        </div>
+        <!-- Campos adicionais -->
+        <div class="row my-2 mx-2 align-items-center">
+          <div class="col-md-2">
+            <div class="form-floating">
+              <%= sale.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+              <%= sale.label :data_venda, class:"" %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              <%= sale.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+              <%= sale.label :numero_nf, class:"" %>
+            </div>
+          </div>
+        </div>
+        <div class="row my-2 mx-2">
+          <div class="col-md-2">
+            <div class="form-floating">
+              <%= sale.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+              <%= sale.label :acrescimo, class:"" %>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-floating mb-3">
+              <%= sale.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+              <%= sale.label :desconto, class:"" %>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="form-floating mb-3">
+              <%= sale.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+              <%= sale.label :valortotal, class:"" %>
+            </div>
+          </div>
+        </div>
+        <!-- Tab panes -->
+        <!-- Nav tabs -->
+        <ul class="nav mt-1 mx-3 nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
             <div class="card-body">
-              <%= form_with(model: [ :collaborators_backoffice, @sale ], class:"col-md-12", local: true) do |sale| %>
-                <div class="">
-                  <div class="row my-2 mx-2 align-items-center">
-                    <!-- Campo de busca -->
-                    <div class="col-md-7">
-                      <div class="form-floating w-100">
-                        <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
-                        <%= sale.label :nome_pessoa, "Pessoa" %>
-                        <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-1" style="display: none; z-index: 100; width: 100%;"></div>
-                        <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
-                      </div>
-                    </div>
-                    <!-- Botão -->
-                    <div class="col-md-1 d-flex">
-                      <%= link_to collaborators_backoffice_report_sales_client_path(:cod_pessoa), id: "client_link", class: "btn btn-lg btn-info btn-circle" do %>
-                        <i class="fa-brands fa-hire-a-helper"></i>
-                      <% end %>
-                      <%= render partial: 'collaborators_backoffice/vendas/shared/pessoa_modal', locals: { form: sale } %>
-                    </div>
-                    <!-- Select de tipo -->
-                    <div class="col-md-3 ">
-                      <div class="form-floating w-100 ms-4">
-                        <%= sale.select :tipo, [['Venda', 'V'], ['Transferência', 'T']], {}, class: "form-select border-top-0 border-start-0 border-end-0 border-dark", id: "tipo" %>
-                        <%= sale.label :tipo, "Tipo" %>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Campos adicionais -->
-                  <div class="row my-2 mx-2 align-items-center">
-                    <div class="col-md-2">
-                      <div class="form-floating">
-                        <%= sale.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
-                        <%= sale.label :data_venda, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-floating">
-                        <%= sale.text_field :numeronf, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                        <%= sale.label :numero_nf, class:"" %>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row my-2 mx-2">
-                    <div class="col-md-2">
-                      <div class="form-floating">
-                        <%= sale.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
-                        <%= sale.label :acrescimo, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-floating mb-3">
-                        <%= sale.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
-                        <%= sale.label :desconto, class:"" %>
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-floating mb-3">
-                        <%= sale.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-                        <%= sale.label :valortotal, class:"" %>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Tab panes -->
-                  <!-- Nav tabs -->
-                  <ul class="nav mt-1 mx-3 nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link active" id="product-tab" data-bs-toggle="tab" data-bs-target="#product" type="button" role="tab" aria-controls="product" aria-selected="true">Produtos</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link" id="bills-tab" data-bs-toggle="tab" data-bs-target="#bills" type="button" role="tab" aria-controls="bills" aria-selected="false">Contas</button>
-                    </li>
-                  </ul>
-                  <div class="tab-content">
-                    <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
-                      <div class="card-body">
-                        <div class="table-responsive">
-                          <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
-                            <thead>
-                              <tr>
-                                <th style="width: 50%;">Nome</th>
-                                <th style="">Cor</th>
-                                <th style="width: 7%;">Qtd</th>
-                                <th style="width: 10%;">valor</th>
-                                <th style="width: 10%;">Total</th>
-                                <%# <th style="width: 3%;"></th> %>
-                              </tr>
-                            </thead>
-                            <tbody id="itensvenda_fields" class='itens' >
-                              <%= sale.fields_for :itensvenda do |item| %>
-                                <%= render partial: "itensvenda_fields", locals: { f: item } %>
-                              <% end %>
-                            </tbody>
-                          </table>
-                          <div class="form-actions">
-                            <%= link_to_add_association 'Adiciona Item', sale, :itensvenda, 
+              <div class="table-responsive">
+                <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                  <thead>
+                    <tr>
+                      <th style="width: 50%;">Nome</th>
+                      <th style="">Cor</th>
+                      <th style="width: 7%;">Qtd</th>
+                      <th style="width: 10%;">Valor</th>
+                      <th style="width: 10%;">Acrescimo</th>
+                      <th style="width: 10%;">Desconto</th>
+                      <th style="width: 10%;">Total</th>
+                      <%# <th style="width: 3%;"></th> %>
+                    </tr>
+                  </thead>
+                  <tbody id="itensvenda_fields" class='itens' >
+                    <%= sale.fields_for :itensvenda do |item| %>
+                      <%= render partial: "itensvenda_fields", locals: { f: item } %>
+                    <% end %>
+                  </tbody>
+                </table>
+                <div class="form-actions">
+                  <%= link_to_add_association 'Adiciona Item', sale, :itensvenda, 
                                                             force_non_association_create: true,
                                                             class: 'btn btn-primary', 
                                                              data: { association_insertion_node: '.itens', 
                                                                      association_insertion_method: :append} %> <%# append para adicionar no fim da lista prepend para adicionar no inicio da lista%>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
-                      <div class="card-body">
-                        <div class="row mb-2">
-                          <div class="col-md-2">
-                            <div class="form-floating mb-3 mb-md-0">
-                              <%= sale.text_field :nmParcela, value: 1, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark"%>
-                              <%= sale.label :parcelas, class:"" %>
-                            </div>
-                          </div>
-                          <div class="col-md-3">
-                            <div class="form-floating mb-3">
-                              <%= sale.text_field :first_date, value: post_date(DateTime.now), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark"%>
-                              <%= sale.label :data_pagto, class:"" %>
-                            </div>
-                          </div>
-                          <div class="col-md-2">
-                            <div class="form-floating mb-3">
-                              <%= sale.text_field :interval, value: 30, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-                              <%= sale.label :dias, class:"" %>
-                            </div>
-                          </div>
-                          <div class="col-md-3">
-                            <div class="form-floating mb-3">
-                              <a href="#" onclick="createBills()" class="btn btn-success">Calcular Parcelas</a>
-                            </div>
-                          </div>
-                        </div>
-                        <table id="tblContas" class="bills table table-sm align-middle table-light table-striped table-hover table-borderless">
-                          <thead>
-                            <tr>
-                              <th class="">Numero</th>
-                              <th class="">Dt Vencimento</th>
-                              <th class="">valor Parcela</th>
-                              <th style="width: 3%;"></th>
-                            </tr>
-                          </thead>
-                          <tbody id = 'conta_fields' class = "contas">
-                            <%= sale.fields_for :contas do |bill| %>
-                              <%= render partial: "conta_fields", locals: { f: bill } %>
-                            <% end %>
-                          </tbody>
-                        </table>
-                        <div class="form-actions">
-                          <%= link_to_add_association 'Adiciona Conta', sale, :contas, 
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="bills" role="tabpanel" aria-labelledby="bills-tab" tabindex="0">
+            <div class="card-body">
+              <div class="row mb-2">
+                <div class="col-md-2">
+                  <div class="form-floating mb-3 mb-md-0">
+                    <%= sale.text_field :nmParcela, value: 1, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                    <%= sale.label :parcelas, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating mb-3">
+                    <%= sale.text_field :first_date, value: post_date(DateTime.now), class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark"%>
+                    <%= sale.label :data_pagto, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-floating mb-3">
+                    <%= sale.text_field :interval, value: 30, type: "number", step: "1", class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+                    <%= sale.label :dias, class:"" %>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-floating mb-3">
+                    <a href="#" onclick="createBills()" class="btn btn-success">Calcular Parcelas</a>
+                  </div>
+                </div>
+              </div>
+              <table id="tblContas" class="bills table table-sm align-middle table-light table-striped table-hover table-borderless">
+                <thead>
+                  <tr>
+                    <th class="">Numero</th>
+                    <th class="">Dt Vencimento</th>
+                    <th class="">valor Parcela</th>
+                    <th style="width: 3%;"></th>
+                  </tr>
+                </thead>
+                <tbody id = 'conta_fields' class = "contas">
+                  <%= sale.fields_for :contas do |bill| %>
+                    <%= render partial: "conta_fields", locals: { f: bill } %>
+                  <% end %>
+                </tbody>
+              </table>
+              <div class="form-actions">
+                <%= link_to_add_association 'Adiciona Conta', sale, :contas, 
                                                         force_non_association_create: true, id:"addConta",
                                                         class: 'btn btn-primary', 
                                                          data: { association_insertion_node: '.contas',
                                                                  association_insertion_method: :append } %>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="position-fixed bottom-0 end-0 m-4">
-                  <div class="d-block my-3 mx-3">
-                    <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
-                      <i class="fa fa-check fa-2x"></i>
-                    </button>
-                  </div>
-                </div>
-              <% end %>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </main>
+      <div class="position-fixed bottom-0 end-0 m-4">
+        <div class="d-block my-3 mx-3">
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+            <i class="fa fa-check fa-2x"></i>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </div>
 </div>
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>
 <%= render partial: 'layouts/shared/modal_alert' %>
@@ -329,11 +321,6 @@
 
 
   }
-
-
-
-
-
 
 
   // Função para formatar a data no formato DD/MM/AAAA
@@ -603,17 +590,22 @@
 
       }
   // --------------------------- FIM COR ---------------------- //
-
+    function toFloat(value) {
+      let num = parseFloat((value || "0").toString().replace(",", "."));
+      return isNaN(num) ? 0 : num;
+    }
   // ------------- calculas os valores da tela ---------------
 
       function setValorTotal(field) {
           let index = thisIndex(field);
           let proValor = document.getElementById(`venda_itensvenda_attributes_${index}_valorunitario`);
+          let proDesconto = document.getElementById(`venda_itensvenda_attributes_${index}_valor_desconto`);
+          let proAcresimo = document.getElementById(`venda_itensvenda_attributes_${index}_valor_acrescimo`);
           let proQtd   = document.getElementById(`venda_itensvenda_attributes_${index}_quantidade`);
           let proTotal = document.getElementById(`venda_itensvenda_attributes_${index}_valor_total`);
           let venTotal = document.getElementById("valor_total");
 
-          let valUnit = parseFloat(proValor.value.replace(",",".")) * 100;
+          let valUnit = ((toFloat(proValor.value) + toFloat(proAcresimo.value)) - toFloat(proDesconto.value)) * 100;
 
   //console.log("PRODUTO = "+valUnit);
           //var ttProd = (parseFloat( proValor.value ) * parseFloat(proQtd.value)).toFixed(2);
@@ -623,6 +615,8 @@
 
           setTotalVenda();
           proValor = "";
+          proAcresimo = "";
+          proDesconto = "";
           proQtd   = "";
           proTotal = "";
           venTotal = "";
@@ -640,18 +634,13 @@
 
           // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
           for (var i = 1; i < tabela.rows.length; i++) {
-              // Obtenha o valor unitário da célula de classe "valor-unitario"
-              var valorUnitarioCell = tabela.rows[i].querySelector(".valor-unitario");
+              // Obtenha o valor unitário da célula de classe "valor-total"
+              var valorUnitarioCell = tabela.rows[i].querySelector(".valor-total");
               // Use uma expressão condicional para verificar se o valor é válido
               var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
 
-              //console.log("TEXTO - "+valorUnitario)
-
-              var qtdCell = tabela.rows[i].querySelector(".quantidade");
-              var qtdProduto = qtdCell.value ? parseFloat(qtdCell.value.replace(",",".")) : 0;
-
               // Some o valor unitário à variável de soma
-              soma += (valorUnitario*qtdProduto);
+              soma += (valorUnitario);
           }
 
           soma += parseFloat(acrescimo) - parseFloat(desconto);

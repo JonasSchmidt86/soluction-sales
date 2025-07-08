@@ -61,8 +61,9 @@
               <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
               <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">NrVenda/NFe</a></th>
               <th data-sortable=""><a href="#" class="dataTable-sorter">Colaborador</a></th>
+              <th data-sortable="" style="width: 150px;">Outros Valores</th>
               <th data-sortable="" style="width: 150px;">Valor Total</th>
-              <th data-sortable="" style="">Info</th>
+              <th data-sortable="" style="width: 20px;">Info</th>
             </tr>
           </thead>
           <tbody>
@@ -83,13 +84,16 @@
                   <td class="align-middle"><%= sale.pessoa.nome %></td>
                   <td class="align-middle"><%= sale.venda_nfe %> </td>
                   <td class="align-middle"><%= sale.funcionario.usuario %> </td>
+                  <td class="align-middle">
+                    <%= number_to_currency((sale.acrescimo - sale.desconto), precision: 2, separator: ",", delimiter: "", unit: "") %>
+                  </td>
                   <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                   <td class="align-middle">
                     <button type="button" onclick="MudarEstado('minhaDiv<%= sale %>')" class = "btn btn-info btn-circle"><i class="fa fa-info"></i></button>
                   </td>
                 </tr>
                 <tr id="minhaDiv<%= sale %>" style="display: none;">
-                  <td colspan="7" class="align-middle">
+                  <td colspan="8" class="align-middle">
                     <div class="dataTable-container">
                       <table id="datatablesSimple" class="dataTable-table table-striped">
                         <thead>
@@ -100,9 +104,8 @@
                             <th data-sortable=""><a href="#" class="dataTable-sorter">Cliente</a></th>
                             <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Dt Venci..</a></th>
                             <th data-sortable=""  style="width: 8.5%;"><a href="#" class="dataTable-sorter">Ult Pgto..</a></th>
-                            <th data-sortable="" style="width: 110px;">Valor Total</th>
-                            <th data-sortable="" style="width: 110px;">Valor Pago</th>
-                            <th data-sortable="" style="width: 50px;">Lançamentos</th>
+                            <th data-sortable="" style="width: 100px;">Valor Total</th>
+                            <th data-sortable="" style="width: 100px;">Valor Pago</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -160,7 +163,10 @@
                           <th data-sortable="" style="width: 40%;"><a href="#" class="dataTable-sorter">Produto</a></th>
                           <th data-sortable="" style="width: 20%;"><a href="#" class="dataTable-sorter">Cor</a></th>
                           <th data-sortable="" style="width: 8%;"><a href="#" class="dataTable-sorter">Quantidade</a></th>
-                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">valor</a></th>
+                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Acrescimo</a></th>
+                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Desconto</a></th>
+                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Vl_Unitário</a></th>
+                          <th data-sortable="" style="width: 10%;"><a href="#" class="dataTable-sorter">Total</a></th>
                         </thead>
                         <tbody>
                           <% sale.itensvenda.order(:cod_item).each do |item| %>
@@ -169,7 +175,10 @@
                               <td class="align-middle"><%= item.produto.nome %> </td>
                               <td class="align-middle"><%= item.cor.nmcor %> </td>
                               <td class="align-middle"><%= item.quantidade.to_i %> </td>
+                              <td class="align-middle"><%= number_to_currency( item.valor_acrescimo, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                              <td class="align-middle"><%= number_to_currency( item.valor_desconto, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
                               <td class="align-middle"><%= number_to_currency( item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                              <td class="align-middle"><%= number_to_currency( item.valor_total, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
                             </tr>
                           <% end %>
                         </tbody>

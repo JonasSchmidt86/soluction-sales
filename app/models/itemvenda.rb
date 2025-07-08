@@ -23,7 +23,10 @@ class Itemvenda < ApplicationRecord
     end
     
     def valor_total
-        (self.valorunitario || 0) * (self.quantidade || 0)
+        subtotal = (self.valorunitario || 0) * (self.quantidade || 0)
+        acrescimo = self.valor_acrescimo || 0
+        desconto = self.valor_desconto || 0
+        subtotal + acrescimo - desconto
     end
 
     def full_codigo

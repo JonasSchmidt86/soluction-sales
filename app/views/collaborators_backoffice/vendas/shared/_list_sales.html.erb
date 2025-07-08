@@ -101,6 +101,8 @@
                             <th>Nome</th>
                             <th>Qtd</th>
                             <th>valor</th>
+                            <th>Acrescimo</th>
+                            <th>Desconto</th>
                             <th>Total</th>
                           </tr>
                         </thead>
@@ -123,6 +125,12 @@
                                   </td>
                                   <td class="table-success" >
                                     <%= number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"") %>
+                                  </td>
+                                  <td class="table-success" >
+                                    <%= number_to_currency(item.valor_acrescimo, separator: ",", delimiter: "", unit:"") %>
+                                  </td>
+                                  <td class="table-success" >
+                                    <%= number_to_currency(item.valor_desconto, separator: ",", delimiter: "", unit:"") %>
                                   </td>
                                   <td class="">
                                     <%= number_to_currency(item.valor_total, separator: ",", delimiter: "", unit:"" ) %>

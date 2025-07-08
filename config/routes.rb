@@ -62,6 +62,8 @@ Rails.application.routes.draw do
 
     resources :vendas, only: [:index, :edit, :new, :create, :destroy] do
       patch :atualizar_vendedor, on: :member
+      get :editar_itens, on: :member
+      patch :atualizar_itens, on: :member
     end
     
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
