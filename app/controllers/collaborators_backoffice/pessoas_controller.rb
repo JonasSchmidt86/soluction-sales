@@ -44,7 +44,7 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
         if !pessoaExistente.blank?
           redirect_to edit_collaborators_backoffice_pessoa_path(pessoaExistente.cod_pessoa), notice: 'Pessoa já existe cadastrada!'
         elsif @pessoa.save
-          redirect_to @pessoa, notice: 'Pessoa criada com sucesso.'
+          redirect_to collaborators_backoffice_pessoas_path , notice: 'Pessoa criada com sucesso.'
         else
           render :new
         end
