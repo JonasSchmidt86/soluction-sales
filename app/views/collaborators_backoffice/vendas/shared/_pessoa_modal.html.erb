@@ -1,5 +1,4 @@
-<button type="button", class="btn btn-info btn-circle btn-lg", data-bs-toggle="modal",
-  data-bs-target="#vendaModal", data-bs-whatever= <%= "" %> >
+<button type="button" class="btn btn-info btn-circle btn-lg" data-bs-toggle="modal" data-bs-target="#vendaModal">
   <i class="fas fa-user-plus"></i>
 </button>
 <div class="modal fade" id="vendaModal" data-tor-parent="show">
@@ -7,9 +6,9 @@
     <div class="modal-content">
       <div class="modal-header text-center bg-primary text-white">
         <h5 class="modal-title" id="modalLabel">Cad cliente</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" onclick='fecha_modal(`vendaModal`)' data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body ms-3 me-3 mt-3 mb-3">
+      <div class="modal-body mb-3 mt-3 ms-3 me-3">
         <%= form.fields_for :pessoa, (form.object.pessoa || Pessoa.new), id: "form_pessoa", local: true do |form_pessoa| %>
           <div class="col-md-12">
             <div class="d-flex row align-items-center">
@@ -108,8 +107,11 @@
               </div>
             </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="salvarPessoa()">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -194,4 +196,56 @@
               }
           });
       });
+
+      function salvarPessoa() {
+          const formData = {
+              tipo: $('input[name="venda[pessoa_attributes][tipo]"]:checked').val(),
+              cpf_cnpj: $('#venda_pessoa_attributes_cpf_cnpj').val(),
+              rg_ie: $('#venda_pessoa_attributes_rg_ie').val(),
+              nome: $('#venda_pessoa_attributes_nome').val(),
+              telefone: $('#venda_pessoa_attributes_telefone').val(),
+              celular: $('#venda_pessoa_attributes_celular').val(),
+              cep: $('#venda_pessoa_attributes_cep').val(),
+              cod_cidade: $('#venda_pessoa_attributes_cod_cidade').val(),
+              complemento: $('#venda_pessoa_attributes_complemento').val(),
+              endereco: $('#venda_pessoa_attributes_endereco').val(),
+              bairro: $('#venda_pessoa_attributes_bairro').val(),
+              numero: $('#venda_pessoa_attributes_numero').val(),
+              email: $('#venda_pessoa_attributes_email').val()
+          };
+
+          $.ajax({
+              url: '/collaborators_backoffice/pessoas',
+              method: 'POST',
+              data: { pessoa: formData },
+              dataType: 'json',
+              headers: {
+                  'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+              },
+              success: function(response) {
+                  $('#venda_nome_pessoa').val(response.nome);
+                  $('#selected_person_id').val(response.cod_pessoa);
+
+                  alert('Pessoa salva com sucesso!');
+                  fecha_modal('vendaModal')
+
+              },
+              error: function(xhr, status, error) {
+                  console.error('Erro ao salvar pessoa:', error);
+                  alert('Erro ao salvar pessoa. Verifique os dados.');
+              }
+          });
+      }
+      function fecha_modal(modal) {
+          const modalEl = document.getElementById(modal);
+          const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          modalInstance.hide();
+
+          modalEl.addEventListener('hidden.bs.modal', function () {
+            // Remove backdrop manualmente se ainda existir
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+          }, { once: true });
+      }
 </script>

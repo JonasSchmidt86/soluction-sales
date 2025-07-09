@@ -31,15 +31,23 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
     def create
       @pessoa = Pessoa.new(pessoa_params)
       pessoaExistente = Pessoa.find_by(cpf_cnpj: @pessoa.cpf_cnpj);
-      if !pessoaExistente.blank?
-        puts "EXISTE "
-        redirect_to edit_collaborators_backoffice_pessoa_path(pessoaExistente.cod_pessoa), notice: 'Pessoa já existe cadastrada!'
-        return;
-      end
-      if @pessoa.save
-        redirect_to @pessoa, notice: 'Pessoa criada com sucesso.'
-      else
-        render :new
+      
+      if request.xhr? # Verifica se é uma requisição AJAX
+        if !pessoaExistente.blank?
+          render json: pessoaExistente
+        elsif @pessoa.save
+          render json: @pessoa
+        else
+          render json: @pessoa.errors, status: :unprocessable_entity
+        end
+      else # Requisição normal do Rails
+        if !pessoaExistente.blank?
+          redirect_to edit_collaborators_backoffice_pessoa_path(pessoaExistente.cod_pessoa), notice: 'Pessoa já existe cadastrada!'
+        elsif @pessoa.save
+          redirect_to @pessoa, notice: 'Pessoa criada com sucesso.'
+        else
+          render :new
+        end
       end
     end
   
