@@ -4,11 +4,13 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
     # before_action :params_caixa, only: [:update]
 
     def index
-        @caixas = Caixa
-            # .includes(funcionario_abertura: :permissao, funcionario_fechamento:{}, empresa:{})
+        registros = Caixa
             .where("cod_empresa = ?", current_collaborator.cod_empresa)
             .order("datafechamento desc")
-            .page(params[:page])
+            .limit(60)
+
+        @caixas = Kaminari.paginate_array(registros).page(params[:page]).per(15)
+
     end
 
     def update

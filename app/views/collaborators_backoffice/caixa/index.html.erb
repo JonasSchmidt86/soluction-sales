@@ -1,7 +1,14 @@
-<div class="card mt-2 mb-3">
-  <%= link_to collaborators_backoffice_caixa_index_path, class:"card-header text-center bg-primary text-white" do %>
-    <h4>Caixas</h4>
-  <% end %>
+<div class="card mt-3 mb-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_caixa_index_path do %>
+      <h4 class="text-white mb-0">Caixas</h4>
+    <% end %>
+    <div class="ms-auto">
+      <%= link_to new_collaborators_backoffice_caixa_path, class:"btn btn-light btn-circle", data: {confirm: "Abrir Caixa?"} do %>
+        <i class="fa fa-plus"> </i> Abrir Caixa
+      <% end %>
+    </div>
+  </div>
   <div class="">
   </div>
   <div class="card-body">
