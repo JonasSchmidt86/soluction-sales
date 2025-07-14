@@ -1,0 +1,55 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_stock_min_index_path do %>
+      <h4 class="text-white mb-0">Relatório de Estoque Mínimo</h4>
+    <% end %>
+  </div>
+  <div class="card-body">
+    <!-- Filtros -->
+    <%= form_with url: collaborators_backoffice_report_stock_min_index_path, method: :get, local: true, class: "mb-4" do |f| %>
+      <div class="row">
+        <div class="col-md-4">
+          <%= f.text_field :search, placeholder: "Nome ou código do produto", value: params[:search], class: "form-control" %>
+        </div>
+        <div class="col-md-3">
+          <%= f.select :cod_marca, options_from_collection_for_select(@marcas, :cod_marca, :nome, params[:cod_marca]), 
+                      { prompt: "Todas as Marcas" }, { class: "form-select" } %>
+        </div>
+        <div class="col-md-3">
+          <%= f.select :cod_grupo, options_from_collection_for_select(@grupos, :cod_grupo, :nomegrupo, params[:cod_grupo]), 
+                      { prompt: "Todos os Grupos" }, { class: "form-select" } %>
+        </div>
+        <div class="col-md-2">
+          <%= f.submit "Filtrar", class: "btn btn-primary" %>
+        </div>
+      </div>
+    <% end %>
+    <!-- Tabela -->
+    <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+      <div class="dataTable-container">
+        <table id="datatablesSimple" class="dataTable-table table-striped" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome</th>
+              <th>Cor</th>
+              <th>Estoque Mínimo</th>
+              <th>Estoque Atual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @stock_items.each do |item| %>
+              <tr>
+                <td><%= item['codigo'] %></td>
+                <td><%= item['nome'] %></td>
+                <td><%= item['nmcor'] %></td>
+                <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
+                <td class="text-center"><%= item['estoque'].to_i %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

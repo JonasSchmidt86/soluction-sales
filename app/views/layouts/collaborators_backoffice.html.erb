@@ -156,6 +156,9 @@
                     <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
                       Relatório de Compra
                     <% end %>
+                    <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
+                      Estoque Mínimo
+                    <% end %>
                     <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                       <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
                         Relatório de DRE

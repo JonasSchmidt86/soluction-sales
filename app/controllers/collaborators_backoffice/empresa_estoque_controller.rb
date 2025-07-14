@@ -83,6 +83,7 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
 
     def update
         @empresa_produto.valorvenda = params[:estoque][:valorvenda].gsub(',', '.').to_f;
+        @empresa_produto.quantidademinima = params[:estoque][:quantidademinima].gsub(',', '.').to_f;
         if @empresa_produto.save!
             render json: { message: "Valor atualizado com sucesso!", estoque: @empresa_produto }, status: :ok
           else

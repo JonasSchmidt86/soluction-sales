@@ -13,6 +13,7 @@
               <th data-sortable="">Nome</th>
               <th data-sortable="" style="width: 20%;">Cor</th>
               <th data-sortable="" style="width: 7%;">Qtd</th>
+              <th style="width: 100px">Qtd Min</th>
               <th style="width: 100px">Vl Venda</th>
               <%# <th data-sortable="" style="width: 8%;">Vl Venda</th> %>
               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -30,6 +31,12 @@
                 <td class="align-middle "><%= estoque.cor.nmcor %> </td>
                 <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
                 <td class="align-middle ">
+                  <input type="number" 
+                              class="form-control form-control-sm editable-qtd-minima" 
+                              data-id="<%= estoque.id %>" 
+                              value="<%= estoque.quantidademinima.to_i %>">
+                </td>
+                <td class="align-middle ">
                   <input type="text" 
                               input_html= { inputmode: "numeric", pattern: "[0-9]*" }
                               class="money2 form-control form-control-sm editable-valor-venda" 
@@ -39,7 +46,7 @@
                 <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                   <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
                   <td class="align-middle">
-                    <%= link_to "#", class: "btn btn-success btn-circle salvar-valor", data: { id: estoque.id } do %>
+                    <%= link_to "#", class: "btn btn-success btn-circle salvar-dados", data: { id: estoque.id } do %>
                       <i class="fa fa-check"></i>
                     <% end %>
                   </td>
@@ -52,16 +59,19 @@
     </div>
   </div>
   <script>
-    function salvarValor(estoqueId) {
-      const inputField = document.querySelector(`.editable-valor-venda[data-id="${estoqueId}"]`);
+    function salvarDados(estoqueId) {
+      const inputValor = document.querySelector(`.editable-valor-venda[data-id="${estoqueId}"]`);
+      const inputQtdMin = document.querySelector(`.editable-qtd-minima[data-id="${estoqueId}"]`);
 
-      if (!inputField) {
-        console.error("Erro: Input não encontrado.");
+      if (!inputValor || !inputQtdMin) {
+        console.error("Erro: Inputs não encontrados.");
         return;
       }
 
-      let valor = inputField.value.trim();
-      if (!valor) return;
+      let valor = inputValor.value.trim();
+      let qtdMinima = inputQtdMin.value.trim();
+      
+      if (!valor && !qtdMinima) return;
 
       // Converte de formato brasileiro para formato numérico (troca vírgula por ponto)
       const valorFormatado = valor.replace(/\./g, "").replace(",", ".");
@@ -72,7 +82,7 @@
           "Content-Type": "application/json",
           "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
         },
-        body: JSON.stringify({ estoque: { valorvenda: valorFormatado, id_compra: estoqueId } }),
+        body: JSON.stringify({ estoque: { valorvenda: valorFormatado, quantidademinima: qtdMinima, id_compra: estoqueId } }),
       })
       .then(response => response.ok ? response.json() : Promise.reject("Erro ao salvar"))
       .then(data => {
@@ -96,21 +106,21 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      document.querySelectorAll(".salvar-valor").forEach(button => {
+      document.querySelectorAll(".salvar-dados").forEach(button => {
         button.addEventListener("click", function() {
           const estoqueId = this.dataset.id;
-          salvarValor(estoqueId); // Chama a função ao clicar no botão
+          salvarDados(estoqueId); // Chama a função ao clicar no botão
         });
       });
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-      document.querySelectorAll(".editable-valor-venda").forEach(input => {
+      document.querySelectorAll(".editable-valor-venda, .editable-qtd-minima").forEach(input => {
         input.addEventListener("keydown", function(event) {
           if (event.key === "Enter") {
             event.preventDefault(); // Evita quebra de linha
             const estoqueId = this.dataset.id;
-            salvarValor(estoqueId); // Chama a função ao pressionar Enter
+            salvarDados(estoqueId); // Chama a função ao pressionar Enter
           }
         });
       });

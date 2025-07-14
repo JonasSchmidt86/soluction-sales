@@ -98,6 +98,7 @@ Rails.application.routes.draw do
     get 'sales/index'
     get 'report_put_box', to: 'report/rep_put_box#index', as: 'report_put_box_index'
     delete '/report_put_box/:id', to: 'report/rep_put_box#destroy', as: 'report_put_box_destroy'
+    get 'report_stock_min', to: 'report/rep_stock_min#index', as: 'report_stock_min_index'
   end
 
   resources :produtos do
