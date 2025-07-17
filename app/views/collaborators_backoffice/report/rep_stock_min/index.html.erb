@@ -4,6 +4,18 @@
       <h4 class="text-white mb-0">Relatório de Estoque Mínimo</h4>
     <% end %>
   </div>
+  <% if flash[:success] %>
+    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+      <%= flash[:success] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+  <% if flash[:error] %>
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+      <%= flash[:error] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
   <div class="card-body">
     <!-- Filtros -->
     <%= form_with url: collaborators_backoffice_report_stock_min_index_path, method: :get, local: true, class: "mb-4" do |f| %>
@@ -35,6 +47,8 @@
               <th>Cor</th>
               <th>Estoque Mínimo</th>
               <th>Estoque Atual</th>
+              <th>Pedido</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -45,6 +59,23 @@
                 <td><%= item['nmcor'] %></td>
                 <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
                 <td class="text-center"><%= item['estoque'].to_i %></td>
+                <td class="text-center"><%= item['quantidade_pedida_aberta'].to_i %></td>
+                <td class="text-center">
+                  <% if item['ultimo_fornecedor_id'].present? %>
+                    <%= form_tag collaborators_backoffice_add_to_order_report_rep_stock_min_path, method: :post do %>
+                      <%= hidden_field_tag :cod_produto, item['cod_produto'] %>
+                      <%= hidden_field_tag :cod_cor, item['cod_cor'] %>
+                      <%= hidden_field_tag :cod_fornecedor, item['ultimo_fornecedor_id'] %>
+                      <%= button_tag type: 'submit', class: 'btn btn-sm btn-success', data: { confirm: 'Deseja adicionar este produto ao pedido?' } do %>
+                        <i class="fas fa-shopping-cart"></i> Pedir
+                      <% end %>
+                    <% end %>
+                  <% else %>
+                    <button class="btn btn-sm btn-secondary" disabled title="Sem fornecedor recente">
+                      <i class="fas fa-shopping-cart"></i> Pedir
+                    </button>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>

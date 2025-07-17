@@ -21,6 +21,8 @@ class Empresa < ApplicationRecord
     has_many :funcionarioempresas, foreign_key: 'cod_empresa', inverse_of: :empresa
     has_many :employees, through: :funcionarioempresas
 
+    has_many :pedidos_compras, foreign_key: :cod_empresa, primary_key: :cod_empresa
+
     accepts_nested_attributes_for :employees, reject_if: :all_blank, allow_destroy: false #cocoon gem
 
 end

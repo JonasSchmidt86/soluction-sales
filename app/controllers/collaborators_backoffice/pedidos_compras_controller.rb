@@ -4,36 +4,29 @@ class CollaboratorsBackoffice::PedidosComprasController < CollaboratorsBackoffic
 
   def index
     @pedidos = PedidosCompra.includes(:pessoa, :itens_pedido_compras)
-    
-    # Filtros
+                            .where(cod_empresa: current_collaborator.cod_empresa)
+
     if params[:term].present?
       @pedidos = @pedidos.joins(:pessoa).where('pessoa.nome ILIKE ?', "%#{params[:term]}%")
     end
-    
+
     if params[:nr_pedido].present?
       @pedidos = @pedidos.where('nr_pedido ILIKE ?', "%#{params[:nr_pedido]}%")
     end
-    
+
     if params[:dataInicial].present?
       data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')
       @pedidos = @pedidos.where('data_emissao >= ?', data_inicial)
     end
-    
+
     if params[:dataFinal].present?
       data_final = Date.strptime(params[:dataFinal], '%d/%m/%Y')
       @pedidos = @pedidos.where('data_emissao <= ?', data_final)
     end
-    
-    @pedidos = @pedidos.order(data_emissao: :desc)
-    
-    # Paginação
-    if params[:per_page] == 'Todas'
-      @pedidos = @pedidos.all
-    else
-      per_page = params[:per_page].present? ? params[:per_page].to_i : 30
-      @pedidos = @pedidos.page(params[:page]).per(per_page)
-    end
+
+    @pedidos = @pedidos.order(data_emissao: :desc).page(params[:page])
   end
+
 
   def new
     @pedido = PedidosCompra.new
@@ -43,7 +36,8 @@ class CollaboratorsBackoffice::PedidosComprasController < CollaboratorsBackoffic
 
   def create
     @pedido = PedidosCompra.new(pedido_params)
-    
+    @pedido.cod_empresa = current_collaborator.cod_empresa
+
     if params[:pedidos_compra][:itens_pedido_compras_attributes].present?
       itens = params[:pedidos_compra][:itens_pedido_compras_attributes].values
       @pedido.itens_pedido_compras.clear
@@ -117,7 +111,8 @@ class CollaboratorsBackoffice::PedidosComprasController < CollaboratorsBackoffic
       quantidade = item[:quantidade].to_f rescue 0
 
       item[:valor_unitario] = valor_unitario
-
+      item[:valor_total] = valor_unitario * quantidade;
+puts "Valor unitário: #{valor_unitario}, Quantidade: #{quantidade}, Valor total: #{item[:valor_total]}"
       total += (valor_unitario * quantidade)
     end
 
@@ -134,7 +129,7 @@ class CollaboratorsBackoffice::PedidosComprasController < CollaboratorsBackoffic
   def pedido_params
     params.require(:pedidos_compra).permit(
       :cod_pessoa, :nr_pedido, :data_emissao, :data_entrega, :observacoes, :total,
-      itens_pedido_compras_attributes: [:id, :cod_produto, :cod_cor, :quantidade, :valor_unitario, 
+      itens_pedido_compras_attributes: [:id, :cod_produto, :cod_cor, :quantidade, :valor_unitario, :valor_total,
                                        :percentual_ipi, :percentual_icms, :_destroy]
     )
   end

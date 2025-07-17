@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_15_162642) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_17_134421) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -420,6 +420,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_15_162642) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "nr_pedido", limit: 20
+    t.integer "cod_empresa", null: false
+    t.index ["cod_empresa"], name: "index_pedidos_compras_on_cod_empresa"
     t.index ["cod_pessoa"], name: "index_pedidos_compras_on_cod_pessoa"
   end
 
@@ -655,6 +657,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_15_162642) do
   add_foreign_key "lembretes", "empresa", column: "cod_empresasolicitada", primary_key: "cod_empresa", name: "fk_empresasolicitada"
   add_foreign_key "lembretes", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
   add_foreign_key "parametros", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk9229ce7a3eac1b66"
+  add_foreign_key "pedidos_compras", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
   add_foreign_key "pedidos_compras", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa"
   add_foreign_key "pessoa", "cidade", column: "cod_cidade", primary_key: "cod_cidade", name: "fk_cidade"
   add_foreign_key "produto", "grupo", column: "grupo", primary_key: "cod_grupo", name: "fk_grupo"

@@ -12,10 +12,10 @@
                 { prompt: "Selecione" }, { class: "form-select cor-select" } %>
   </td>
   <td>
-    <%= f.number_field :quantidade, step: 0.001, class: "form-control", style: "width: 80px;" %>
+    <%= f.number_field :quantidade, step: 1, class: "form-control", style: "width: 80px;" %>
   </td>
   <td>
-    <%= f.text_field :valor_unitario, class: "form-control money2", style: "width: 100px;" %>
+    <%= f.text_field :valor_unitario, value: number_to_currency(f.object.valor_unitario || 0, unit: "", separator: ",", delimiter: ""), class: "form-control money2", style: "width: 100px;" %>
   </td>
   <td>
     <%= f.number_field :percentual_ipi, step: 0.01, class: "form-control", style: "width: 80px;" %>

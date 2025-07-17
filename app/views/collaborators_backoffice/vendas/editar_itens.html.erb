@@ -227,7 +227,7 @@
       const valorUnitario = parseFloat(row.querySelector('.valor-unitario').value.replace(/\./g, '').replace(',', '.')) || 0;
       const acrescimo = parseFloat(row.querySelector('.valor-acrescimo').value.replace(/\./g, '').replace(',', '.')) || 0;
       const desconto = parseFloat(row.querySelector('.valor-desconto').value.replace(/\./g, '').replace(',', '.')) || 0;
-      
+
       const subtotal = quantidade * valorUnitario;
       const total = subtotal + acrescimo - desconto;
 
@@ -311,11 +311,11 @@
       const totalProdutos = obterTotalProdutos();
       const valorTotalFinal = obterValorTotalFinal();
       const totalParcelas = obterTotalParcelas();
-      
+
       atualizarSubtotalProdutos(totalProdutos);
       atualizarStatusParcelas(valorTotalFinal, totalParcelas);
     }
-    
+
     function obterTotalProdutos() {
       let total = 0;
       document.querySelectorAll('strong.text-success').forEach(function(element) {
@@ -326,7 +326,7 @@
       });
       return total;
     }
-    
+
     function obterTotalParcelas() {
       let total = 0;
       document.querySelectorAll('input[name*="valorparcela"]').forEach(function(input) {
@@ -336,13 +336,13 @@
       });
       return total;
     }
-    
+
     function atualizarSubtotalProdutos(total) {
       const subtotalField = document.getElementById('subtotal-produtos');
       if (subtotalField) {
         subtotalField.value = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
       }
-      
+
       // Atualizar valor total da venda
       const valorTotalField = document.querySelector('input[name="venda[valortotal]"]');
       if (valorTotalField) {
@@ -352,16 +352,16 @@
         valorTotalField.value = valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',');
       }
     }
-    
+
     function atualizarStatusParcelas(valorFinal, totalParcelas) {
       const infoElement = document.querySelector('#bills .alert-info');
       if (!infoElement) return;
-      
+
       const diferenca = totalParcelas - valorFinal;
-      const status = Math.abs(diferenca) < 0.01 
+      const status = Math.abs(diferenca) < 0.01
         ? '<span class="text-success">✓ Valores balanceados</span>'
         : `<span class="text-danger">⚠ Diferença: R$ ${diferenca.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>`;
-      
+
       infoElement.innerHTML = `
         <i class="fa fa-info-circle me-2"></i>
         <strong>Total Final:</strong> R$ ${valorFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} |
