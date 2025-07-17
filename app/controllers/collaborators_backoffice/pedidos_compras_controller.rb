@@ -112,7 +112,7 @@ class CollaboratorsBackoffice::PedidosComprasController < CollaboratorsBackoffic
 
       item[:valor_unitario] = valor_unitario
       item[:valor_total] = valor_unitario * quantidade;
-puts "Valor unitário: #{valor_unitario}, Quantidade: #{quantidade}, Valor total: #{item[:valor_total]}"
+
       total += (valor_unitario * quantidade)
     end
 
@@ -122,7 +122,6 @@ puts "Valor unitário: #{valor_unitario}, Quantidade: #{quantidade}, Valor total
 
 
   def set_pedido
-    puts "Fetching pedido with ID: #{params[:id]}"
     @pedido = PedidosCompra.find(params[:id])
   end
 

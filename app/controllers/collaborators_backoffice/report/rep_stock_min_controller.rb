@@ -105,7 +105,11 @@ class CollaboratorsBackoffice::Report::RepStockMinController < CollaboratorsBack
       itempedido = @pedido.itens_pedido_compras.where(cod_produto: cod_produto, cod_cor: cod_cor).first
     end
 
-    valor_unitario = Itemcompra.find_by(cod_produto: cod_produto, cod_cor: cod_cor)&.valorunitario || 1.0
+    valor_unitario = Itemcompra.joins(:compra) # precisa ter relacionamento definido: belongs_to :compra
+                               .where(cod_produto: cod_produto, cod_cor: cod_cor)
+                               .order('compra.datacompra DESC')
+                               .limit(1)
+                               .pick(:valorunitario) || 1.0
 
     if itempedido
       # Se o item já existe, incrementar a quantidade
