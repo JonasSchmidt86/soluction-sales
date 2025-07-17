@@ -1,0 +1,236 @@
+<%= form_with model: [:collaborators_backoffice, @pedido], local: true do |f| %>
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <%= f.label :nome_pessoa, "Fornecedor", class: "form-label" %>
+      <%= text_field_tag :nome_pessoa, @pedido.pessoa&.nome, 
+                        class: "form-control", 
+                        placeholder: "Digite o nome ou CPF/CNPJ do fornecedor",
+                        autocomplete: "off" %>
+      <%= f.hidden_field :cod_pessoa, id: "selected_person_id" %>
+      <div id="results_list" class="list-group position-absolute" style="z-index: 1000; display: none;"></div>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :nr_pedido, "Nº Pedido Fornecedor", class: "form-label" %>
+      <%= f.text_field :nr_pedido, class: "form-control", maxlength: 50 %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :data_emissao, "Data Emissão", class: "form-label" %>
+      <%= f.date_field :data_emissao, class: "form-control" %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :data_entrega, "Data Entrega", class: "form-label" %>
+      <%= f.date_field :data_entrega, class: "form-control" %>
+    </div>
+  </div>
+  <div class="mb-3">
+    <%= f.label :observacoes, "Observações", class: "form-label" %>
+    <%= f.text_area :observacoes, class: "form-control", rows: 3 %>
+  </div>
+  <h5>Itens do Pedido</h5>
+  <%= link_to_add_association "+ Adicionar Produto", f, :itens_pedido_compras, 
+                             class: "btn btn-primary btn-sm mb-3",
+                             data: { association_insertion_node: '#itens-tbody', association_insertion_method: 'append' } %>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Produto</th>
+          <th>Cor</th>
+          <th>Qtd</th>
+          <th>Valor Unit.</th>
+          <th>IPI %</th>
+          <th>ICMS %</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="itens-tbody">
+        <%= f.fields_for :itens_pedido_compras do |item_form| %>
+          <%= render 'itens_pedido_compra_fields', f: item_form %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-between">
+    <%= link_to "Cancelar", collaborators_backoffice_pedidos_compras_path, class: "btn btn-secondary" %>
+    <%= f.submit action_message, class: "btn btn-success" %>
+  </div>
+<% end %>
+<%= render partial: 'collaborators_backoffice/pedidos_compras/shared/modal_cores' %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Kaminari gerencia os índices automaticamente
+    let url = window.location.origin + '/collaborators_backoffice/';
+
+    // Busca de fornecedor
+    setupFornecedorSearch();
+
+    // Busca de produtos
+    setupProdutoSearch();
+
+    function setupFornecedorSearch() {
+      const fornecedorInput = document.getElementById('nome_pessoa');
+      const resultsList = document.getElementById('results_list');
+      const selectedPersonIdField = document.getElementById('selected_person_id');
+
+      fornecedorInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          buscarFornecedor();
+        } else if (event.key === 'Escape') {
+          fornecedorInput.value = '';
+          selectedPersonIdField.value = '';
+          resultsList.style.display = 'none';
+        }
+      });
+
+      resultsList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('list-group-item')) {
+          fornecedorInput.value = e.target.textContent;
+          selectedPersonIdField.value = e.target.dataset.codPessoa;
+          resultsList.style.display = 'none';
+        }
+      });
+
+      function buscarFornecedor() {
+        const query = fornecedorInput.value.trim();
+        if (query.length < 2) return;
+
+        fetch(url + 'buscas/buscar_pessoas?query=' + encodeURIComponent(query))
+          .then(response => response.json())
+          .then(data => {
+            resultsList.innerHTML = '';
+            data.forEach(person => {
+              const item = document.createElement('div');
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = person.nome;
+              item.dataset.codPessoa = person.cod_pessoa;
+              resultsList.appendChild(item);
+            });
+            resultsList.style.display = data.length > 0 ? 'block' : 'none';
+          })
+          .catch(error => console.error('Erro:', error));
+      }
+    }
+
+    function setupProdutoSearch() {
+      document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('produto-busca')) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarProduto(e.target);
+          } else if (e.key === 'Escape') {
+            e.target.value = '';
+            e.target.nextElementSibling.value = '';
+            e.target.closest('td').querySelector('.produto-results').style.display = 'none';
+          }
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('produto-item')) {
+          const input = e.target.closest('td').querySelector('.produto-busca');
+          const hiddenField = e.target.closest('td').querySelector('.produto-cod');
+          const resultsList = e.target.closest('.produto-results');
+
+          input.value = e.target.textContent;
+          hiddenField.value = e.target.dataset.codProduto;
+          resultsList.style.display = 'none';
+
+          // Buscar cores do produto e abrir modal
+          buscarCoresProduto(e.target.dataset.codProduto, e.target.closest('tr.item-pedido'));
+        }
+      });
+
+      function buscarProduto(input) {
+        const query = input.value.trim();
+        if (query.length < 2) return;
+
+        const resultsList = input.closest('td').querySelector('.produto-results');
+
+        fetch(url + 'buscas/buscar_produtos?query=' + encodeURIComponent(query))
+          .then(response => response.json())
+          .then(data => {
+            resultsList.innerHTML = '';
+            data.forEach(produto => {
+              const item = document.createElement('div');
+              item.className = 'list-group-item list-group-item-action produto-item';
+              item.textContent = produto.nome;
+              item.dataset.codProduto = produto.cod_produto;
+              resultsList.appendChild(item);
+            });
+            resultsList.style.display = data.length > 0 ? 'block' : 'none';
+          })
+          .catch(error => console.error('Erro:', error));
+      }
+
+      function buscarCoresProduto(codProduto, itemContainer) {
+        window.currentItemContainer = itemContainer;
+
+        fetch(url + 'compras/consulta_estoque', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+          },
+          body: JSON.stringify({ id_produto: codProduto })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.getElementById('cores-table-body');
+          tbody.innerHTML = '';
+
+          data.forEach(cor => {
+            const row = `
+              <tr>
+                <td><span class="badge bg-secondary">${cor.nmcor}</span></td>
+                <td>${cor.quantidade || 0}</td>
+                <td>R$ ${(cor.ultimocusto || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-primary btn-selecionar-cor"
+                          data-cod-cor="${cor.cod_cor}"
+                          data-nm-cor="${cor.nmcor}"
+                          data-ultimo-custo="${cor.ultimocusto || 0}">
+                    Selecionar
+                  </button>
+                </td>
+              </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+          });
+
+          // Abrir modal
+          const modal = new bootstrap.Modal(document.getElementById('coresModal'));
+          modal.show();
+        })
+        .catch(error => console.error('Erro:', error));
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      // Botão confirmar cor no modal
+      if (e.target.id === 'confirmar-cor') {
+        const corSelect = document.getElementById('cor_id');
+        const selectedOption = corSelect.options[corSelect.selectedIndex];
+        
+        if (selectedOption.value) {
+          // Atualizar select de cor no formulário
+          const formCorSelect = window.currentItemContainer.querySelector('.cor-select');
+          formCorSelect.value = selectedOption.value;
+          
+          // Atualizar valor unitário com último custo
+          const ultimoCusto = selectedOption.dataset.ultimoCusto;
+          const valorInput = window.currentItemContainer.querySelector('input[name*="valor_unitario"]');
+          if (ultimoCusto && ultimoCusto > 0) {
+            valorInput.value = parseFloat(ultimoCusto).toLocaleString('pt-BR', { minimumFractionDigits: 2 }).replace('.', ',');
+          }
+          
+          // Fechar modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('coresModal'));
+          modal.hide();
+        }
+      }
+    });
+
+
+  });
+</script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_08_150804) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_15_162642) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -329,6 +329,23 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_08_150804) do
     t.decimal "valor_desconto", precision: 10, scale: 2, default: "0.0"
   end
 
+  create_table "itens_pedido_compras", force: :cascade do |t|
+    t.bigint "pedidos_compra_id", null: false
+    t.integer "cod_produto", null: false
+    t.decimal "quantidade", precision: 10, scale: 3, null: false
+    t.decimal "valor_unitario", precision: 10, scale: 2, null: false
+    t.decimal "percentual_ipi", precision: 5, scale: 2, default: "0.0"
+    t.decimal "valor_ipi", precision: 10, scale: 2, default: "0.0"
+    t.decimal "percentual_icms", precision: 5, scale: 2, default: "0.0"
+    t.decimal "valor_icms", precision: 10, scale: 2, default: "0.0"
+    t.decimal "valor_total", precision: 10, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "cod_cor"
+    t.index ["cod_produto"], name: "index_itens_pedido_compras_on_cod_produto"
+    t.index ["pedidos_compra_id"], name: "index_itens_pedido_compras_on_pedidos_compra_id"
+  end
+
   create_table "lancamentoscaixa", primary_key: "cod_lancamentocaixa", id: :bigint, default: -> { "nextval('lancamentocaixa_sequence'::regclass)" }, force: :cascade do |t|
     t.string "tipo", limit: 1, null: false
     t.bigint "cod_empresa", null: false
@@ -392,6 +409,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_08_150804) do
     t.boolean "imprimerelatoriocaixa"
     t.boolean "maiusculo"
     t.boolean "etiqueta", default: false
+  end
+
+  create_table "pedidos_compras", force: :cascade do |t|
+    t.integer "cod_pessoa", null: false
+    t.date "data_emissao", null: false
+    t.date "data_entrega"
+    t.text "observacoes"
+    t.decimal "total", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "nr_pedido", limit: 20
+    t.index ["cod_pessoa"], name: "index_pedidos_compras_on_cod_pessoa"
   end
 
   create_table "permissao", primary_key: "cod_permissao", id: :bigint, default: -> { "nextval('permissao_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -607,6 +636,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_08_150804) do
   add_foreign_key "itemvenda", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "itemvenda", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"
   add_foreign_key "itemvenda", "venda", column: "cod_venda", primary_key: "cod_venda", name: "fk_venda"
+  add_foreign_key "itens_pedido_compras", "pedidos_compras"
+  add_foreign_key "itens_pedido_compras", "produto", column: "cod_produto", primary_key: "cod_produto"
   add_foreign_key "lancamentoscaixa", "bancocheques", column: "cod_dadoscheque", primary_key: "cod_dadoscheque", name: "fk_bancocheque"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"
   add_foreign_key "lancamentoscaixa", "bancoconta", column: "cod_bancocontadestino", primary_key: "cod_bancoconta", name: "fk_bancocontadestino"
@@ -624,6 +655,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_08_150804) do
   add_foreign_key "lembretes", "empresa", column: "cod_empresasolicitada", primary_key: "cod_empresa", name: "fk_empresasolicitada"
   add_foreign_key "lembretes", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
   add_foreign_key "parametros", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk9229ce7a3eac1b66"
+  add_foreign_key "pedidos_compras", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa"
   add_foreign_key "pessoa", "cidade", column: "cod_cidade", primary_key: "cod_cidade", name: "fk_cidade"
   add_foreign_key "produto", "grupo", column: "grupo", primary_key: "cod_grupo", name: "fk_grupo"
   add_foreign_key "produto", "marca", column: "marca", primary_key: "cod_marca", name: "fk_marca"

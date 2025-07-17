@@ -1,0 +1,8 @@
+<div class="card mt-4">
+  <div class="card-header text-center bg-warning text-white">
+    <h4>Editar Pedido de Compra #<%= @pedido.id %></h4>
+  </div>
+  <div class="card-body">
+    <%= render partial: 'collaborators_backoffice/pedidos_compras/shared/form', locals: { action_message: "Atualizar Pedido" } %>
+  </div>
+</div>

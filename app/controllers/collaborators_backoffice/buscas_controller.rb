@@ -1,13 +1,11 @@
 class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeController
     
     def buscar_pessoas
-      entidade = params[:entidade]
       query = params[:query].downcase
-      puts params[:query].downcase
-      entity_class = entidade.constantize
-      # Lógica para buscar a entidade no banco de dados (substitua 'Entidade' pelo nome real da sua entidade/modelo)
-      result = entity_class.select( :nome, :cod_pessoa, :cpf_cnpj ).
-                                      where(' LOWER(nome) ILIKE ? ', "%#{query}%").order(:nome).limit(10);
+      result = Pessoa.select(:nome, :cod_pessoa, :cpf_cnpj)
+                    .where('LOWER(nome) ILIKE :query OR cpf_cnpj ILIKE :query', query: "%#{query}%")
+                    .order(:nome)
+                    .limit(10)
       render json: result
     end
 
@@ -15,18 +13,26 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
       entidade = params[:entidade]
       query = params[:query]
       puts params[:query].downcase
-      entity_class = entidade.constantize
-      # Lógica para buscar a entidade no banco de dados (substitua 'Entidade' pelo nome real da sua entidade/modelo)
-      result = entity_class.select(:nome, :cod_produto, "CONCAT(cod_produto, ' - ', nome) as produto ")
-        .where('cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR nome ILIKE :query ', query: "%#{query}%")
-        .order(:nome)
-        .limit(30)
+      
+      if entidade.present?
+        entity_class = entidade.constantize
+        result = entity_class.select(:nome, :cod_produto, "CONCAT(cod_produto, ' - ', nome) as produto ")
+          .where('cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR nome ILIKE :query ', query: "%#{query}%")
+          .order(:nome)
+          .limit(30)
+      else
+        # Para pedido de compra sem entidade
+        result = Produto.select(:nome, :cod_produto)
+          .where('cod_produto::varchar ILIKE :query OR LOWER(nome) ILIKE :query', query: "%#{query.downcase}%")
+          .order(:nome)
+          .limit(30)
+      end
+      
       render json: result
-
     end
 
     def consulta_estoque
-      # puts "CONSULTA CORES #{params} "x
+      puts "CONSULTA CORES #{params} "
       @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
                    .joins(:empresaprodutos)
                    .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)

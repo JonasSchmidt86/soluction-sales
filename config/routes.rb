@@ -67,6 +67,7 @@ Rails.application.routes.draw do
     end
     
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
+    resources :pedidos_compras
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :whatsapp_contacts #, only: [:index, :edit, :new, :create, :destroy, :update]

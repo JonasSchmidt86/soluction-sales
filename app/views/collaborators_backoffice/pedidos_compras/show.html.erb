@@ -1,0 +1,95 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_pedidos_compras_path do %>
+      <h4 class="text-white mb-0">Pedido de Compra #<%= @pedido.id %></h4>
+    <% end %>
+    <div class="ms-auto">
+      <%= link_to edit_collaborators_backoffice_pedidos_compra_path(@pedido), class: "btn btn-light" do %>
+        <i class="fa fa-edit"></i> Editar
+      <% end %>
+    </div>
+  </div>
+  <div class="card-body">
+    <!-- Informações do Pedido -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <strong>Fornecedor:</strong><br>
+        <%= @pedido.pessoa.nome %>
+      </div>
+      <div class="col-md-2">
+        <strong>Nº Pedido:</strong><br>
+        <%= @pedido.nr_pedido %>
+      </div>
+      <div class="col-md-2">
+        <strong>Data Emissão:</strong><br>
+        <%= @pedido.data_emissao&.strftime("%d/%m/%Y") %>
+      </div>
+      <div class="col-md-2">
+        <strong>Data Entrega:</strong><br>
+        <%= @pedido.data_entrega&.strftime("%d/%m/%Y") %>
+      </div>
+      <div class="col-md-3 text-end">
+        <strong>Total:</strong><br>
+        <h4 class="text-success">R$ <%= number_to_currency(@pedido.total || 0, unit: "", separator: ",", delimiter: ".") %></h4>
+      </div>
+    </div>
+
+    <% if @pedido.observacoes.present? %>
+      <div class="mb-4">
+        <strong>Observações:</strong><br>
+        <%= simple_format(@pedido.observacoes) %>
+      </div>
+    <% end %>
+
+    <!-- Tabela de Itens -->
+    <h5>Itens do Pedido</h5>
+    <div class="table-responsive">
+      <table id="itens-table" class="table table-striped table-hover table-bordered table-sm">
+        <thead class="table-primary">
+          <tr>
+            <th>Produto</th>
+            <th>Cor</th>
+            <th>Quantidade</th>
+            <th>Valor Unit.</th>
+            <th>IPI %</th>
+            <th>ICMS %</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @pedido.itens_pedido_compras.each do |item| %>
+            <tr>
+              <td><%= item.produto.nome %></td>
+              <td><%= item.cor&.nmcor %></td>
+              <td><%= item.quantidade %></td>
+              <td>R$ <%= number_to_currency(item.valor_unitario, unit: "", separator: ",", delimiter: ".") %></td>
+              <td><%= item.percentual_ipi %>%</td>
+              <td><%= item.percentual_icms %>%</td>
+              <td>R$ <%= number_to_currency(item.valor_total, unit: "", separator: ",", delimiter: ".") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <%= link_to "Voltar", collaborators_backoffice_pedidos_compras_path, class: "btn btn-secondary" %>
+      <div>
+        <%= link_to "Editar", edit_collaborators_backoffice_pedidos_compra_path(@pedido), class: "btn btn-warning me-2" %>
+        <%= link_to "Excluir", collaborators_backoffice_pedidos_compra_path(@pedido), method: :delete, 
+                   class: "btn btn-danger", data: { confirm: "Deseja remover o Pedido?" } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#itens-table').DataTable({
+      "paging": false,
+      "searching": false,
+      "ordering": true,
+      "info": false
+    });
+  });
+</script>

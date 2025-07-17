@@ -1,0 +1,29 @@
+<tr class="nested-fields item-pedido">
+  <td>
+    <%= text_field_tag "produto_busca_#{f.object_name}", f.object.produto&.nome, 
+                      class: "form-control produto-busca", 
+                      placeholder: "Digite o nome ou código do produto",
+                      autocomplete: "off" %>
+    <%= f.hidden_field :cod_produto, class: "produto-cod" %>
+    <div class="produto-results list-group position-absolute" style="z-index: 1000; display: none;"></div>
+  </td>
+  <td>
+    <%= f.select :cod_cor, options_from_collection_for_select(Core.all.order(:nmcor), :cod_cor, :nmcor, f.object.cod_cor), 
+                { prompt: "Selecione" }, { class: "form-select cor-select" } %>
+  </td>
+  <td>
+    <%= f.number_field :quantidade, step: 0.001, class: "form-control", style: "width: 80px;" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_unitario, class: "form-control money2", style: "width: 100px;" %>
+  </td>
+  <td>
+    <%= f.number_field :percentual_ipi, step: 0.01, class: "form-control", style: "width: 80px;" %>
+  </td>
+  <td>
+    <%= f.number_field :percentual_icms, step: 0.01, class: "form-control", style: "width: 80px;" %>
+  </td>
+  <td>
+    <%= link_to_remove_association "Remover", f, class: "btn btn-danger btn-sm" %>
+  </td>
+</tr>

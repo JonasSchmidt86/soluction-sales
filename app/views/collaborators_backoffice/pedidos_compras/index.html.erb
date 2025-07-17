@@ -1,0 +1,133 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <h4 class="text-white mb-0">Pedidos de Compra</h4>
+    <div class="ms-auto">
+      <%= link_to new_collaborators_backoffice_pedidos_compra_path, class: "btn btn-light" do %>
+        <i class="fa fa-plus"></i> Novo
+      <% end %>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="">
+      <%= form_with(url: collaborators_backoffice_pedidos_compras_path, local: true, method: :get, class:"mb-3") do |form| %>
+        <div class="container-fluid">
+          <div class="row g-1 align-items-center">
+            <div class="col-auto" style="max-width: 80px;">
+              <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-select form-select-md" %>
+            </div>
+            <div class="col-auto">
+              <%= form.text_field :term, class:"form-control form-control-md", value: params[:term], placeholder:"Fornecedor..." %>
+            </div>
+            <div class="col-auto">
+              <%= form.text_field :dataInicial, 
+              value: params[:dataInicial].presence || Time.current.strftime("01/%m/%Y"), 
+              class: "form-control form-control-md datepicker fallback", style:"width: 115px;", 
+              placeholder:"Data Inicial" %>
+            </div>
+            <div class="col-auto">
+              <%= form.text_field :dataFinal, 
+              value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"), 
+              class: "form-control form-control-md datepicker fallback", style:"width: 115px;", 
+              placeholder:"Data Final" %>
+            </div>
+            <div class="col-auto">
+              <%= form.text_field :nr_pedido, class:"form-control form-control-md", value: params[:nr_pedido], placeholder:"Nº Pedido..." %>
+            </div>
+            <div class="col-auto d-grid" style="width: 130px;">
+              <button type="submit" class="btn btn-success btn-md">Buscar</button>
+            </div>
+            <div class="col-auto ms-auto d-flex gap-2">
+              <div class="form-floating">
+                <%= form.text_field :valortotal, class: "form-control form-control-sm text-bg-success", readonly: true, id: "valortotal", style: "min-width: 120px;" %>
+                <%= form.label :valortotal, "Total Pedidos" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <div class="dataTable-loading sortable searchable fixed-columns">
+        <table id="pedidos-table" class="table table-striped table-hover table-bordered table-sm">
+          <thead class="table-primary">
+            <tr>
+              <th data-sortable="true" style="width: 10%;">Data Emissão</th>
+              <th data-sortable="true">Fornecedor</th>
+              <th data-sortable="true" style="width: 10%;">Nº Pedido</th>
+              <th data-sortable="true" style="width: 10%;">Data Entrega</th>
+              <th data-sortable="true" style="width: 150px;">Valor Total</th>
+              <th data-sortable="false" style="width: 45px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% somaPedidos = 0; %>
+            <% @pedidos.each do |pedido| %>
+              <tr>
+                <td class="align-middle"><%= pedido.data_emissao&.strftime("%d/%m/%Y") %></td>
+                <td class="align-middle"><%= pedido.pessoa.nome %></td>
+                <td class="align-middle"><%= pedido.nr_pedido %></td>
+                <td class="align-middle"><%= pedido.data_entrega&.strftime("%d/%m/%Y") %></td>
+                <td class="align-middle"><%= number_to_currency(pedido.total || 0, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+                <% somaPedidos += (pedido.total || 0) %>
+                <td class="align-middle">
+                  <div class="dropdown">
+                    <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                      <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-menu" style="width: 50px;">
+                      <li>
+                        <%= link_to collaborators_backoffice_pedidos_compra_path(pedido), class:"dropdown-item btn btn-info btn-circle" do %>
+                          <i class="fa fa-info" style="width: 35px;"></i>Informações
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to edit_collaborators_backoffice_pedidos_compra_path(pedido), class:"dropdown-item btn btn-warning btn-circle" do %>
+                          <i class="fa fa-edit" style="width: 35px;"></i>Editar
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to collaborators_backoffice_pedidos_compra_path(pedido), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                                  data: { confirm: "Deseja remover o Pedido?" } do %>
+                          <i class="fa fa-trash-can" style="width: 35px;"></i>Apagar
+                        <% end %>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <% if @pedidos.respond_to?(:total_pages) %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info"><%= page_entries_info @pedidos, entry_name: 'item' %></div>
+            <div class = "text-center">
+              <%= paginate @pedidos %>
+            </div>
+          </div>
+        <% else %>
+          <div class="dataTable-bottom">
+            <div class="dataTable-info">
+              <h5>Exibindo <%= @pedidos.size %> registros</h5>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function formatarReal(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  
+  document.getElementById("valortotal").value = formatarReal(<%= somaPedidos %>);
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#pedidos-table').DataTable({
+      "paging": false,
+      "searching": false,
+      "ordering": true,
+      "info": false
+    });
+  });
+</script>
