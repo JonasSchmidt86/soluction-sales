@@ -1,23 +1,37 @@
 <tr class= "nested-fields">
-    <td class="">
-        <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
-    </td>
-    <td class="">
-        <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-    </td>
-    <td class="">
-        <%= f.text_field :valorparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-    </td>
-        
-    <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
-
-    <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
-    <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
-    <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 1 %>
-
-    <td class="align-middle fw-semibold">
-        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
-            <i class="fa fa-trash-can"></i>
-        <% end %>
-    </td>
+  <td class="">
+    <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+  </td>
+  <td class="">
+    <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+  </td>
+  <td class="">
+    <%= f.text_field :valorparcela, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+  </td>
+  <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
+  <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
+  <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
+  <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 1 %>
+  <td class="align-middle fw-semibold">
+    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+      <i class="fa fa-trash-can"></i>
+    <% end %>
+  </td>
 </tr>
+<script>
+  $(document).ready(function() {
+    // Inicializa datepickers e fallback existentes
+    $(".datepicker").datepicker({ dateFormat: "dd/mm/yy" });
+    $(".fallback").mask("99/99/9999");
+    $(".money2").mask("000000000,00", {reverse: true})
+
+    // Para novos campos adicionados pelo Cocoon
+    $(document).on('cocoon:after-insert', function(e, insertedItem) {
+      setTimeout(function() {
+        $(insertedItem).find('.datepicker').datepicker({ dateFormat: "dd/mm/yy" });
+        $(insertedItem).find('.fallback').mask("99/99/9999");
+        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
+      }, 100);
+    });
+  });
+</script>

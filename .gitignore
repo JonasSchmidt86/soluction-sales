@@ -5,7 +5,9 @@
 #   git config --global core.excludesfile '~/.gitignore_global'
 
 
+# para passar o banco de dados local para o servidor
 
+# scp /Users/jonas/Desktop/BANCO/. BANCO.sql root@85.31.231.205:/home/jonas/
 # --- passo a passo para fazer o commit da nova versão no servidor -----
 # ssh root@85.31.231.205 
 # cd /home/jonas/www/soluction-sales/

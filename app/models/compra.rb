@@ -38,24 +38,30 @@ class Compra < ApplicationRecord
     0;
   end
 
-    def valorPago
-      valor = 0
-      unless self.cancelada
-        for conta in self.contas do
-          unless conta.lancamentos.blank?
-            for launch in conta.lancamentos do
-                valor += launch.valor
-                puts "\n valor Pago: #{valor} \n"
-            end
-          end
-        end
-      end
-      return valor
-    end
+  def nome_pessoa
+    Pessoa.where(cod_pessoa: self.cod_pessoa).pluck(:nome).first
+  end
 
-    def atualizar_codigo_no_xml_file
-        if xml_file.present?
-          xml_file.update_attributes(compra_id: self.codigo)
-        end
-      end
+  def self.pessoa 
+      nome_pessoa
+  end
+
+  def funcionario
+    Funcionario.where(id: self.cod_funcionario).pluck(:usuario).first
+  end
+
+  def valorPago
+    return 0 if cancelada?
+
+    Lancamentoscaixa
+      .joins(:contaspagrec)
+      .where(contaspagrec: { cod_compra: id })
+      .sum(:valor)
+  end
+
+  def atualizar_codigo_no_xml_file
+    if xml_file.present?
+      xml_file.update_attributes(compra_id: self.codigo)
+    end
+  end
 end

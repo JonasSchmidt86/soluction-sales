@@ -3,7 +3,6 @@ class Venda < ApplicationRecord
     self.table_name = "venda"
     self.primary_key = "cod_venda"
 
-    #https://api.rubyonrails.org/classes/ActiveRecord/NestedAttributes/ClassMethods.html
     has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all, autosave: true
     accepts_nested_attributes_for :itensvenda, allow_destroy: true, update_only: true #, reject_if: :all_blank
 
@@ -21,15 +20,16 @@ class Venda < ApplicationRecord
 
     paginates_per 30
 
-    def nome_pessoa
-        if !pessoa.nil?
-            return pessoa.nome
-        end
+    def nome_funcionario
+        Funcionario.where(id: self.cod_funcionario).pluck(:usuario).first
     end
-    def self.pessoa 
-        unless self.pessoa.blank?
-            return self.pessoa.nome
-        end
+
+    def nome_empresa
+        Empresa.where(cod_empresa: self.cod_empresa).pluck(:nome).first
+    end
+
+    def nome_pessoa 
+        Pessoa.where(cod_pessoa: self.cod_pessoa).pluck(:nome).first
     end
 
     def venda_nfe
@@ -41,21 +41,16 @@ class Venda < ApplicationRecord
     end
 
     def valorRecebido
-        valor = 0
-        unless self.cancelada
-            for conta in self.contas do
-                unless conta.lancamentos.blank?
-                    for launch in conta.lancamentos do
-                        valor += launch.valor
-                    end
-                end
-            end
-        end
-        return valor
+        return 0 if cancelada?
+
+        Lancamentoscaixa
+            .joins(:contaspagrec)
+            .where(contaspagrec: { cod_venda: id })
+            .sum(:valor)
     end
-    
+
     def valorDevido
-        return self.valortotal - self.valorRecebido
+        valortotal - valorRecebido
     end
     
     def valorCusto

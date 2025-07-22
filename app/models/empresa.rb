@@ -25,4 +25,7 @@ class Empresa < ApplicationRecord
 
     accepts_nested_attributes_for :employees, reject_if: :all_blank, allow_destroy: false #cocoon gem
 
+    def to_s
+        self.nome;
+    end
 end

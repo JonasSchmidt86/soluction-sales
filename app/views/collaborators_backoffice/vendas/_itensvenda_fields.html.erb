@@ -12,7 +12,13 @@
                     class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
   </td>
   <td>
-    <%= f.text_field :quantidade, type: "number", step: "1", class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :quantidade,
+      type: "number",
+      step: 1,
+      min: 0,
+      class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark",
+      onchange: "setValorTotal(this)",
+      oninput: "this.value = this.value.replace(/[^0-9]/g, '')" %>
   </td>
   <td>
     <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
@@ -33,3 +39,18 @@
     <% end %>
   </td>
 </tr>
+<script>
+  $(document).ready(function() {
+    $(".money2").mask("000000000,00", {reverse: true})
+
+    $(document).on('mouseup', '.money2, .quantidade', function() {
+      $(this).select();
+    });
+    // Para novos campos adicionados pelo Cocoon
+    $(document).on('cocoon:after-insert', function(e, insertedItem) {
+      setTimeout(function() {
+        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
+      }, 100);
+    });
+  });
+</script>

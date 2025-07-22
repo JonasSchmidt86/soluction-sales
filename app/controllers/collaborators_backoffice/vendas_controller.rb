@@ -205,7 +205,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
     def atualizar_vendedor
       @venda = Venda.find(params[:id])
-      @venda.funcionario = Funcionario.find_by(cod_funcionario: params[:cod_funcionario])
+      @venda.cod_funcionario = Funcionario.find_by(cod_funcionario: params[:cod_funcionario]).cod_funcionario if params[:cod_funcionario].present?  
 
       if @venda.save!
         redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda), notice: "Vendedor atualizado com sucesso."

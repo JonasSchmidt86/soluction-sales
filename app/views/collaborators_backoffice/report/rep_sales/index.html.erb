@@ -3,6 +3,11 @@
     <%= link_to collaborators_backoffice_report_sales_path do %>
       <h4 class="text-white mb-0">Relatorio Vendas</h4>
     <% end %>
+    <div class="ms-auto">
+      <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-light" do %>
+        <i class="fa fa-plus"></i> Nova
+      <% end %>
+    </div>
   </div>
   <div class="card-body">
     <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, class: "dataTable-search mb-2") do |form| %>
@@ -98,12 +103,12 @@
                 <% end %>
                 <td class="align-middle"><%= post_date (sale.datavenda? ? sale.datavenda : "") %> </td>
                 <td class="align-middle">
-                  <div class="text-truncate" style="width: 150px" ><%= sale.empresa.nome %></div>
+                  <div class="text-truncate" style="width: 150px" ><%= sale.nome_empresa %></div>
                 </td>
-                <td class="align-middle"><%= sale.pessoa.nome %></td>
+                <td class="align-middle"><%= sale.nome_pessoa %></td>
                 <td class="align-middle"><%= sale.venda_nfe %> </td>
                 <td class="align-middle">
-                  <div class="text-truncate" style="max-width: 150px" ><%= sale.funcionario.usuario %></div>
+                  <div class="text-truncate" style="max-width: 150px" ><%= sale.nome_funcionario %></div>
                 </td>
                 <td class="align-middle"><%= number_to_currency( sale.valortotal, precision: 2, separator: ",", delimiter: "", unit: "")  %></td>
                 <% unless sale.cancelada %>
@@ -123,7 +128,7 @@
                         <% end %>
                       </li>
                       <li>
-                        <%= link_to collaborators_backoffice_report_sales_client_path(sale.pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
+                        <%= link_to collaborators_backoffice_report_sales_client_path(sale.cod_pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
                           <i class="fa-brands fa-hire-a-helper", style="width: 35px;"></i> Histórico
                         <% end %>
                       </li>
@@ -148,7 +153,7 @@
                           <% end %>
                         </li>
                         <li>
-                          <button class="dropdown-item btn btn-warning btn-circle" data-bs-toggle="modal" data-bs-target="#modalVendedor<%= sale.id %>">
+                          <button class="dropdown-item btn btn-warning btn-circle" data-bs-toggle="modal" data-bs-target="#modalVendedor" data-venda-id="<%= sale.id %>" data-venda-numero="<%= sale.cod_vendaempresa %>" onclick="setVendaInfo(this)">
                             <i class="fa fa-user-edit"></i> Alterar Vendedor
                           </button>
                         </li>
@@ -157,10 +162,6 @@
                   </div>
                 </td>
               </tr>
-              <!-- Modal para alterar vendedor fica separado para não ficar dentro da tabela que faz não aparecer o modal -->
-              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                <%= render partial: 'vendedor_modal', locals: { venda: sale } %>
-              <% end %>
             <% end %>
           </tbody>
         </table>
@@ -199,4 +200,22 @@
               "ordering": true,  // Habilita ordenação nas colunas (opcional)
               "info": false}); // Habilita ordenação nas colunas (opcional)
           });
+  </script>
+  <!-- Modal para alterar vendedor fica fora do loop para melhorar performance -->
+  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+    <%= render partial: 'vendedor_modal' %>
+  <% end %>
+  <script>
+    function setVendaInfo(button) {
+      const vendaId = button.getAttribute('data-venda-id');
+      const vendaNumero = button.getAttribute('data-venda-numero');
+
+      // Update form action
+      const form = document.querySelector('#modalVendedor form');
+      form.action = `/collaborators_backoffice/vendas/${vendaId}/atualizar_vendedor`;
+
+      // Update modal title
+      const title = document.querySelector('#modalVendedor .modal-title');
+      title.textContent = `Alterar Vendedor - Venda ${vendaNumero}`;
+    }
   </script>

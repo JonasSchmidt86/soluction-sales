@@ -11,7 +11,7 @@
     <%= f.text_field :dtvencimento, class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark" %>
   </td>
   <td class="">
-    <%= f.text_field :valorparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    <%= f.text_field :valorparcela, value: number_to_currency(f.object.valorparcela,  unit: "", separator: ",", delimiter: ""), class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
   </td>
   <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
   <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
@@ -27,12 +27,17 @@
     // Inicializa datepickers e fallback existentes
     $(".datepicker").datepicker({ dateFormat: "dd/mm/yy" });
     $(".fallback").mask("99/99/9999");
+    $(".money2").mask("000000000,00", {reverse: true})
 
+    $(document).on('mouseup', '.money2, .quantidade', function() {
+      $(this).select();
+    });
     // Para novos campos adicionados pelo Cocoon
     $(document).on('cocoon:after-insert', function(e, insertedItem) {
       setTimeout(function() {
         $(insertedItem).find('.datepicker').datepicker({ dateFormat: "dd/mm/yy" });
         $(insertedItem).find('.fallback').mask("99/99/9999");
+        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
       }, 100);
     });
   });
