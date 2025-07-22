@@ -30,28 +30,31 @@ class Contaspagrec < ApplicationRecord
     end
 
     def nmParcela
-        if !self.venda.nil?
-            [self.venda.cod_vendaempresa, self.numeroparcela].join('-')
+        if venda.present?
+            [venda.cod_vendaempresa, numeroparcela].join('-')
 
-        elsif !self.compra.nil?
-            if !self.frete.nil?
-                [self.frete.nrromaneio, "F", self.frete.pessoa.nome].join('-')
+        elsif compra.present?
+            if frete.present?
+            [frete.nrromaneio, "F", frete.pessoa&.nome].join('-')
             else
-                if self.compra.numeronf.blank?
-                    ["S/N", self.numeroparcela].join('-')
-                else
-                    [self.compra.numeronf, self.numeroparcela].join('-')
-                end
+            if compra.numeronf.blank?
+                ["S/N", numeroparcela].join('-')
+            else
+                [compra.numeronf, numeroparcela].join('-')
+            end
             end
 
-        elsif !self.frete.nil?
-            if self.frete.compra.numeronf.blank?
-                [self.frete.nrromaneio.to_i , "F"].join('-')
+        elsif frete.present? && frete.compra.present?
+            if frete.compra.numeronf.blank?
+            [frete.nrromaneio.to_i, "F"].join('-')
             else
-                [self.frete.compra.numeronf , "F"].join('-')
+            [frete.compra.numeronf, "F"].join('-')
             end
+        else
+            "—"
         end
     end
+
 
     def nmPessoa 
         if !self.venda.nil?
