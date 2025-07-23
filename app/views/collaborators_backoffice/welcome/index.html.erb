@@ -1,12 +1,13 @@
 <div class="d-flex p-2">
   <button type="button", class="btn btn-success btn-circle px-4", data-bs-toggle="modal",
         data-bs-target="#produtoModal", href="collaborators_backoffice/produtos/shared" 
-            data-bs-whatever="passa para o modal" >
-    <i class="fa fa-plus">  Produto</i>
+            data-bs-whatever="Welcome/index" >
+    <i class="fa fa-plus">  </i> Produto
   </button>
+  <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Welcome/index' } %>
 </div>
-<%# <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { produto: @produto } % > %>
-<%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Modal' } %>
-<%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info btn-circle btn-sm", title: "Gerenciar Imagens" do %>
-  <i class="fa fa-images"></i>
-<% end %>
+<div class="d-flex p-2">
+  <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info btn-circle px-4", title: "Gerenciar Imagens" do %>
+    <i class="fa fa-images"> </i> Imagens
+  <% end %>
+</div>

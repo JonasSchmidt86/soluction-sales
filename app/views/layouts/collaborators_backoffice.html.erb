@@ -114,6 +114,26 @@
                     <%= render 'layouts/shared/menu_lateral' %>
                   </nav>
                 </div>
+                <!-- Colapso: Cadastros -->
+                <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Vendas
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                      Cadastro Venda
+                    <% end %>
+                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                      Contas pagar/Receber
+                    <% end %>
+                  </nav>
+                </div>
                 <!-- Colapso: Compras -->
                 <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
                   <div class="sb-nav-link-icon">

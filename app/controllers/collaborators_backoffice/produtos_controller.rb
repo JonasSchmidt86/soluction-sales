@@ -27,14 +27,25 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
 
     def create
         @produto = Produto.new(params_produto)
+        action_message = params[:action_message] || ''
 
         if @produto.cod_produto.blank?
-            @produto.cod_produto = Produto.last.cod_produto += 1
+            ultimo_codigo = Produto.maximum(:cod_produto) || 0
+            @produto.cod_produto = ultimo_codigo + 1
         end
+
         if @produto.save
-            redirect_to collaborators_backoffice_produtos_path, notice: "Produto Cadastrado com sucesso!"
+            if action_message == 'Welcome/index'
+                redirect_to collaborators_backoffice_welcome_index_path, notice: "Produto Cadastrado com sucesso!"
+            else
+                redirect_to collaborators_backoffice_produtos_path, notice: "Produto Cadastrado com sucesso!"
+            end
         else 
-            render :new
+            if action_message == 'Welcome/index'
+                redirect_to collaborators_backoffice_welcome_index_path, notice: "Erro ao cadastrar produto!"
+            else
+                render :new
+            end
         end
     end
     

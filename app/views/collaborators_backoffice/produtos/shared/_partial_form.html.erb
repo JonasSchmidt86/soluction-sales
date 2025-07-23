@@ -1,5 +1,6 @@
 <div class="card-body">
   <%= form_with(model: [ :collaborators_backoffice, (@produto.nil? ? Produto.new : @produto) ], local: true) do |form| %>
+    <%= hidden_field_tag :action_message, local_assigns[:action_message] || '' %>
     <div class="row mb-3">
       <div class="col-md-6">
         <div class="form-floating mb-3 mb-md-0">
