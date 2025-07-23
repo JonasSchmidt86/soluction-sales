@@ -1,13 +1,224 @@
-<div class="d-flex p-2">
-  <button type="button", class="btn btn-success btn-circle px-4", data-bs-toggle="modal",
-        data-bs-target="#produtoModal", href="collaborators_backoffice/produtos/shared" 
-            data-bs-whatever="Welcome/index" >
-    <i class="fa fa-plus">  </i> Produto
-  </button>
-  <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Welcome/index' } %>
+<div class="container mt-4">
+  <!-- Painel de Acesso Rápido -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fa fa-th"></i> Acesso Rápido</h5>
+    </div>
+    <div class="card-body">
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- Vendas -->
+        <div class="col">
+          <div class="card h-100 border-primary">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-shopping-cart"></i> Vendas</h5>
+              <% if @ultima_venda.present? %>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Total Vendas:</small>
+                    <small class="text-muted"><%= Venda.where("DATE(datavenda) = ? and cod_empresa = ? and tipo = 'V'", Date.current, current_collaborator.cod_empresa).count %> venda(s)</small>
+                    <span class="fw-bold">R$ <%= number_with_precision(@ultima_venda, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+              <% else %>
+                <p class="card-text">Registre e gerencie vendas</p>
+              <% end %>
+              <div class="d-flex gap-2">
+                <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-primary" do %>
+                  <i class="fa fa-plus"></i> Nova Venda
+                <% end %>
+                <%= link_to collaborators_backoffice_report_sales_path, class: "btn btn-outline-primary" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Imagens -->
+        <div class="col">
+          <div class="card h-100 border-info">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-images"></i> Imagens</h5>
+              <p class="card-text">Gerencie imagens dos produtos</p>
+              <div class="d-flex gap-2">
+                <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info" do %>
+                  <i class="fa fa-images"></i> Gerenciar Imagens
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Produto -->
+        <div class="col">
+          <div class="card h-100 border-success">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-box"></i> Produtos</h5>
+              <p class="card-text">Cadastre e gerencie produtos</p>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
+                  <i class="fa fa-plus"></i> Novo Produto
+                </button>
+                <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Contas -->
+        <div class="col">
+          <div class="card h-100 border-warning">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-money-bill"></i> Contas</h5>
+              <p class="card-text">Gerencie contas a pagar e receber</p>
+              <div class="d-flex gap-2">
+                <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "btn btn-outline-warning" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Pessoas -->
+        <div class="col">
+          <div class="card h-100 border-secondary">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-users"></i> Pessoas</h5>
+              <p class="card-text">Cadastre e gerencie clientes e fornecedores</p>
+              <div class="d-flex gap-2">
+                <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-secondary" do %>
+                  <i class="fa fa-plus"></i> Nova Pessoa
+                <% end %>
+                <%= link_to collaborators_backoffice_pessoas_path, class: "btn btn-outline-secondary" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Lembretes -->
+        <div class="col">
+          <div class="card h-100 border-danger">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-bell"></i> Lembretes</h5>
+              <p class="card-text">Gerencie seus lembretes e tarefas</p>
+              <div class="d-flex gap-2">
+                <button type="button", class="btn btn-danger", data-bs-toggle="modal",
+                                data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
+                  <i class="fa fa-plus"></i> Novo Lembrete
+                </button>
+                <%= link_to collaborators_backoffice_lembretes_path, class: "btn btn-outline-danger" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Painel de Estatísticas -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fa fa-chart-line"></i> Dashboard</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Produtos Mais Lucrativos -->
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-muted text-center">Produtos + Lucrativos (Mês)</h6>
+              <% if @produtos_mais_lucrativos.present? %>
+                <div class="list-group list-group-flush">
+                  <% @produtos_mais_lucrativos.each_with_index do |produto, index| %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                      <span>
+                        <span class="badge bg-<%= ['success', 'primary', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
+                        <%= truncate(produto.nome, length: 18) %>
+                      </span>
+                      <span class="badge bg-success text-white">R$ <%= number_with_precision(produto.lucro_total, precision: 2, delimiter: '.', separator: ',') %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-center mt-3">
+                  <p class="text-muted">Sem dados de lucro</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <!-- Informações de Caixa -->
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-muted text-center">Caixa</h6>
+              <div class="row g-2">
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Saldo Inicial</small>
+                    <span class="<%= @abertura_caixa >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(@abertura_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Saldo Atual</small>
+                    <span class="<%= @saldo_caixa >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(@saldo_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Entradas</small>
+                    <span class="text-success fw-bold">R$ <%= number_with_precision(@entradas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Saídas</small>
+                    <span class="text-danger fw-bold">R$ <%= number_with_precision(@saidas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+                <% if @ultimo_fechamento.present? %>
+                  <div class="col-12">
+                    <div class="p-2 border rounded bg-white">
+                      <small class="text-muted d-block">Último Fechamento</small>
+                      <span class="text-primary fw-bold">R$ <%= number_with_precision(@ultimo_fechamento.valorfechamento, precision: 2, delimiter: '.', separator: ',') %></span>
+                      <small class="text-muted d-block"><%= l(@ultimo_fechamento.datafechamento, format: :short) if @ultimo_fechamento.datafechamento %></small>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 5 Produtos Mais Vendidos -->
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-muted text-center">Top 5 Produtos (Mês)</h6>
+              <% if @produtos_mais_vendidos.present? %>
+                <div class="list-group list-group-flush">
+                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                      <span>
+                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
+                        <%= truncate(produto.nome, length: 20) %>
+                      </span>
+                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-center mt-3">
+                  <p class="text-muted">Sem vendas no mês</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="d-flex p-2">
-  <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info btn-circle px-4", title: "Gerenciar Imagens" do %>
-    <i class="fa fa-images"> </i> Imagens
-  <% end %>
-</div>
+<%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Welcome/index' } %>
+<%= render partial: 'collaborators_backoffice/lembretes/shared/lembrete_modal', locals: { action_message: 'Welcome/index' } %>
