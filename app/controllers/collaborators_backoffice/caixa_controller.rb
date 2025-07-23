@@ -18,7 +18,7 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
         if !@caixa.nil? && @caixa.datafechamento.nil?
 
             # @caixa.datafechamento = 0.day.from_now
-            @caixa.datafechamento = DateTime.now
+            @caixa.datafechamento = DateTime.current
             @caixa.cod_funcionariofechamento = current_collaborator.cod_funcionario
             @caixa.valorfechamento = (@caixa.valorabertura + @caixa.valorentradas) - @caixa.valorsaidas
             if @caixa.save
@@ -41,7 +41,7 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
         else
             @caixa = Caixa.new do |cx|
                 cx.cod_empresa = current_collaborator.cod_empresa
-                cx.dataabertura = DateTime.now
+                cx.dataabertura = DateTime.current
 
                 cx.valorabertura = cx2.valorfechamento      
                 cx.cod_funcionarioabertura = current_collaborator.cod_funcionario

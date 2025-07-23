@@ -6,3 +6,9 @@ pt-BR:
     abbr_day_names: ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
     month_names: [~, "janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
     abbr_month_names: [~, "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+  
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d/%m %H:%M"
+      long: "%d de %B de %Y às %H:%M"

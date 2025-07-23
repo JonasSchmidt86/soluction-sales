@@ -34,7 +34,7 @@ module SoluctionSales
     config.time_zone = 'America/Sao_Paulo'
     config.active_record.default_timezone = :local
 
-    # config.active_storage.service = :local
+    config.active_storage.service = :local
     config.i18n.default_locale = 'pt-BR'
     
     config.i18n.default_locale = :'pt-BR'
