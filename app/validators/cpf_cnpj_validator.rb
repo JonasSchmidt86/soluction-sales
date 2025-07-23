@@ -1,27 +1,24 @@
 class CpfCnpjValidator < ActiveModel::EachValidator
 
   def validate_each(record, attribute, value)
-    unless CPF.valid?(value) || CNPJ.valid?(value)
-      record.errors.add(attribute, "não é um CPF ou CNPJ válido")
+    unless value == '00000000000' || value == '11111111111' || value == '00000000000000' || value == '11111111111111' || value == '00000000002' 
+      puts "VALUE ----------------------------------------#{value}";
+      unless CPF.valid?(value) || CNPJ.valid?(value)
+        record.errors.add(attribute, "não é um CPF ou CNPJ válido")
+      end
     end
   end
-
-#  def validate_each(record, attribute, value)
-#    value = value.to_s.gsub(/[^0-9]/, '')
-#
-#    if value.length == 11 && !validar_cpf(value)
-#      record.errors[attribute] << ('Não é um CPF válido')
-#    elsif value.length == 14 && !validar_cnpj(value)
-#      record.errors[attribute] << ('Não é um CNPJ válido')
-#    end
-#  end
 
   private
 
   def validar_cpf(cpf)
     cpf = cpf.gsub(/[^0-9]/, '')  # Remove caracteres não numéricos
 
+puts "----------------------------------------#{cpf}";
+    return true if cpf == '00000000000' || cpf == '11111111111'
+    
     return false if cpf.length != 11
+    
 
     # Calcula o primeiro dígito verificador
     soma = 0
@@ -52,9 +49,11 @@ class CpfCnpjValidator < ActiveModel::EachValidator
     
   def validar_cnpj(cnpj)
     cnpj = cnpj.gsub(/[^0-9]/, '')  # Remove caracteres não numéricos
-      
+    puts "----------------------------------------#{cnpj}";
+    return true if cnpj == '00000000000000' || cnpj == '11111111111111'
+
     return false if cnpj.length != 14
-      
+    
     # Calcula o primeiro dígito verificador
     soma = 0
     peso = 5

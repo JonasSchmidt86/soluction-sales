@@ -26,7 +26,7 @@
                       <div class="form-floating">
                         <%= compra.text_field :nome_pessoa, value: @compra.pessoa.nil? ? "" : @compra.pessoa.nome  ,class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder:"Digite para buscar" %>
                         <%= compra.label :pessoa_nome, class:"" %>
-                        <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                        <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
                         <%= compra.hidden_field :cod_pessoa, id: 'selected_person_id' %>
                       </div>
                     </div>

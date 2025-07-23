@@ -24,7 +24,7 @@
             <div class="form-floating w-100">
               <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
               <%= sale.label :nome_pessoa, "Pessoa" %>
-              <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-1" style="display: none; z-index: 100; width: 100%;"></div>
+              <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
               <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
             </div>
           </div>

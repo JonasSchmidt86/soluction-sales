@@ -4,7 +4,7 @@
     <%= f.text_field :produto, 
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
             placeholder: "Pressione Enter para buscar!" %>
-    <div id="products_list" class="position-absolute bg-light rounded form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 48%;"></div>
+    <div id="products_list" class="list-group position-absolute " style="display: none; z-index: 100; width: 35%;"></div>
   </td>
   <td class="col-auto">
     <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,

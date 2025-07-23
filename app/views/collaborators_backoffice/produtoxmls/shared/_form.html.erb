@@ -219,7 +219,7 @@
                             <%= form_itens.hidden_field :cod_produto %>
                             <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo" %>
                             <%# form_itens.label :produto, class:"" %>
-                            <div id="products_list_<%= index %>" class="position-absolute bg-light rounded form-control-md p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
+                            <div id="products_list_<%= index %>" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
                             <% index += 1 %>
                           </div>
                         </div>
