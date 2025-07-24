@@ -32,6 +32,44 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
         .select("produto.nome, produto.cod_produto, SUM(itemvenda.quantidade) as total_vendido")
         .limit(6)
         
+      @vendas_vendedor = Venda.where(
+        "DATE_PART('month', datavenda) = ?
+         AND DATE_PART('year', datavenda) = ? 
+         AND cod_empresa = ? 
+         AND tipo = 'V'
+         AND cod_funcionario = ? 
+         AND cancelada = false",
+        Date.current.month, Date.current.year, current_collaborator.cod_empresa, current_collaborator.cod_funcionario
+      ).sum(:valortotal) || 0
+
+      @total_vendas_empresa = Venda.where(
+        "DATE_PART('month', datavenda) = ? 
+         AND DATE_PART('year', datavenda) = ? 
+         AND cod_empresa = ? 
+         AND tipo = 'V' 
+         AND cancelada = false",
+        Date.current.month, Date.current.year, current_collaborator.cod_empresa
+      ).sum(:valortotal) || 0
+
+      @total_pagar = Contaspagrec.where(
+        "DATE_PART('month', dtvencimento) = ? 
+         AND DATE_PART('year', dtvencimento) = ? 
+         AND cod_empresa = ? 
+         AND cod_venda is null
+         AND quitada = false",
+        Date.current.month, Date.current.year, current_collaborator.cod_empresa
+      ).sum(:valorparcela) || 0
+
+      @total_receber = Contaspagrec.where(
+        "DATE_PART('month', dtvencimento) = ? 
+         AND DATE_PART('year', dtvencimento) = ? 
+         AND cod_empresa = ? 
+         AND cod_venda is not null
+         AND ativo = true
+         AND quitada = false",
+        Date.current.month, Date.current.year, current_collaborator.cod_empresa
+      ).sum(:valorparcela) || 0
+        
       # 5 produtos mais lucrativos do mês
       @produtos_mais_lucrativos = Itemvenda.joins(:venda, :produto)
         .where(

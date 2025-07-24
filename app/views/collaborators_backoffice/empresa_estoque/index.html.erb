@@ -78,7 +78,9 @@
             <th data-sortable="true" style="width: 7%;">Qtd</th>
             <th data-sortable="true" style="width: 8%;">Vl Venda</th>
             <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
-              <th data-sortable="true" style="width: 8%;">Custo</th>
+              <% if (current_collaborator.funcionario.permissao.nivel) == 1 %>
+                <th data-sortable="true" style="width: 8%;">Custo</th>
+              <% end %>
               <th data-sortable="true" style="width: 55px;">...</th>
             <% end %>
           </tr>
@@ -92,12 +94,14 @@
               <td class="align-middle "><%= estoque.cor.nmcor %> </td>
               <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
               <td class="align-middle "><%= "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> </td>
-              <% if estoque.quantidade > 0 %>
-                <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
-                <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
+              <% if (current_collaborator.funcionario.permissao.nivel) == 1 %>
+                <% if estoque.quantidade > 0 %>
+                  <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
+                  <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
+                <% end %>
+                <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
               <% end %>
               <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
-                <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
                 <td class="align-middle">
                   <div class="dropdown">
                     <button type="button" class="btn btn-sm" id="dropdownMenuButton<%= estoque.id %>" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">

@@ -123,9 +123,10 @@
     </div>
     <div class="card-body">
       <div class="row">
-        <!-- Produtos Mais Lucrativos -->
-        <div class="col-md-4">
-          <div class="card bg-light">
+        <!-- Coluna Esquerda - Produtos -->
+        <div class="col-md-6">
+          <!-- Produtos Mais Lucrativos -->
+          <div class="card bg-light mb-3">
             <div class="card-body">
               <h6 class="card-title text-muted text-center">Produtos + Lucrativos (Mês)</h6>
               <% if @produtos_mais_lucrativos.present? %>
@@ -134,9 +135,8 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
                       <span>
                         <span class="badge bg-<%= ['success', 'primary', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
-                        <%= truncate(produto.nome, length: 18) %>
+                        <%= truncate(produto.nome, length: 50) %>
                       </span>
-                      <span class="badge bg-success text-white">R$ <%= number_with_precision(produto.lucro_total, precision: 2, delimiter: '.', separator: ',') %></span>
                     </div>
                   <% end %>
                 </div>
@@ -147,10 +147,34 @@
               <% end %>
             </div>
           </div>
-        </div>
-        <!-- Informações de Caixa -->
-        <div class="col-md-4">
+          <!-- Produtos Mais Vendidos -->
           <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-muted text-center">Top 6 Produtos (Mês)</h6>
+              <% if @produtos_mais_vendidos.present? %>
+                <div class="list-group list-group-flush">
+                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                      <span>
+                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
+                        <%= truncate(produto.nome, length: 30) %>
+                      </span>
+                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-center mt-3">
+                  <p class="text-muted">Sem vendas no mês</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <!-- Coluna Direita - Informações Financeiras -->
+        <div class="col-md-6">
+          <!-- Informações de Caixa -->
+          <div class="card bg-light mb-3">
             <div class="card-body">
               <h6 class="card-title text-muted text-center">Caixa</h6>
               <div class="row g-2">
@@ -190,29 +214,36 @@
               </div>
             </div>
           </div>
-        </div>
-        <!-- 5 Produtos Mais Vendidos -->
-        <div class="col-md-4">
+          <!-- Informações de Vendas e Contas -->
           <div class="card bg-light">
             <div class="card-body">
-              <h6 class="card-title text-muted text-center">Top 5 Produtos (Mês)</h6>
-              <% if @produtos_mais_vendidos.present? %>
-                <div class="list-group list-group-flush">
-                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
-                      <span>
-                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
-                        <%= truncate(produto.nome, length: 20) %>
-                      </span>
-                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
-                    </div>
-                  <% end %>
+              <h6 class="card-title text-muted text-center">Resumo Financeiro (Mês)</h6>
+              <div class="row g-2">
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Minhas Vendas</small>
+                    <span class="text-success fw-bold">R$ <%= number_with_precision(@vendas_vendedor || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
                 </div>
-              <% else %>
-                <div class="text-center mt-3">
-                  <p class="text-muted">Sem vendas no mês</p>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Total Vendas</small>
+                    <span class="text-success fw-bold">R$ <%= number_with_precision(@total_vendas_empresa || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
                 </div>
-              <% end %>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Total a Pagar</small>
+                    <span class="text-danger fw-bold">R$ <%= number_with_precision(@total_pagar || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 border rounded bg-white">
+                    <small class="text-muted d-block">Total a Receber</small>
+                    <span class="text-success fw-bold">R$ <%= number_with_precision(@total_receber || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
