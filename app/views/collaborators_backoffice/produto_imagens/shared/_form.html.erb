@@ -171,11 +171,13 @@
     });
 
     // ---- 2️⃣ Prevenir Enter em toda a Página ----
-    document.addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
+    document.addEventListener("keydown", function(event) {
+      // Permitir quebra de linha no textarea
+      if (event.key === "Enter" && event.target.tagName !== "TEXTAREA") {
+        event.preventDefault(); // Bloqueia envio do form
       }
     });
+
 
     // ---- 3️⃣ Auto Complete de Produtos ----
     const productsList = $("#products_list");
