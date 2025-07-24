@@ -232,17 +232,21 @@
                   </div>
                 </div>
                 <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Total a Pagar</small>
-                    <span class="text-danger fw-bold">R$ <%= number_with_precision(@total_pagar || 0, precision: 2, delimiter: '.', separator: ',') %></span>
-                  </div>
+                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path(tipo_conta: true, status_bill: 'Abertos'), class: "text-decoration-none" do %>
+                    <div class="p-2 border rounded bg-white">
+                      <small class="text-muted d-block">Total a Pagar</small>
+                      <span class="text-danger fw-bold">R$ <%= number_with_precision(@total_pagar || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    </div>
+                  <% end %>
                 </div>
                 <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Total a Receber</small>
-                    <span class="text-success fw-bold">R$ <%= number_with_precision(@total_receber || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path(tipo_conta: false, status_bill: 'Abertos'), class: "text-decoration-none" do %>
+                    <div class="p-2 border rounded bg-white">
+                      <small class="text-muted d-block">Total a Receber</small>
+                      <span class="text-success fw-bold">R$ <%= number_with_precision(@total_receber || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    </div>
                   </div>
-                </div>
+                <% end %>
               </div>
             </div>
           </div>
