@@ -106,10 +106,10 @@
                             <i class="far fa-money-bill-alt", style="width: 35px;"></i> Financeiro
                           <% end %>
                         </li>
-                        <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                        <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                           <span class="visually-hidden">Toggle Dropdown</span>
                           <li>
-                            <%= link_to collaborators_backoffice_compra_path(buy), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                            <%= link_to collaborators_backoffice_compra_path(buy, term: params[:term], dataInicial: params[:dataInicial], dataFinal: params[:dataFinal], cod_funcionario: params[:cod_funcionario], per_page: params[:per_page]), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
                                       data: { confirm: "Deseja remover a Compra?" } do %>
                               <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                             <% end %>

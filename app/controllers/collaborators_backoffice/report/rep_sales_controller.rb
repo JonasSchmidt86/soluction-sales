@@ -10,7 +10,7 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         end
 
         vendas = base_scope.where(cod_empresa: current_collaborator.cod_empresa)
-                            .where.not(tipo: 'T', cancelada: true)
+                            .where(" venda.tipo <> 'T' and  venda.cancelada = false ")
 
         if params[:cod_pessoa].present?
             vendas = vendas.where(cod_pessoa: params[:cod_pessoa])

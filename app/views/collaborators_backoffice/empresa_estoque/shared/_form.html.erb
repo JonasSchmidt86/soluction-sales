@@ -15,11 +15,8 @@
               <th data-sortable="" style="width: 7%;">Qtd</th>
               <th style="width: 100px">Qtd Min</th>
               <th style="width: 100px">Vl Venda</th>
-              <%# <th data-sortable="" style="width: 8%;">Vl Venda</th> %>
-              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                <th data-sortable="" style="width: 8%;">Custo</th>
-                <th data-sortable="" style="width: 55px;">Grava</th>
-              <% end %>
+              <th data-sortable="" style="width: 8%;">Custo</th>
+              <th data-sortable="" style="width: 55px;">Grava</th>
             </tr>
           </thead>
           <tbody>
@@ -43,14 +40,12 @@
                               data-id="<%= estoque.id %>" 
                               value="<%= number_with_precision(estoque.valorvenda, precision: 2, separator: ',', delimiter: '') %>">
                 </td>
-                <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                  <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
-                  <td class="align-middle">
-                    <%= link_to "#", class: "btn btn-success btn-circle salvar-dados", data: { id: estoque.id } do %>
-                      <i class="fa fa-check"></i>
-                    <% end %>
-                  </td>
-                <% end %>
+                <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                <td class="align-middle">
+                  <%= link_to "#", class: "btn btn-success btn-circle salvar-dados", data: { id: estoque.id } do %>
+                    <i class="fa fa-check"></i>
+                  <% end %>
+                </td>
               </td>
             <% end %>
           </tbody>
@@ -70,7 +65,7 @@
 
       let valor = inputValor.value.trim();
       let qtdMinima = inputQtdMin.value.trim();
-      
+
       if (!valor && !qtdMinima) return;
 
       // Converte de formato brasileiro para formato numérico (troca vírgula por ponto)

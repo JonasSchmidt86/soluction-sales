@@ -77,9 +77,9 @@
             <th data-sortable="true" style="width: 20%;">Cor</th>
             <th data-sortable="true" style="width: 7%;">Qtd</th>
             <th data-sortable="true" style="width: 8%;">Vl Venda</th>
-            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+            <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
               <th data-sortable="true" style="width: 8%;">Custo</th>
-              <th data-sortable="true" style="width: 55px;">Desativar</th>
+              <th data-sortable="true" style="width: 55px;">...</th>
             <% end %>
           </tr>
         </thead>
@@ -96,7 +96,7 @@
                 <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
                 <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
               <% end %>
-              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                 <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
                 <td class="align-middle">
                   <div class="dropdown">
@@ -115,7 +115,7 @@
                         <%= link_to collaborators_backoffice_empresa_estoque_path(estoque), 
                                           method: :delete, 
                                           class: "dropdown-item text-danger", 
-                                          data: { confirm: "Deseja remover o estoque da empresa?" } do %>
+                                          data: { confirm: "Deseja desativar do estoque da empresa?" } do %>
                           <i class="fas fa-trash me-2"></i> Remover
                         <% end %>
                       </li>

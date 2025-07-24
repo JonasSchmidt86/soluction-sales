@@ -265,7 +265,6 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       # contas Pagar
       if params[:compra][:contas_attributes].present?
         contas = params[:compra][:contas_attributes]
-          
           # Verifique se itens é uma instância de ActionController::Parameters
           if contas.is_a?(ActionController::Parameters)
             # Converta contas para uma matriz de hashes
@@ -295,7 +294,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
       if compra.save!
         respond_to do |format|
-          format.html { redirect_to collaborators_backoffice_compras_path, notice: 'Compra criada com sucesso.' }
+          format.html { redirect_to edit_collaborators_backoffice_empresa_estoque_path(compra), notice: 'Compra criada com sucesso.' }
           format.json { render json: { message: 'Compra criada com sucesso', compra_url: edit_collaborators_backoffice_empresa_estoque_path(compra) }, status: :created }
         end
       else
@@ -313,7 +312,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
     def destroy
       @compra = Compra.find(params[:id])
-    
+    puts "PARAMETROS ---------- #{params}"
       unless @compra.blank?
 
         xml = @compra.xml_file;
@@ -326,14 +325,14 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         ActiveRecord::Base.transaction do
           @compra.xml_file = nil;
           if @compra.destroy
-            redirect_to collaborators_backoffice_report_buy_path, notice: "Compra Excluída!"
+            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Compra Excluída!"
           else
             raise ActiveRecord::Rollback, "Não foi possível Excluir a Compra!"
-            redirect_to collaborators_backoffice_report_buy_path, notice: "Não foi possível Excluir a Compra!"
+            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Não foi possível Excluir a Compra!"
           end
         end
       else
-        redirect_to collaborators_backoffice_report_buy_path, notice: "Compra não encontrada!"
+        redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Compra não encontrada!"
       end
     end    
 
