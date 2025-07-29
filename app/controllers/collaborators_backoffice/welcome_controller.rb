@@ -8,7 +8,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
       
       # Última venda
       @ultima_venda = Venda.where(cod_empresa: current_collaborator.cod_empresa)
-                      .where("date(venda.datavenda) = ?", Time.current).sum(:valortotal) || 0
+                      .where("date(venda.datavenda) = ? AND TIPO = 'V' ", Time.current).sum(:valortotal) || 0
       
       # Caixa
       @caixa_atual = Caixa.where(datafechamento: nil, cod_empresa: current_collaborator.cod_empresa).first

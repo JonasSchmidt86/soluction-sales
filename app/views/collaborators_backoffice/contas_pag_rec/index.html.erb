@@ -10,7 +10,7 @@
     </div>
   </div>
   <div class="card-body">
-    <div class="dataTable-wrapper">
+    <div class="">
       <%= form_with(url: collaborators_backoffice_contas_pag_rec_index_path, local: true, method: :get, 
                               class:"dataTable-search") do |form| %>
         <div class="d-flex mb-2 col-md-3">
@@ -102,124 +102,121 @@
                         <% if !bill.quitada || bill.lancamentos.size == 0 %>
                           <% if bill.ativo %>
                             <%= link_to collaborators_backoffice_contas_pag_rec_path(bill, 
-                            { :tipo_conta => params[:tipo_conta], 
-                              :status_bill => params[:status_bill], 
-                              :nrVenda => params[:nrVenda], 
-                              :cliente => params[:cliente], 
-                              :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
-                              method: :put, 
-                              class:"btn btn-success btn-circle", 
-                              style:"width: 35px; height: 35px;",
-                              data: {confirm: "Deseja Liquidar a conta?"} do %>
+                              { :tipo_conta => params[:tipo_conta], 
+                                :status_bill => params[:status_bill], 
+                                :nrVenda => params[:nrVenda], 
+                                :cliente => params[:cliente], 
+                                :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]}),
+                                method: :put, 
+                                class:"btn btn-success btn-circle", 
+                                style:"width: 35px; height: 35px;",
+                                data: {confirm: "Deseja Liquidar a conta?"} do %>
                               <i class="fa fa-check" ></i>
                             <% end %>
                           <% end %>
                         <% end %>
                         <% if !bill.lancamentos.blank? && !bill.quitada%>
-                          <div class="dropdown" >
-                            <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                          <div class="btn-group" >
+                            <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                             </button>
-                            <ul class="dropdown-menu position-absolute" style="width: 50px;">
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
                               <li>
                                 <% unless bill.quitada  %>
                                   <% if (bill.ativo) %>
                                     <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal",
                                     data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                      <i class="fa-regular fa-handshake", style="width: 35px;"></i>Pagamento
+                                      <i class="fa-regular fa-handshake", style="width: 35px;"> </i> Pagamento
                                     </button>
                                   <% end %>
                                 <% end %>
                               </li>
                               <li>
                                 <% if !bill.lancamentos.blank? %>
-                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal"
-                                  data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                    <i class="fa fa-info", style="width: 35px;"></i>Informações
+                                  <button type="button", class="dropdown-item btn btn-info btn-circle", data-bs-toggle="modal" data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                    <i class="fa fa-info", style="width: 35px;"> </i> Informações
                                   </button>
                                 <% end %>
                               </li>
                             </ul>
-                            <div>
-                            <% else %>
-                              <% unless bill.quitada  %>
-                                <% if (bill.ativo) %>
-                                  <div class="d-flex justify-content-end">
-                                    <button type="button", class="ms-1 btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;",
-                                data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                      <i class="fa-regular fa-handshake"></i>
-                                    </button>
-                                  </div>
-                                <% end %>
-                              <% end %>
-                              <% if !bill.lancamentos.blank? %>
-                                <div class="d-flex justify-content-end">
-                                  <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;"
-                                data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
-                                    <i class="fa fa-info"></i>
-                                  </button>
-                                </div>
-                              <% end %>
-                            <% end %>
-                            <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
-                            <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
                           </div>
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-              <% if @bills.respond_to?(:total_pages) %>
-                <div class="dataTable-bottom">
-                  <div class="dataTable-info"><%= page_entries_info @bills, entry_name: 'conta' %></div>
-                  <div class = "text-center">
-                    <%= paginate @bills %>
-                  </div>
-                </div>
-              <% else %>
-                <div class="dataTable-bottom">
-                  <div class="dataTable-info">
-                    <h5>Exibindo <%= @bills.size %> registros</h5>
-                  </div>
-                  <div class = "text-center">
-                  </div>
-                </div>
-              <% end %>
+                        <% else %>
+                          <% unless bill.quitada  %>
+                            <% if (bill.ativo) %>
+                              <div class="d-flex justify-content-end">
+                                <button type="button", class="ms-1 btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;", data-bs-target="#launchPartialModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                  <i class="fa-regular fa-handshake"></i>
+                                </button>
+                              </div>
+                            <% end %>
+                          <% end %>
+                          <% if !bill.lancamentos.blank? %>
+                            <div class="d-flex justify-content-end">
+                              <button type="button", class="btn btn-info btn-circle", data-bs-toggle="modal", style="width: 35px; height: 35px;"
+                                data-bs-target="#launchsModal<%= bill.cod_contaspagrec %>", data-bs-whatever= <%= bill.cod_contaspagrec %> >
+                                <i class="fa fa-info"></i>
+                              </button>
+                            </div>
+                          <% end %>
+                        <% end %>
+                        <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/launchs_modal', locals: { bill: bill } %>
+                        <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
+            <% if @bills.respond_to?(:total_pages) %>
+              <div class="dataTable-bottom">
+                <div class="dataTable-info"><%= page_entries_info @bills, entry_name: 'conta' %></div>
+                <div class = "text-center">
+                  <%= paginate @bills %>
+                </div>
+              </div>
+            <% else %>
+              <div class="dataTable-bottom">
+                <div class="dataTable-info">
+                  <h5>Exibindo <%= @bills.size %> registros</h5>
+                </div>
+                <div class = "text-center">
+                </div>
+              </div>
+            <% end %>
           </div>
         </div>
-        <script>
-          var check = document.getElementById("tipo_conta");
-          check.onclick = function () {
-            var label = document.getElementById("lb_pag_rec");
-            if (check.checked) {
-                label.innerHTML  = "Pagar";
-            } else {
-                label.innerHTML  = "Receber";
-            }
-          };
-
-          var check_status = document.getElementById("quitada");
-          check_status.onclick = function () {
-            console.log("CLICOU ")
-            var label1 = document.getElementById("lb_bill_status");
-            var ttDev = document.getElementById("vl_devido");
-            var ttPag = document.getElementById("valorpagar");
-            if (check_status.checked) {
-                label1.innerHTML  = "Total";
-                ttPag.value = ttDev.value;
-            } else {
-                label1.innerHTML  = "Parcial";
-                console.log("Partial")
-                ttPag.value = 0,00
-            }
-          };
-
-          function formatarReal(valor) {
-            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      </div>
+      <script>
+        var check = document.getElementById("tipo_conta");
+        check.onclick = function () {
+          var label = document.getElementById("lb_pag_rec");
+          if (check.checked) {
+              label.innerHTML  = "Pagar";
+          } else {
+              label.innerHTML  = "Receber";
           }
-          // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-          document.getElementById("valorRecebido").value = formatarReal(<%= somaRecebido %>);
-          document.getElementById("valorReceber").value = formatarReal(<%= somaReceber %>);
-        </script>
+        };
+
+        var check_status = document.getElementById("quitada");
+        check_status.onclick = function () {
+          console.log("CLICOU ")
+          var label1 = document.getElementById("lb_bill_status");
+          var ttDev = document.getElementById("vl_devido");
+          var ttPag = document.getElementById("valorpagar");
+          if (check_status.checked) {
+              label1.innerHTML  = "Total";
+              ttPag.value = ttDev.value;
+          } else {
+              label1.innerHTML  = "Parcial";
+              console.log("Partial")
+              ttPag.value = 0,00
+          }
+        };
+
+        function formatarReal(valor) {
+          return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
+        document.getElementById("valorRecebido").value = formatarReal(<%= somaRecebido %>);
+        document.getElementById("valorReceber").value = formatarReal(<%= somaReceber %>);
+      </script>
