@@ -15,7 +15,7 @@
                 <div class="mb-3">
                   <div class="d-flex justify-content-between align-items-center">
                     <small class="text-muted">Total Vendas:</small>
-                    <small class="text-muted"><%= Venda.where("DATE(datavenda) = ? and cod_empresa = ? and tipo = 'V'", Date.current, current_collaborator.cod_empresa).count %> venda(s)</small>
+                    <small class="text-muted"><%= Venda.where("DATE(datavenda) = ? and cod_empresa = ? and tipo = 'V' and cancelada = false ", Date.current, current_collaborator.cod_empresa).count %> venda(s)</small>
                     <span class="fw-bold">R$ <%= number_with_precision(@ultima_venda, precision: 2, delimiter: '.', separator: ',') %></span>
                   </div>
                 </div>
