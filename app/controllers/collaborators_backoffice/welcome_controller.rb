@@ -2,7 +2,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
 
     def index
       # Vendas do dia
-      @vendas_dia = Venda.where("DATE(datavenda) = ? AND cod_empresa = ?", Date.current, current_collaborator.cod_empresa)
+      @vendas_dia = Venda.where("DATE(datavenda) = ? AND cod_empresa = ?  AND CANCELADA = false ", Date.current, current_collaborator.cod_empresa)
       @total_vendas_dia = @vendas_dia.sum(:valortotal)
       @qtd_vendas_dia = @vendas_dia.count
       
@@ -25,7 +25,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
       
       # 5 produtos mais vendidos do mês
       @produtos_mais_vendidos = Itemvenda.joins(:venda, :produto)
-        .where("DATE_PART('month', venda.datavenda) = ? AND DATE_PART('year', venda.datavenda) = ? AND venda.cod_empresa = ? and venda.tipo = 'V'", 
+        .where("DATE_PART('month', venda.datavenda) = ? AND DATE_PART('year', venda.datavenda) = ? AND venda.cod_empresa = ? and venda.tipo = 'V'  AND CANCELADA = false ", 
                Date.current.month, Date.current.year, current_collaborator.cod_empresa)
         .group("produto.nome, produto.cod_produto")
         .order("SUM(itemvenda.quantidade) DESC")
@@ -37,6 +37,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
          AND DATE_PART('year', datavenda) = ? 
          AND cod_empresa = ? 
          AND tipo = 'V'
+         AND CANCELADA = false 
          AND cod_funcionario = ? 
          AND cancelada = false",
         Date.current.month, Date.current.year, current_collaborator.cod_empresa, current_collaborator.cod_funcionario
@@ -46,6 +47,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
         "DATE_PART('month', datavenda) = ? 
          AND DATE_PART('year', datavenda) = ? 
          AND cod_empresa = ? 
+         AND CANCELADA = false 
          AND tipo = 'V' 
          AND cancelada = false",
         Date.current.month, Date.current.year, current_collaborator.cod_empresa
