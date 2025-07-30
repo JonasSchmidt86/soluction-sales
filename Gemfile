@@ -21,6 +21,7 @@ gem 'carrierwave'
 # -- pdf ------
 gem 'wicked_pdf'
 gem 'wkhtmltopdf-binary'
+gem 'numbers_and_words', '~> 0.11.9'
 # --------------
 
 #Formatador de html

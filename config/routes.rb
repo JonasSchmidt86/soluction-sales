@@ -55,7 +55,11 @@ Rails.application.routes.draw do
     end
     
     resources :caixa, only: [:index, :edit, :update, :new, :create, :destroy]
-    resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
+    # resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy]
+    resources :contas_pag_rec, only: [:index, :edit, :update, :new, :create, :destroy] do
+      get :print_promissory_note, on: :collection
+    end
+
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     
     resources :lancamentosdiversos, only: [:index, :edit, :update, :new, :create, :destroy]

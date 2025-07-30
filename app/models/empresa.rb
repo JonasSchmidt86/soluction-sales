@@ -9,7 +9,7 @@ class Empresa < ApplicationRecord
     has_many :funcionarios, :class_name => 'Funcionario', :through => :funcionariosempresa
     has_many :whatsapp_contacts, foreign_key: 'empresa_id', primary_key: 'cod_empresa'
     has_many :vendas, :class_name => 'Venda', :foreign_key => 'cod_venda', inverse_of: :empresa
-    
+    belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa'
     has_many :lancamentos, :class_name => 'LancamentosCaixa', :foreign_key => 'cod_lancamentocaixa', inverse_of: :empresa
 
     has_many :fretes, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :empresa

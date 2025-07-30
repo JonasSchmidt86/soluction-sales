@@ -137,6 +137,11 @@
                           <i class="far fa-money-bill-alt", style="width: 35px;"></i> Financeiro
                         <% end %>
                       </li>
+                      <li>
+                        <%= link_to print_promissory_note_collaborators_backoffice_contas_pag_rec_index_path(cod_venda: sale.cod_venda), target: '_blank', class: "dropdown-item btn btn-info btn-circle" do %>
+                          <i class="far fa-money-bill-alt" style="width: 35px;"></i> Imprimir Nota Promissória
+                        <% end %>
+                      </li>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
                         <li>
                           <%= link_to editar_itens_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>

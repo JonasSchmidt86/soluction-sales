@@ -44,6 +44,15 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         end 
     end
 
+    def print_promissory_note
+        @parcelas = Contaspagrec
+                .includes(venda: :pessoa)
+                .where(cod_venda: params[:cod_venda])
+                .order(:dtvencimento)
+
+  render layout: 'impressao'
+    end
+
 private 
 
     def consulta_index

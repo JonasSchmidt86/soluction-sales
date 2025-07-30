@@ -1,0 +1,31 @@
+<% @parcelas.each_slice(4).with_index do |grupo, index| %>
+  <% grupo.each do |conta| %>
+    <% pessoa = conta.venda&.pessoa %>
+    <% empresa = conta.venda&.empresa %>
+    <div class="promissory-wrapper">
+      <h3 style="display: flex; justify-content: space-between; align-items: center;">
+        <span>NOTA PROMISSÓRIA Nº <%= conta.venda.cod_vendaempresa.to_s.rjust(3, '0') %>-<%= conta.numeroparcela %></span>
+        <span>Vencimento: <%= l(conta.dtvencimento) %></span>
+      </h3>
+      <p>
+        No valor de <strong>R$ <%= number_to_currency(conta.valorparcela, unit: "", separator: ",", delimiter: ".") %></strong>
+        (<strong><%= valor_por_extenso(conta.valorparcela) %></strong>), pagarei por esta única via de nota promissória
+        a <strong><%= empresa&.nome || "__________" %></strong>, na cidade de <%= empresa&.pessoa.cidade&.nome || "__________" %>,
+        até o dia <strong><%= I18n.l(conta.dtvencimento) %></strong>, a importância de R$ <%= number_to_currency(conta.valorparcela) %>.
+      </p>
+      <p>
+        Local e data: <%= empresa&.pessoa.cidade&.nome || "__________" %>, <%= I18n.l(Date.today) %><br>
+        Nome do devedor: <%= pessoa&.nome || "__________" %><br>
+        CPF/CNPJ: <%= pessoa&.cpf_cnpj || "__________" %>
+      </p>
+      <div class="signature">
+        <div class="signature-line"></div>
+        <p>Assinatura do Devedor</p>
+      </div>
+    </div>
+  <% end %>
+  <%# Quebra de página só se não for o último grupo %>
+  <% if index < (@parcelas.size / 4.0).ceil - 1 %>
+    <div class="page-break"></div>
+  <% end %>
+<% end %>
