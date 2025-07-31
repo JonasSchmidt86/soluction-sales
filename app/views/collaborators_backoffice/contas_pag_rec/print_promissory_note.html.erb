@@ -2,39 +2,50 @@
   <% grupo.each do |conta| %>
     <% pessoa = conta.venda&.pessoa %>
     <% empresa = conta.venda&.empresa %>
-    <div class="promissory-wrapper">
-      <h3 style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: bold;">NOTA PROMISSÓRIA Nº <%= conta.venda.cod_vendaempresa.to_s.rjust(3, '0') %>-<%= conta.numeroparcela %></span>
-        Vencimento: <span style="font-weight: bold;"><%= I18n.l(conta.dtvencimento, format: :long) %></span><span> Valor: <strong style="font-weight: bold;">R$ <%= number_to_currency(conta.valorparcela, unit: "", separator: ",", delimiter: ".") %></strong></span>
-      </h3>
-      <br>
-      <p>
-        No dia <strong><%= I18n.l(conta.dtvencimento, format: :long) %></strong> pagarei por essa via de nota promissória a
-        <strong style="font-weight: bold;"><%= empresa&.pessoa.nome || "__________" %></strong>, CNPJ: <%= empresa&.pessoa&.cpf_cnpj ? (empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').length == 14 ? empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %>
-        a sua ordem a quantida de <strong style="font-weight: bold;"><%= valor_por_extenso(conta.valorparcela) %></strong>.
-        <%#  %>
-        <%#  %>
-        <%#  %>
-      </p>
-      <br>
-      <p>
-        Pagavel em <strong style="font-weight: bold;"><%= empresa&.pessoa&.endereco || "__________" %></strong>
-      </p>
-      <p>
-        <span>Local e data: <strong style="font-weight: bold;"><%= empresa&.pessoa.cidade&.nome || "__________" %>, <%= I18n.l(Date.today) %></strong></span><br>
-        <div style="display: flex; justify-content: space-between;">
-          <span>Nome do Emitente: <strong style="font-weight: bold;"><%= pessoa&.nome || "__________" %></strong></span>
-          <span>CPF/CNPJ: <strong style="font-weight: bold;"><%= pessoa&.cpf_cnpj ? (pessoa.cpf_cnpj.gsub(/\D/, '').length == 14 ? pessoa.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : pessoa.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %></strong></span>
+    <div class="promissory-wrapper" style="border: 1px solid #000; padding: 10px; margin-bottom: 10px;">
+      <div style="display: flex; gap: 10px;">
+        <!-- Coluna vertical interna -->
+        <!-- Coluna vertical interna (corrigida) -->
+        <div style="display: flex; gap: 15px; flex-direction: row; align-items: flex-start;">
+          <div style="writing-mode: vertical-lr; text-orientation: mixed; border-right: 1px solid #000; padding-right: 0px; height: 220px; font-size: 0px; display: flex; align-items: center;"></div>
+          <div style="writing-mode: vertical-lr; text-orientation: mixed; border-right: 1px solid #000; padding-right: 5px; height: 220px; font-size: 11px; display: flex; align-items: center;">Assinatura</div>
+          <div style="writing-mode: vertical-lr; text-orientation: mixed; border-right: 1px solid #000; padding-right: 5px; height: 220px; font-size: 11px; display: flex; align-items: center;">CPF</div>
+          <div style="writing-mode: vertical-lr; text-orientation: mixed; border-right: 1px solid #000; padding-right: 5px; height: 220px; font-size: 11px; display: flex; align-items: center;">Avalista</div>
         </div>
-        <span>Endereço: <strong style="font-weight: bold;"><%= pessoa&.endereco %> - <%= pessoa&.numero %></strong></span>
-      </p>
-      <div class="signature">
-        <div class="signature-line"></div>
-        <p>Assinatura do Emitente</p>
+        <!-- Conteúdo principal da nota -->
+        <div style="flex: 1;">
+          <h3 style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold;">NOTA PROMISSÓRIA Nº <%= conta.venda.cod_vendaempresa.to_s.rjust(3, '0') %>-<%= conta.numeroparcela %></span>
+            Vencimento: <span style="font-weight: bold;"><%= I18n.l(conta.dtvencimento, format: :long) %></span>
+            <span> Valor: <strong style="font-weight: bold;">R$ <%= number_to_currency(conta.valorparcela, unit: "", separator: ",", delimiter: ".") %></strong></span>
+          </h3>
+          <div style="margin-top: 8px;"></div>
+          <p>
+            No dia <strong><%= I18n.l(conta.dtvencimento, format: :long) %></strong> pagarei por essa via de nota promissória a
+            <strong style="font-weight: bold;"><%= empresa&.pessoa.nome || "__________" %></strong>, CNPJ: <%= empresa&.pessoa&.cpf_cnpj ? (empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').length == 14 ? empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %>
+            a sua ordem a quantia de <strong style="font-weight: bold;"><%= valor_por_extenso(conta.valorparcela) %></strong>.
+          </p>
+          <div style="margin-top: 8px;"></div>
+          <p>
+            Pagável em <strong style="font-weight: bold;"><%= empresa&.pessoa&.endereco || "__________" %></strong>
+          </p>
+          <p>
+            <span>Local e data: <strong style="font-weight: bold;"><%= empresa&.pessoa.cidade&.nome || "__________" %>, <%= I18n.l(Date.today) %></strong></span><br>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Nome do Emitente: <strong style="font-weight: bold;"><%= pessoa&.nome || "__________" %></strong></span>
+              <span>CPF/CNPJ: <strong style="font-weight: bold;"><%= pessoa&.cpf_cnpj ? (pessoa.cpf_cnpj.gsub(/\D/, '').length == 14 ? pessoa.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : pessoa.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %></strong></span>
+            </div>
+            <span>Endereço: <strong style="font-weight: bold;"><%= pessoa&.endereco %> - <%= pessoa&.numero %></strong></span>
+          </p>
+          <div class="signature">
+            <div class="signature-line"></div>
+            <p>Assinatura do Emitente</p>
+          </div>
+        </div>
       </div>
     </div>
   <% end %>
-  <%# Quebra de página só se não for o último grupo %>
+  <%# Quebra de página se não for o último grupo %>
   <% if index < (@parcelas.size / 4.0).ceil - 1 %>
     <div class="page-break"></div>
   <% end %>

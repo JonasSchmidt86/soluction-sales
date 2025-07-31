@@ -25,7 +25,7 @@ class CollaboratorsBackoffice::Report::RepBuyController < CollaboratorsBackoffic
                                                     Time.zone.today.end_of_month
                                                 ]
                                                 end
-                    scope = scope.where(datacompra: data_inicial..data_final)
+                    scope = scope.where(datacompra: data_inicial.beginning_of_day..data_final.end_of_day)
 
                     if params[:cod_funcionario].present?
                         scope = scope.where(cod_funcionario: params[:cod_funcionario])

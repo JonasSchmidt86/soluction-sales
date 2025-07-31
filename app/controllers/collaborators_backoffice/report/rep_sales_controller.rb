@@ -29,7 +29,7 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             data_final   = Time.zone.today.end_of_month
         end
 
-        vendas = vendas.where(datavenda: data_inicial..data_final)
+        vendas = vendas.where(datavenda: data_inicial.beginning_of_day..data_final.end_of_day)
 
         if params[:cod_funcionario].present?
             vendas = vendas.where(cod_funcionario: params[:cod_funcionario])
