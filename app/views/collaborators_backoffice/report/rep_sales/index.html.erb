@@ -207,7 +207,7 @@
           });
   </script>
   <!-- Modal para alterar vendedor fica fora do loop para melhorar performance -->
-  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+  <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
     <%= render partial: 'vendedor_modal' %>
   <% end %>
   <script>
