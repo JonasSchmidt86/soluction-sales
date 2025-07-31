@@ -2,82 +2,133 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Impressão</title>
+    <!-- Reset completo para evitar conflitos -->
     <style>
-      /* Estilos gerais para tela e impressão */
+      /* Reset completo */
+      html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, strong {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+
+      /* Configurações específicas para impressão */
+      /* Reset básico */
+      * {
+        box-sizing: border-box;
+      }
+
+      /* Estilos gerais */
       body {
-        font-family: 'Times New Roman', serif;
-        font-size: 14pt;
-        margin: 30px;
+        font-family: 'Times New Roman', serif !important;
+        font-size: 12pt !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+        padding: 15px !important;
+        background: white !important;
+        color: #000 !important;
       }
 
       .promissory-wrapper {
-        width: 48%;
-        border: 1px solid #000;
-        padding: 15px;
-        margin: 1%;
-        box-sizing: border-box;
-        display: inline-block;
-        vertical-align: top;
-        height: 350px;
-        /* Evita quebra no meio da nota */
-        page-break-inside: avoid;
+        width: 100% !important;
+        border: 2px solid #000 !important;
+        padding: 10px !important;
+        margin: 5px 0 !important;
+        display: block !important;
+        min-height: 160px !important;
+        page-break-inside: avoid !important;
+        background: white !important;
+        box-sizing: border-box !important;
       }
 
       .signature {
-        margin-top: 40px;
+        margin-top: 30px;
         text-align: center;
       }
 
       .signature-line {
-        margin-top: 20px;
+        margin-top: 15px;
         border-top: 1px solid #000;
-        width: 70%;
+        width: 60%;
         margin-left: auto;
         margin-right: auto;
       }
 
-      .page-break {
-        page-break-after: always;
-      }
-
-      /* Configurações específicas para impressão */
+      /* Configurações de página */
       @page {
         size: A4;
-        margin: 15mm 10mm 10mm 10mm;
+        margin: 5mm;
       }
 
+      /* Estilos específicos para impressão */
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: 'Times New Roman', serif;
-          font-size: 14pt;
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
 
-        /* Esconde elementos que não devem aparecer na impressão */
+        body {
+          margin: 0px !important;
+          padding: 20px !important;
+          font-size: 12pt !important;
+          background: white !important;
+          width: 210mm !important;
+          min-height: 297mm !important;
+        }
+
+        .promissory-wrapper {
+          width: 190mm !important;
+          height: 67mm !important;
+          border: 1px solid #000 !important;
+          padding: 5mm !important;
+          margin: 3mm 0 !important;
+          display: block !important;
+          page-break-inside: avoid !important;
+          background: white !important;
+          box-shadow: none !important;
+          box-sizing: border-box !important;
+        }
+
         .no-print {
           display: none !important;
         }
 
-        /* Certifica que .page-break funciona no print */
-        .page-break {
-          display: block;
-          page-break-before: always;
+        .signature {
+          margin-top: 20px !important;
         }
 
-        /* Para garantir alinhamento das notas */
-        .promissory-wrapper {
-          box-shadow: none; /* remove sombras se tiver */
-          break-inside: avoid;
-          -webkit-print-color-adjust: exact; /* para manter cores se usar */
-          -moz-print-color-adjust: exact;
-          print-color-adjust: exact;
+        .signature-line {
+          margin-top: 40px !important;
+          border-top: 1px solid #000 !important;
         }
       }
     </style>
+    <script>
+      // Função para imprimir automaticamente quando a página carregar
+      window.onload = function() {
+        // Pequeno delay para garantir que o CSS seja aplicado
+        setTimeout(function() {
+          window.print();
+        }, 1000);
+      };
+
+      // Função para fechar a janela após impressão
+      window.onafterprint = function() {
+        window.close();
+      };
+    </script>
   </head>
   <body>
     <%= yield %>
+    <!-- Botão manual de impressão (caso o automático não funcione) -->
+    <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
+      <button onclick="window.print()" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Imprimir
+      </button>
+    </div>
   </body>
 </html>

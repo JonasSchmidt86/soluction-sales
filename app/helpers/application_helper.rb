@@ -17,12 +17,12 @@ module ApplicationHelper
       extenso_reais = reais.to_words(locale: :pt_br)
       extenso_centavos = centavos > 0 ? centavos.to_words(locale: :pt_br) : nil
 
-      resultado = "#{extenso_reais} real"
-      resultado += "s" if reais != 1
+      resultado = "#{extenso_reais} rea"
+      resultado += "is" if reais != 1
 
       if extenso_centavos
-        resultado += " e #{extenso_centavos} centavo"
-        resultado += "s" if centavos != 1
+        resultado += "is #{extenso_centavos} centavo"
+        resultado += "is" if centavos != 1
       end
 
       resultado.capitalize
