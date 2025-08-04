@@ -24,6 +24,9 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         if params[:dataInicial].present? && params[:dataFinal].present?
             data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')
             data_final   = Date.strptime(params[:dataFinal], '%d/%m/%Y')
+        elsif params[:dataInicial].present?
+            data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')
+            data_final   = data_inicial.end_of_month
         else
             data_inicial = Time.zone.today
             data_final   = Time.zone.today.end_of_month
