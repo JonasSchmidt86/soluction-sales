@@ -228,7 +228,7 @@
               <div class="row g-2">
                 <div class="col-6">
                   <div class="p-2 border rounded bg-white">
-                    <%= link_to collaborators_backoffice_report_sales_path(cod_funcionario: current_collaborator.id, per_page: 'Todas', dataInicial: Time.zone.today.beginning_of_month.strftime('%d/%m/%Y')), class: "text-decoration-none" do %>
+                    <%= link_to collaborators_backoffice_report_sales_path(cod_funcionario: current_collaborator.cod_funcionario, per_page: 'Todas', dataInicial: Time.zone.today.beginning_of_month.strftime('%d/%m/%Y')), class: "text-decoration-none" do %>
                       <small class="text-muted d-block">Minhas Vendas</small>
                       <span class="text-success fw-bold">R$ <%= number_with_precision(@vendas_vendedor || 0, precision: 2, delimiter: '.', separator: ',') %></span>
                     <% end %>
