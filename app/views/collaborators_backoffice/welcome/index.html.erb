@@ -228,14 +228,18 @@
               <div class="row g-2">
                 <div class="col-6">
                   <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Minhas Vendas</small>
-                    <span class="text-success fw-bold">R$ <%= number_with_precision(@vendas_vendedor || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <%= link_to collaborators_backoffice_report_sales_path(cod_funcionario: current_collaborator.id, per_page: 'Todas'), class: "text-decoration-none" do %>
+                      <small class="text-muted d-block">Minhas Vendas</small>
+                      <span class="text-success fw-bold">R$ <%= number_with_precision(@vendas_vendedor || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <% end %>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Total Vendas</small>
-                    <span class="text-success fw-bold">R$ <%= number_with_precision(@total_vendas_empresa || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <%= link_to collaborators_backoffice_report_sales_path(per_page: 'Todas'), class: "text-decoration-none" do %>
+                      <small class="text-muted d-block">Total Vendas</small>
+                      <span class="text-success fw-bold">R$ <%= number_with_precision(@total_vendas_empresa || 0, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <% end %>
                   </div>
                 </div>
                 <div class="col-6">
