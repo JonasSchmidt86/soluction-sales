@@ -128,6 +128,29 @@
       <div class="row">
         <!-- Coluna Esquerda - Produtos -->
         <div class="col-md-6">
+          <!-- Produtos Mais Vendidos -->
+          <div class="card bg-light  mb-3">
+            <div class="card-body">
+              <h6 class="card-title text-muted text-center">Top 6 Produtos (Mês)</h6>
+              <% if @produtos_mais_vendidos.present? %>
+                <div class="list-group list-group-flush">
+                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
+                      <span>
+                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
+                        <%= truncate(produto.nome, length: 30) %>
+                      </span>
+                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-center mt-3">
+                  <p class="text-muted">Sem vendas no mês</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
           <!-- Produtos Mais Lucrativos -->
           <div class="card bg-light mb-3">
             <div class="card-body">
@@ -146,29 +169,6 @@
               <% else %>
                 <div class="text-center mt-3">
                   <p class="text-muted">Sem dados de lucro</p>
-                </div>
-              <% end %>
-            </div>
-          </div>
-          <!-- Produtos Mais Vendidos -->
-          <div class="card bg-light">
-            <div class="card-body">
-              <h6 class="card-title text-muted text-center">Top 6 Produtos (Mês)</h6>
-              <% if @produtos_mais_vendidos.present? %>
-                <div class="list-group list-group-flush">
-                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
-                      <span>
-                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
-                        <%= truncate(produto.nome, length: 30) %>
-                      </span>
-                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
-                    </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <div class="text-center mt-3">
-                  <p class="text-muted">Sem vendas no mês</p>
                 </div>
               <% end %>
             </div>
@@ -195,14 +195,18 @@
                 </div>
                 <div class="col-6">
                   <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Entradas</small>
-                    <span class="text-success fw-bold">R$ <%= number_with_precision(@entradas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
+                      <small class="text-muted d-block">Entradas</small>
+                      <span class="text-success fw-bold">R$ <%= number_with_precision(@entradas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <% end %>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Saídas</small>
-                    <span class="text-danger fw-bold">R$ <%= number_with_precision(@saidas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
+                      <small class="text-muted d-block">Saídas</small>
+                      <span class="text-danger fw-bold">R$ <%= number_with_precision(@saidas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
+                    <% end %>
                   </div>
                 </div>
                 <% if @ultimo_fechamento.present? %>
