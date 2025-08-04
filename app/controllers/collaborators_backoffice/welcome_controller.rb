@@ -1,6 +1,15 @@
 class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeController
 
     def index
+      agente = request.user_agent
+
+      @dispositivo = 
+      if agente =~ /Windows|Macintosh/
+        'Computador'
+      else
+        'Outro'
+      end
+      
       # Vendas do dia
       @vendas_dia = Venda.where("DATE(datavenda) = ? AND cod_empresa = ?  AND CANCELADA = false ", Date.current, current_collaborator.cod_empresa)
       @total_vendas_dia = @vendas_dia.sum(:valortotal)
@@ -87,5 +96,21 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
         .order("lucro_total DESC")
         .limit(6)
 
+    end
+    private
+
+    def definir_dispositivo
+      agente = request.user_agent
+
+      @dispositivo =
+        if agente =~ /Windows|Macintosh/
+          'Computador'
+        elsif agente =~ /iPad/
+          'iPad'
+        elsif agente =~ /iPhone|Android/
+          'Celular'
+        else
+          'Desconhecido'
+        end
     end
 end

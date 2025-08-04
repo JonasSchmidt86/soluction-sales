@@ -57,8 +57,10 @@
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
                   <i class="fa fa-plus"></i> Novo Produto
                 </button>
-                <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
+                <% if @dispositivo.present? && @dispositivo == 'Computador' %>
+                  <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success" do %>
+                    <i class="fa fa-list"></i> Listar
+                  <% end %>
                 <% end %>
                 <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-outline-primary" do %>
                   <i class="fa fa-list"></i> Estoque
