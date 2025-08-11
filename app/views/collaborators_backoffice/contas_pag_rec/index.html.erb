@@ -196,22 +196,24 @@
               label.innerHTML  = "Receber";
           }
         };
+        function toggleQuitada(id_recebido) {
+          console.log("CLICOU toggleQuitada " + id_recebido);
+          var check = document.getElementById("quitada_" + id_recebido);
+          var label = document.getElementById("lb_bill_status_" + id_recebido);
+          var ttDev = document.getElementById("vl_devido_" + id_recebido);
+          var ttPag = document.getElementById("valorpagar_" + id_recebido);
 
-        var check_status = document.getElementById("quitada");
-        check_status.onclick = function () {
-          console.log("CLICOU ")
-          var label1 = document.getElementById("lb_bill_status");
-          var ttDev = document.getElementById("vl_devido");
-          var ttPag = document.getElementById("valorpagar");
-          if (check_status.checked) {
-              label1.innerHTML  = "Total";
-              ttPag.value = ttDev.value;
+          if (!check || !label || !ttDev || !ttPag) return;
+
+          if (check.checked) {
+            label.innerHTML = "Total";
+            ttPag.value = ttDev.value;
           } else {
-              label1.innerHTML  = "Parcial";
-              console.log("Partial")
-              ttPag.value = 0,00
+            label.innerHTML = "Parcial";
+            ttPag.value = "0,00"; // precisa ser string
           }
-        };
+        }
+
 
         function formatarReal(valor) {
           return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

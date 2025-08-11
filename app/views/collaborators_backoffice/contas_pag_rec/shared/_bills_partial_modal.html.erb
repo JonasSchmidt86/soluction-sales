@@ -19,7 +19,7 @@
               </div>
               <div class="col">
                 <div class="form-floating mb-3 ">
-                  <input type="text" class="form-control" id="vl_devido" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
+                  <input type="text" class="form-control" id="vl_devido_<%= bill.cod_contaspagrec %>" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
                   <label for="recipient-name" class="col-form-label">Valor Devido:</label>
                 </div>
               </div>
@@ -37,7 +37,7 @@
           <div class="row g-3">
             <div class="col-md">
               <div class="form-floating">
-                <%= form.text_field :valor, value:"",placeholder: "Valor_pagar", class: "form-control money2", id:"valorpagar" %>
+                <%= form.text_field :valor, value:"",placeholder: "Valor_pagar", class: "form-control money2", id: "valorpagar_#{bill.cod_contaspagrec}" %>
                 <label for="valorpagar">Valor Pagar</label>
               </div>
             </div>
@@ -48,9 +48,15 @@
                     <div class="form-floating mb-3">
                       <div class="d-grid">
                         <div class=" dataTable-input form-check form-switch">
-                          <label id="lb_bill_status" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
-                          <%# form.check_box :quitada, { checked: params[:quitada].nil? ? false : true, class: "col-md-3 form-check-input", type:"checkbox", id:"quitada"}, true, false %>
-                          <%= form.check_box :quitada, { checked: params[:quitada] || false, class: "col-md-5 form-check-input", type: "checkbox", id: "quitada" } %>
+                          <label id="lb_bill_status_<%= bill.cod_contaspagrec %>" for= "quitada" class="label-check form-check-label"><%= status_bill(params[:quitada])%></label>
+                          <%= form.check_box :quitada, 
+                              { checked: params[:quitada] || false,
+                                class: "col-md-5 form-check-input",
+                                type: "checkbox",
+                                id: "quitada_#{bill.cod_contaspagrec}",
+                                onclick: "toggleQuitada(#{bill.cod_contaspagrec})"
+                              }
+                            %>
                           <%# filtros da pesquisa, para retornar na mesma pg %>
                           <%= form.hidden_field :contaspagrec,  value: bill.cod_contaspagrec %>
                           <%= form.hidden_field :tipo_conta,  value: tipe_bill_true(params[:tipo_conta]) %>
