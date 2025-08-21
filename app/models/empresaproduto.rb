@@ -18,21 +18,23 @@ class Empresaproduto < ApplicationRecord
     end
 
     def estoq_real
-      sql = "SELECT function_estoquereal($1, $2, $3)"
-      result = self.class.connection.select_value(
-        self.class.send(:sanitize_sql_array, [sql, cod_empresa, cod_produto, cod_cor])
-      )
-      result.to_i
+      sql = <<~SQL
+        SELECT function_estoquereal(
+          :cod_empresa::integer,
+          :cod_produto::integer,
+          :cod_cor::integer
+        )
+      SQL
 
+      binds = {
+        cod_empresa: cod_empresa,
+        cod_produto: cod_produto,
+        cod_cor:     cod_cor
+      }
 
-      # # ajuste :quantidade se o nome da coluna na view for outro (ex.: :qtd, :saldo, etc.)
-      # EstoqueReal
-      # .where(
-      #     cod_empresa: cod_empresa,
-      #     cod_produto: cod_produto,
-      #     cod_cor:     cod_cor
-      #   )
-      #   .pick(:estoque_real) || 0
+      self.class.connection
+        .select_value(self.class.send(:sanitize_sql_array, [sql, binds]))
+        .to_i
     end
 
   paginates_per 20
