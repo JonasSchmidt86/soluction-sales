@@ -52,6 +52,7 @@
                   <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Empresa</a></th>
                   <th data-sortable="" style="width: 5%;"><a href="#" class="dataTable-sorter">Cor</a></th>
                   <th data-sortable=""><a href="#" class="dataTable-sorter">Nome Cor</a></th>
+                  <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Est_Real</a></th>
                   <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
                 </tr>
               </thead>
@@ -61,6 +62,7 @@
                     <td><%= produto.cod_empresa %></td>
                     <td><%= produto.cod_cor %></td>
                     <td><%= produto.cor.nmcor %></td>
+                    <td><%= produto.estoq_real.to_i %></td>
                     <td><%= produto.quantidade.to_i %></td>
                   </tr>
                 <% end %>

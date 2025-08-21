@@ -17,6 +17,17 @@ class Empresaproduto < ApplicationRecord
       [self.cod_produto, self.cod_cor].join('-')
     end
 
+    def estoq_real
+    # ajuste :quantidade se o nome da coluna na view for outro (ex.: :qtd, :saldo, etc.)
+    EstoqueReal
+      .where(
+        cod_empresa: cod_empresa,
+        cod_produto: cod_produto,
+        cod_cor:     cod_cor
+      )
+      .pick(:estoque_real) || 0
+  end
+
   paginates_per 20
     
 end
