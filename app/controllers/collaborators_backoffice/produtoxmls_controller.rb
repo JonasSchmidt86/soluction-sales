@@ -255,7 +255,6 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       produtoXMl.cest = pr.at("CEST")&.text || ''
       produtoXMl.desconto = (pr.at("vDesc")&.text || '0').to_f
 
-
       itemcompra.cod_empresa = @xml_file.empresa_id
       itemcompra.numeronf = @xml_file.compra.numeronf
 
@@ -267,8 +266,9 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       else
         itemcompra.icms = 0.00
       end
-      puts "\n Valor do ICMS #{ itemcompra.icms } \n"
-      puts "\n Valor do ICMS #{ icms10_elements.any? } \n"
+      if pr.at("vOutro")&.text.present?
+        itemcompra.icms += (pr.at("vOutro")&.text || '0').to_f;
+      end
 
       itemcompra.quantidade = (pr.at("qCom")&.text if  pr.at("qCom")&.text || 0).to_i
       itemcompra.ipi = ((pr.at("vIPI")&.text if  pr.at("vIPI")&.text || 0).to_f) #(pr.at("pIPI")&.text if  pr.at("pIPI")&.text || 0).to_f

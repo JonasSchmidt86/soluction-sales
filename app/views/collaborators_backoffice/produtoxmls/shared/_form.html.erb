@@ -257,7 +257,7 @@
                         <div class="col-md-3">
                           <div class="form-floating">
                             <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
-                            <%= form_itens.label :Icms_10_ST, class:"" %>
+                            <%= form_itens.label :Icms_ST_Outros, class:"" %>
                           </div>
                         </div>
                       </div>
