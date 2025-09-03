@@ -653,6 +653,7 @@
           var tabela = document.getElementById("tblProdutos");
           var acrescimo = document.getElementById("compra_outrasdespesas").value.replace(",",".");
           var desconto = document.getElementById( "compra_desconto").value.replace(",",".");
+          var frete_compra = document.getElementById( "compra_valorfrete").value.replace(",",".");
 
           // Inicialize a variável para armazenar a soma
           var soma = 0;
@@ -677,7 +678,7 @@
               soma += valorTotal;
           }
 
-          soma += (parseFloat(acrescimo) || 0) - (parseFloat(desconto) || 0);
+          soma += (parseFloat(acrescimo) || 0) + (parseFloat(frete_compra) || 0) - (parseFloat(desconto) || 0);
           document.getElementById("compra_valortotal").value = soma.toFixed(2).replace(".",",");
           // Exiba o resultado da soma
       }

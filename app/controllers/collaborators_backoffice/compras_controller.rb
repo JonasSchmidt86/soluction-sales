@@ -80,6 +80,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         compra.serienf = params[:compra][:serienf];
         compra.desconto = params[:compra][:desconto]&.gsub(',', '.').to_f || 0.0;
         compra.valorfrete = params[:compra][:valorfrete]&.gsub(',', '.').to_f || 0.0;
+
         # compra.valortotal = params[:compra][:valortotal]&.gsub(',', '.').to_f || 0.0;
         compra.valortotal = params[:compra][:Valor_liquido]&.gsub(',', '.').to_f || 0.0;
 
@@ -122,6 +123,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             puts itens.class
             itens = itens.values
           end
+
+# se tiver frete a nota eu preciso somar o frete no produto
+          taxa_frete = compra.valorfrete / (compra.valortotal - compra.valorfrete);
 
           # Agora você pode iterar sobre os itens
           errors = []
@@ -201,17 +205,26 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             
             itemCompra = Itemcompra.new
 
+
+            itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
+            itemCompra.quantidade = pro_temp["quantidade"]
+
+            if taxa_frete > 0
+              itemCompra.valor_frete = (itemCompra.valorunitario * itemCompra.quantidade) * taxa_frete;
+            else
+              itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0;
+            end
+
             itemCompra.cod_compra = compra.cod_compra
             itemCompra.cod_empresa = compra.cod_empresa
             itemCompra.cod_produto = pro_temp["cod_produto"]
             
             itemCompra.icms = pro_temp["icms"] 
             itemCompra.ipi = pro_temp["ipi"]&.gsub(',', '.').to_f
-            itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0
-            itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
+            
 
             itemCompra.numeronf = compra.numeronf
-            itemCompra.quantidade = pro_temp["quantidade"]
+            
             itemCompra.valorst = pro_temp["icms"]&.gsub(',', '.').to_f || 0.0
             itemCompra.cod_cor = pro_temp["cod_cor"]
             itemCompra.cancelado = false
