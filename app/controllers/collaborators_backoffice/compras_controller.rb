@@ -124,8 +124,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itens = itens.values
           end
 
-# se tiver frete a nota eu preciso somar o frete no produto
-          taxa_frete = compra.valorfrete / (compra.valortotal - compra.valorfrete);
+# se tiver frete a nota eu preciso somar o frete no produto ## O BD ESTA COM TRIGGER PARA ISSO
+
+          #taxa_frete = compra.valorfrete / (compra.valortotal - compra.valorfrete);
 
           # Agora você pode iterar sobre os itens
           errors = []
@@ -209,11 +210,11 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
             itemCompra.quantidade = pro_temp["quantidade"]
 
-            if taxa_frete > 0
-              itemCompra.valor_frete = (itemCompra.valorunitario * itemCompra.quantidade) * taxa_frete;
-            else
+            # if taxa_frete > 0
+            #   itemCompra.valor_frete = (itemCompra.valorunitario * itemCompra.quantidade) * taxa_frete;
+            # else
               itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0;
-            end
+            # end
 
             itemCompra.cod_compra = compra.cod_compra
             itemCompra.cod_empresa = compra.cod_empresa
