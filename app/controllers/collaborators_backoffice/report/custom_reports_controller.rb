@@ -60,6 +60,10 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
           params.each do |k, v|
             next if v.blank?
             placeholder = "{{#{k}}}"
+            puts("Substituindo #{placeholder} por #{v}")
+            puts("Substituindo #{placeholder} por #{v}")
+            puts("Substituindo #{placeholder} por #{v} -- #{sql.include?(placeholder)}")
+
             sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
           end
 
