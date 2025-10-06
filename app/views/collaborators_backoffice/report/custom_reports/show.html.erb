@@ -68,6 +68,22 @@
               class: "form-control", style: "width: 180px;" , include_blank: "Selecione..."
             ) %>
           </div>
+        <% elsif field_name == 'vendedor' %>
+          <div class="col-auto">
+            <%= form.label :cod_funcionario, "Vendedor", class: "form-label" %>
+            <%= select_tag(
+              :cod_funcionario, 
+              options_from_collection_for_select(
+                Funcionario.select(:cod_funcionario, :usuario).where(
+                        "cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null",
+                      current_collaborator.cod_empresa), 
+                "cod_funcionario", 
+                "usuario",
+                params[:cod_funcionario]
+              ), 
+              class: "form-control", style: "width: 180px;" , include_blank: "Selecione..."
+            ) %>
+          </div>
         <% else %>
           <div class="col-auto">
             <%= label_tag param, param.humanize, class: "form-label" %>
