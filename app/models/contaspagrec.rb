@@ -1,6 +1,6 @@
 class Contaspagrec < ApplicationRecord
 
-   default_scope { order(vencimento: :asc) }
+   default_scope { order(dtvencimento: :asc) }
 
     self.table_name = "contaspagrec"
     self.primary_key = "cod_contaspagrec"
