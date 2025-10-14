@@ -1,5 +1,6 @@
 class Itemvenda < ApplicationRecord
 
+    default_scope { order(cod_item: :asc) }
 
     self.table_name = "itemvenda"
     self.primary_key = "cod_item"
