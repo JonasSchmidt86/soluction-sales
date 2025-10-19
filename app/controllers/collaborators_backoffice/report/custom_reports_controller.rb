@@ -58,7 +58,8 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
 
           # Substituições simples para demais placeholders
           params.each do |k, v|
-            next if v.blank?
+            v = nil if v.blank?
+            # next if v.blank?
             placeholder = "{{#{k}}}"
             puts("Substituindo #{placeholder} por #{v}")
             puts("Substituindo #{placeholder} por #{v}")
