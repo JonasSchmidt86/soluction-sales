@@ -31,8 +31,8 @@ class CollaboratorsBackoffice::Report::RepDreController < CollaboratorsBackoffic
       .group("extract(month from venda.datavenda)")
       .select(
         Arel.sql("extract(month from venda.datavenda) AS mes"),
-        Arel.sql("SUM(itemvenda.valorunitario * itemvenda.quantidade) AS receita_bruta"),
-        Arel.sql("SUM(itemvenda.valororiginal * itemvenda.quantidade) AS custo_total")
+        Arel.sql("SUM(itemvenda.valorunitario * itemvenda.quantidade + ((itemvenda.valor_acrescimo - itemvenda.valor_desconto) / itemvenda.quantidade)) AS receita_bruta"),
+        Arel.sql("SUM(itemvenda.valororiginal * itemvenda.quantidade + (itemvenda.valor_acrescimo - itemvenda.valor_desconto)) AS custo_total")
       )
 
     vendas_hash = vendas_totais.index_by { |v| v.mes.to_i }
