@@ -110,95 +110,75 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
 
     # Itera sobre cada produto no hash de produtos
     params[:produtos].each do |produto_id, produto_info|
-      # Obtém o ID do produto
-      id_do_produto = produto_id
-
-      # Faça algo com o ID, por exemplo, imprimir
-      puts "ID do Produto: #{id_do_produto}"
-
-      # Se você quiser acessar outros atributos, pode fazer algo como
+      next if produto_info["cod_produto"].blank? || produto_info["cod_cor"].blank?
+      
       if produto_info && produto_info["produto_xml"].present?
-        puts "-------- SE -------------------------"
-        produto_xml_string = produto_info["produto_xml"]
-        produto_xml_hash = JSON.parse(produto_xml_string)
-
-        codigo_do_produtoXML = produto_xml_hash["codigo"]
-        puts "Código do ProdutoXML: #{codigo_do_produtoXML}"
-        prXML = Produtoxml.find_by(codigo: codigo_do_produtoXML.to_i);
-
-        if !prXML.nil?
-          prXML.cod_cor = produto_info["cod_cor"]
-          prXML.cod_produto = produto_info["cod_produto"]
-          
-          # abrir o arquivo e ler para passar as informações atualizadas da nota
-          # quando eu crio eu já altero esses valores, aparemtenete
-          prXML.nome = produto_xml_hash["nome"]
-          prXML.infadicionais = produto_xml_hash["infadicionais"]
-          prXML.ncm = produto_xml_hash["ncm"]
-          prXML.ucom = produto_xml_hash["ucom"]
-          prXML.cfop = produto_xml_hash["cfop"]
-          prXML.cest = produto_xml_hash["cest"]
-          prXML.desconto = produto_xml_hash["vDesc"]
-
-        end
-        # Pré-save
-        prXML.valid?  # Isso verifica a validade do objeto sem salvar
-
-        # Se houver erros, lide com eles conforme necessário
-        if prXML.errors.any?
-          flash[:alert] = "Erro ao validar o produto #{prXML.codigo}: #{prXML.errors.full_messages.join(', ')}"
-          redirect_to colaboradores_backoffice_xml_files_path
-          return  # Retorna para evitar a execução do restante do código
-        else
-          produtoXmlSalvar << prXML;
-        end
+        xml_pro = JSON.parse(produto_info["produto_xml"])
+        proXml = nil
         
-      else
-        puts "---------- ELSE -------- "
-
-        # Certifique-se de verificar se o parâmetro :produto_xml está presente e é um array
-        if params[:produtos].present? && params[:produtos].is_a?(Array)
-
-          params[:produtos].each do |produto_params|
-
-            if produto_params[:produto_xml].present?
-
-              produto_json = produto_params[:produto_xml]
-              produto_hash = JSON.parse(produto_json)
-              
-              produto = Produtoxml.new(
-                codproemissor: produto_hash["codproemissor"],
-                nome: produto_hash["nome"],
-                cod_cor: produto_hash["cod_cor"],
-                cod_produto: produto_params["cod_produto"],
-                infadicionais: produto_hash["infadicionais"],
-                ncm: produto_hash["ncm"],
-                cod_pessoa: produto_hash["cod_pessoa"],
-                ucom: produto_hash["ucom"],
-                cfop: produto_hash["cfop"],
-                desconto: produto_hash["vDesc"],
-                cest: produto_hash["cest"]
-              )
-
-              # Agora você pode trabalhar com o objeto Produto recém-criado
-              puts "Produto criado:"
-              puts produto.inspect
-            else
-              puts "A chave :produto_xml está vazia, nula ou não está presente como esperado para um produto."
+        # Busca por código existente se presente
+        if xml_pro["codigo"].present? && !xml_pro["codigo"].blank?
+          candidatos_por_codigo = Produtoxml.where(codigo: xml_pro["codigo"])
+          
+          # Verifica infadicionais nos candidatos encontrados por código
+          candidatos_por_codigo.each do |candidato|
+            if candidato.infadicionais.to_s.rstrip.upcase == xml_pro["infadicionais"].to_s.rstrip.upcase
+              proXml = candidato
+              break
             end
           end
-        else
-          puts "O parâmetro :produtos está vazio, nulo ou não é um array."
         end
+        
+        # Se não encontrou por código, busca por produto/cor/emissor/nome
+        if proXml.blank?
+          proXml = Produtoxml.where(
+            cod_cor: produto_info["cod_cor"].to_i,
+            cod_produto: produto_info["cod_produto"].to_i,
+            codproemissor: xml_pro["codproemissor"]
+          ).where(" nome ilike ? ", xml_pro["nome"].to_s.upcase.rstrip).order(:codigo).first
+          
+          # Verifica infadicionais se encontrou
+          if !proXml.blank?
+            unless proXml.infadicionais.nil? && (xml_pro["infadicionais"].nil? || xml_pro["infadicionais"].to_s.strip.empty?) ||
+              proXml.infadicionais.to_s.rstrip.upcase == xml_pro["infadicionais"].to_s.rstrip.upcase
+              proXml = nil
+            end
+          end
+        end
+        
+        # Se ainda não encontrou, cria novo
+        if proXml.blank?
+          proXml = Produtoxml.new
+          proXml.codproemissor = xml_pro["codproemissor"]
+          proXml.infadicionais = xml_pro["infadicionais"].to_s.rstrip.upcase if xml_pro["infadicionais"].present?
+          proXml.nome = xml_pro["nome"].to_s.rstrip.upcase if xml_pro["nome"].present?
+          proXml.ucom = xml_pro["ucom"]
+          proXml.ncm = xml_pro["ncm"]
+          proXml.cfop = xml_pro["cfop"]
+          proXml.cest = xml_pro["cest"]
+        end
+        
+        # Atualiza dados
+        proXml.cod_produto = produto_info["cod_produto"]
+        proXml.cod_cor = produto_info["cod_cor"]
+        proXml.cod_pessoa = current_collaborator.cod_empresa # Assumindo que é a empresa
 
-        puts "---------------------------------"
-      end 
+        unless proXml.save!
+          respond_to do |format|
+            format.json { render json: { error: "Erro ao salvar produto #{xml_pro["nome"]}" } }
+            format.html { redirect_to collaborators_backoffice_xml_files_path, alert: "Erro ao salvar produto" }
+          end
+        end
+        
+        produtoXmlSalvar << proXml
+      end
     end
-    produtoXmlSalvar.each do |produto|
-      produto.save!
-      puts "Salvo " + produto.codigo.to_s
+
+    
+    respond_to do |format|
+      format.json { render json: { message: "#{produtoXmlSalvar.count} produtos salvos com sucesso!" } }
+      format.html { redirect_to collaborators_backoffice_xml_files_path, notice: "XML Atualizado" }
     end
-    redirect_to collaborators_backoffice_xml_files_path , notice: "XML Atualizado"
   end
 
   
@@ -212,20 +192,35 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       codEmissor = pr.at("cProd")&.text if pr.at("cProd")&.text || 0;
       # nmXML = pr.at("xProd")&.text if pr.at("xProd")&.text || '';
       nmXML = pr.at("xProd")&.text || ''
+      infXML = pr.at("infAdProd")&.text || ''
       nmXML = GenericService.remover_acentos(nmXML); 
+      infXML = GenericService.remover_acentos(infXML); 
 
-      # xmlProds = Produtoxml.where(codproemissor: codEmissor, nome: nmXML, pessoa: @xml_file.pessoa).order(:codigo);
       xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).where(" nome ilike ? ", nmXML).order(:codigo)
+
+      if xmlProds.size === 0
+        xmlProds = Produtoxml
+            .where("unaccent(replace(nome, ' ', '')) ILIKE unaccent(replace(?, ' ', ''))", nmXML.gsub(/\s+/, ''))
+            .order(:codigo)
+      end
+
+      # puts "\n"
+      # puts "\n"
+      # puts "----- Produtos XML encontrados: #{xmlProds.size} para o produto #{nmXML} -----"
+      # puts "\n"
+      # puts "\n"
 
       itemcompra = Itemcompra.new
       produtoXMl = Produtoxml.new
+
       if xmlProds 
         xmlProds.each do |prXML|
 
-          # if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === GenericService.remover_acentos((pr.at("infAdProd")&.text if pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
+          itemcompra.produto = prXML.produto
+
           if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === 
             GenericService.remover_acentos((pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
-         
+
             prXML.ncm = ( pr.at("NCM")&.text if  pr.at("NCM")&.text || prXML.ncm);
             prXML.produto.ncm = prXML.ncm;
 

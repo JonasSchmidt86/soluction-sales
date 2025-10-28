@@ -168,8 +168,8 @@
                         Nome: 
                         <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:nome] %></span></p>
                       <p class="text-start text-uppercase">
-                        Unidade Medida: 
-                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:ucom] %></span></p>
+                        INF: 
+                        <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:infadicionais] %></span></p>
                       <p class="text-start text-uppercase">
                         Quantidade: 
                         <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object[:quantidade] %></span></p>
@@ -194,22 +194,24 @@
                       <p class="text-start text-uppercase">
                         CFOP: 
                         <span class="font-weight-bold" style="font-weight: bold !important;"><%= form_itens.object.pro_xml_temp[:cfop] %></span></p>
-                      <% unless form_itens.object.pro_xml_temp[:cod_produto].present? %>
-                        <%= form_itens.hidden_field :index, value:form_itens.index, id:"data-index" %>
+                      <%# unless form_itens.object.pro_xml_temp[:cod_produto].present? %>
+                      <%= form_itens.hidden_field :index, value:form_itens.index, id:"data-index" %>
+                      <div class="text-end">
                         <button 
-                                  type="button" 
-                                  class="btn btn-sm btn-outline-primary mt-2"
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#modalNovoProduto"
-                                  data-nome="<%= form_itens.object.pro_xml_temp[:nome] %>"
-                                  data-ucom="<%= form_itens.object.pro_xml_temp[:ucom] %>"
-                                  data-ncm="<%= form_itens.object.pro_xml_temp[:ncm] %>"
-                                  data-cfop="<%= form_itens.object.pro_xml_temp[:cfop] %>"
-                                  data-index="<%= form_itens.index %>"
-                                  onclick="abrirModal(this)">
-                          Cadastrar Produto
+                                    type="button" 
+                                    class="btn btn-success btn-sm mt-2"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalNovoProduto"
+                                    data-nome="<%= form_itens.object.pro_xml_temp[:nome] %>"
+                                    data-ucom="<%= form_itens.object.pro_xml_temp[:ucom] %>"
+                                    data-ncm="<%= form_itens.object.pro_xml_temp[:ncm] %>"
+                                    data-cfop="<%= form_itens.object.pro_xml_temp[:cfop] %>"
+                                    data-index="<%= form_itens.index %>"
+                                    onclick="abrirModal(this)">
+                          <i class="fa fa-plus"></i> Cadastrar Produto
                         </button>
-                      <% end %>
+                      </div>
+                      <%# end %>
                     </td>
                     <td class="align-middle">
                       <%= form_itens.hidden_field :pro_xml_temp, value: form_itens.object.pro_xml_temp.to_json %>
@@ -291,6 +293,14 @@
                             <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
                             <%= form_itens.label :valor_total, class:"" %>
                           </div>
+                        </div>
+                      </div>
+                      <div class="row g-2 my-2">
+                        <div class="col-md-12 text-end">
+                          <%= form_itens.hidden_field :_destroy, value: false, class: "destroy-field" %>
+                          <button type="button" class="btn btn-danger btn-sm remove-item" onclick="removeItem(this)">
+                            <i class="fa fa-trash"></i> Excluir Item
+                          </button>
                         </div>
                       </div>
                     </td>
@@ -443,7 +453,10 @@
       <% end %>
       <div class="position-fixed bottom-0 end-0 m-4">
         <div class="d-block my-3 mx-3">
-          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+          <button type="button" class="btn btn-warning rounded-circle p-3 me-2" onclick="salvarProdutoXml()" title="Salvar apenas produtos">
+            <i class="fa fa-save fa-2x"></i>
+          </button>
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3" title="Salvar compra completa">
             <i class="fa fa-check fa-2x"></i>
           </button>
         </div>
@@ -539,6 +552,11 @@
         $(document).ready(function() {
         $('#xml_compra').submit(function(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
+
+            // Validar contas antes de enviar
+            if (!validarContas()) {
+                return false;
+            }
 
             var formData = $(this).serialize(); // Serializa os dados do formulário
 
@@ -641,12 +659,9 @@
             productsList.on('click', `div.list-group-item`, function() {
                 let selectedProduct = $(this).data('produto');
                 let selectedProductId = $(this).data('cod_produto');
-                //console.log(index)
                 field.value =  selectedProduct ;
                 selectedProductIdField.value = selectedProductId;
-                // Limpa a lista de resultados
                 productsList.hide();
-
             });
 
             function productOptions() {
@@ -729,8 +744,6 @@
 
         // fim valor total item \
         function setTotalCompra() {
-            // Selecione a tabela
-
             var tabela = document.getElementById("tblProducts");
             var desconto = document.getElementById("compra_desconto").value.replace(",",".");
             var seguro = document.getElementById("compra_vSeguro").value.replace(",",".");
@@ -742,25 +755,33 @@
             var totalProduto = document.getElementById("compra_tt_produto");
             var totalST = document.getElementById("compra_vST");
 
-            // Inicialize a variável para armazenar a soma
             var soma = 0;
             var somaST = 0;
 
-            // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
+            // Percorra as linhas da tabela ignorando linhas ocultas/removidas
             for (var i = 1; i < tabela.rows.length; i++) {
-                soma += parseFloat(tabela.rows[i].querySelector(".valorTotal").value.replace(",","."));
-                somaST += parseFloat(tabela.rows[i].querySelector(".valorST").value.replace(",","."));
+                var row = tabela.rows[i];
+                var destroyField = row.querySelector('.destroy-field');
+
+                // Pula linhas marcadas para exclusão ou ocultas
+                if (row.style.display === 'none' || (destroyField && destroyField.value === '1')) {
+                    continue;
+                }
+
+                var valorTotalField = row.querySelector(".valorTotal");
+                var valorSTField = row.querySelector(".valorST");
+
+                if (valorTotalField && valorTotalField.value) {
+                    soma += parseFloat(valorTotalField.value.replace(",","."));
+                }
+                if (valorSTField && valorSTField.value) {
+                    somaST += parseFloat(valorSTField.value.replace(",","."));
+                }
             }
 
             totalProduto.value = soma.toFixed(2).replace(".",",");
             totalST.value = somaST.toFixed(2).replace(".",",");
-
-            // soma = soma + parseFloat(valorfrete) + parseFloat(outrasdespesas) + parseFloat(seguro) - parseFloat(desconto);
-
-            console.log("Soma = " + soma);
-
             valor_liquido.value = soma.toFixed(2).replace(".",",");
-            // Exiba o resultado da soma
         }
         // fim total compra
 
@@ -833,4 +854,110 @@
             }
         });
         // -------- Fim Busca pessoas ---------//
+
+        function removeItem(button) {
+            const row = button.closest('tr');
+            const destroyField = row.querySelector('.destroy-field');
+
+            if (destroyField) {
+                destroyField.value = '1';
+                row.style.display = 'none';
+                setTotalCompra();
+            }
+        }
+
+        function showCustomAlert(title, message, type = 'danger') {
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const btnClass = type === 'success' ? 'btn-outline-success' : 'btn-outline-danger';
+
+            const alertHtml = `
+                <div id="customAlert" class="position-fixed top-50 start-50 translate-middle" style="z-index: 9999;">
+                    <div class="alert ${alertClass} alert-dismissible shadow-lg" style="min-width: 400px;">
+                        <h5 class="alert-heading"><i class="fa ${iconClass}"></i> ${title}</h5>
+                        <p class="mb-3">${message}</p>
+                        <button type="button" class="btn ${btnClass} btn-sm" onclick="closeCustomAlert()">Fechar</button>
+                    </div>
+                </div>
+                <div id="customAlertBackdrop" class="position-fixed top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.5); z-index: 9998;"></div>
+            `;
+            $('body').append(alertHtml);
+        }
+
+        function closeCustomAlert() {
+            $('#customAlert, #customAlertBackdrop').remove();
+        }
+
+        function salvarProdutoXml() {
+            var produtos = {};
+            var index = 0;
+
+            $('#tblProducts tbody tr').each(function() {
+                var row = $(this);
+                var destroyField = row.find('.destroy-field');
+
+                // Pula linhas marcadas para exclusão
+                if (row.is(':hidden') || (destroyField.length && destroyField.val() === '1')) {
+                    return;
+                }
+
+                var codProduto = row.find('input[id*="_cod_produto"]').val();
+                var codCor = row.find('select[id*="_cod_cor"]').val();
+                var proXmlTemp = row.find('input[id*="_pro_xml_temp"]').val();
+
+                if (codProduto && codCor && proXmlTemp) {
+                    produtos[index] = {
+                        cod_produto: codProduto,
+                        cod_cor: codCor,
+                        produto_xml: proXmlTemp
+                    };
+                    index++;
+                }
+            });
+
+            if (Object.keys(produtos).length === 0) {
+                showCustomAlert('Aviso', 'Nenhum produto para salvar.');
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            $.ajax({
+                url: url + 'produtoxmls',
+                method: 'POST',
+                data: { produtos: produtos },
+                headers: { 'X-CSRF-Token': csrfToken },
+                success: function(response) {
+                    showCustomAlert('Sucesso', 'Produtos salvos com sucesso!', 'success');
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON?.error || 'Erro ao salvar produtos.';
+                    showCustomAlert('Erro', errorMsg, 'danger');
+                }
+            });
+        }
+
+        function validarContas() {
+            var valorLiquido = parseFloat(document.getElementById("compra_Valor_liquido").value.replace(",", "."));
+            var somaContas = 0;
+
+            // Soma todas as parcelas das contas
+            $('.contas input[id*="valorparcela"]').each(function() {
+                var valor = $(this).val();
+                if (valor && valor.trim() !== '') {
+                    somaContas += parseFloat(valor.replace(",", "."));
+                }
+            });
+
+            // Calcula a diferença
+            var diferenca = Math.abs(valorLiquido - somaContas);
+
+            // Permite diferença de até 0.05 (5 centavos)
+            if (diferenca > 0.05) {
+                showCustomAlert(`Erro na validação das contas`, `A soma das contas (${somaContas.toFixed(2).replace(".", ",")}) deve ser igual ao VALOR NF (${valorLiquido.toFixed(2).replace(".", ",")}). Diferença: ${diferenca.toFixed(2).replace(".", ",")}`);
+                return false;
+            }
+
+            return true;
+        }
 </script>
