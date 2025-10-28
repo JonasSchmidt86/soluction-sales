@@ -882,6 +882,9 @@
                 <div id="customAlertBackdrop" class="position-fixed top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.5); z-index: 9998;"></div>
             `;
             $('body').append(alertHtml);
+
+            // Auto-fechar após 5 segundos
+            setTimeout(closeCustomAlert, 1000);
         }
 
         function closeCustomAlert() {
