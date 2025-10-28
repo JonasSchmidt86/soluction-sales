@@ -196,19 +196,14 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       nmXML = GenericService.remover_acentos(nmXML); 
       infXML = GenericService.remover_acentos(infXML); 
 
-      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).where(" nome ilike ? ", nmXML).order(:codigo)
+      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).order(:codigo)
+      puts "\n"
 
       if xmlProds.size === 0
+        term = nmXML.gsub(/[ \.,]/, '')
         xmlProds = Produtoxml
-            .where("unaccent(replace(nome, ' ', '')) ILIKE unaccent(replace(?, ' ', ''))", nmXML.gsub(/\s+/, ''))
-            .order(:codigo)
+          .where("unaccent(replace(replace(replace(nome, ' ', ''), '.', ''), ',', '')) ILIKE unaccent(?)", term)
       end
-
-      # puts "\n"
-      # puts "\n"
-      # puts "----- Produtos XML encontrados: #{xmlProds.size} para o produto #{nmXML} -----"
-      # puts "\n"
-      # puts "\n"
 
       itemcompra = Itemcompra.new
       produtoXMl = Produtoxml.new
