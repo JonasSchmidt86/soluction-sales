@@ -1,24 +1,21 @@
 <tr class= "nested-fields">
-    <td class="">
-        <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: false %>
-    </td>
-    <td class="">
-        <%# f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: params[:dtvencimento].strftime("%d/%m/%Y")  %>
-        <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: f.object.dtvencimento.present? ? f.object.dtvencimento.strftime("%d/%m/%Y") : "" %>
-    </td>
-    <td class="">
-        <%= f.text_field :valorparcela, value: number_to_currency((f.object.valorparcela), separator: ",", delimiter: "", unit:""), class: "form-control border-top-0 border-start-0 border-end-0 border-dark" %>
-    </td>
-        
-    <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
-
-    <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
-    <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
-    <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 2 %>
-
-    <td class="align-middle fw-semibold">
-        <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
-            <i class="fa fa-trash-can"></i>
-        <% end %>
-    </td>
+  <td class="">
+    <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: false %>
+  </td>
+  <td class="">
+    <%# f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: params[:dtvencimento].strftime("%d/%m/%Y")  %>
+    <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark", value: f.object.dtvencimento.present? ? f.object.dtvencimento.strftime("%d/%m/%Y") : "" %>
+  </td>
+  <td class="">
+    <%= f.text_field :valorparcela, value: number_to_currency((f.object.valorparcela), separator: ",", delimiter: "", unit:""), input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+  </td>
+  <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
+  <%= f.hidden_field :ativo,  value: params[:ativo] || true %>
+  <%= f.hidden_field :quitada,  value: params[:quitada] || false %>
+  <%= f.hidden_field :cod_tppagamento,  value: params[:cod_tppagamento] || 2 %>
+  <td class="align-middle fw-semibold">
+    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+      <i class="fa fa-trash-can"></i>
+    <% end %>
+  </td>
 </tr>

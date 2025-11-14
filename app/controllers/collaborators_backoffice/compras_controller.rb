@@ -131,8 +131,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           # Agora você pode iterar sobre os itens
           errors = []
           itens.each do |pro_temp|
-            next if pro_temp["cod_produto"].blank?
-            puts "PRO_TEMP: #{pro_temp.inspect}"
+            next if pro_temp["_destroy"].to_s == "1"
 
             if pro_temp["cod_produto"].blank?
               error_message = "Informe o produto! #{JSON.parse(pro_temp[:pro_xml_temp])["nome"].to_s.upcase}!"
