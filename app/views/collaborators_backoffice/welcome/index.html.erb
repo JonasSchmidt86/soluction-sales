@@ -122,8 +122,8 @@
   <script>
     function detectDevice() {
       const userAgent = navigator.userAgent;
-
-      if (/iPad/.test(userAgent)) {
+      
+      if (/iPad|Macintosh/.test(userAgent) && 'ontouchend' in document) {
         return 'iPad';
       } else if (/iPhone|Android.*Mobile/.test(userAgent)) {
         return 'Celular';
