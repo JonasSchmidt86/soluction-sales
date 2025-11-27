@@ -57,10 +57,8 @@
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
                   <i class="fa fa-plus"></i> Novo Produto
                 </button>
-                <% if @dispositivo.present? && @dispositivo == 'Computador' %>
-                  <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success" do %>
-                    <i class="fa fa-list"></i> Listar
-                  <% end %>
+                <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success", id: "btn-listar-produtos", style: "display: none;" do %>
+                  <i class="fa fa-list"></i> Listar
                 <% end %>
                 <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-outline-primary" do %>
                   <i class="fa fa-list"></i> Estoque
@@ -121,6 +119,28 @@
       </div>
     </div>
   </div>
+  <script>
+    function detectDevice() {
+      const userAgent = navigator.userAgent;
+
+      if (/iPad/.test(userAgent)) {
+        return 'iPad';
+      } else if (/iPhone|Android.*Mobile/.test(userAgent)) {
+        return 'Celular';
+      } else {
+        return 'Computador';
+      }
+    }
+
+    const dispositivo = detectDevice();
+    console.log('Dispositivo detectado:', dispositivo);
+    
+    // Mostrar botão Listar apenas em computador
+    if (dispositivo === 'Computador') {
+      const btnListar = document.getElementById('btn-listar-produtos');
+      if (btnListar) btnListar.style.display = 'inline-block';
+    }
+  </script>
   <!-- Painel de Estatísticas -->
   <div class="card mb-4 border-0 shadow-sm">
     <div class="card-header bg-primary text-white">
