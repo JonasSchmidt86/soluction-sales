@@ -12,18 +12,37 @@
                 { prompt: "Selecione" }, { class: "form-select cor-select" } %>
   </td>
   <td>
-    <%= f.number_field :quantidade, step: 1, class: "form-control", style: "width: 80px;" %>
+    <%= f.number_field :quantidade, step: 1, class: "form-control quantidade-field", style: "width: 80px;", onchange: "calcularTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_unitario, value: number_to_currency(f.object.valor_unitario || 0, unit: "", separator: ",", delimiter: ""), class: "form-control money2", style: "width: 100px;" %>
+    <%= f.text_field :valor_unitario, value: number_to_currency(f.object.valor_unitario || 0, unit: "", separator: ",", delimiter: ""), class: "form-control money2 valor-unitario-field", style: "width: 100px;", onchange: "calcularTotal(this)" %>
   </td>
   <td>
-    <%= f.number_field :percentual_ipi, step: 0.01, class: "form-control", style: "width: 80px;" %>
+    <%= f.number_field :percentual_ipi, step: 0.01, class: "form-control ipi-field", style: "width: 80px;", onchange: "calcularTotal(this)" %>
   </td>
   <td>
-    <%= f.number_field :percentual_icms, step: 0.01, class: "form-control", style: "width: 80px;" %>
+    <%= f.number_field :percentual_icms, step: 0.01, class: "form-control icms-field", style: "width: 80px;", onchange: "calcularTotal(this)" %>
+  </td>
+  <td>
+    <input type="text" class="form-control total-field" readonly style="width: 100px; background-color: #e9ecef;" value="0,00">
   </td>
   <td>
     <%= link_to_remove_association "Remover", f, class: "btn btn-danger btn-sm" %>
   </td>
 </tr>
+<script>
+  function calcularTotal(element) {
+    const row = $(element).closest('tr');
+
+    const quantidade = parseFloat(row.find('.quantidade-field').val()) || 0;
+    const valorUnitario = parseFloat(row.find('.valor-unitario-field').val().replace(',', '.')) || 0;
+    const ipi = parseFloat(row.find('.ipi-field').val()) || 0;
+    const icms = parseFloat(row.find('.icms-field').val()) || 0;
+
+    // Calcula valor com impostos: valor + (valor * ipi/100) + (valor * icms/100)
+    const valorComImpostos = valorUnitario * (1 + (ipi / 100)) * (1 + (icms / 100));
+    const total = quantidade * valorComImpostos;
+
+    row.find('.total-field').val(total.toFixed(2).replace('.', ','));
+  }
+</script>

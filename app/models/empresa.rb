@@ -28,4 +28,16 @@ class Empresa < ApplicationRecord
     def to_s
         self.nome;
     end
+
+    def horario_comercial?
+        return true unless controlar_horario?
+        
+        agora = Time.current.strftime("%H:%M")
+        inicio = horario_comercial_inicio&.strftime("%H:%M")
+        fim = horario_comercial_fim&.strftime("%H:%M")
+        
+        return true if inicio.nil? || fim.nil?
+        puts "Horário Comercial: #{inicio} - #{fim}, Agora: #{agora}"
+        agora >= inicio && agora <= fim
+    end
 end

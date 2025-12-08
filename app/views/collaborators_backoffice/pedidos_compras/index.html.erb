@@ -114,14 +114,13 @@
     </div>
   </div>
 </div>
-
 <script>
   function formatarReal(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
-  
+
   document.getElementById("valortotal").value = formatarReal(<%= somaPedidos %>);
-  
+
   document.addEventListener('DOMContentLoaded', function() {
     $('#pedidos-table').DataTable({
       "paging": false,
