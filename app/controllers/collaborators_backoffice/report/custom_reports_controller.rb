@@ -56,15 +56,13 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
           end
           sql.gsub!("{{filtro_grupo}}", filtro_grupo)
 
+          # Substituição para empresa logada
+          sql.gsub!("[[empresa_logada]]", current_collaborator.cod_empresa.to_s)
+          
           # Substituições simples para demais placeholders
           params.each do |k, v|
             v = nil if v.blank?
-            # next if v.blank?
             placeholder = "{{#{k}}}"
-            puts("Substituindo #{placeholder} por #{v}")
-            puts("Substituindo #{placeholder} por #{v}")
-            puts("Substituindo #{placeholder} por #{v} -- #{sql.include?(placeholder)}")
-
             sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
           end
 
