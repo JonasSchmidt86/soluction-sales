@@ -196,33 +196,41 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       nmXML = GenericService.remover_acentos(nmXML); 
       infXML = GenericService.remover_acentos(infXML); 
 
-      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa).order(:codigo)
-      puts "\n"
+      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa.id).order(:codigo).first
 
-      if xmlProds.size === 0
+      if xmlProds.nil?
         term = nmXML.gsub(/[ \.,]/, '')
-        xmlProds = Produtoxml
-          .where("unaccent(replace(replace(replace(nome, ' ', ''), '.', ''), ',', '')) ILIKE unaccent(?)", term)
+        xmlProds = Produtoxml.where("unaccent(replace(replace(replace(nome, ' ', ''), '.', ''), ',', '')) ILIKE unaccent(?)", term)
       end
 
       itemcompra = Itemcompra.new
       produtoXMl = Produtoxml.new
 
       if xmlProds 
+        puts "\n"
         xmlProds.each do |prXML|
-
           itemcompra.produto = prXML.produto
-
           if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === 
             GenericService.remover_acentos((pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
 
-            prXML.ncm = ( pr.at("NCM")&.text if  pr.at("NCM")&.text || prXML.ncm);
-            prXML.produto.ncm = prXML.ncm;
+            novo_ncm = pr.at("NCM")&.text
+
+            if novo_ncm.present? && prXML.produto.present? && prXML.produto.ncm != novo_ncm
+              prXML.produto.update_column(:ncm, novo_ncm)
+            end
+            prXML.ncm = novo_ncm if novo_ncm.present?
 
             #atualizar produtoXML e NCM Produto
             if prXML.changed?
-              prXML.save!
-              puts "Produto XML Atualizado Codigo: #{prXML.codigo}"
+              begin
+                prXML.save!
+                puts "Produto XML Atualizado Codigo: #{prXML.codigo}"
+              rescue ActiveRecord::RecordInvalid => e
+                puts "Erro ao salvar Produtoxml - Produto: #{prXML.nome} (Código: #{prXML.codproemissor}) - #{e.message}"
+                puts "Detalhes dos erros: #{prXML.errors.full_messages.join(', ')}"
+                puts "Erros do produto associado: #{prXML.produto.errors.full_messages.join(', ')}" if prXML.produto&.errors&.any?
+                Rails.logger.error "Erro ao salvar Produtoxml ID #{prXML.id} - Produto: #{prXML.nome}: #{e.message} - Erros: #{prXML.errors.full_messages} - Erros do produto: #{prXML.produto&.errors&.full_messages}"
+              end
             end
             produtoXMl = prXML;
             itemcompra.produto = prXML.produto
