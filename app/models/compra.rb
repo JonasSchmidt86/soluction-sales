@@ -7,10 +7,10 @@ class Compra < ApplicationRecord
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :compra, dependent: :destroy, optional: true, autosave: true
     
     has_many :itenscompra, :class_name => 'Itemcompra', :foreign_key => 'cod_compra', inverse_of: :compra, autosave: true, dependent: :destroy
-    accepts_nested_attributes_for :itenscompra, allow_destroy: true, update_only: true, reject_if: :all_blank
+    accepts_nested_attributes_for :itenscompra, allow_destroy: true, update_only: true, reject_if: :reject_empty_items
 
     has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_compra', inverse_of: :compra, autosave: true, dependent: :destroy
-    accepts_nested_attributes_for :contas, allow_destroy: true, update_only: true, reject_if: :all_blank
+    accepts_nested_attributes_for :contas, allow_destroy: true, update_only: true, reject_if: :reject_empty_contas
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :compras, autosave: true
     accepts_nested_attributes_for :pessoa, allow_destroy: false
@@ -63,5 +63,15 @@ class Compra < ApplicationRecord
     if xml_file.present?
       xml_file.update_attributes(compra_id: self.codigo)
     end
+  end
+
+  private
+
+  def reject_empty_items(attributes)
+    attributes['cod_produto'].blank? || attributes['quantidade'].blank? || attributes['valorunitario'].blank?
+  end
+
+  def reject_empty_contas(attributes)
+    attributes['valorparcela'].blank? || attributes['dtvencimento'].blank?
   end
 end

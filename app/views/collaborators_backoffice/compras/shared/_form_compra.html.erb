@@ -217,6 +217,39 @@
 <%= render partial: 'layouts/shared/modal_alert' %>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
+  // Intercepta o submit do formulário para tratar erros JSON
+  $(document).ready(function() {
+    $('form').on('submit', function(e) {
+      e.preventDefault();
+      
+      var formData = new FormData(this);
+      var form = $(this);
+      
+      $.ajax({
+        url: form.attr('action'),
+        type: form.attr('method'),
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(response) {
+          if (response.compra_url) {
+            window.location.href = response.compra_url;
+          } else if (response.message) {
+            alert(response.message);
+          }
+        },
+        error: function(xhr) {
+          var response = xhr.responseJSON;
+          if (response && response.error) {
+            alert(response.error);
+          } else {
+            alert('Erro ao processar a solicitação.');
+          }
+        }
+      });
+    });
+  });
   // ---------------------------------
 
       document.addEventListener("keypress", function () {

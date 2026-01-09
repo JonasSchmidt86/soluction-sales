@@ -72,8 +72,8 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
     def create
       compra = Compra.new
       
-      #puts " -------- create COMPRA ---------- #{params}"
-      puts " -------- create COMPRA ----------"
+      puts " -------- create COMPRA ---------- #{params}"
+      # puts " -------- create COMPRA ----------"
 
       if params[:compra].present?
         compra.numeronf = params[:compra][:numeronf];
@@ -102,14 +102,16 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         compra.cod_empresa = current_collaborator.cod_empresa
         if params[:compra][:cod_pessoa].present?
           compra.cod_pessoa = params[:compra][:cod_pessoa].to_i
-        else
+        elsif params[:compra][:pessoa_attributes] && params[:compra][:pessoa_attributes][:id].present?
           compra.cod_pessoa = params[:compra][:pessoa_attributes][:id].to_i
+        else
+          return render json: { error: "Informe o Fornecedor!" }, status: :unprocessable_entity
         end
-
-        compra.pessoa.pessoacontato = params[:compra][:pessoa_attributes][:pessoacontato].try(:upcase) || ""
-        compra.pessoa.telefonecontato = params.dig(:compra, :pessoa_attributes, :telefonecontato).to_s
-        compra.pessoa.email = params.dig(:compra, :pessoa_attributes, :email).to_s
-
+        unless compra.cod_pessoa.nil?
+                compra.pessoa.pessoacontato = params[:compra][:pessoa_attributes][:pessoacontato].try(:upcase) || ""
+                compra.pessoa.telefonecontato = params.dig(:compra, :pessoa_attributes, :telefonecontato).to_s
+                compra.pessoa.email = params.dig(:compra, :pessoa_attributes, :email).to_s
+        end
         if params[:compra][:xml_file].present?
           compra.xml_file = XmlFile.find(params[:compra][:xml_file].to_i)
         end
@@ -124,18 +126,33 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itens = itens.values
           end
 
-# se tiver frete a nota eu preciso somar o frete no produto ## O BD ESTA COM TRIGGER PARA ISSO
+          # se tiver frete a nota eu preciso somar o frete no produto ## O BD ESTA COM TRIGGER PARA ISSO
 
           #taxa_frete = compra.valorfrete / (compra.valortotal - compra.valorfrete);
 
           # Agora você pode iterar sobre os itens
           errors = []
+          produtos_sem_cor = []
+          produtos_sem_produto = []
           itens.each do |pro_temp|
             next if pro_temp["_destroy"].to_s == "1"
-
+            
+            # Verifica se tem produto
             if pro_temp["cod_produto"].blank?
-              error_message = "Informe o produto! #{JSON.parse(pro_temp[:pro_xml_temp])["nome"].to_s.upcase}!"
-              return render json: { error: error_message }, status: :not_found
+              if pro_temp[:pro_xml_temp].present?
+                xml_pro = JSON.parse(pro_temp[:pro_xml_temp])
+                produtos_sem_produto << xml_pro["nome"].to_s.upcase
+              end
+              next # Pula se não tem produto
+            end
+
+            # Verifica se tem cor
+            if pro_temp["cod_cor"].blank?
+              if pro_temp[:pro_xml_temp].present?
+                xml_pro = JSON.parse(pro_temp[:pro_xml_temp])
+                produtos_sem_cor << xml_pro["nome"].to_s.upcase
+              end
+              next # Pula se não tem cor
             end
 
             if pro_temp[:pro_xml_temp].present?
@@ -146,13 +163,8 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
                 proXml = Produtoxml.find(xml_pro["codigo"])
               end
 
-              if !pro_temp["cod_produto"].present? && pro_temp["cod_produto"].blank?
-                error_message = "Informe o produto #{xml_pro["nome"].to_s.upcase}!"
-                return render json: { error: error_message }, status: :not_found
-              end
-              if !pro_temp["cod_cor"].present? && pro_temp["cod_cor"].blank?
-                error_message = "Informe a cor do produto #{xml_pro["nome"].to_s.upcase}!"
-                return render json: { error: error_message }, status: :not_found
+              if pro_temp["cod_produto"].blank?
+                next # Pula se não tem produto
               end
 
               if proXml.blank?
@@ -209,6 +221,13 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             itemCompra.valorunitario = pro_temp["valorunitario"]&.gsub(',', '.').to_f || 0.0
             itemCompra.quantidade = pro_temp["quantidade"]
 
+            if itemCompra.valorunitario.nil? || itemCompra.valorunitario <= 0
+              return render json: { error: "Informe o Valor Unitário!" }, status: :unprocessable_entity
+            end
+            if itemCompra.quantidade.nil? || itemCompra.quantidade <= 0
+              return render json: { error: "Informe a Quantidade!" }, status: :unprocessable_entity
+            end
+
             # if taxa_frete > 0
             #   itemCompra.valor_frete = (itemCompra.valorunitario * itemCompra.quantidade) * taxa_frete;
             # else
@@ -233,6 +252,17 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
           end
         end
+      end
+      
+      # Verifica se há produtos sem produto ou cor e mostra mensagem
+      if produtos_sem_produto.any?
+        mensagem_produtos = produtos_sem_produto.join(", ")
+        return render json: { error: "Os seguintes produtos estão sem produto selecionado: #{mensagem_produtos}" }, status: :unprocessable_entity
+      end
+      
+      if produtos_sem_cor.any?
+        mensagem_produtos = produtos_sem_cor.join(", ")
+        return render json: { error: "Os seguintes produtos estão sem cor selecionada: #{mensagem_produtos}" }, status: :unprocessable_entity
       end
       
       # frete
