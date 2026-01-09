@@ -210,12 +210,13 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
         puts "\n"
         xmlProds.each do |prXML|
           itemcompra.produto = prXML.produto
-          itemcompra.cor = prXML.cor
 
           if GenericService.remover_acentos(prXML.infadicionais.to_s.gsub(/[.,]/, "").strip.upcase) === 
             GenericService.remover_acentos((pr.at("infAdProd")&.text || "").to_s.gsub(/[.,]/, "").strip.upcase)
 
             novo_ncm = pr.at("NCM")&.text
+
+            itemcompra.cor = prXML.cor
 
             if novo_ncm.present? && prXML.produto.present? && prXML.produto.ncm != novo_ncm
               prXML.produto.update_column(:ncm, novo_ncm)
