@@ -196,7 +196,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       nmXML = GenericService.remover_acentos(nmXML); 
       infXML = GenericService.remover_acentos(infXML); 
 
-      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa.id).order(:codigo).first
+      xmlProds = Produtoxml.where(codproemissor: codEmissor, pessoa: @xml_file.pessoa.id).order(:codigo)
 
       if xmlProds.nil?
         term = nmXML.gsub(/[ \.,]/, '')
