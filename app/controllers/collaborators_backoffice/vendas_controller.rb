@@ -94,6 +94,8 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         @sale.contas.clear;
         
         contas.each do |conta_venda|
+          
+          next if conta_venda[:numeroparcela].blank? || conta_venda[:valorparcela].blank? ||  conta_venda[:dtvencimento].blank? 
 
           conta = Contaspagrec.new
 
