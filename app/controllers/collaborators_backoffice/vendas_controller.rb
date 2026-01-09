@@ -66,6 +66,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         @sale.itensvenda.clear;
         
         itens.each do |pro_temp|
+          next if pro_temp[:cod_produto].blank?
 
           item = Itemvenda.new
 
