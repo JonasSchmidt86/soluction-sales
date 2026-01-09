@@ -221,17 +221,20 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
             prXML.ncm = novo_ncm if novo_ncm.present?
 
             #atualizar produtoXML e NCM Produto
-            if prXML.changed?
-              begin
-                prXML.save!
-                puts "Produto XML Atualizado Codigo: #{prXML.codigo}"
-              rescue ActiveRecord::RecordInvalid => e
-                puts "Erro ao salvar Produtoxml - Produto: #{prXML.nome} (Código: #{prXML.codproemissor}) - #{e.message}"
-                puts "Detalhes dos erros: #{prXML.errors.full_messages.join(', ')}"
-                puts "Erros do produto associado: #{prXML.produto.errors.full_messages.join(', ')}" if prXML.produto&.errors&.any?
-                Rails.logger.error "Erro ao salvar Produtoxml ID #{prXML.id} - Produto: #{prXML.nome}: #{e.message} - Erros: #{prXML.errors.full_messages} - Erros do produto: #{prXML.produto&.errors&.full_messages}"
+            if prXML.cod_produto.present? && prXML.cod_cor.present?
+              if prXML.changed?
+                begin
+                  prXML.save!
+                  puts "Produto XML Atualizado Codigo: #{prXML.codigo}"
+                rescue ActiveRecord::RecordInvalid => e
+                  puts "Erro ao salvar Produtoxml - Produto: #{prXML.nome} (Código: #{prXML.codproemissor}) - #{e.message}"
+                  puts "Detalhes dos erros: #{prXML.errors.full_messages.join(', ')}"
+                  puts "Erros do produto associado: #{prXML.produto.errors.full_messages.join(', ')}" if prXML.produto&.errors&.any?
+                  Rails.logger.error "Erro ao salvar Produtoxml ID #{prXML.id} - Produto: #{prXML.nome}: #{e.message} - Erros: #{prXML.errors.full_messages} - Erros do produto: #{prXML.produto&.errors&.full_messages}"
+                end
               end
             end
+
             produtoXMl = prXML;
             itemcompra.produto = prXML.produto
             itemcompra.cor = prXML.cor
