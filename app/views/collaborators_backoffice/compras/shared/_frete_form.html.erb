@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <%= frete.text_field :nome_transportadora, class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder: "Digite para buscar" %>
+          <%= frete.text_field :nome_transportadora, class: "border-top-0 border-start-0 border-end-0 border-dark form-control text", placeholder: "Digite para buscar", autocomplete:"off" %>
           <%= frete.label :transportadora, class: "" %>
           <div id="transportadora_results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
           <%= frete.hidden_field :cod_pessoa, id: 'selected_transportadora_id' %>

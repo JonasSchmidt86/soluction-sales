@@ -3,7 +3,7 @@
   <td class="col-md-2">
     <%= f.text_field :produto, 
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
-            placeholder: "Pressione Enter para buscar!" %>
+            placeholder: "Pressione Enter para buscar!", autocomplete:"off" %>
     <div id="products_list" class="list-group position-absolute " style="display: none; z-index: 100; width: 35%;"></div>
   </td>
   <td class="col-auto">
@@ -18,7 +18,7 @@
       min: 0,
       class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark",
       onchange: "setValorTotal(this)",
-      oninput: "this.value = this.value.replace(/[^0-9]/g, '')" %>
+      oninput: "this.value = this.value.replace(/[^0-9]/g, '')", autocomplete:"off" %>
   </td>
   <td>
     <%= f.text_field :ipi, value: number_to_currency(f.object.ipi,  unit: "", separator: ",", delimiter: ""), input_html: { inputmode: "number", pattern: "[0-9]*" }, class: "money2 valor-ipi form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setValorTotal(this)" %>

@@ -219,7 +219,7 @@
                         <div class="col-md-12">
                           <div class="form-floating mb-3 mb-md-0">
                             <%= form_itens.hidden_field :cod_produto %>
-                            <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo" %>
+                            <%= form_itens.text_field :produto, disabled: false, class: "text form-control produto_search", placeholder:"arquivo", autocomplete:"off" %>
                             <%# form_itens.label :produto, class:"" %>
                             <div id="products_list_<%= index %>" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
                             <% index += 1 %>
@@ -380,7 +380,7 @@
               <div class="row g-2 my-2">
                 <div class="col-md-9">
                   <div class="form-floating mb-3 mb-md-0">
-                    <%= form_ff.text_field :pessoa, class: "form-control border-top-0 border-start-0 border-end-0 border-dark ", placeholder:"Transportadora", readonly: false  %>
+                    <%= form_ff.text_field :pessoa, class: "form-control border-top-0 border-start-0 border-end-0 border-dark ", placeholder:"Transportadora", readonly: false, autocomplete:"off"  %>
                     <%= form_ff.label :transportadora, class:"" %>
                     <div id="results_list" class="position-absolute bg-light form-control-lg p-2 mt-2" style="display: none; z-index: 100; width: 100%;"></div>
                     <%= form_ff.hidden_field :cod_pessoa, id: 'selected_frete_person_id' %>

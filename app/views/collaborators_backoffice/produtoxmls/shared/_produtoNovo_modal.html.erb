@@ -13,7 +13,7 @@
               <div class="col-md-6">
                 <%= form.hidden_field :indexAtual, value: 1 %>
                 <div class="form-floating mb-3 mb-md-0">
-                  <%= form.text_field :cod_produto, disabled: true, value: Produto.last.cod_produto += 1, class: "text form-control", placeholder:"Codigo", id:"text" %>
+                  <%= form.text_field :cod_produto, disabled: true, value: Produto.last.cod_produto += 1, class: "text form-control", placeholder:"Codigo", id:"text", autocomplete:"off" %>
                   <%= form.label :cod_produto, class:"" %>
                 </div>
               </div>
@@ -31,7 +31,7 @@
               </div>
             </div>
             <div class="form-floating mb-3">
-              <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
+              <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome", autocomplete:"off" %>
               <%= form.label :name, class:"" %>
             </div>
             <div class="row mb-3">
