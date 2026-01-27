@@ -48,7 +48,10 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
   def update
     puts "UPDATE #{params_collaborator}" 
     if @collaborator.update(params_collaborator)
-      bypass_sign_in(@collaborator) # quando troca a senha não precisa refazer o login
+      # Só faz login automático se for o próprio usuário logado editando
+      if current_collaborator == @collaborator
+        bypass_sign_in(@collaborator) # quando troca a senha não precisa refazer o login
+      end
 
       if params_collaborator[:cod_empresa]
         redirect_to collaborators_backoffice_welcome_index_path, notice: "Você trocou de empresa!"
