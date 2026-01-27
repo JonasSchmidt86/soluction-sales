@@ -25,9 +25,9 @@ Rails.application.configure do
   config.action_mailer.smtp_settings = {
     address: 'smtp.gmail.com',
     port: 587,
-    domain: 'moveisrosa.shop',
-    user_name: ENV['moveisrosa.toledo@gmail.com'], # seu-email@gmail.com
-    password: ENV['01022021'], # senha de app do Gmail
+    domain: 'localhost',
+    user_name: 'moveisrosa.toledo@gmail.com',
+    password: 'zaot gpfk atti igmu',
     authentication: 'plain',
     enable_starttls_auto: true
   }
