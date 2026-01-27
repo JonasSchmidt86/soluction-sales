@@ -68,6 +68,34 @@ Rails.application.configure do
   # config.active_job.queue_name_prefix = "soluction_sales_#{Rails.env}"
 
   config.action_mailer.perform_caching = false
+  
+  # Configuração de email para produção
+  config.action_mailer.default_url_options = { host: 'moveisrosa.shop', protocol: 'https' }
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.delivery_method = :smtp
+  
+  # Opção 1: Gmail SMTP (recomendado para pequenos volumes)
+  config.action_mailer.smtp_settings = {
+    address: 'smtp.gmail.com',
+    port: 587,
+    domain: 'moveisrosa.shop',
+    user_name: ENV['moveisrosa.toledo@gmail.com'], # seu-email@gmail.com
+    password: ENV['01022021'], # senha de app do Gmail
+    authentication: 'plain',
+    enable_starttls_auto: true
+  }
+  
+  # Opção 2: SendGrid (descomente para usar)
+  # config.action_mailer.smtp_settings = {
+  #   address: 'smtp.sendgrid.net',
+  #   port: 587,
+  #   domain: 'moveisrosa.shop',
+  #   user_name: 'apikey',
+  #   password: ENV['SENDGRID_API_KEY'],
+  #   authentication: 'plain',
+  #   enable_starttls_auto: true
+  # }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.

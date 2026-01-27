@@ -8,7 +8,12 @@
                           <div class="col-lg-5">
                               <div class="card shadow-lg border-0 rounded-lg mt-5">
                                   <div class="card-header">
-                                    <h3 class="text-center font-weight-light my-4">Esqueceu a sua senha</h3>
+                                    <% if resource.needs_password_setup? %>
+                                      <h3 class="text-center font-weight-light my-4">Defina sua senha</h3>
+                                      <p class="text-center text-muted">Bem-vindo! Defina sua senha para acessar o sistema.</p>
+                                    <% else %>
+                                      <h3 class="text-center font-weight-light my-4">Esqueceu a sua senha</h3>
+                                    <% end %>
                                   </div>
                                   <div class="card-body">
                                         <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
@@ -26,7 +31,11 @@
                                           </div>
 
                                           <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
-                                            <%= f.submit "Alterar minha senha!" %>
+                                            <% if resource.needs_password_setup? %>
+                                              <%= f.submit "Definir senha", class: "btn btn-primary" %>
+                                            <% else %>
+                                              <%= f.submit "Alterar minha senha!", class: "btn btn-primary" %>
+                                            <% end %>
                                           </div>
                                         <% end %>
                                   </div>

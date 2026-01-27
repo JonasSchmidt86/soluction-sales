@@ -1,5 +1,5 @@
 class CollaboratorMailer < ApplicationMailer
-    default from: 'suporte@seu-dominio.com'
+    default from: 'moveisrosa.toledo@gmail.com'
   
     def set_password_email(collaborator, token)
       @collaborator = collaborator

@@ -28,10 +28,18 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
   end
 
   def create
+    # Remove senha dos parâmetros se estiver vazia
+    if params[:collaborator][:password].blank?
+      params[:collaborator].delete(:password)
+      params[:collaborator].delete(:password_confirmation)
+    end
+    
     @collaborator = Collaborator.new(params_collaborator)
     if @collaborator.save
-      @collaborator.send_reset_password_instructions # Envia o e-mail com link para definir senha
-      redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador Cadastrado com sucesso!"
+      # Gera token e envia email customizado
+      token = @collaborator.send(:set_reset_password_token)
+      CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
+      redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
     else 
       redirect_to collaborators_backoffice_collaborators_path, notice: "Erro ao cadastrar Colaborador!"
     end

@@ -17,15 +17,19 @@ Rails.application.configure do
 
   config.active_storage.variant_processor = :vips
 
-  #mailtrap config
+  # Para desenvolvimento - usar test delivery
+  #config.action_mailer.delivery_method = :test
+  
+  # Configuração SMTP para produção (comentada)
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    :user_name => '5726ec0406134f',
-    :password => '62ffa6074814c3',
-    :address => 'smtp.mailtrap.io',
-    :domain => 'smtp.mailtrap.io',
-    :port => '2525',
-    :authentication => :cram_md5
+    address: 'smtp.gmail.com',
+    port: 587,
+    domain: 'moveisrosa.shop',
+    user_name: ENV['moveisrosa.toledo@gmail.com'], # seu-email@gmail.com
+    password: ENV['01022021'], # senha de app do Gmail
+    authentication: 'plain',
+    enable_starttls_auto: true
   }
 
   # Enable/disable caching. By default caching is disabled.
@@ -49,7 +53,8 @@ Rails.application.configure do
 
 
   # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
 
   config.action_mailer.perform_caching = false
 

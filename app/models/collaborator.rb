@@ -12,15 +12,18 @@ class Collaborator < ApplicationRecord
   
   belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', optional: false
 
-  # validates :email, presence: :true, on: :update, unless: :reset_password_token_present?
+  validates :password, presence: true, if: :password_required?
 
-  validates :password, presence: true, if: -> { encrypted_password.blank? && new_record? }
+  def password_required?
+    # Não exige senha se os campos estão vazios (para criação sem senha)
+    return false if password.blank? && password_confirmation.blank?
+    # Exige senha apenas se está sendo definida
+    !password.blank?
+  end
 
-  def reset_password_token_present?
-    # !! duas exclamaçoes retorna valor boleano, se trouxer o token ele não faz o validate
-    # params não pode ser acessado no model, para isso precisa criar uma variavel global onde o sistema passa
-    puts "GLOBAL"
-    !!global_params[:collaborator][:reset_password_token]
+  # Verifica se precisa definir senha pela primeira vez
+  def needs_password_setup?
+    encrypted_password.blank?
   end
   
   private 
