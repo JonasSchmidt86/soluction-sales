@@ -10,12 +10,17 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
 
   def reset_password
     @collaborator = Collaborator.find(params[:id])
-    token = @collaborator.send(:set_reset_password_token) # Chama o método protegido de forma segura
-
-    CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
-
-    redirect_to collaborators_backoffice_collaborators_path, 
-                notice: "E-mail de redefinição de senha enviado para #{@collaborator.email}."
+    
+    # Verifica se o funcionário está ativo antes de enviar email
+    if @collaborator.funcionario.ativo?
+      token = @collaborator.send(:set_reset_password_token)
+      CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
+      redirect_to collaborators_backoffice_collaborators_path, 
+                  notice: "E-mail de redefinição de senha enviado para #{@collaborator.email}."
+    else
+      redirect_to collaborators_backoffice_collaborators_path, 
+                  notice: "Não é possível enviar e-mail para colaborador inativo."
+    end
   end
 
   def edit
@@ -36,10 +41,15 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
     
     @collaborator = Collaborator.new(params_collaborator)
     if @collaborator.save
-      # Gera token e envia email customizado
-      token = @collaborator.send(:set_reset_password_token)
-      CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
-      redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
+      # Verifica se o funcionário está ativo antes de enviar email
+      if @collaborator.funcionario.ativo?
+        # Gera token e envia email customizado
+        token = @collaborator.send(:set_reset_password_token)
+        CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
+        redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
+      else
+        redirect_to collaborators_backoffice_collaborators_path, notice: "Não é possível enviar e-mail para colaborador inativo."
+      end
     else 
       redirect_to collaborators_backoffice_collaborators_path, notice: "Erro ao cadastrar Colaborador!"
     end

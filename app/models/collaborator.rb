@@ -32,5 +32,5 @@ class Collaborator < ApplicationRecord
     funcionario.pessoa.nome
   end
 
-  paginates_per 5
+  paginates_per 30
 end

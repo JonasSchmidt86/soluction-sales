@@ -92,7 +92,7 @@
                     <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
                       <i class="fa fa-dashboard fa-fw"></i> Caixa
                     <% end %>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                    <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario != 82 %>
                       <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
                         <i class="fa fa-users fa-fw"></i> Colaboradores
                       <% end %>
