@@ -93,7 +93,7 @@
                     <td class= "align-middle"><%= post_date ((bill.dtvencimento? ? bill.dtvencimento : "")) %> </td>
                     <td class= "align-middle"><%= "R$ #{number_to_currency(bill.valorparcela, separator: ",", delimiter: "", unit:"")}" %></td>
                     <td class= "align-middle"><%= "R$ #{number_to_currency(bill.valorPago, separator: ",", delimiter: "", unit:"")}" %></td>
-                    <td class= "align-middle">
+                    <td class= "align-middle" id = "acoes">
                       <% if bill.ativo %>
                         <% somaRecebido += bill.valorPago; %>
                         <% somaReceber += (bill.valorparcela) %>
@@ -213,7 +213,6 @@
             ttPag.value = "0,00"; // precisa ser string
           }
         }
-
 
         function formatarReal(valor) {
           return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

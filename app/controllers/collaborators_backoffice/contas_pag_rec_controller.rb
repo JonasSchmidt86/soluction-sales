@@ -50,7 +50,7 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
                 .where(cod_venda: params[:cod_venda])
                 .order(:dtvencimento)
 
-  render layout: 'impressao'
+        render layout: 'impressao'
     end
 
 private 
