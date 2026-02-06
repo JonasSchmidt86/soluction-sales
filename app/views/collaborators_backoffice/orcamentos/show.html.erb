@@ -1,16 +1,12 @@
 <div class="card mt-3">
   <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-    <h4 class="mb-0">Orçamento #<%= @orcamento.cod_orcamento %></h4>
-    <div>
-      <%= link_to 'Imprimir', print_collaborators_backoffice_orcamento_path(@orcamento), target: '_blank', class: 'btn btn-light btn-sm' %>
-      <% if @orcamento.pode_converter? %>
-        <%= link_to 'Converter em Venda', converter_venda_collaborators_backoffice_orcamento_path(@orcamento), 
-            method: :post, data: { confirm: 'Deseja converter este orçamento em venda?' }, 
-            class: 'btn btn-success btn-sm' %>
-      <% end %>
-      <%= link_to 'Editar', edit_collaborators_backoffice_orcamento_path(@orcamento), class: 'btn btn-warning btn-sm' unless @orcamento.convertido? %>
-      <%= link_to 'Voltar', collaborators_backoffice_orcamentos_path, class: 'btn btn-secondary btn-sm' %>
-    </div>
+    <h4 class="mb-0" style="text-align: center;">Orçamento #<%= @orcamento.cod_orcamento %></h4>
+    <!-- VOLTAR -->
+    <%= link_to collaborators_backoffice_orcamentos_path,
+      class: 'btn btn-secondary btn-sm btn-acao-footer',
+      title: 'Voltar' do %>
+      <i class="fa fa-arrow-left me-2"></i>
+    <% end %>
   </div>
   <div class="card-body">
     <div class="row my-2">
@@ -71,9 +67,9 @@
       </div>
     <% end %>
     <h5 class="mt-4 mb-3">Itens do Orçamento</h5>
-    <div class="table-responsive">
-      <table class="table table-sm align-middle table-light table-striped table-hover table-borderless">
-        <thead>
+    <div class="dataTable-loading sortable searchable fixed-columns">
+      <table id="report-budget" class="table table-striped table-hover table-bordered table-sm">
+        <thead class="table-primary">
           <tr>
             <th style="width: 35%;">Produto</th>
             <th>Cor</th>
@@ -90,15 +86,15 @@
             <tr>
               <td><%= item.produto.nome %></td>
               <td><%= item.cor&.nmcor || '-' %></td>
-              <td><%= number_with_precision(item.quantidade, precision: 2) %></td>
-              <td><%= number_to_currency(item.valorunitario) %></td>
-              <td><%= number_to_currency(item.valor_acrescimo) %></td>
-              <td><%= number_to_currency(item.valor_desconto) %></td>
-              <td><%= number_to_currency(item.valor_total) %></td>
+              <td><%= number_with_precision(item.quantidade, precision: 0) %></td>
+              <td><%= "R$ #{number_to_currency(item.valorunitario, separator: ",", delimiter: "", unit:"")}" %></td>
+              <td><%= "R$ #{number_to_currency(item.valor_acrescimo, separator: ",", delimiter: "", unit:"")}" %></td>
+              <td><%= "R$ #{number_to_currency(item.valor_desconto, separator: ",", delimiter: "", unit:"")}" %></td>
+              <td><%= "R$ #{number_to_currency(item.valor_total, separator: ",", delimiter: "", unit:"")}" %></td>
               <td>
                 <% estoque = item.estoque_disponivel %>
                 <span class="<%= estoque >= item.quantidade ? 'text-success' : 'text-danger' %>">
-                  <%= number_with_precision(estoque, precision: 2) %>
+                  <%= number_with_precision(estoque, precision: 0) %>
                 </span>
               </td>
             </tr>
@@ -128,5 +124,76 @@
         </tfoot>
       </table>
     </div>
+    <!-- RODAPÉ DE AÇÕES -->
+    <div class="acoes-footer mt-5 d-flex justify-content-end gap-3">
+      <!-- IMPRIMIR -->
+      <%= link_to '#',
+      onclick: 'printOrcamento(); return false;',
+      class: 'btn btn-outline-secondary btn-md btn-acao-footer',
+      title: 'Imprimir' do %>
+        <i class="fa fa-print me-2"></i> Imprimir
+      <% end %>
+      <!-- CONVERTER EM VENDA -->
+      <% if @orcamento.pode_converter? %>
+        <%= link_to converter_venda_collaborators_backoffice_orcamento_path(@orcamento),
+        method: :post,
+        data: { confirm: 'Deseja converter este orçamento em venda?' },
+        class: 'btn btn-success btn-md btn-acao-footer',
+        title: 'Converter em venda' do %>
+          <i class="fa fa-check me-2"></i> Converter em venda
+        <% end %>
+      <% end %>
+      <!-- EDITAR -->
+      <% unless @orcamento.convertido? %>
+        <%= link_to edit_collaborators_backoffice_orcamento_path(@orcamento),
+        class: 'btn btn-warning btn-md btn-acao-footer',
+        title: 'Editar' do %>
+          <i class="fa fa-edit me-2"></i> Editar
+        <% end %>
+      <% end %>
+      <!-- VOLTAR -->
+      <%= link_to collaborators_backoffice_orcamentos_path,
+      class: 'btn btn-secondary btn-md btn-acao-footer',
+      title: 'Voltar' do %>
+        <i class="fa fa-arrow-left me-2"></i> Voltar
+      <% end %>
+    </div>
+    <!-- IFRAME DE IMPRESSÃO -->
+    <iframe id="print-frame" style="display:none;"></iframe>
+    <script>
+      function printOrcamento() {
+        const iframe = document.getElementById('print-frame');
+        iframe.src = "<%= print_collaborators_backoffice_orcamento_path(@orcamento) %>";
+
+        iframe.onload = function() {
+          iframe.contentWindow.print();
+        };
+      }
+    </script>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#report-budget').DataTable({
+      "paging": false,  // Desabilita a paginação
+      "searching": false, // Permite a pesquisa na tabela (opcional)
+      "ordering": true,  // Habilita ordenação nas colunas (opcional)
+      "info": false}); // Habilita ordenação nas colunas (opcional)
+  });
+</script>
+<style>
+  .btn-acao-footer {
+    padding: 12px 22px;
+    font-weight: 600;
+    border-radius: 8px;
+  }
+
+  .btn-acao-footer i {
+    font-size: 1.1rem;
+  }
+  @media print {
+    .acoes-footer {
+      display: none !important;
+    }
+  }
+</style>

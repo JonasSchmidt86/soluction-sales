@@ -7,26 +7,26 @@
       <%= link_to 'Novo Orçamento', new_collaborators_backoffice_orcamento_path, class: 'btn btn-primary' %>
     </div>
     <div class="table-responsive">
-      <table class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+      <table id="orcamentos-table" class="table table-striped table-hover table-bordered table-sm">
         <thead>
           <tr>
             <th>Código</th>
             <th>Cliente</th>
-            <th>Data</th>
-            <th>Validade</th>
-            <th>Valor Total</th>
-            <th>Status</th>
-            <th>Ações</th>
+            <th style="text-align: center;">Data</th>
+            <th style="text-align: center;">Validade</th>
+            <th style="text-align: center;">Valor Total</th>
+            <th style="width: 100px;">Status</th>
+            <th style="text-align: center;">Ações</th>
           </tr>
         </thead>
         <tbody>
           <% @orcamentos.each do |orcamento| %>
             <tr>
-              <td><%= orcamento.cod_orcamento %></td>
+              <td class="col-acoes" style="text-align: center;"><%= orcamento.cod_orcamento %></td>
               <td><%= orcamento.pessoa.nome %></td>
-              <td><%= l(orcamento.data_orcamento, format: :short) %></td>
-              <td><%= orcamento.data_validade ? l(orcamento.data_validade) : '-' %></td>
-              <td><%= number_to_currency(orcamento.valortotal) %></td>
+              <td class="col-acoes"><%= l(orcamento.data_orcamento, format: :default) %></td>
+              <td class="col-acoes"><%= orcamento.data_validade ? l(orcamento.data_validade) : '-' %></td>
+              <td class="col-acoes"><%= "R$ #{number_to_currency(orcamento.valortotal, separator: ",", delimiter: "", unit:"")}" %></td>
               <td>
                 <% case orcamento.status %>
                 <% when 'pendente' %>
@@ -39,10 +39,26 @@
                   <span class="badge bg-danger">Rejeitado</span>
                 <% end %>
               </td>
-              <td>
-                <%= link_to 'Ver', collaborators_backoffice_orcamento_path(orcamento), class: 'btn btn-info btn-sm' %>
-                <%= link_to 'Editar', edit_collaborators_backoffice_orcamento_path(orcamento), class: 'btn btn-warning btn-sm' unless orcamento.convertido? %>
-                <%= link_to 'Excluir', collaborators_backoffice_orcamento_path(orcamento), method: :delete, data: { confirm: 'Tem certeza?' }, class: 'btn btn-danger btn-sm' unless orcamento.convertido? %>
+              <td class="col-acoes">
+                <%= link_to collaborators_backoffice_orcamento_path(orcamento),
+                    class: 'btn btn-info btn-sm btn-acao',
+                    title: 'Visualizar' do %>
+                  <i class="fa fa-eye"></i>
+                <% end %>
+                <% unless orcamento.convertido? %>
+                  <%= link_to edit_collaborators_backoffice_orcamento_path(orcamento),
+                      class: 'btn btn-warning btn-sm btn-acao',
+                      title: 'Editar' do %>
+                    <i class="fa fa-edit"></i>
+                  <% end %>
+                  <%= link_to collaborators_backoffice_orcamento_path(orcamento),
+                      method: :delete,
+                      data: { confirm: 'Tem certeza?' },
+                      class: 'btn btn-danger btn-sm btn-acao',
+                      title: 'Excluir' do %>
+                    <i class="fa fa-trash-can"></i>
+                  <% end %>
+                <% end %>
               </td>
             </tr>
           <% end %>
@@ -54,3 +70,27 @@
     </div>
   </div>
 </div>
+<style>
+  /* Ajuste da coluna de ações no index */
+  table {
+    table-layout: auto;
+  }
+
+  th.col-acoes,
+  td.col-acoes {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#orcamentos-table').DataTable({
+      "paging": false,  // Desabilita a paginação
+      "searching": false, // Permite a pesquisa na tabela (opcional)
+      "ordering": true,  // Habilita ordenação nas colunas (opcional)
+      "info": false}); // Habilita ordenação nas colunas (opcional)
+  });
+</script>
