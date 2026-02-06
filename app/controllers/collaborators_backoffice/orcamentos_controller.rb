@@ -1,5 +1,5 @@
 class CollaboratorsBackoffice::OrcamentosController < CollaboratorsBackofficeController
-  before_action :set_orcamento, only: [:show, :edit, :update, :destroy, :converter_venda]
+  before_action :set_orcamento, only: [:show, :edit, :update, :destroy, :converter_venda, :print]
 
   def index
     @orcamentos = Orcamento.where(cod_empresa: current_collaborator.cod_empresa)
@@ -58,6 +58,10 @@ class CollaboratorsBackoffice::OrcamentosController < CollaboratorsBackofficeCon
 
   def converter_venda
     redirect_to new_collaborators_backoffice_venda_path(orcamento_id: @orcamento.cod_orcamento)
+  end
+
+  def print
+    render layout: false
   end
 
   private

@@ -2,6 +2,7 @@
   <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
     <h4 class="mb-0">Orçamento #<%= @orcamento.cod_orcamento %></h4>
     <div>
+      <%= link_to 'Imprimir', print_collaborators_backoffice_orcamento_path(@orcamento), target: '_blank', class: 'btn btn-light btn-sm' %>
       <% if @orcamento.pode_converter? %>
         <%= link_to 'Converter em Venda', converter_venda_collaborators_backoffice_orcamento_path(@orcamento), 
             method: :post, data: { confirm: 'Deseja converter este orçamento em venda?' }, 

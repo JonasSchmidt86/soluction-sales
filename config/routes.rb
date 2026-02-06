@@ -67,6 +67,7 @@ Rails.application.routes.draw do
     resources :orcamentos do
       member do
         post :converter_venda
+        get :print
       end
     end
     
