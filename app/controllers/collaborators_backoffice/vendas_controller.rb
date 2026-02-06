@@ -36,11 +36,38 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def new
-      @sale = Venda.new
-      @sale.cod_empresa = current_collaborator.cod_empresa
-      # @sale.itensvenda.build
-      2.times { @sale.itensvenda.build }
-      # @sale.contas.build
+      if params[:orcamento_id]
+        orcamento = Orcamento.find(params[:orcamento_id])
+        @sale = Venda.new(
+          tipo: 'V',
+          cod_empresa: orcamento.cod_empresa,
+          cod_pessoa: orcamento.cod_pessoa,
+          cod_funcionario: orcamento.cod_funcionario,
+          datavenda: Time.current,
+          valortotal: orcamento.valortotal,
+          desconto: 0,
+          acrescimo: 0
+        )
+
+        orcamento.itens_orcamentos.each do |item|
+          item_venda = @sale.itensvenda.build(
+            cod_produto: item.cod_produto,
+            cod_cor: item.cod_cor,
+            cod_empresa: item.cod_empresa,
+            quantidade: item.quantidade.to_i
+          )
+          # Formata valores no padrão brasileiro para a máscara JS processar corretamente
+          item_venda.valorunitario = '%.2f' % item.valorunitario
+          item_venda.valor_desconto = '%.2f' % (item.valor_desconto || 0)
+          item_venda.valor_acrescimo = '%.2f' % (item.valor_acrescimo || 0)
+        end
+
+        session[:orcamento_id] = orcamento.cod_orcamento
+      else
+        @sale = Venda.new
+        @sale.cod_empresa = current_collaborator.cod_empresa
+        2.times { @sale.itensvenda.build }
+      end
     end
   
     def create
@@ -162,6 +189,12 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       puts "ANTES DE SALVAR"
 
       if @sale.save
+          # Se veio de um orçamento, atualiza o orçamento
+          if session[:orcamento_id]
+            orcamento = Orcamento.find_by(cod_orcamento: session[:orcamento_id])
+            orcamento.update(status: 'convertido', cod_venda: @sale.cod_venda) if orcamento
+            session.delete(:orcamento_id)
+          end
           redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
       else 
         puts @sale
@@ -182,6 +215,10 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
           return
         end
       end
+
+      # Se a venda veio de um orçamento, atualiza o orçamento
+      orcamento = Orcamento.find_by(cod_venda: @sale.cod_venda)
+      orcamento.update(status: 'pendente', cod_venda: nil) if orcamento
 
       if @sale.destroy
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Excluida com sucesso!"

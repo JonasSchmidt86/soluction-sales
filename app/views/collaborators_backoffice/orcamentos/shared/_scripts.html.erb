@@ -1,0 +1,421 @@
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  document.addEventListener("keypress", function () {
+      if(event.keyCode == 13){
+          event.preventDefault();
+      }
+  });
+
+  let url = window.location.origin + '/collaborators_backoffice/';
+
+  function abrirModal() {
+      var modal = document.getElementById('coresModal');
+      $(modal).modal('show');
+      $(modal).on('shown.bs.modal', function () {
+          $('#cor_id').focus();
+      });
+  }
+
+  $(document).ready(function() {
+      var categorySearch = $('#orcamento_nome_pessoa');
+      var resultsList = $('#results_list');
+      var selectedPersonIdField = $('#selected_person_id');
+      var selectedPersonCpfCnpjField = $('#orcamento_pessoa_attributes_cpf_cnpj');
+
+      let apiUrl = url+ "buscas/buscar_pessoas";
+
+      categorySearch.on('keydown', function(event) {
+          if (event.key === 'Enter') {
+              filterOptions();
+          } else if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+              categorySearch.val('');
+              selectedPersonIdField.val("");
+              selectedPersonCpfCnpjField.val("");
+              resultsList.empty().hide();
+          }
+      });
+
+      resultsList.on('click', 'div.list-group-item', function() {
+          var selectedPerson = $(this).text();
+          var selectedPersonId = $(this).data('cod_pessoa');
+          selectedPersonIdField.val(selectedPersonId);
+          selectedPersonCpfCnpjField.val($(this).data('cpf_cnpj'));
+          buscarPessoaPorCpfCnpj(selectedPersonCpfCnpjField)
+          categorySearch.val(selectedPerson);
+          resultsList.empty().hide();
+      });
+
+      function filterOptions() {
+          var query = categorySearch.val().trim().toLowerCase();
+          resultsList.empty();
+
+          $.ajax({
+              url: apiUrl,
+              method: 'GET',
+              data: { entidade: 'Pessoa', query: query },
+              success: function(data) {
+                  data.forEach(function(person) {
+                      var listItem = $('<div>').text(person.nome);
+                      listItem.addClass('list-group-item');
+                      listItem.data('cod_pessoa', person.cod_pessoa);
+                      listItem.data('cpf_cnpj',   person.cpf_cnpj);
+                      resultsList.append(listItem);
+                  });
+                  resultsList.show();
+              },
+              error: function(err) {
+                  console.error('Erro na requisição AJAX:', err);
+              }
+          });
+      }
+  });
+
+  function thisIndex(field) {
+      var name = field.name;
+      var regex = /\[(\d+)\]/;
+      var matches = name.match(regex);
+      if (matches && matches.length > 1) {
+          return parseInt(matches[1], 10);
+      } else {
+          return null;
+      }
+  }
+
+  function atualizarCommentIndex(inputField) {
+      if (inputField.value !== null && inputField.value.trim() !== '') {
+          inputField.value = inputField.value.replace(/\s/g, '');
+          var index = thisIndex(inputField);
+          if ( index != null ) {
+              var selector = `orcamento_itens_orcamentos_attributes_${index}_cod_produto`
+              var commentField = document.getElementById(selector);
+              if ( commentField ){
+                  commentField.value = inputField.value;
+              }
+              selectColorProduct(inputField)
+              inputField = "";
+          }
+      }
+  };
+
+  function selectColorProduct(field) {
+      field.value = field.value.replace(/\s/g, '');
+      var index = thisIndex(field);
+      let corSelect = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_cod_cor`);
+      var proValor = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valorunitario`);
+      var proQtd = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_quantidade`);
+
+      if (corSelect){
+          corSelect.selectedIndex = 0;
+      }
+
+      let apiUrl = url + 'vendas/consulta_estoque';
+
+      fetch(apiUrl, {
+          method: 'post',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id_produto: field.value })
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Erro ao enviar dados para a API');
+          }
+          return response.json();
+      })
+      .then(data => {
+          var x = document.getElementById("cor_id");
+          x.innerHTML = "";
+
+          var option = document.createElement("option");
+          option.text = "Selecione uma Cor!";
+          option.value = 0;
+          x.add(option)
+
+          if ( data.length === 0 ){
+              corSelect.value = 1;
+          } else if(data.length === 1 ){
+              corSelect.value = data[0].cod_cor;
+              proQtd.value = 1;
+              option.setAttribute("data-valor-attribute", data[0].valorvenda);
+              proValor.value = data[0].valorvenda;
+              setValorTotal(field);
+          } else if (data.length > 0) {
+              data.forEach(cor => {
+                  var option = document.createElement("option");
+                  option.text = [cor.nmcor, cor.quantidade.replace('.0','')].join(' - ');
+                  option.value = cor.cod_cor;
+                  option.setAttribute("data-valor-attribute", cor.valorvenda);
+                  option.setAttribute("data-quantidade-attribute", cor.quantidade);
+                  x.add(option);
+              });
+              abrirModal();
+          }
+      })
+      .catch(error => {
+          console.error('Ocorreu um erro:', error);
+      });
+
+      var selectCor = document.querySelector("#cor_id");
+      selectCor.addEventListener("change", (event) => {
+          let element = document.getElementById('cor_id');
+          let valor;
+          let quantidade;
+
+          for (var i = 0; i < element.options.length; i++) {
+              if (corSelect.value === null || corSelect.value === undefined || corSelect.value === ''){
+                  if (element.options[i].value === element.value) {
+                      if (index == thisIndex(corSelect)) {
+                          valor = element.options[i].getAttribute(`data-valor-attribute`);
+                          quantidade = element.options[i].getAttribute(`data-quantidade-attribute`);
+                          corSelect.value = element.value;
+                          proValor.value = parseFloat(valor).toFixed(2).replace(".",",");
+                          proQtd.value = '1';
+                          setValorTotal(field);
+                          break;
+                      }
+                  }
+                  $('#coresModal').modal('hide');
+              }
+          }
+      });
+  }
+
+  function toFloat(value) {
+    let num = parseFloat((value || "0").toString().replace(/\s/g, '').replace(",", "."));
+    return isNaN(num) ? 0 : num;
+  }
+
+  function setValorTotal(field) {
+      let index = thisIndex(field);
+      let proValor = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valorunitario`);
+      let proDesconto = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valor_desconto`);
+      let proAcresimo = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valor_acrescimo`);
+      let proQtd   = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_quantidade`);
+
+      if (!proValor || !proQtd) return;
+
+      let valUnit = ((toFloat(proValor.value) + toFloat(proAcresimo ? proAcresimo.value : 0)) - toFloat(proDesconto ? proDesconto.value : 0)) * 100;
+      let total = ((parseFloat(valUnit) * parseFloat(proQtd.value.replace(",","."))) / 100);
+
+      // Atualiza o campo de total na linha
+      let row = field.closest('tr');
+      let proTotal = row.querySelector('.valor-total');
+      if (proTotal) {
+          proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
+      }
+
+      setTotalOrcamento();
+  }
+
+  function setTotalOrcamento(){
+
+      var tabela = document.getElementById("tblProdutos");
+
+      var soma = 0;
+      console.log("Calculando total do orçamento...");
+
+      for (var i = 1; i < tabela.rows.length; i++) {
+          var valorUnitarioCell = tabela.rows[i].querySelector(".valor-total");
+          var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
+          soma += (valorUnitario);
+      }
+
+      document.getElementById("orcamento_valortotal").value = soma.toFixed(2).replace(".",",");
+  }
+
+  $(document).on('keydown', '.produto_search', function(event) {
+      if (event.key === 'Enter') {
+          selectProduct(this);
+      }
+  });
+
+  function selectProduct(field) {
+      var index = thisIndex(field);
+      var productsListDiv = document.getElementById("products_list");
+
+      if (productsListDiv) {
+          productsListDiv.id = `products_list_${index}`;
+      }
+
+      var selectedProductIdField = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_cod_produto`);
+      let productsList = $(`#products_list_${index}`);
+      let apiUrl = url+ "buscas/buscar_produtos";
+
+      productOptions();
+
+      productsList.on('click', `div.list-group-item`, function() {
+          let selectedProduct = $(this).data('produto');
+          let selectedProductId = $(this).data('cod_produto');
+          selectedProductIdField.value = ( selectedProductId );
+          field.value =  selectedProduct ;
+          atualizarCommentIndex(selectedProductIdField);
+          productsList.hide();
+      });
+
+      function productOptions() {
+          var query = field.value.trim().toLowerCase();
+          productsList.empty();
+
+          $.ajax({
+              url: apiUrl,
+              method: 'GET',
+              data: { entidade: 'Produto', query: query },
+              success: function(data) {
+                  productsList.empty();
+                  data.forEach(function(product) {
+                      var listItem = $('<div>').text(product.produto);
+                      listItem.addClass('list-group-item');
+                      listItem.data('cod_produto', product.cod_produto);
+                      listItem.data('produto', product.produto);
+                      productsList.append(listItem);
+                  });
+                  productsList.show();
+              },
+              error: function(err) {
+                  console.error('Erro na requisição AJAX:', err);
+              }
+          });
+      }
+  };
+
+  $(document).ready(function() {
+    $(".money2").mask("000000000,00", {reverse: true})
+
+    $(document).on('mouseup', '.money2, .quantidade', function() {
+      $(this).select();
+    });
+
+    $(document).on('cocoon:after-insert', function(e, insertedItem) {
+      setTimeout(function() {
+        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
+      }, 100);
+    });
+  });
+
+  function aplicarMascara(tipoSelecionado) {
+      const input = $('.pessoa_cpf_cnpj');
+      input.unmask();
+      if (tipoSelecionado === 'F') {
+          input.val('')
+          input.mask('000.000.000-00', {reverse: true});
+      } else {
+          input.val('')
+          input.mask('00.000.000/0000-00', {reverse: true});
+      }
+  }
+
+  function buscarPessoaPorCpfCnpj(cpfCnpjInput) {
+      const cpfCnpj = cpfCnpjInput.val();
+      $.ajax({
+          url: '/collaborators_backoffice/check_cpf_cnpj',
+          method: 'GET',
+          data: { cpf_cnpj: cpfCnpj },
+          dataType: 'json',
+          success: function(response) {
+              if (response.status !== 'not_found' && response.status !== 'invalid_format') {
+                  var pessoa = response;
+                  aplicarMascara(pessoa.tipo);
+                  document.getElementById('orcamento_pessoa_attributes_cpf_cnpj').value = pessoa.cpf_cnpj;
+                  document.getElementById('orcamento_pessoa_attributes_rg_ie').value = pessoa.rg_ie;
+                  document.getElementById('orcamento_pessoa_attributes_nome').value = pessoa.nome;
+                  document.getElementById('orcamento_pessoa_attributes_telefone').value = pessoa.telefone;
+                  document.getElementById('orcamento_pessoa_attributes_celular').value = pessoa.celular;
+                  document.getElementById('orcamento_pessoa_attributes_cep').value = pessoa.cep;
+                  document.getElementById('orcamento_pessoa_attributes_cod_cidade').value = pessoa.cod_cidade;
+                  document.getElementById('orcamento_pessoa_attributes_complemento').value = pessoa.complemento;
+                  document.getElementById('orcamento_pessoa_attributes_endereco').value = pessoa.endereco;
+                  document.getElementById('orcamento_pessoa_attributes_bairro').value = pessoa.bairro;
+                  document.getElementById('orcamento_pessoa_attributes_numero').value = pessoa.numero;
+                  document.getElementById('orcamento_pessoa_attributes_email').value = pessoa.email;
+                  document.getElementById('orcamento_nome_pessoa').value = pessoa.nome;
+                  document.getElementById('selected_person_id').value = pessoa.cod_pessoa;
+              }
+          },
+          error: function(xhr, status, error) {
+              console.error('Erro:', error);
+          }
+      });
+  }
+
+  $(document).ready(function() {
+      $('input[name="orcamento[pessoa_attributes][tipo]"]').on('change', function() {
+          const tipoSelecionado = $(this).val();
+          aplicarMascara(tipoSelecionado);
+      });
+      const tipoSelecionadoInicial = $('input[name="orcamento[pessoa_attributes][tipo]"]:checked').val();
+      aplicarMascara(tipoSelecionadoInicial);
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+      $('.pessoa_cpf_cnpj').blur(function() {
+          var cpfCnpj = $(this).val();
+          if (cpfCnpj) {
+              buscarPessoaPorCpfCnpj($(this));
+          }
+      });
+  });
+
+  function salvarPessoaOrcamento() {
+      const formData = {
+          tipo: $('input[name="orcamento[pessoa_attributes][tipo]"]:checked').val(),
+          cpf_cnpj: $('#orcamento_pessoa_attributes_cpf_cnpj').val(),
+          rg_ie: $('#orcamento_pessoa_attributes_rg_ie').val(),
+          nome: $('#orcamento_pessoa_attributes_nome').val(),
+          telefone: $('#orcamento_pessoa_attributes_telefone').val(),
+          celular: $('#orcamento_pessoa_attributes_celular').val(),
+          cep: $('#orcamento_pessoa_attributes_cep').val(),
+          cod_cidade: $('#orcamento_pessoa_attributes_cod_cidade').val(),
+          complemento: $('#orcamento_pessoa_attributes_complemento').val(),
+          endereco: $('#orcamento_pessoa_attributes_endereco').val(),
+          bairro: $('#orcamento_pessoa_attributes_bairro').val(),
+          numero: $('#orcamento_pessoa_attributes_numero').val(),
+          email: $('#orcamento_pessoa_attributes_email').val()
+      };
+
+      $.ajax({
+          url: '/collaborators_backoffice/pessoas',
+          method: 'POST',
+          data: { pessoa: formData },
+          dataType: 'json',
+          headers: {
+              'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+          },
+          success: function(response) {
+              $('#orcamento_nome_pessoa').val(response.nome);
+              $('#selected_person_id').val(response.cod_pessoa);
+              alert('Pessoa salva com sucesso!');
+              fecha_modal('orcamentoModal')
+          },
+          error: function(xhr, status, error) {
+              console.error('Erro ao salvar pessoa:', error);
+              alert('Erro ao salvar pessoa. Verifique os dados.');
+          }
+      });
+  }
+
+  function fecha_modal(modal) {
+      const modalEl = document.getElementById(modal);
+      const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      modalInstance.hide();
+
+      modalEl.addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+      }, { once: true });
+  }
+
+  // Recalcula totais ao carregar a página (para edição)
+  $(document).ready(function() {
+    setTimeout(function() {
+      $('.itens tr').each(function() {
+        var firstInput = $(this).find('input[id*=_quantidade]').first();
+        if (firstInput.length && firstInput.val()) {
+          setValorTotal(firstInput[0]);
+        }
+      });
+      setTotalOrcamento();
+    }, 300);
+  });
+</script>

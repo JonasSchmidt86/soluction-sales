@@ -1,0 +1,41 @@
+<tr class="nested-fields">
+  <%= f.hidden_field :cod_produto %>
+  <td class="col-1">
+    <%= f.text_field :produto, 
+            class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
+            placeholder: "Pressione Enter para buscar!" %>
+    <div id="products_list" class="list-group position-absolute bg-light" style="display: none; z-index: 100; width: 35%;"></div>
+  </td>
+  <td class="col-auto">
+    <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
+                { prompt: "Selecione uma Cor" },
+                    class: "form-control border-top-0 border-start-0 border-end-0 border-dark") %>
+  </td>
+  <td>
+    <%= f.text_field :quantidade,
+      type: "number",
+      step: 1,
+      min: 0,
+      class: "quantidade form-control border-top-0 border-start-0 border-end-0 border-dark",
+      onchange: "setValorTotal(this)",
+      oninput: "this.value = this.value.replace(/[^0-9]/g, '')" %>
+  </td>
+  <td>
+    <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_acrescimo, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <%= f.text_field :valor_desconto, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+  </td>
+  <td>
+    <input type="text" class="valor-total money2 form-control border-top-0 border-start-0 border-end-0 border-dark" disabled>
+  </td>
+  <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
+  <td class="align-middle fw-semibold">
+    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+      <i class="fa fa-trash-can"></i>
+    <% end %>
+  </td>
+</tr>

@@ -1,0 +1,103 @@
+<div class="card mt-3">
+  <% if @orcamento.errors.any? %>
+    <div class="alert alert-danger alert-dismissible" role="alert">
+      <% @orcamento.errors.full_messages.each do |message| %>
+        <ul>
+          <li><%= message %></li>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="card-header text-center bg-primary text-white">
+    <h4><%= @orcamento.new_record? ? 'Novo' : 'Editar' %> Orçamento</h4>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: [:collaborators_backoffice, @orcamento], class: "col-md-12", local: true, html: { autocomplete: "off" }) do |f| %>
+      <div class="row my-2 mx-2 align-items-center">
+        <div class="col-md-7">
+          <div class="form-floating w-100">
+            <%= f.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
+            <%= f.label :nome_pessoa, "Cliente" %>
+            <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
+            <%= f.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+          </div>
+        </div>
+        <div class="col-md-1 d-flex">
+          <%= render partial: 'collaborators_backoffice/orcamentos/shared/pessoa_modal', locals: { form: f } %>
+        </div>
+        <div class="col-md-4">
+          <div class="form-floating w-100">
+            <%= f.select :status, [['Pendente', 'pendente'], ['Aprovado', 'aprovado'], ['Rejeitado', 'rejeitado']], {}, class: "form-select border-top-0 border-start-0 border-end-0 border-dark" %>
+            <%= f.label :status, "Status" %>
+          </div>
+        </div>
+      </div>
+      <div class="row my-2 mx-2 align-items-center">
+        <div class="col-md-3">
+          <div class="form-floating">
+            <%= f.text_field :data_orcamento, value: (@orcamento.data_orcamento || Time.current).strftime('%d/%m/%Y %H:%M'), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+            <%= f.label :data_orcamento, "Data Orçamento" %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <%= f.text_field :data_validade, value: @orcamento.data_validade&.strftime('%d/%m/%Y'), class: "form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+            <%= f.label :data_validade, "Validade" %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <%= f.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+            <%= f.label :valortotal, "Valor Total" %>
+          </div>
+        </div>
+      </div>
+      <div class="row my-2 mx-2">
+        <div class="col-md-12">
+          <div class="form-floating">
+            <%= f.text_area :observacoes, rows: 2, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", style: "height: 60px" %>
+            <%= f.label :observacoes, "Observações" %>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Nome</th>
+                <th>Cor</th>
+                <th style="width: 7%;">Qtd</th>
+                <th style="width: 10%;">Valor</th>
+                <th style="width: 10%;">Acréscimo</th>
+                <th style="width: 10%;">Desconto</th>
+                <th style="width: 10%;">Total</th>
+                <th style="width: 3%;"></th>
+              </tr>
+            </thead>
+            <tbody id="itens_orcamentos_fields" class='itens'>
+              <%= f.fields_for :itens_orcamentos do |item| %>
+                <%= render partial: "itens_orcamento_fields", locals: { f: item } %>
+              <% end %>
+            </tbody>
+          </table>
+          <div class="form-actions">
+            <%= link_to_add_association 'Adicionar Item', f, :itens_orcamentos, 
+                force_non_association_create: true,
+                class: 'btn btn-primary', 
+                data: { association_insertion_node: '.itens', association_insertion_method: :append} %>
+          </div>
+        </div>
+      </div>
+      <div class="position-fixed bottom-0 end-0 m-4">
+        <div class="d-block my-3 mx-3">
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+            <i class="fa fa-check fa-2x"></i>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+<%= render partial: 'collaborators_backoffice/orcamentos/shared/cores_modal' %>
+<%= render partial: 'collaborators_backoffice/orcamentos/shared/scripts' %>

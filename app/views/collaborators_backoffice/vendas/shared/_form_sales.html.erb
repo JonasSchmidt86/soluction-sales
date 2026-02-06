@@ -16,7 +16,7 @@
     </h4>
   </div>
   <div class="card-body">
-    <%= form_with(model: [ :collaborators_backoffice, @sale ], class:"col-md-12", local: true) do |sale| %>
+    <%= form_with(model: [ :collaborators_backoffice, @sale ], class:"col-md-12", local: true, html: { autocomplete: "off" }) do |sale| %>
       <div class="">
         <div class="row my-2 mx-2 align-items-center">
           <!-- Campo de busca -->
@@ -728,3 +728,21 @@
           }
       };
 </script>
+<% if session[:orcamento_id] %>
+<script>
+  $(document).ready(function() {
+    // Aguarda um pouco para garantir que as máscaras foram aplicadas
+    setTimeout(function() {
+      // Atualiza o total de cada item
+      $('.itens tr').each(function() {
+        var firstInput = $(this).find('input').first();
+        if (firstInput.length) {
+          setValorTotal(firstInput[0]);
+        }
+      });
+      // Atualiza o total geral
+      setTotalVenda();
+    }, 500);
+  });
+</script>
+<% end %>

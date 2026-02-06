@@ -1,0 +1,131 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Orçamento #<%= @orcamento.cod_orcamento %></h4>
+    <div>
+      <% if @orcamento.pode_converter? %>
+        <%= link_to 'Converter em Venda', converter_venda_collaborators_backoffice_orcamento_path(@orcamento), 
+            method: :post, data: { confirm: 'Deseja converter este orçamento em venda?' }, 
+            class: 'btn btn-success btn-sm' %>
+      <% end %>
+      <%= link_to 'Editar', edit_collaborators_backoffice_orcamento_path(@orcamento), class: 'btn btn-warning btn-sm' unless @orcamento.convertido? %>
+      <%= link_to 'Voltar', collaborators_backoffice_orcamentos_path, class: 'btn btn-secondary btn-sm' %>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="row my-2">
+      <div class="col-md-6">
+        <div class="form-floating">
+          <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="<%= @orcamento.pessoa.nome %>" readonly>
+          <label>Cliente</label>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-floating">
+          <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="<%= @orcamento.funcionario.usuario %>" readonly>
+          <label>Vendedor</label>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-floating">
+          <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="<%= case @orcamento.status
+            when 'pendente' then 'Pendente'
+            when 'aprovado' then 'Aprovado'
+            when 'convertido' then 'Convertido'
+            when 'rejeitado' then 'Rejeitado'
+            end %>" readonly>
+          <label>Status</label>
+        </div>
+      </div>
+    </div>
+    <div class="row my-2">
+      <div class="col-md-3">
+        <div class="form-floating">
+          <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="<%= l(@orcamento.data_orcamento, format: :short) %>" readonly>
+          <label>Data Orçamento</label>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-floating">
+          <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="<%= @orcamento.data_validade ? l(@orcamento.data_validade) : 'Não definida' %>" readonly>
+          <label>Validade</label>
+        </div>
+      </div>
+      <% if @orcamento.cod_venda.present? %>
+        <div class="col-md-3">
+          <div class="form-floating">
+            <input type="text" class="form-control border-top-0 border-start-0 border-end-0 border-dark" value="#<%= @orcamento.cod_venda %>" readonly>
+            <label>Venda</label>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <% if @orcamento.observacoes.present? %>
+      <div class="row my-2">
+        <div class="col-md-12">
+          <div class="form-floating">
+            <textarea class="form-control border-top-0 border-start-0 border-end-0 border-dark" readonly style="height: 60px"><%= @orcamento.observacoes %></textarea>
+            <label>Observações</label>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <h5 class="mt-4 mb-3">Itens do Orçamento</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+        <thead>
+          <tr>
+            <th style="width: 35%;">Produto</th>
+            <th>Cor</th>
+            <th style="width: 7%;">Qtd</th>
+            <th style="width: 10%;">Valor Unit.</th>
+            <th style="width: 10%;">Acréscimo</th>
+            <th style="width: 10%;">Desconto</th>
+            <th style="width: 10%;">Total</th>
+            <th style="width: 8%;">Estoque</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @itens.each do |item| %>
+            <tr>
+              <td><%= item.produto.nome %></td>
+              <td><%= item.cor&.nmcor || '-' %></td>
+              <td><%= number_with_precision(item.quantidade, precision: 2) %></td>
+              <td><%= number_to_currency(item.valorunitario) %></td>
+              <td><%= number_to_currency(item.valor_acrescimo) %></td>
+              <td><%= number_to_currency(item.valor_desconto) %></td>
+              <td><%= number_to_currency(item.valor_total) %></td>
+              <td>
+                <% estoque = item.estoque_disponivel %>
+                <span class="<%= estoque >= item.quantidade ? 'text-success' : 'text-danger' %>">
+                  <%= number_with_precision(estoque, precision: 2) %>
+                </span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="6" class="text-end">Subtotal:</th>
+            <th colspan="2"><%= number_to_currency(@orcamento.valortotal - @orcamento.acrescimo + @orcamento.desconto) %></th>
+          </tr>
+          <% if @orcamento.desconto > 0 %>
+            <tr>
+              <th colspan="6" class="text-end">Desconto:</th>
+              <th colspan="2" class="text-danger">- <%= number_to_currency(@orcamento.desconto) %></th>
+            </tr>
+          <% end %>
+          <% if @orcamento.acrescimo > 0 %>
+            <tr>
+              <th colspan="6" class="text-end">Acréscimo:</th>
+              <th colspan="2" class="text-success">+ <%= number_to_currency(@orcamento.acrescimo) %></th>
+            </tr>
+          <% end %>
+          <tr>
+            <th colspan="6" class="text-end">Total:</th>
+            <th colspan="2"><%= number_to_currency(@orcamento.valortotal) %></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

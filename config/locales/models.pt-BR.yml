@@ -1,6 +1,12 @@
 'pt-BR':
   activerecord:
     models:
+      orcamento:
+        one: Orçamento
+        other: Orçamentos
+      item_orcamento:
+        one: Item do Orçamento
+        other: Itens do Orçamento
       collaborator:
         one: Administrador
         other: Administradores
@@ -9,6 +15,26 @@
         other: Usuários
 
     attributes:
+      orcamento:
+        cod_orcamento: Código
+        cod_pessoa: Cliente
+        cod_funcionario: Vendedor
+        cod_empresa: Empresa
+        data_orcamento: Data do Orçamento
+        data_validade: Validade
+        valortotal: Valor Total
+        desconto: Desconto
+        acrescimo: Acréscimo
+        status: Status
+        observacoes: Observações
+        cod_venda: Venda
+      item_orcamento:
+        cod_produto: Produto
+        cod_cor: Cor
+        quantidade: Quantidade
+        valorunitario: Valor Unitário
+        valor_desconto: Desconto
+        valor_acrescimo: Acréscimo
       core:
           nmcor: Nome da cor
           ativo: Ativo

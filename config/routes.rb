@@ -64,6 +64,12 @@ Rails.application.routes.draw do
     
     resources :lancamentosdiversos, only: [:index, :edit, :update, :new, :create, :destroy]
 
+    resources :orcamentos do
+      member do
+        post :converter_venda
+      end
+    end
+    
     resources :vendas, only: [:index, :edit, :new, :create, :destroy] do
       patch :atualizar_vendedor, on: :member
       get :editar_itens, on: :member

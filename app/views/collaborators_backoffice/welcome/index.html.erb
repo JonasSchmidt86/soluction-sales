@@ -122,7 +122,7 @@
   <script>
     function detectDevice() {
       const userAgent = navigator.userAgent;
-      
+
       if (/iPad|Macintosh/.test(userAgent) && 'ontouchend' in document) {
         return 'iPad';
       } else if (/iPhone|Android.*Mobile/.test(userAgent)) {
@@ -134,7 +134,7 @@
 
     const dispositivo = detectDevice();
     console.log('Dispositivo detectado:', dispositivo);
-    
+
     // Mostrar botão Listar apenas em computador
     if (dispositivo === 'Computador') {
       const btnListar = document.getElementById('btn-listar-produtos');

@@ -11,7 +11,7 @@
     <%= stylesheet_link_tag 'application' %>
     <%= stylesheet_link_tag 'collaborators_backoffice' %>
   </head>
-  <body class="sb-nav-fixed bg-light">
+  <body class="sb-nav-fixed bg-light" autocomplete="off">
     <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-primary hstack gap-3 ">
       <!-- Navbar Brand-->
       <div class="p-2 d-flex justify-content-start text-truncate">
@@ -131,6 +131,9 @@
                     <% end %>
                     <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
                       Contas pagar/Receber
+                    <% end %>
+                    <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
+                      Orçamentos
                     <% end %>
                   </nav>
                 </div>
