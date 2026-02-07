@@ -29,7 +29,7 @@
       <button onclick="window.close()">Fechar</button>
     </div>
     <div class="header">
-      <h2><%= @orcamento.empresa.nome %></h2>
+      <h2><%= @orcamento.empresa.pessoa.apelido %></h2>
       <%# <p>CNPJ: <%= @orcamento.empresa.cpf_cnpj % ></p> %>
       <p>Endereço: <%= @orcamento.empresa.pessoa.endereco %>, <%= @orcamento.empresa.pessoa.numero %></p>
       <p>Telefone: <%= @orcamento.empresa.pessoa.telefone %>, Celular: <%= @orcamento.empresa.pessoa.celular %></p>
