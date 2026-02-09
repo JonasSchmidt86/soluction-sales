@@ -1,0 +1,52 @@
+<% if @lancamentosdiverso.errors.any? %>
+  <div class="alert alert-danger">
+    <h4>Foram encontrados os seguintes erros:</h4>
+    <ul>
+      <% @lancamentosdiverso.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+<%= form_with model: @lancamentosdiverso, url: @lancamentosdiverso.new_record? ? collaborators_backoffice_lancamentosdiversos_path : collaborators_backoffice_lancamentosdiverso_path(@lancamentosdiverso), local: true do |form| %>
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5><%= @lancamentosdiverso.new_record? ? 'Novo Lançamento Diverso' : 'Editar Lançamento Diverso' %></h5>
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <%= form.label :descricao, 'Descrição', class: 'form-label' %>
+        <%= form.text_field :descricao, class: 'form-control' %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :valor, 'Valor', class: 'form-label' %>
+        <%= form.number_field :valor, step: 0.01, class: 'form-control' %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :datainicio, 'Data de Início', class: 'form-label' %>
+        <%= form.date_field :datainicio, class: 'form-control' %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :datavencimento, 'Data de Vencimento', class: 'form-label' %>
+        <%= form.date_field :datavencimento, class: 'form-control' %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :entrada, 'Entrada', class: 'form-label' %>
+        <%= form.check_box :entrada %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :provisionada, 'Provisionada', class: 'form-label' %>
+        <%= form.check_box :provisionada %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :cod_tphitorico, 'Histórico', class: 'form-label' %>
+        <%= form.collection_select :cod_tphitorico, Tiposhistoricoscaixa.where("ativo = true"), :cod_tphitorico, :descricao, { prompt: 'Selecione um histórico' }, class: 'form-control' %>
+      </div>
+      <%= form.hidden_field :cod_funcionario, value: current_collaborator.id %>
+    </div>
+    <div class="card-footer text-end">
+      <%= form.submit class: 'btn btn-primary' %>
+      <%= link_to 'Cancelar', collaborators_backoffice_lancamentosdiversos_path, class: 'btn btn-secondary' %>
+    </div>
+  </div>
+<% end %>

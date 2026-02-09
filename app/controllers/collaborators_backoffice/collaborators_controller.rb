@@ -19,7 +19,7 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
                   notice: "E-mail de redefinição de senha enviado para #{@collaborator.email}."
     else
       redirect_to collaborators_backoffice_collaborators_path, 
-                  notice: "Não é possível enviar e-mail para colaborador inativo."
+                  alert: "Não é possível enviar e-mail para colaborador inativo."
     end
   end
 
@@ -48,10 +48,10 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
         CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
         redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
       else
-        redirect_to collaborators_backoffice_collaborators_path, notice: "Não é possível enviar e-mail para colaborador inativo."
+        redirect_to collaborators_backoffice_collaborators_path, alert: "Não é possível enviar e-mail para colaborador inativo."
       end
     else 
-      redirect_to collaborators_backoffice_collaborators_path, notice: "Erro ao cadastrar Colaborador!"
+      redirect_to collaborators_backoffice_collaborators_path, alert: "Erro ao cadastrar Colaborador!"
     end
   end
 
@@ -70,7 +70,7 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
       end
       
     else 
-      redirect_to collaborators_backoffice_welcome_index_path, notice: "ERRO"
+      redirect_to collaborators_backoffice_welcome_index_path, alert: "ERRO"
     end
 
   end

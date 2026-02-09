@@ -11,6 +11,7 @@ class Lancamentosdiverso < ApplicationRecord
     
     validates :valor,numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" }
 
+    paginates_per 30
     
 end
 

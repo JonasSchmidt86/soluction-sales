@@ -42,7 +42,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
             end
         else 
             if action_message == 'Welcome/index'
-                redirect_to collaborators_backoffice_welcome_index_path, notice: "Erro ao cadastrar produto!"
+                redirect_to collaborators_backoffice_welcome_index_path, alert: "Erro ao cadastrar produto!"
             else
                 render :new
             end
@@ -62,14 +62,14 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
             if @produto.destroy
                 redirect_to collaborators_backoffice_produtos_path(page: params[:page]) , notice: "Produto Removido!"
             else
-                redirect_to collaborators_backoffice_produtos_path(page: params[:page]) , notice: "Erro ao remover produto!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]) , alert: "Erro ao remover produto!"
             end
         else
             @produto.ativo = false;
             if @produto.save
                 redirect_to collaborators_backoffice_produtos_path(page: params[:page]), notice: "Produto foi desativado!"
             else 
-                redirect_to collaborators_backoffice_produtos_path(page: params[:page]), notice: "Produto não pode ser removido!"
+                redirect_to collaborators_backoffice_produtos_path(page: params[:page]), alert: "Produto não pode ser removido!"
             end
         end
     end

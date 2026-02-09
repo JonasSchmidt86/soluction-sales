@@ -50,20 +50,21 @@
                   <i class="fa fa-power-off fa-sm fa-fw mr-2 text-gray-400"></i>
                   Sair
                 <% end %>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
-      <div id="layoutSidenav">
-        <!-- Sidebar (Navegação Lateral) -->
-        <div id="layoutSidenav_nav">
-          <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
-            <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
-              <div class="accordion nav mt-2" id="sidenavAccordion">
-                <!-- Perfil -->
-                <div class="profile clearfix d-flex justify-content-center">
-                  <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), 
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <div id="layoutSidenav">
+      <!-- Sidebar (Navegação Lateral) -->
+      <div id="layoutSidenav_nav">
+        <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
+          <div class="sb-sidenav-menu" style="background-color: #e3f2fd;">
+            <div class="accordion nav mt-2" id="sidenavAccordion">
+              <!-- Perfil -->
+              <div class="profile clearfix d-flex justify-content-center">
+                <%= link_to image_tag(avatar_url.presence || asset_path('img_bkp.jpg'), 
                           style: "max-width: 100%; height: 180px;", 
                           id: "imgAvatarLg", 
                           class: "rounded mx-auto d-block rounded-5", 
@@ -71,284 +72,312 @@
                           '#', 
                           data: { bs_toggle: "modal", bs_target: "#avatarModal" } 
                       %>
+              </div>
+              <!-- Menu Principal -->
+              <div class="sb-sidenav-menu-heading">Menus</div>
+              <!-- Colapso: Principal -->
+              <a class="nav-link collapsed" href="#"  data-target="#collapseCads" aria-expanded="false" aria-controls="collapseCads">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-money-check-dollar fa-flip" style="--fa-animation-duration: 3s;"></i>
                 </div>
-                <!-- Menu Principal -->
-                <div class="sb-sidenav-menu-heading">Menus</div>
-                <!-- Colapso: Principal -->
-                <a class="nav-link collapsed" href="#"  data-target="#collapseCads" aria-expanded="false" aria-controls="collapseCads">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-money-check-dollar fa-flip" style="--fa-animation-duration: 3s;"></i>
-                  </div>
-                  Principal
-                  <div class="sb-sidenav-collapse-arrow">
-                    <i class="fas fa-angle-down"></i>
-                  </div>
-                </a>
-                <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
-                      <i class="fa fa-dashboard fa-fw"></i> Dashboard
-                    <% end %>
-                    <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
-                      <i class="fa fa-dashboard fa-fw"></i> Caixa
-                    <% end %>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario != 82 %>
-                      <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
-                        <i class="fa fa-users fa-fw"></i> Colaboradores
-                      <% end %>
-                    <% end %>
-                  </nav>
+                Principal
+                <div class="sb-sidenav-collapse-arrow">
+                  <i class="fas fa-angle-down"></i>
                 </div>
-                <!-- Colapso: Cadastros -->
-                <a class="nav-link collapsed" href="#" data-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
-                  </div>
-                  Cadastros
-                  <div class="sb-sidenav-collapse-arrow">
-                    <i class="fas fa-angle-down"></i>
-                  </div>
-                </a>
-                <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= render 'layouts/shared/menu_lateral' %>
-                  </nav>
+              </a>
+              <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
+                    <i class="fa fa-dashboard fa-fw"></i> Dashboard
+                  <% end %>
+                  <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
+                    <i class="fa fa-dashboard fa-fw"></i> Caixa
+                  <% end %>
+                  <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario != 82 %>
+                    <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
+                      <i class="fa fa-users fa-fw"></i> Colaboradores
+                    <% end %>
+                  <% end %>
+                </nav>
+              </div>
+              <!-- Colapso: Cadastros -->
+              <a class="nav-link collapsed" href="#" data-target="#collapseOts" aria-expanded="false" aria-controls="collapseOts">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
                 </div>
-                <!-- Colapso: Cadastros -->
-                <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
-                  </div>
-                  Vendas
-                  <div class="sb-sidenav-collapse-arrow">
-                    <i class="fas fa-angle-down"></i>
-                  </div>
-                </a>
-                <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                      Cadastro Venda
-                    <% end %>
-                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                      Contas pagar/Receber
-                    <% end %>
-                    <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
-                      Orçamentos
-                    <% end %>
-                  </nav>
+                Cadastros
+                <div class="sb-sidenav-collapse-arrow">
+                  <i class="fas fa-angle-down"></i>
                 </div>
-                <!-- Colapso: Compras -->
-                <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
-                  </div>
-                  Compras
-                  <div class="sb-sidenav-collapse-arrow">
-                    <i class="fas fa-angle-down"></i>
-                  </div>
-                </a>
-                <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
-                      Pedidos de Compra
-                    <% end %>
-                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                      XML    
-                    <% end %>
-                    <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
-                      Cad Compra
-                    <% end %>
-                  </nav>
+              </a>
+              <div id="collapseOts" class="collapse" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= render 'layouts/shared/menu_lateral' %>
+                </nav>
+              </div>
+              <!-- Colapso: Cadastros -->
+              <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
                 </div>
-                <!-- Colapso: Relatórios -->
-                <a class="nav-link collapsed" href="#" data-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
-                  </div>
-                  Relatórios
-                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                </a>
-                <div class="collapse" id="collapseRels" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
-                      Estoque
-                    <% end %>
-                    <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
-                      Relatório de Vendas
-                    <% end %>
-                    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
-                      Lançamentos Caixa
-                    <% end %>
-                    <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
-                      Relatório de Compra
-                    <% end %>
-                    <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
-                      Estoque Mínimo
-                    <% end %>
-                    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-                      <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
-                        Relatório de DRE
-                      <% end %>
-                      <%= link_to collaborators_backoffice_report_custom_reports_path, class:"nav-link" do %>
-                        Ots Relatórios
-                      <% end %>
-                    <% end %>
-                  </nav>
+                Vendas
+                <div class="sb-sidenav-collapse-arrow">
+                  <i class="fas fa-angle-down"></i>
                 </div>
+              </a>
+              <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                    Cadastro Venda
+                  <% end %>
+                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                    Contas pagar/Receber
+                  <% end %>
+                  <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
+                    Orçamentos
+                  <% end %>
+                </nav>
+              </div>
+              <!-- Colapso: Compras -->
+              <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                </div>
+                Compras
+                <div class="sb-sidenav-collapse-arrow">
+                  <i class="fas fa-angle-down"></i>
+                </div>
+              </a>
+              <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
+                    Pedidos de Compra
+                  <% end %>
+                  <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+                    XML    
+                  <% end %>
+                  <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
+                    Cad Compra
+                  <% end %>
+                </nav>
+              </div>
+              <!-- Colapso: Relatórios -->
+              <a class="nav-link collapsed" href="#" data-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                </div>
+                Relatórios
+                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+              </a>
+              <div class="collapse" id="collapseRels" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                    Estoque
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                    Relatório de Vendas
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+                    Lançamentos Caixa
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                    Relatório de Compra
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
+                    Estoque Mínimo
+                  <% end %>
+                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                    <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
+                      Relatório de DRE
+                    <% end %>
+                    <%= link_to collaborators_backoffice_report_custom_reports_path, class:"nav-link" do %>
+                      Ots Relatórios
+                    <% end %>
+                  <% end %>
+                </nav>
+              </div>
+              <!-- Colapso: Financeiro -->
+              <a class="nav-link collapsed" href="#" data-target="#collapseFinanceiro" aria-expanded="false" aria-controls="collapseFinanceiro">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                </div>
+                Financeiro
+                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+              </a>
+              <div class="collapse" id="collapseFinanceiro" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                    Diverso
+                  <% end %>
+                </nav>
               </div>
             </div>
-            <!-- Footer do Sidebar -->
-            <div class="sb-sidenav-footer">
-              <div class="small">Quem está Logado:</div>
-              <%= current_collaborator.funcionario.usuario %>
-            </div>
-          </nav>
-        </div>
-        <!-- Conteúdo Principal -->
-        <div id="layoutSidenav_content">
-          <main>
-            <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11">
-              <%= yield %>
-            </div>
-          </main>
-        </div>
+          </div>
+          <!-- Footer do Sidebar -->
+          <div class="sb-sidenav-footer">
+            <div class="small">Quem está Logado:</div>
+            <%= current_collaborator.funcionario.usuario %>
+          </div>
+        </nav>
       </div>
-      <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
-      <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
-      <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
-      <%# fim modais  %>
-      <%= javascript_include_tag 'application'%>
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-      <%= javascript_include_tag 'collaborators_backoffice' %>
-      <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-      <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll('[data-target]').forEach(function (trigger) {
-            const targetSelector = trigger.getAttribute("data-target");
-            const target = document.querySelector(targetSelector);
-            if (!target) return;
+      <!-- Conteúdo Principal -->
+      <div id="layoutSidenav_content">
+        <main>
+          <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11">
+            <%= yield %>
+          </div>
+        </main>
+      </div>
+    </div>
+    <%= render partial: 'layouts/shared/modal', locals: { action_message: 'Modal' } %>
+    <%= render partial: 'layouts/shared/empresa_modal', locals: { action_message: 'Modal' } %>
+    <%= render partial: 'layouts/shared/modal_alert', locals: { action_message: 'Modal' } %>
+    <%# fim modais  %>
+    <%= javascript_include_tag 'application'%>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <%= javascript_include_tag 'collaborators_backoffice' %>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('[data-target]').forEach(function (trigger) {
+          const targetSelector = trigger.getAttribute("data-target");
+          const target = document.querySelector(targetSelector);
+          if (!target) return;
 
-            // Cria a instância de Collapse
-            const collapse = new bootstrap.Collapse(target, {
-              toggle: false // evita que abra automaticamente ao iniciar
-            });
+          // Cria a instância de Collapse
+          const collapse = new bootstrap.Collapse(target, {
+            toggle: false // evita que abra automaticamente ao iniciar
+          });
 
-            // Adiciona o clique no link
-            trigger.addEventListener("click", function (e) {
-              e.preventDefault();
+          // Adiciona o clique no link
+          trigger.addEventListener("click", function (e) {
+            e.preventDefault();
 
-              if (target.classList.contains("show")) {
-                collapse.hide();
-              } else {
-                collapse.show();
-              }
-            });
+            if (target.classList.contains("show")) {
+              collapse.hide();
+            } else {
+              collapse.show();
+            }
           });
         });
-          // -------------------- FUNÇÃO PARA Validar data --------------------------------------------------------
-        document.addEventListener("DOMContentLoaded", function () {
-          const campos = document.querySelectorAll('.datepicker');
-          campos.forEach(function (campo) {
-            campo.addEventListener('blur', function () {
-              const valor = campo.value.trim();
-              const partes = valor.split('/');
-              // console.log(campo.id)
-              if (partes.length === 3) {
-                let [dia, mes, ano] = partes.map(p => parseInt(p));
-                if (!isNaN(dia) && !isNaN(mes) && !isNaN(ano)) {
-                  // Testa se a data é válida
-                  const dataTeste = new Date(ano, mes - 1, dia);
-                  if (
-                  dataTeste.getFullYear() !== ano ||
-                  dataTeste.getMonth() !== mes - 1 ||
-                  dataTeste.getDate() !== dia
-                  ) {
-                    // Data inválida → corrigir para o último dia do mês
-                    const ultimoDia = new Date(ano, mes, 0).getDate(); // dia 0 do mês seguinte = último do mês atual
-                    const novaData = `${String(ultimoDia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
-                    campo.value = novaData;
-                    console.log(`Data inválida corrigida para ${novaData}`);
-                  }
+      });
+        // -------------------- FUNÇÃO PARA Validar data --------------------------------------------------------
+      document.addEventListener("DOMContentLoaded", function () {
+        const campos = document.querySelectorAll('.datepicker');
+        campos.forEach(function (campo) {
+          campo.addEventListener('blur', function () {
+            const valor = campo.value.trim();
+            const partes = valor.split('/');
+            // console.log(campo.id)
+            if (partes.length === 3) {
+              let [dia, mes, ano] = partes.map(p => parseInt(p));
+              if (!isNaN(dia) && !isNaN(mes) && !isNaN(ano)) {
+                // Testa se a data é válida
+                const dataTeste = new Date(ano, mes - 1, dia);
+                if (
+                dataTeste.getFullYear() !== ano ||
+                dataTeste.getMonth() !== mes - 1 ||
+                dataTeste.getDate() !== dia
+                ) {
+                  // Data inválida → corrigir para o último dia do mês
+                  const ultimoDia = new Date(ano, mes, 0).getDate(); // dia 0 do mês seguinte = último do mês atual
+                  const novaData = `${String(ultimoDia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+                  campo.value = novaData;
+                  console.log(`Data inválida corrigida para ${novaData}`);
                 }
               }
-            });
+            }
           });
         });
-          // -------------------- FUNÇÃO PARA RETORNO O ENDEREÇO COM O CEP --------------------------------------------------------
-        function removerAcentos(texto) {
-          return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        }
-        function buscarEnderecoPorCEP(cepInput) {
-          const cepValue = cepInput.value.replace(/\D/g, '');
-          if (cepValue.length === 8) {
-            fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
-            .then(response => response.json())
-            .then(data => {
-            const enderecoInput = document.querySelector('[name*="endereco"]');
-            const bairroInput = document.querySelector('[name*="bairro"]');
-            const citySelect = document.querySelector('[name*="cod_cidade"]');
-            if (!data.erro) {
-              if (enderecoInput) {
-                enderecoInput.value = removerAcentos(data.logradouro.toUpperCase());
-              }
-              if (bairroInput) {
-                bairroInput.value = removerAcentos(data.bairro.toUpperCase());
-              }
-              if (citySelect) {
-                citySelect.value = removerAcentos(data.localidade.toUpperCase());
-              }
-              const desiredCity = removerAcentos(data.localidade.toUpperCase());
-              for (let i = 0; i < citySelect.options.length; i++) {
-                  if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
-                      citySelect.value = citySelect.options[i].value;
-                      break;
-                  }
-              }
-            } else {
-              if (enderecoInput) {
-                enderecoInput.value = "";
-              }
-              if (bairroInput) {
-                bairroInput.value = "";
-              }
-              if (citySelect) {
-                citySelect.value = 0;
-              }
+      });
+        // -------------------- FUNÇÃO PARA RETORNO O ENDEREÇO COM O CEP --------------------------------------------------------
+      function removerAcentos(texto) {
+        return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      function buscarEnderecoPorCEP(cepInput) {
+        const cepValue = cepInput.value.replace(/\D/g, '');
+        if (cepValue.length === 8) {
+          fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
+          .then(response => response.json())
+          .then(data => {
+          const enderecoInput = document.querySelector('[name*="endereco"]');
+          const bairroInput = document.querySelector('[name*="bairro"]');
+          const citySelect = document.querySelector('[name*="cod_cidade"]');
+          if (!data.erro) {
+            if (enderecoInput) {
+              enderecoInput.value = removerAcentos(data.logradouro.toUpperCase());
             }
-          })
-          . catch(error => console.error('Ocorreu um erro:', error));
+            if (bairroInput) {
+              bairroInput.value = removerAcentos(data.bairro.toUpperCase());
+            }
+            if (citySelect) {
+              citySelect.value = removerAcentos(data.localidade.toUpperCase());
+            }
+            const desiredCity = removerAcentos(data.localidade.toUpperCase());
+            for (let i = 0; i < citySelect.options.length; i++) {
+                if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
+                    citySelect.value = citySelect.options[i].value;
+                    break;
+                }
+            }
+          } else {
+            if (enderecoInput) {
+              enderecoInput.value = "";
+            }
+            if (bairroInput) {
+              bairroInput.value = "";
+            }
+            if (citySelect) {
+              citySelect.value = 0;
+            }
           }
+        })
+        . catch(error => console.error('Ocorreu um erro:', error));
         }
-            document.addEventListener('DOMContentLoaded', function() {
-            const cepInput = document.getElementById('pessoa_cep');
-            if (cepInput) {
-            cepInput.addEventListener('blur', function() {
-            buscarEnderecoPorCEP(cepInput);
+      }
+          document.addEventListener('DOMContentLoaded', function() {
+          const cepInput = document.getElementById('pessoa_cep');
+          if (cepInput) {
+          cepInput.addEventListener('blur', function() {
+          buscarEnderecoPorCEP(cepInput);
+          });
+          cepInput.addEventListener('input', function() {
+          buscarEnderecoPorCEP(cepInput);
+          });
+          }
+          });
+          // ----------------------------------------------------------------------------------
+          $(document).ready(function () {
+            $('.datepicker').datepicker();
+          });
+          function alertModal(mensagem) {
+            var modal = document.getElementById('customModal');
+            var alertMessage = document.getElementById('alertMessage');
+            alertMessage.textContent = mensagem; // Define a mensagem personalizada no alerta
+            $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modals)
+            setTimeout(function() {
+              $(modal).modal('hide');
+            }, 2900); // Redireciona após 2.9 segundos (opcional)
+          }
+          <% if notice %>
+            //alertModal('<%= notice %>');
+            $.bootstrapGrowl('<%= notice %>', {
+              ele: 'body', // which element to append to
+              type: 'success', // (null, 'info', 'danger', 'success')
+              // offset: {from: 'top', amount: $(window).height() / 2 - 25}, // Meio da tela (altura da janela dividida por 2, menos metade da altura da notificação)
+              offset: {from: 'top', amount: 60}, // 'top', or 'bottom'
+              align: 'center', // ('left', 'right', or 'center')
+              width: 250, // (integer, or 'auto')
+              delay: 4000, // Time while the message will be displayed. It's not equivalent to the *demo* timeOut!
+              allow_dismiss: false, // If true then will display a cross to close the popup.
+              stackup_spacing: 40 // spacing between consecutively stacked growls.
             });
-            cepInput.addEventListener('input', function() {
-            buscarEnderecoPorCEP(cepInput);
-            });
-            }
-            });
-            // ----------------------------------------------------------------------------------
-            $(document).ready(function () {
-              $('.datepicker').datepicker();
-            });
-            function alertModal(mensagem) {
-              var modal = document.getElementById('customModal');
-              var alertMessage = document.getElementById('alertMessage');
-              alertMessage.textContent = mensagem; // Define a mensagem personalizada no alerta
-              $(modal).modal('show'); // Abre o modal usando jQuery (Bootstrap requer jQuery para operações com modals)
-              setTimeout(function() {
-                $(modal).modal('hide');
-              }, 2900); // Redireciona após 2.9 segundos (opcional)
-            }
-            <% if notice %>
-              //alertModal('<%= notice %>');
-              $.bootstrapGrowl('<%= notice %>', {
+            <% else %>
+              <% if alert %>
+              $.bootstrapGrowl('<%= alert %>', {
                 ele: 'body', // which element to append to
-                type: 'success', // (null, 'info', 'danger', 'success')
+                type: 'danger', // (null, 'info', 'danger', 'success')
                 // offset: {from: 'top', amount: $(window).height() / 2 - 25}, // Meio da tela (altura da janela dividida por 2, menos metade da altura da notificação)
                 offset: {from: 'top', amount: 60}, // 'top', or 'bottom'
                 align: 'center', // ('left', 'right', or 'center')
@@ -358,147 +387,148 @@
                 stackup_spacing: 40 // spacing between consecutively stacked growls.
               });
             <% end %>
-            // ----------- Horas da PG -------
-            var div = document.getElementById("myId");
-            // Adicionando ouvinte de clique
-            div.addEventListener("click", function () {
-              div.innerHTML = "Boas Vendas =)";
-            });
-            // Criando um intervalo
-            var interval = setInterval(function () {
-              var date = new Date();
-              div.innerHTML = date.toLocaleTimeString();
-            }, 1000/* 1s */);
-            // --------------------------------
-            // deixa Maiuscula o input com class text
-            $(document).ready(function() {
-            // Quando o usuário digita no campo de texto
-            $('.text').on('input', function() {
-            $(this).val($(this).val().toUpperCase());
-            $(this).attr("autocomplete", "off");
-            });
-            });
-            // tira a sugestão dos campos
-            //     $(document).ready(function() {
-            //         $("input[type='text']").attr("autocomplete", "off");
-            //     });
-            function formatarMoeda() {
-            var elemento = document.getElementById('valor');
-            var valor = elemento.value;
-            valor = valor + '';
-            valor = parseInt(valor.replace(/[\D]+/g, ''));
-            valor = valor + '';
-            valor = valor.replace(/([0-9]{2})$/g, ",$1");
-            if (valor.length > 6) {
-            valor = valor.replace(/([0-9]{3}),([0-9]{2}$)/g, ".$1,$2");
-            }
-            elemento.value = valor;
-            if(valor == 'NaN') elemento.value = '';
-            };
-            $('.cpf-cnpj').mask('000.000.000-00', {reverse: false});
-            // Adiciona um ouvinte de eventos para verificar se é CPF ou CNPJ e aplicar a máscara correta
-            $('.cpf-cnpj').on('input', function() {
-            var value = $(this).val().replace(/\D/g, '');
-            if (value.length > 11) {
-            $(this).mask('00.000.000/0000-00', {reverse: true});
-            } else {
-            $(this).mask('000.000.000-00', {reverse: true});
-            }
-            });
-            // para mascaras gem jquery-mask-pluguin
-            $(document).ready(function(){
-            $('.date').mask('00/00/0000');
-            $('.numero').mask('00000000');
-            $('.time').mask('00:00:00');
-            $('.date_time').mask('00/00/0000 00:00:00');
-            $('.cep').mask('00000-000');
-            $('.phone').mask('(00) 0000-0000');
-            $('.phone_with_ddd').mask('(00) 0 0000-0000');
-            $('.phone_us').mask('(000) 000-0000');
-            $('.mixed').mask('AAA 000-S0S');
-            $('.cpf').mask('000.000.000-00', {reverse: true});
-            $('.cnpj').mask('00.000.000/0000-00', {reverse: true});
-            $('.money').mask('000.000.000.000.000,00', {reverse: true});
-            $('.money2').mask("000000000,00", {reverse: true});
-            $('.ip_address').mask('0ZZ.0ZZ.0ZZ.0ZZ', {
-            translation: {
-            'Z': {
-            pattern: /[0-9]/, optional: true
-            }
-            }
-            });
-            $('.ip_address').mask('099.099.099.099');
-            $('.percent').mask('##0,00%', {reverse: true});
-            $('.clear-if-not-match').mask("00/00/0000", {clearIfNotMatch: true});
-            $('.placeholder').mask("00/00/0000", {placeholder: "__/__/____"});
-            $('.fallback').mask("00r00r0000", {
-            translation: {
-            'r': {
-            pattern: /[\/]/,
-            fallback: '/'
-            },
-            placeholder: "__/__/____"
-            }
-            });
-            $('.selectonfocus').mask("00/00/0000", {selectOnFocus: true});
-            });
-            // ------------------ Abre modal de estoque do prouto nas imagens -----------------------------------
-            document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('produto_info');
-            if (!modal) return;
-            modal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const produtoId = button.getAttribute('data-produto-id');
-            const produtoNome = button.getAttribute('data-produto-nome');
-            const tbody = modal.querySelector('#tabela-cores-body');
-            const titulo = modal.querySelector('#modal-produto-titulo');
-            const editUrl = `/collaborators_backoffice/produtos/${produtoId}/edit`;
-            // Atualiza o título dinamicamente
-            //titulo.textContent = `Estoque do produto: ${'<button type="button" class="btn-close" data-bs-dismiss="modal"></button>'}`;
-            titulo.innerHTML = `
-            Editar produto:
-            <a href="${editUrl}" class="btn btn-sm btn-outline-primary ms-3">
-        ${produtoNome}
-            </a>
-            `;
-            // Carregamento da tabela
-            tbody.innerHTML = `
-            <tr>
-        <td colspan="3">Carregando...</td>
-            </tr>
-            `;
-            fetch(`/collaborators_backoffice/produtos/${produtoId}/estoque`)
-            .then(res => res.json())
-            .then(dados => {
-            if (dados.length === 0) {
-            tbody.innerHTML = `
-            <tr>
-        <td colspan="3"> ${produtoNome} Sem Estoque.</td>
-            </tr>
-            `;
-            return;
-            }
-            tbody.innerHTML = "";
-            dados.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-            <td class="text-center">${item.id_empresa}</td>
-            <td>${item.nome_produto}</td>
-            <td>${item.cor}</td>
-            <td class="text-center">${item.quantidade}</td>
-            `;
-            tbody.appendChild(tr);
-            });
-            })
-            .catch(() => {
-            tbody.innerHTML = `
-            <tr>
-        <td colspan="3">Erro ao carregar dados.</td>
-            </tr>
-            `;
-            });
-            });
-            });
-      </script>
-    </body>
-  </html>
+          <% end %>
+          // ----------- Horas da PG -------
+          var div = document.getElementById("myId");
+          // Adicionando ouvinte de clique
+          div.addEventListener("click", function () {
+            div.innerHTML = "Boas Vendas =)";
+          });
+          // Criando um intervalo
+          var interval = setInterval(function () {
+            var date = new Date();
+            div.innerHTML = date.toLocaleTimeString();
+          }, 1000/* 1s */);
+          // --------------------------------
+          // deixa Maiuscula o input com class text
+          $(document).ready(function() {
+          // Quando o usuário digita no campo de texto
+          $('.text').on('input', function() {
+          $(this).val($(this).val().toUpperCase());
+          $(this).attr("autocomplete", "off");
+          });
+          });
+          // tira a sugestão dos campos
+          //     $(document).ready(function() {
+          //         $("input[type='text']").attr("autocomplete", "off");
+          //     });
+          function formatarMoeda() {
+          var elemento = document.getElementById('valor');
+          var valor = elemento.value;
+          valor = valor + '';
+          valor = parseInt(valor.replace(/[\D]+/g, ''));
+          valor = valor + '';
+          valor = valor.replace(/([0-9]{2})$/g, ",$1");
+          if (valor.length > 6) {
+          valor = valor.replace(/([0-9]{3}),([0-9]{2}$)/g, ".$1,$2");
+          }
+          elemento.value = valor;
+          if(valor == 'NaN') elemento.value = '';
+          };
+          $('.cpf-cnpj').mask('000.000.000-00', {reverse: false});
+          // Adiciona um ouvinte de eventos para verificar se é CPF ou CNPJ e aplicar a máscara correta
+          $('.cpf-cnpj').on('input', function() {
+          var value = $(this).val().replace(/\D/g, '');
+          if (value.length > 11) {
+          $(this).mask('00.000.000/0000-00', {reverse: true});
+          } else {
+          $(this).mask('000.000.000-00', {reverse: true});
+          }
+          });
+          // para mascaras gem jquery-mask-pluguin
+          $(document).ready(function(){
+          $('.date').mask('00/00/0000');
+          $('.numero').mask('00000000');
+          $('.time').mask('00:00:00');
+          $('.date_time').mask('00/00/0000 00:00:00');
+          $('.cep').mask('00000-000');
+          $('.phone').mask('(00) 0000-0000');
+          $('.phone_with_ddd').mask('(00) 0 0000-0000');
+          $('.phone_us').mask('(000) 000-0000');
+          $('.mixed').mask('AAA 000-S0S');
+          $('.cpf').mask('000.000.000-00', {reverse: true});
+          $('.cnpj').mask('00.000.000/0000-00', {reverse: true});
+          $('.money').mask('000.000.000.000.000,00', {reverse: true});
+          $('.money2').mask("000000000,00", {reverse: true});
+          $('.ip_address').mask('0ZZ.0ZZ.0ZZ.0ZZ', {
+          translation: {
+          'Z': {
+          pattern: /[0-9]/, optional: true
+          }
+          }
+          });
+          $('.ip_address').mask('099.099.099.099');
+          $('.percent').mask('##0,00%', {reverse: true});
+          $('.clear-if-not-match').mask("00/00/0000", {clearIfNotMatch: true});
+          $('.placeholder').mask("00/00/0000", {placeholder: "__/__/____"});
+          $('.fallback').mask("00r00r0000", {
+          translation: {
+          'r': {
+          pattern: /[\/]/,
+          fallback: '/'
+          },
+          placeholder: "__/__/____"
+          }
+          });
+          $('.selectonfocus').mask("00/00/0000", {selectOnFocus: true});
+          });
+          // ------------------ Abre modal de estoque do prouto nas imagens -----------------------------------
+          document.addEventListener('DOMContentLoaded', function () {
+          const modal = document.getElementById('produto_info');
+          if (!modal) return;
+          modal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          const produtoId = button.getAttribute('data-produto-id');
+          const produtoNome = button.getAttribute('data-produto-nome');
+          const tbody = modal.querySelector('#tabela-cores-body');
+          const titulo = modal.querySelector('#modal-produto-titulo');
+          const editUrl = `/collaborators_backoffice/produtos/${produtoId}/edit`;
+          // Atualiza o título dinamicamente
+          //titulo.textContent = `Estoque do produto: ${'<button type="button" class="btn-close" data-bs-dismiss="modal"></button>'}`;
+          titulo.innerHTML = `
+          Editar produto:
+          <a href="${editUrl}" class="btn btn-sm btn-outline-primary ms-3">
+      ${produtoNome}
+          </a>
+          `;
+          // Carregamento da tabela
+          tbody.innerHTML = `
+          <tr>
+      <td colspan="3">Carregando...</td>
+          </tr>
+          `;
+          fetch(`/collaborators_backoffice/produtos/${produtoId}/estoque`)
+          .then(res => res.json())
+          .then(dados => {
+          if (dados.length === 0) {
+          tbody.innerHTML = `
+          <tr>
+      <td colspan="3"> ${produtoNome} Sem Estoque.</td>
+          </tr>
+          `;
+          return;
+          }
+          tbody.innerHTML = "";
+          dados.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+          <td class="text-center">${item.id_empresa}</td>
+          <td>${item.nome_produto}</td>
+          <td>${item.cor}</td>
+          <td class="text-center">${item.quantidade}</td>
+          `;
+          tbody.appendChild(tr);
+          });
+          })
+          .catch(() => {
+          tbody.innerHTML = `
+          <tr>
+      <td colspan="3">Erro ao carregar dados.</td>
+          </tr>
+          `;
+          });
+          });
+          });
+    </script>
+  </body>
+</html>

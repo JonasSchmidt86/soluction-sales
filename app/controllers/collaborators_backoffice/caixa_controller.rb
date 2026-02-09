@@ -24,10 +24,10 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
             if @caixa.save
                 redirect_to collaborators_backoffice_caixa_index_path, notice: "Caixa fechado com sucesso!"
             else 
-                # redirect_to collaborators_backoffice_caixa_index_path, notice: "Erro ao fechar caixa!"
+                redirect_to collaborators_backoffice_caixa_index_path, alert: "Erro ao fechar caixa!"
             end
         else 
-            redirect_to collaborators_backoffice_caixa_index_path , notice: "Caixa já esta fechado!"
+            redirect_to collaborators_backoffice_caixa_index_path , alert: "Caixa já esta fechado!"
         end
     end
 
@@ -37,7 +37,7 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
     def new
         cx2 = Caixa.where(" cod_empresa = ? ", current_collaborator.cod_empresa).last
         if cx2.datafechamento == nil
-            redirect_to collaborators_backoffice_caixa_index_path , notice: "Caixa já esta Aberto"
+            redirect_to collaborators_backoffice_caixa_index_path , alert: "Caixa já esta Aberto"
         else
             @caixa = Caixa.new do |cx|
                 cx.cod_empresa = current_collaborator.cod_empresa
@@ -54,7 +54,7 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
             if @caixa.save
                 redirect_to collaborators_backoffice_caixa_index_path , notice: "Caixa Aberto com sucesso!"
             else
-                redirect_to collaborators_backoffice_caixa_index_path , notice: "Erro ao abrir caixa"
+                redirect_to collaborators_backoffice_caixa_index_path , alert: "Erro ao abrir caixa"
             end
         end
     end
@@ -65,7 +65,7 @@ class CollaboratorsBackoffice::CaixaController < CollaboratorsBackofficeControll
 
     def destroy
         if @caixa.lancamentoscaixa.any?
-            redirect_to collaborators_backoffice_caixa_index_path , notice: "Não é possivel apagar caixa!"
+            redirect_to collaborators_backoffice_caixa_index_path , alert: "Não é possivel apagar caixa!"
         else @caixa.destroy
             redirect_to collaborators_backoffice_caixa_index_path , notice: "Caixa Apagado!"
         end
