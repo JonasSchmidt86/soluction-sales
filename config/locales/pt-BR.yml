@@ -12,3 +12,8 @@ pt-BR:
       default: "%d/%m/%Y %H:%M"
       short: "%d/%m %H:%M"
       long: "%d de %B de %Y às %H:%M"
+  number:
+    currency:
+      format:
+        unit: "R$"
+        format: "%u %n"

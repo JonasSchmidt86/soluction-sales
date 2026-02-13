@@ -8,19 +8,8 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
 
         @lancamentos_diversos = Lancamentosdiverso
         .unscoped
-        .where(cod_empresa: current_collaborator.empresa.cod_empresa, datavencimento: nil)
-        .where(
-            "cod_lancamento NOT IN (
-            SELECT cod_lancamentodiverso
-            FROM lancamentoscaixa
-            WHERE cod_empresa = ?
-                AND datapagto BETWEEN ? AND ?
-            )",
-            current_collaborator.empresa.cod_empresa,
-            inicio_mes,
-            fim_mes
-        )
-        .order(:datainicio)
+        .where(cod_empresa: current_collaborator.empresa.cod_empresa)
+        .order(:cod_tphitorico)
         .page(params[:page])
     end
 
@@ -32,18 +21,12 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
     end
 
     def create
-        puts "PARAMS: #{params.inspect}"
         @lancamentosdiverso = Lancamentosdiverso.new(lancamentosdiverso_params)
         @lancamentosdiverso.cod_empresa = current_collaborator.empresa.cod_empresa
         if @lancamentosdiverso.save
             redirect_to collaborators_backoffice_lancamentosdiversos_path, notice: 'Lançamento criado com sucesso.'
         else
             puts "Erro ao salvar: #{@lancamentosdiverso.errors.full_messages}"
-            @lancamentos_diversos = Lancamentosdiverso
-            .unscoped
-            .where(cod_empresa: current_collaborator.empresa.cod_empresa, datavencimento: nil)
-            .order(:datainicio)
-            .page(params[:page])
             render :new
         end
     end
@@ -63,6 +46,43 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
         else
             render :edit
         end
+    end
+
+    def pagamentos
+        inicio_mes = Date.current.beginning_of_month
+        fim_mes    = Date.current.end_of_month
+
+        dataInicial = Date.strptime(params[:data_inicial], "%d/%m/%Y") rescue nil
+        dataFinal   = Date.strptime(params[:data_final], "%d/%m/%Y") rescue nil
+
+
+        @q = Lancamentosdiverso.ransack(params[:q])
+        @lancamentos_diversos = @q.result
+                                    .unscoped
+                                    .where(cod_empresa: current_collaborator.empresa.cod_empresa, provisionada: true)
+                                    .where("cod_lancamento NOT IN (SELECT cod_lancamentodiverso FROM lancamentoscaixa WHERE datapagto BETWEEN  ? AND ? and cod_lancamentodiverso IS NOT NULL)", inicio_mes, fim_mes)
+
+        # Apply filters for descricao, historico, and date range
+        @lancamentos_diversos = @lancamentos_diversos.where("descricao ILIKE ?", "%#{params[:descricao_cont]}%") if params[:descricao_cont].present?
+        @lancamentos_diversos = @lancamentos_diversos.where("cod_tphitorico = ?", params[:cod_historico]) if params[:cod_historico].present?
+
+        if dataInicial && dataFinal
+            @lancamentos_diversos = @lancamentos_diversos.where(
+                "EXTRACT(DAY FROM datainicio) BETWEEN ? AND ?",
+                dataInicial.day,
+                dataFinal.day
+            )
+        elsif dataInicial
+            @lancamentos_diversos = @lancamentos_diversos.where(
+                "EXTRACT(DAY FROM datainicio) >= ?",
+                dataInicial.day
+            )
+        elsif dataFinal
+            @lancamentos_diversos = @lancamentos_diversos.where("EXTRACT(DAY FROM datainicio) <= ?", dataFinal.day)
+        end
+
+        # @lancamentos_diversos = @lancamentos_diversos.order(Arel.sql("EXTRACT(DAY FROM datainicio) desc")).page(params[:page])
+        @lancamentos_diversos = @lancamentos_diversos.order(:cod_tphitorico).page(params[:page])
     end
 
     private

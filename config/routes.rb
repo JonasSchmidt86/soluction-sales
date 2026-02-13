@@ -62,7 +62,11 @@ Rails.application.routes.draw do
 
     resources :lancamentoscaixas, only: [:index, :edit, :update, :new, :create, :destroy]
     
-    resources :lancamentosdiversos, only: [:index, :edit, :update, :new, :create, :destroy]
+    resources :lancamentosdiversos do
+      collection do
+        get :pagamentos
+      end
+    end
 
     resources :orcamentos do
       member do

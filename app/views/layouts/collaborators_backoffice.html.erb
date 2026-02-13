@@ -211,6 +211,11 @@
                       Lançamentos Diversos
                     <% end %>
                   </nav>
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                      Pagamentos Lançamentos Diversos
+                    <% end %>
+                  </nav>
                 </div>
               <% end %>
             </div>
@@ -404,11 +409,15 @@
           // --------------------------------
           // deixa Maiuscula o input com class text
           $(document).ready(function() {
-          // Quando o usuário digita no campo de texto
-          $('.text').on('input', function() {
-          $(this).val($(this).val().toUpperCase());
-          $(this).attr("autocomplete", "off");
-          });
+            $('.text').on('input', function() {
+              const start = this.selectionStart;
+              const end   = this.selectionEnd;
+
+              this.value = this.value.toUpperCase();
+              this.setSelectionRange(start, end);
+
+              $(this).attr("autocomplete", "off");
+            });
           });
           // tira a sugestão dos campos
           //     $(document).ready(function() {

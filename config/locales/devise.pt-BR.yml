@@ -65,3 +65,8 @@ pt-BR:
       not_saved:
         one: "1 erro impediu a gravação de %{resource} :"
         other: "%{count} erros impediram a gravação de %{resource} :"
+  number:
+    currency:
+      format:
+        unit: "R$"
+        format: "%n %u"

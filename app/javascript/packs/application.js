@@ -16,6 +16,8 @@
 // const imagePath = (name) => images(name, true)
 
 import '../stylesheets/application.scss'
+import 'bootstrap';
+import '@popperjs/core';
 
 
 function formatarReal(valor) {
@@ -41,4 +43,5 @@ document.addEventListener("DOMContentLoaded", function () {
       document.body.style.cursor = "default";
     });
   }
+})
 

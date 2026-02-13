@@ -1,0 +1,62 @@
+<div class="modal fade" id="paymentModal<%= lancamento.id %>" data-tor-parent="static">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <%= form_with(model: [ :collaborators_backoffice, Lancamentoscaixa.new ], method: :post, local: true) do |form| %>
+        <div class="modal-header text-center bg-primary text-white">
+          <h5 class="modal-title">Pagamento de Lançamento</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body px-4 mt-3">
+          <div class="row g-3">
+            <div class="col">
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" value="<%= lancamento.descricao %>" readonly>
+                <label>Descrição</label>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control" value="<%= number_to_currency(lancamento.valor, unit: "R$", separator: ",", delimiter: ".") %>" readonly>
+                <label>Valor</label>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <div class="form-floating mb-3">
+                <%= form.collection_select(:cod_bancoconta, Bancoconta.where(ativo: true, cod_empresa: current_collaborator.cod_empresa), :cod_bancoconta, :nome_banco, { prompt: 'Selecione um banco' }, class: "form-control") %>
+                <label>Banco</label>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-floating mb-3">
+                <%= form.hidden_field :lancamento_id, value: lancamento.id %>
+                <%= form.text_field :valor,
+                    value: number_to_currency(
+                      (lancamento.valor),
+                      separator: ",",
+                      delimiter: "",
+                      unit: ""
+                    ),
+                    placeholder: "Valor a pagar",
+                    class: "form-control money2"
+                %>
+                <label>Valor a Pagar</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <%= hidden_field_tag :origem, "payment_modal" %>
+        <%= hidden_field_tag :data_inicial, params[:data_inicial] %>
+        <%= hidden_field_tag :data_final, params[:data_final] %>
+        <%= hidden_field_tag :descricao_cont, params[:descricao_cont] %>
+        <%= hidden_field_tag :cod_tphitorico, params[:cod_tphitorico] %>
+        <%= hidden_field_tag :return_params, filtros.to_query %>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Salvar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
