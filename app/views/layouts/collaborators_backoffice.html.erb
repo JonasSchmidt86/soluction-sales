@@ -161,6 +161,33 @@
                   <% end %>
                 </nav>
               </div>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <!-- Colapso: Financeiro -->
+                <a class="nav-link collapsed" href="#" data-target="#collapseFinanceiro" aria-expanded="false" aria-controls="collapseFinanceiro">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Financeiro
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseFinanceiro" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                      Lançamentos Diversos
+                    <% end %>
+                  </nav>
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                      Pagamentos Lançamentos Diversos
+                    <% end %>
+                  </nav>
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                      Contas pagar/Receber
+                    <% end %>
+                  </nav>
+                </div>
+              <% end %>
               <!-- Colapso: Relatórios -->
               <a class="nav-link collapsed" href="#" data-target="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
                 <div class="sb-nav-link-icon">
@@ -196,28 +223,6 @@
                   <% end %>
                 </nav>
               </div>
-              <% if current_collaborator.funcionario.cod_funcionario == 1 %>
-                <!-- Colapso: Financeiro -->
-                <a class="nav-link collapsed" href="#" data-target="#collapseFinanceiro" aria-expanded="false" aria-controls="collapseFinanceiro">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
-                  </div>
-                  Financeiro
-                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                </a>
-                <div class="collapse" id="collapseFinanceiro" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Lançamentos Diversos
-                    <% end %>
-                  </nav>
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Pagamentos Lançamentos Diversos
-                    <% end %>
-                  </nav>
-                </div>
-              <% end %>
             </div>
           </div>
           <!-- Footer do Sidebar -->

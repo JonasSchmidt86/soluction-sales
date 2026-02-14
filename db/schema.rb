@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_02_191407) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_14_131732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -169,6 +169,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_02_191407) do
     t.boolean "quitada"
     t.decimal "valorparcela", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_tppagamento"
+    t.integer "natureza"
+    t.index ["natureza"], name: "index_contaspagrec_on_natureza"
   end
 
   create_table "cores", primary_key: "cod_cor", id: :bigint, default: -> { "nextval('cor_codigo_seq'::regclass)" }, force: :cascade do |t|
