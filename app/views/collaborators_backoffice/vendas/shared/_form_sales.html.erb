@@ -729,20 +729,20 @@
       };
 </script>
 <% if session[:orcamento_id] %>
-<script>
-  $(document).ready(function() {
-    // Aguarda um pouco para garantir que as máscaras foram aplicadas
-    setTimeout(function() {
-      // Atualiza o total de cada item
-      $('.itens tr').each(function() {
-        var firstInput = $(this).find('input').first();
-        if (firstInput.length) {
-          setValorTotal(firstInput[0]);
-        }
-      });
-      // Atualiza o total geral
-      setTotalVenda();
-    }, 500);
-  });
-</script>
+  <script>
+    $(document).ready(function() {
+      // Aguarda um pouco para garantir que as máscaras foram aplicadas
+      setTimeout(function() {
+        // Atualiza o total de cada item
+        $('.itens tr').each(function() {
+          var firstInput = $(this).find('input').first();
+          if (firstInput.length) {
+            setValorTotal(firstInput[0]);
+          }
+        });
+        // Atualiza o total geral
+        setTotalVenda();
+      }, 500);
+    });
+  </script>
 <% end %>

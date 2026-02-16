@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_14_131732) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_16_162355) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -170,6 +170,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_14_131732) do
     t.decimal "valorparcela", precision: 18, scale: 2, default: "0.0"
     t.bigint "cod_tppagamento"
     t.integer "natureza"
+    t.string "descricao"
+    t.bigint "cod_pessoa"
+    t.bigint "cod_funcionario"
+    t.bigint "cod_tphistorico"
+    t.index ["cod_funcionario"], name: "index_contaspagrec_on_cod_funcionario"
+    t.index ["cod_pessoa"], name: "index_contaspagrec_on_cod_pessoa"
+    t.index ["cod_tphistorico"], name: "index_contaspagrec_on_cod_tphistorico"
     t.index ["natureza"], name: "index_contaspagrec_on_natureza"
   end
 
@@ -645,6 +652,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_14_131732) do
   add_foreign_key "contaspagrec", "compra", column: "cod_compra", primary_key: "cod_compra", name: "fk_compra"
   add_foreign_key "contaspagrec", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "contaspagrec", "frete", column: "cod_frete", primary_key: "cod_frete", name: "fk_frete"
+  add_foreign_key "contaspagrec", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario"
+  add_foreign_key "contaspagrec", "tiposhistoricoscaixa", column: "cod_tphistorico", primary_key: "cod_tphitorico"
   add_foreign_key "contaspagrec", "tiposlancamento", column: "cod_tppagamento", primary_key: "cod_tppagamento", name: "fk_tppagto"
   add_foreign_key "contaspagrec", "venda", column: "cod_venda", primary_key: "cod_venda", name: "fk_venda"
   add_foreign_key "empresa", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"

@@ -6,4 +6,6 @@ class Tiposhistoricoscaixa < ApplicationRecord
 
     has_many :lancamentos,   :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_tphitorico', inverse_of: :historico
     
+    has_many :contaspagrec,
+         foreign_key: :cod_tphistorico
 end

@@ -1,0 +1,61 @@
+<div class="modal fade" id="modalContasPagRec" tabindex="-1" aria-labelledby="modalContasPagRecLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header text-center bg-primary text-white">
+        <h5 class="modal-title" id="modalContasPagRecLabel">Nova Conta Pag/Rec</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body ms-2 me-2 mt-3">
+        <%# <%= form_with url: collaborators_backoffice_contas_pag_rec_index_path, model: Contaspagrec.new, local: true do |form| %>
+          <%= form_with model: Contaspagrec.new,
+              url: collaborators_backoffice_contas_pag_rec_index_path,
+              method: :post,
+              local: true do |form| %>
+            <!-- Natureza -->
+            <div class="mb-3">
+              <%= form.label :natureza, "Natureza" %>
+              <%= form.select :natureza, [["Entrada (Receber)", 0], ["Saída (Pagamento)", 1]], {}, class: "form-control" %>
+            </div>
+            <!-- Tipo Historico -->
+            <%= form.select :cod_tphitorico,
+              Tiposhistoricoscaixa.where(ativo: true).order(:cod_tphitorico)
+                .map { |t| [t.descricao, t.cod_tphitorico] },
+              { prompt: "Histórico" },
+              class: "form-control" %>
+            <!-- Descrição -->
+            <div class="mb-3">
+              <%= form.label :descricao, "Descrição" %>
+              <%= form.text_field :descricao, class: "text form-control", placeholder: "Digite a descrição" %>
+            </div>
+            <!-- Valor -->
+            <div class="mb-3">
+              <%= form.label :valor, "Valor" %>
+              <%= form.text_field :valorparcela, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00" %>
+            </div>
+            <!-- Data de Vencimento -->
+            <div class="mb-3">
+              <%= form.label :dtvencimento, "Data de Vencimento" %>
+              <%= form.date_field :dtvencimento, class: "form-control" %>
+            </div>
+            <!-- Campo de busca para Pessoa ajustado ao layout -->
+            <div class="mb-3">
+              <%= form.label :nome_pessoa, "Pessoa" %>
+              <%= form.text_field :nome_pessoa, class: "form-control text", placeholder: "Digite para buscar"%>
+              <%= form.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+              <!-- Lista de resultados para busca de Pessoa -->
+              <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
+            </div>
+            <!-- Campos ocultos -->
+            <%= form.hidden_field :ativo, value: true %>
+            <%= form.hidden_field :numeroparcela, value: 1 %>
+            <%= form.hidden_field :quitada, value: false %>
+            <!-- Botão de Submissão -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+              <%= form.submit "Salvar", class: "btn btn-success" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>

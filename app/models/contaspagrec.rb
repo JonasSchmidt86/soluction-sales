@@ -17,6 +17,46 @@ class Contaspagrec < ApplicationRecord
     
     belongs_to :frete, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :contas, optional: true
 
+    belongs_to :pessoa, foreign_key: :cod_pessoa, optional: true
+
+    belongs_to :tiposhistoricocaixa,:class_name => 'Tiposhistoricoscaixa',
+           foreign_key: :cod_tphitorico,
+           optional: true
+
+    belongs_to :funcionario, :class_name => 'Funcionario',
+           foreign_key: :cod_funcionario,
+           optional: true
+
+    validate :origem_ou_descricao
+
+    def origem_ou_descricao
+        if cod_venda.blank? && cod_compra.blank? && cod_frete.blank? && descricao.blank?
+            errors.add(:descricao, "deve ser informada para conta.")
+        end
+    end
+
+    def natureza_calculada
+        return natureza if self[:natureza].present?
+
+        if venda.present?
+            0
+        elsif compra.present? || frete.present?
+            1
+        end
+    end
+
+    def historico_exibicao
+        return cod_tphitorico if self[:cod_tphitorico].present?
+         if venda.present?
+            1
+         elsif compra.present?
+            2
+         else
+            6
+         end
+         
+     end
+
     def quitada_ext
         if self.ativo
             self.quitada? ? "Liquidada" : "Aberto"
@@ -53,7 +93,7 @@ class Contaspagrec < ApplicationRecord
             [frete.compra.numeronf, "F"].join('-')
             end
         else
-            "—"
+            numeroparcela.to_s
         end
     end
 
@@ -65,18 +105,28 @@ class Contaspagrec < ApplicationRecord
             self.compra.pessoa.nome
         elsif !self.frete.nil?
             [self.frete.pessoa.nome[0,40], self.frete.compra.pessoa.nome[0,15]].join(' - ')
+        else
+            if pessoa.present? 
+                pessoa.nome + " - " + descricao.to_s
+            else
+                descricao.to_s
+            end
         end 
     end
 
     def nmCollaborator 
-        if !self.venda.nil?
-            self.venda.funcionario.usuario
-        elsif !self.compra.nil?
-            self.compra.collaborator.usuario
-        elsif !self.frete.nil?
-            unless self.frete.compra.blank?
-                self.frete.compra.collaborator.usuario
-            end
+        if funcionario.present?
+            funcionario.usuario
+        else
+            if !self.venda.nil?
+                self.venda.funcionario.usuario
+            elsif !self.compra.nil?
+                self.compra.collaborator.usuario
+            elsif !self.frete.nil?
+                unless self.frete.compra.blank?
+                    self.frete.compra.collaborator.usuario
+                end
+            end 
         end 
     end
 

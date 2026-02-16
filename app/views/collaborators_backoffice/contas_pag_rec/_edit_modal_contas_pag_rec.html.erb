@@ -1,0 +1,59 @@
+<div class="modal fade" id="editModalContasPagRec<%= bill.cod_contaspagrec %>" tabindex="-1" aria-labelledby="editModalContasPagRecLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header text-center bg-primary text-white">
+        <h5 class="modal-title" id="editModalContasPagRecLabel">Editar Conta Pag/Rec <%= bill.nmParcela %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body ms-2 me-2 mt-3">
+        <%= form_with model: bill,
+      url: collaborators_backoffice_contas_pag_rec_path(bill),
+      method: :patch,
+      local: true do |form| %>
+          <!-- Natureza -->
+          <div class="mb-3">
+            <%= form.label :natureza, "Natureza" %>
+            <%= form.select :natureza, [["Entrada (Receber)", 0], ["Saída (Pagamento)", 1]], { selected: bill.natureza_calculada }, class: "form-control" %>
+          </div>
+          <!-- Tipo Historico -->
+          <div class="mb-3">
+            <%= form.label :cod_tphitorico, "Tipo Histórico" %>
+            <%= form.select :cod_tphitorico, 
+              Tiposhistoricoscaixa.where(ativo: true).order(:cod_tphitorico)
+                .map { |t| [t.descricao, t.cod_tphitorico] },
+                { prompt: "Histórico", selected: bill.historico_exibicao },
+                class: "form-control" %>
+          </div>
+          <!-- Descrição -->
+          <div class="mb-3">
+            <%= form.label :descricao, "Descrição" %>
+            <%= form.text_field :descricao, class: "text form-control", placeholder: "Digite a descrição" %>
+          </div>
+          <!-- Valor -->
+          <div class="mb-3">
+            <%= form.label :valorparcela, "Valor" %>
+            <%= form.text_field :valorparcela, value: "#{number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"")}",
+                input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00" %>
+          </div>
+          <!-- Data de Vencimento -->
+          <div class="mb-3">
+            <%= form.label :dtvencimento, "Data de Vencimento" %>
+            <%= form.date_field :dtvencimento, class: "form-control" %>
+          </div>
+          <!-- Pessoa -->
+          <div class="mb-3">
+            <%= form.label :nome_pessoa, "Pessoa" %>
+            <%= form.text_field :nome_pessoa, class: "form-control text", placeholder: "Digite para buscar", value: bill.pessoa&.nome %>
+            <%= form.hidden_field :cod_pessoa, id: 'edit_selected_person_id', value: bill.cod_pessoa %>
+            <div id="edit_results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
+          </div>
+          <!-- Botão de Submissão -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <%= form.submit "Salvar", class: "btn btn-success" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

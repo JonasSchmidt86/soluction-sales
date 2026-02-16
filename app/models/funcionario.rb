@@ -26,6 +26,9 @@ class Funcionario < ApplicationRecord
 
     has_one :collaborator, :class_name => 'Collaborator', :foreign_key => 'id'
 
+    has_many :contaspagrec,
+         foreign_key: :cod_funcionario
+         
     accepts_nested_attributes_for :collaborator, reject_if: :all_blank, allow_destroy: true #cocoon gem
     
     has_many :funcionarioempresas, foreign_key: 'cod_funcionario', inverse_of: :funcionario, autosave: true

@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeController
 
 
-    before_action :set_bill, only: [:edit, :update, :destroy]
+    before_action :set_bill, only: [:record_payment, :edit, :update, :destroy]
     # before_action :params_bill, only: [:update]
 
     def index
@@ -33,15 +33,59 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     def edit
         redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "Conta já esta Baixada"
     end
+    
+    def create
+        @conta = Contaspagrec.new(conta_params)
+        @conta.funcionario = current_collaborator.funcionario
+        @conta.valorparcela = conta_params[:valorparcela].to_s.gsub('.', '').gsub(',', '.')
+        @conta.cod_tphitorico = conta_params[:cod_tphitorico];
+        @conta.cod_empresa = current_collaborator.empresa.cod_empresa
+
+        @conta.cod_tphitorico = Tiposhistoricoscaixa.find_by(cod_tphitorico: conta_params[:cod_tphitorico])&.cod_tphitorico
+
+        if @conta.save
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }
+            ), notice: "Conta criada com sucesso."
+        else
+            flash[:alert] = "Erro ao criar a conta. Verifique os dados."
+            render :index
+        end
+    end
 
     def destroy
     end
 
-    def update
+    def record_payment
         if !@bill.nil?
             @bill.quitada = true
             partion((@bill.valorparcela - @bill.valorPago), nil)
         end 
+    end
+
+    def update
+        @bill.valorparcela = params[:contaspagrec][:valorparcela].to_s.gsub('.', '').gsub(',', '.')
+        @bill.dtvencimento = params[:contaspagrec][:dtvencimento]
+        @bill.natureza = params[:contaspagrec][:natureza]
+        @bill.descricao = params[:contaspagrec][:descricao]
+        @bill.numeroparcela = params[:contaspagrec][:numeroparcela]
+        @bill.cod_tphitorico = params[:contaspagrec][:cod_tphitorico]
+        if @bill.funcionario.nil?
+            @bill.cod_funcionario = current_collaborator.funcionario.id
+        end
+
+        if @bill.save
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }
+            ), notice: "Conta atualizada com sucesso."
+        else
+            flash[:alert] = "Erro ao atualizar a conta. Verifique os dados."
+            render :index
+        end
     end
 
     def print_promissory_note
@@ -65,9 +109,10 @@ private
             end            
         else 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
-                consulta += "  cod_venda is null "
+                consulta += " (natureza = 1 OR (natureza IS NULL AND cod_venda IS NULL)) "
+                # consulta += " and cod_compra is null and cod_frete is null "
             else
-                consulta += "  cod_venda is not null and cod_frete is null "
+                consulta += "  (natureza = 0 OR (natureza IS NULL AND cod_venda IS NOT NULL)) "
                 consulta += "  and cod_venda not in (select cod_venda from venda where tipo = 'T' and cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + ") "
             end
             
@@ -173,6 +218,20 @@ private
         end
     end
 
+    private
+
+    def conta_params
+        params.require(:contaspagrec).permit(
+            :dtvencimento, 
+            :natureza, 
+            :descricao, 
+            :valorparcela, 
+            :ativo, 
+            :numeroparcela, 
+            :cod_pessoa,
+            :quitada,
+            :cod_tphitorico)
+    end
 end
 
 
@@ -183,4 +242,4 @@ end
 #    and quantidade != function_estoquereal(cod_empresa,cod_produto,cod_cor )
  
 #  order by cod_produto asc
- 
+

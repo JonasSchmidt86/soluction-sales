@@ -146,15 +146,26 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
 # aqui mudar bill
             # se for venda entrada e se for compra ou frete saida
-            if !@bill.venda.nil?
-                @launch.tipo = 'E'
-                @launch.cod_tphitorico = 1 # parcela de venda
-            elsif !@bill.compra.nil?
-                @launch.tipo = 'S'
-                @launch.cod_tphitorico = 2 # parcela de compra
-            elsif !@bill.frete.nil?
-                @launch.tipo = 'S'
-                @launch.cod_tphitorico = 6 # pagamento de frete
+            if @bill.venda.nil? && @bill.compra.nil? && @bill.frete.nil?
+                @launch.descricao = @bill.descricao
+                @launch.cod_tphitorico = @bill.cod_tphitorico
+                if @bill.natureza == 0 # entrada
+                    @launch.tipo = 'E'
+                elsif @bill.natureza == 1 #saida
+                    @launch.tipo = 'S'
+                end
+
+            else
+                if !@bill.venda.nil?
+                    @launch.tipo = 'E'
+                    @launch.cod_tphitorico = 1 # parcela de venda
+                elsif !@bill.compra.nil?
+                    @launch.tipo = 'S'
+                    @launch.cod_tphitorico = 2 # parcela de compra
+                elsif !@bill.frete.nil?
+                    @launch.tipo = 'S'
+                    @launch.cod_tphitorico = 6 # pagamento de frete
+                end
             end
 
             if !params[:lancamentoscaixa][:contaspagrec].nil? || !params[:lancamentoscaixa][:contaspagrec].blank?
