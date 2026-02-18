@@ -30,8 +30,11 @@ class Contaspagrec < ApplicationRecord
     validate :origem_ou_descricao
 
     def origem_ou_descricao
-        if cod_venda.blank? && cod_compra.blank? && cod_frete.blank? && descricao.blank?
-            errors.add(:descricao, "deve ser informada para conta.")
+        tem_origem = venda.present? || compra.present? || frete.present?
+        tem_descricao = descricao.present?
+
+        unless tem_origem || tem_descricao
+            errors.add(:base, "Informe uma origem ou uma descrição para a conta.")
         end
     end
 
