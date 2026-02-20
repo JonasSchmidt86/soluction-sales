@@ -268,7 +268,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       # frete
       if params[:compra][:frete].present?
 
-        if !params[:compra][:frete][:cod_pessoa].blank?
+        if !params[:compra][:frete][:cod_pessoa].blank? && !params[:compra][:frete][:datavencimento].blank? && !params[:compra][:frete][:valor].blank?
 
           frete = Frete.new;
           frete.compra = compra;
