@@ -111,7 +111,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     # Itera sobre cada produto no hash de produtos
     params[:produtos].each do |produto_id, produto_info|
       next if produto_info["cod_produto"].blank? || produto_info["cod_cor"].blank?
-      
+
       if produto_info && produto_info["produto_xml"].present?
         xml_pro = JSON.parse(produto_info["produto_xml"])
         proXml = nil
@@ -128,7 +128,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
             end
           end
         end
-        
+
         # Se não encontrou por código, busca por produto/cor/emissor/nome
         if proXml.blank?
           proXml = Produtoxml.where(
@@ -161,7 +161,7 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
         # Atualiza dados
         proXml.cod_produto = produto_info["cod_produto"]
         proXml.cod_cor = produto_info["cod_cor"]
-        proXml.cod_pessoa = current_collaborator.cod_empresa # Assumindo que é a empresa
+        proXml.cod_pessoa = Pessoa.find_by(cpf_cnpj: produto_info["cnpj"])&.id
 
         unless proXml.save!
           respond_to do |format|

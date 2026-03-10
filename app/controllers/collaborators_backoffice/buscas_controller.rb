@@ -3,7 +3,7 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
     def buscar_pessoas
       query = params[:query].downcase
       result = Pessoa.select(:nome, :cod_pessoa, :cpf_cnpj)
-                    .where('LOWER(nome) ILIKE :query OR cpf_cnpj ILIKE :query', query: "%#{query}%")
+                    .where('LOWER(nome) ILIKE :query OR cpf_cnpj ILIKE :query', query: "#{query}%")
                     .order(:nome)
                     .limit(10)
       render json: result

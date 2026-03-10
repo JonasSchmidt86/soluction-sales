@@ -87,7 +87,8 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                         Rack::Utils.parse_nested_query(params[:return_params])
                     ), notice: "Lançamento gravado com Sucesso!"
                 else
-                    redirect_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, notice: "Erro ao gravar lançamento!"
+                    redirect_to pagamentos_collaborators_backoffice_lancamentosdiversos_path (
+                        Rack::Utils.parse_nested_query(params[:return_params])) , alert: "Erro ao gravar lançamento!"
                 end
                 return
             end

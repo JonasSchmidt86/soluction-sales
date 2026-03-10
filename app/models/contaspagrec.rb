@@ -136,7 +136,7 @@ class Contaspagrec < ApplicationRecord
     def valorPago
         valor = 0
         if !self.lancamentos.blank?
-            unless self.venda.blank?
+            if !self.venda.blank? || self.natureza_calculada == 0
                 for conta in self.lancamentos do
                     if conta.historico != 14 # 14 credito cliente
                         if conta.tipo == 'E'
@@ -149,7 +149,7 @@ class Contaspagrec < ApplicationRecord
                 end
             else
                 
-                if !self.compra.nil? || !self.frete.nil?
+                if !self.compra.nil? || !self.frete.nil? || self.natureza_calculada == 1
                     for conta in self.lancamentos do
                         if conta.tipo == 'S'
                             valor += conta.valor

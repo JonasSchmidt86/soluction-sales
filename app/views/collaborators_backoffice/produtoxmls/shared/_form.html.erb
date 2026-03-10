@@ -453,7 +453,7 @@
       <% end %>
       <div class="position-fixed bottom-0 end-0 m-4">
         <div class="d-block my-3 mx-3">
-          <button type="button" class="btn btn-warning rounded-circle p-3 me-2" onclick="salvarProdutoXml()" title="Salvar apenas produtos">
+          <button type="button" class="btn btn-warning rounded-circle p-3 me-2" onclick="salvarProdutoXml('<%= @xml_file.compra.pessoa.cpf_cnpj %>')" title="Salvar apenas produtos">
             <i class="fa fa-save fa-2x"></i>
           </button>
           <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3" title="Salvar compra completa">
@@ -911,7 +911,7 @@
             $('#customAlert, #customAlertBackdrop').remove();
         }
 
-        function salvarProdutoXml() {
+        function salvarProdutoXml(cnpj) {
             var produtos = {};
             var index = 0;
 
@@ -932,7 +932,8 @@
                     produtos[index] = {
                         cod_produto: codProduto,
                         cod_cor: codCor,
-                        produto_xml: proXmlTemp
+                        produto_xml: proXmlTemp,
+                        cnpj: cnpj
                     };
                     index++;
                 }

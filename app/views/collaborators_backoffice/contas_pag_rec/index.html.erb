@@ -177,7 +177,7 @@
                         <%= render partial: 'collaborators_backoffice/contas_pag_rec/shared/bills_partial_modal', locals: { bill: bill } %>
                       </td>
                     </tr>
-                    <%= render partial: 'collaborators_backoffice/contas_pag_rec/edit_modal_contas_pag_rec', locals: { bill: bill } %>
+                    <%= render partial: 'collaborators_backoffice/contas_pag_rec/edit_modal_contas_pag_rec', locals: { bill: bill, filtros: request.query_parameters } %>
                   <% end %>
                 </tbody>
               </table>
@@ -215,7 +215,7 @@
     </button>
   </div>
 </div>
-<%= render partial: 'collaborators_backoffice/contas_pag_rec/modal_contas_pag_rec', locals: { action_message: 'Modal' } %>
+<%= render partial: 'collaborators_backoffice/contas_pag_rec/modal_contas_pag_rec', locals: { action_message: 'Modal', filtros: request.query_parameters } %>
 <script>
   document.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
@@ -225,35 +225,45 @@
 
   let url = window.location.origin + '/collaborators_backoffice/';
 
-   $(document).ready(function() {
+  $(document).ready(function() {
 
     let apiUrl = url + "buscas/buscar_pessoas";
 
-    $(document).on('keydown', '#contaspagrec_nome_pessoa', function(event) {
+    $(document).on('keydown', '.pessoa-search', function(event) {
+
+      let input = $(this);
+      let modal = input.closest('.modal');
+      let resultsList = modal.find('.results-list');
+      let selectedPersonField = modal.find('.selected-person-id');
 
       if (event.key === 'Enter') {
         event.preventDefault();
-        filterOptions();
+        filterOptions(input, resultsList);
+
       } else if (event.key === 'Escape') {
-        $('#contaspagrec_nome_pessoa').val('');
-        $('#selected_person_id').val('');
-        $('#results_list').empty().hide();
+        event.preventDefault();
+        event.stopPropagation();
+
+        input.val('');
+        selectedPersonField.val('');
+        resultsList.empty().hide();
       }
     });
 
-    $(document).on('click', '#results_list .list-group-item', function(e) {
+    $(document).on('click', '.results-list .list-group-item', function(e) {
       e.preventDefault();
       e.stopPropagation();
 
-      $('#selected_person_id').val($(this).data('cod_pessoa'));
-      $('#contaspagrec_nome_pessoa').val($(this).text());
-      $('#results_list').empty().hide();
+      let modal = $(this).closest('.modal');
+
+      modal.find('.selected-person-id').val($(this).data('cod_pessoa'));
+      modal.find('.pessoa-search').val($(this).text());
+      modal.find('.results-list').empty().hide();
     });
 
-    function filterOptions() {
-      let query = $('#contaspagrec_nome_pessoa').val().trim().toLowerCase();
-      let resultsList = $('#results_list');
+    function filterOptions(input, resultsList) {
 
+      let query = input.val().trim().toLowerCase();
       resultsList.empty();
 
       $.ajax({
@@ -272,6 +282,7 @@
         }
       });
     }
+
   });
 
   // ------------------------------------------

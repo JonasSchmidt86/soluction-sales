@@ -40,22 +40,48 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         @conta.valorparcela = conta_params[:valorparcela].to_s.gsub('.', '').gsub(',', '.')
         @conta.cod_tphitorico = conta_params[:cod_tphitorico];
         @conta.cod_empresa = current_collaborator.empresa.cod_empresa
+        @conta.numeroparcela = conta_params[:numeroparcela].present? ? conta_params[:numeroparcela] : 1
 
         @conta.cod_tphitorico = Tiposhistoricoscaixa.find_by(cod_tphitorico: conta_params[:cod_tphitorico])&.cod_tphitorico
 
         if @conta.save
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
-                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }
+                        Rack::Utils.parse_nested_query(params[:return_params])
             ), notice: "Conta criada com sucesso."
         else
-            flash[:alert] = "Erro ao criar a conta. Verifique os dados."
-            render :index
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                        Rack::Utils.parse_nested_query(params[:return_params])
+            ), alert: "Erro ao criar a conta. Verifique os dados."
         end
     end
 
     def destroy
+        @lanca = Lancamentoscaixa.where(cod_contaspagrec: @bill.cod_contaspagrec);
+        # se tiver lancamento de caixa vinculado, não pode excluir a conta 
+        if @lanca.present?
+            flash[:alert] = "Não é possível excluir a conta, pois existem lançamentos de caixa vinculados a ela."
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }
+            )
+            return
+        end
+
+        if @bill.destroy
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }
+            ), notice: "Conta excluída com sucesso."
+        else
+            flash[:alert] = "Erro ao excluir a conta."
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
+                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
+                }
+            )
+        end
     end
 
     def record_payment
@@ -66,6 +92,7 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     end
 
     def update
+        puts "PARAMS UPDATE: #{params[:contaspagrec]}"
         @bill.valorparcela = params[:contaspagrec][:valorparcela].to_s.gsub('.', '').gsub(',', '.')
         @bill.dtvencimento = params[:contaspagrec][:dtvencimento]
         @bill.natureza = params[:contaspagrec][:natureza]
@@ -78,13 +105,11 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
 
         if @bill.save
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
-                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }
+                        Rack::Utils.parse_nested_query(params[:return_params])
             ), notice: "Conta atualizada com sucesso."
         else
-            flash[:alert] = "Erro ao atualizar a conta. Verifique os dados."
-            render :index
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                        Rack::Utils.parse_nested_query(params[:return_params])), alert: "Erro ao atualizar a conta. Verifique os dados."
         end
     end
 

@@ -6,10 +6,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body ms-2 me-2 mt-3">
-        <%= form_with model: bill,
-      url: collaborators_backoffice_contas_pag_rec_path(bill),
-      method: :patch,
-      local: true do |form| %>
+        <%= form_with model: bill, url: collaborators_backoffice_contas_pag_rec_path(bill), method: :patch, local: true do |form| %>
           <!-- Natureza -->
           <div class="mb-3">
             <%= form.label :natureza, "Natureza" %>
@@ -43,13 +40,25 @@
           <!-- Pessoa -->
           <div class="mb-3">
             <%= form.label :nome_pessoa, "Pessoa" %>
-            <%= form.text_field :nome_pessoa, class: "form-control text", placeholder: "Digite para buscar", value: bill.pessoa&.nome %>
-            <%= form.hidden_field :cod_pessoa, id: 'edit_selected_person_id', value: bill.cod_pessoa %>
+            <%= form.text_field :nome_pessoa, class: "form-control text pessoa-search", placeholder: "Digite para buscar", value: bill.pessoa&.nome %>
+            <%= form.hidden_field :cod_pessoa, class: "selected-person-id", value: bill.cod_pessoa %>
             <div id="edit_results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
           </div>
+          <%= hidden_field_tag :tipo_conta, params[:tipo_conta] %>
+          <%= hidden_field_tag :status_bill, params[:status_bill] %>
+          <%= hidden_field_tag :nrVenda, params[:nrVenda] %>
+          <%= hidden_field_tag :cliente, params[:cliente] %>
+          <%= hidden_field_tag :dataInicial, params[:dataInicial] %>
+          <%= hidden_field_tag :dataFinal, params[:dataFinal] %>
+          <%= hidden_field_tag :return_params, filtros.to_query %>
           <!-- Botão de Submissão -->
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <%= button_to "Excluir",
+              collaborators_backoffice_contas_pag_rec_path(bill),
+              method: :delete,
+              data: { confirm: "Tem certeza que deseja excluir?" },
+              class: "btn btn-danger" %>
             <%= form.submit "Salvar", class: "btn btn-success" %>
           </div>
         <% end %>

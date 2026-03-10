@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalContasPagRec" tabindex="-1" aria-labelledby="modalContasPagRecLabel" aria-hidden="true">
+<div class="modal fade" id="modalContasPagRec" tabindex="-1" aria-labelledby="modalContasPagRecLabel" aria-hidden="true" >
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header text-center bg-primary text-white">
@@ -40,16 +40,23 @@
             <!-- Campo de busca para Pessoa ajustado ao layout -->
             <div class="mb-3">
               <%= form.label :nome_pessoa, "Pessoa" %>
-              <%= form.text_field :nome_pessoa, class: "form-control text", placeholder: "Digite para buscar"%>
-              <%= form.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+              <%= form.text_field :nome_pessoa, class: "form-control text pessoa-search", placeholder: "Digite para buscar"%>
+              <%= form.hidden_field :cod_pessoa, class: "selected-person-id" %>
               <!-- Lista de resultados para busca de Pessoa -->
-              <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
+              <div class="results-list list-group position-absolute w-100"style="display:none; z-index:1055;"></div>
             </div>
             <!-- Campos ocultos -->
             <%= form.hidden_field :ativo, value: true %>
             <%= form.hidden_field :numeroparcela, value: 1 %>
             <%= form.hidden_field :quitada, value: false %>
             <!-- Botão de Submissão -->
+            <%= hidden_field_tag :tipo_conta, params[:tipo_conta] %>
+            <%= hidden_field_tag :status_bill, params[:status_bill] %>
+            <%= hidden_field_tag :nrVenda, params[:nrVenda] %>
+            <%= hidden_field_tag :cliente, params[:cliente] %>
+            <%= hidden_field_tag :dataInicial, params[:dataInicial] %>
+            <%= hidden_field_tag :dataFinal, params[:dataFinal] %>
+            <%= hidden_field_tag :return_params, filtros.to_query %>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
               <%= form.submit "Salvar", class: "btn btn-success" %>
