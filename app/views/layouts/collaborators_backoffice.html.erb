@@ -136,6 +136,9 @@
                   <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
                     Orçamentos
                   <% end %>
+                  <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                    Relatório de Vendas
+                  <% end %>
                 </nav>
               </div>
               <!-- Colapso: Compras -->
@@ -159,6 +162,9 @@
                   <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
                     Cad Compra
                   <% end %>
+                  <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                    Relatório de Compra
+                  <% end %>1
                 </nav>
               </div>
               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -173,17 +179,27 @@
                 <div class="collapse" id="collapseFinanceiro" data-bs-parent="#sidenavAccordion">
                   <nav class="sb-sidenav-menu-nested nav">
                     <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Lançamentos Diversos
+                      Cadastro de Provisionados
                     <% end %>
                   </nav>
                   <nav class="sb-sidenav-menu-nested nav">
                     <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Pagamentos Lançamentos Diversos
+                      Pagamentos Provisionados
                     <% end %>
                   </nav>
                   <nav class="sb-sidenav-menu-nested nav">
                     <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
                       Contas pagar/Receber
+                    <% end %>
+                  </nav>
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
+                      Relatório de DRE
+                    <% end %>
+                  </nav>
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+                      Lançamentos Caixa
                     <% end %>
                   </nav>
                 </div>
