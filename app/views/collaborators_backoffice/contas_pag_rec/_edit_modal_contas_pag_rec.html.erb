@@ -35,13 +35,21 @@
           <!-- Data de Vencimento -->
           <div class="mb-3">
             <%= form.label :dtvencimento, "Data de Vencimento" %>
-            <%= form.date_field :dtvencimento, class: "form-control" %>
+            <%= form.text_field :dtvencimento, value: l(bill.dtvencimento), class: "form-control datepicker" %>
           </div>
           <!-- Pessoa -->
           <div class="mb-3">
             <%= form.label :nome_pessoa, "Pessoa" %>
-            <%= form.text_field :nome_pessoa, class: "form-control text pessoa-search", placeholder: "Digite para buscar", value: bill.pessoa&.nome %>
-            <%= form.hidden_field :cod_pessoa, class: "selected-person-id", value: bill.cod_pessoa %>
+            <%= form.text_field :nome_pessoa,
+                  class: "form-control text pessoa-search",
+                  value: bill.pessoa&.nome %>
+            <%= form.hidden_field :cod_pessoa,
+                  class: "selected-person-id",
+                  value: bill.cod_pessoa %>
+            <div class="results-list list-group position-absolute w-100"
+                style="display:none; z-index:1055;"></div>
+            <%# form.text_field :edit_nome_pessoa, class: "form-control text pessoa-search", placeholder: "Digite para buscar", value: bill.pessoa&.nome %>
+            <%# form.hidden_field :edit_cod_pessoa, class: "selected-person-id", value: bill.cod_pessoa %>
             <div id="edit_results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
           </div>
           <%= hidden_field_tag :tipo_conta, params[:tipo_conta] %>
@@ -53,12 +61,14 @@
           <%= hidden_field_tag :return_params, filtros.to_query %>
           <!-- Botão de Submissão -->
           <div class="modal-footer">
+            <%= link_to "Excluir",
+                collaborators_backoffice_contas_pag_rec_path(bill,
+                          return_params: filtros.to_query
+          ),
+                method: :delete,
+                data: { confirm: "Tem certeza que deseja excluir?" },
+                class: "btn btn-danger" %>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            <%= button_to "Excluir",
-              collaborators_backoffice_contas_pag_rec_path(bill),
-              method: :delete,
-              data: { confirm: "Tem certeza que deseja excluir?" },
-              class: "btn btn-danger" %>
             <%= form.submit "Salvar", class: "btn btn-success" %>
           </div>
         <% end %>

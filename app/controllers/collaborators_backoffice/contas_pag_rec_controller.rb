@@ -33,54 +33,85 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     def edit
         redirect_to collaborators_backoffice_contas_pag_rec_index_path , notice: "Conta já esta Baixada"
     end
-    
+
     def create
         @conta = Contaspagrec.new(conta_params)
+
         @conta.funcionario = current_collaborator.funcionario
         @conta.valorparcela = conta_params[:valorparcela].to_s.gsub('.', '').gsub(',', '.')
-        @conta.cod_tphitorico = conta_params[:cod_tphitorico];
-        @conta.cod_empresa = current_collaborator.empresa.cod_empresa
-        @conta.numeroparcela = conta_params[:numeroparcela].present? ? conta_params[:numeroparcela] : 1
+        @conta.cod_tphitorico = conta_params[:cod_tphitorico]
 
-        @conta.cod_tphitorico = Tiposhistoricoscaixa.find_by(cod_tphitorico: conta_params[:cod_tphitorico])&.cod_tphitorico
+        data = conta_params[:dtvencimento]
+        if data.present?
+            @conta.dtvencimento = Date.strptime(data, "%d/%m/%Y")
+        end
+
+        @conta.cod_empresa = current_collaborator.empresa.cod_empresa
+        @conta.numeroparcela = conta_params[:numeroparcela].presence || 1
+        
+        if @conta.numeroparcela.nil? || @conta.numeroparcela == 0
+            @conta.numeroparcela = 1
+        end
 
         if @conta.save
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                        Rack::Utils.parse_nested_query(params[:return_params])
+            Rack::Utils.parse_nested_query(params[:return_params])
             ), notice: "Conta criada com sucesso."
         else
-            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                        Rack::Utils.parse_nested_query(params[:return_params])
-            ), alert: "Erro ao criar a conta. Verifique os dados."
+            puts "ERROS:"
+            puts @conta.errors.full_messages
+
+            render :new # ← importante para ver erro real
         end
     end
+    
+    # def create
+
+    #     @conta = Contaspagrec.new(conta_params)
+    #     @conta.funcionario = current_collaborator.funcionario
+    #     @conta.valorparcela = conta_params[:valorparcela].to_s.gsub('.', '').gsub(',', '.')
+    #     @conta.cod_tphitorico = conta_params[:cod_tphitorico];
+        
+    #     data = 
+    #     @conta.dtvencimento = Date.strptime(data, "%d/%m/%Y") if data.present?
+        
+    #     @conta.cod_empresa = current_collaborator.empresa.cod_empresa
+    #     @conta.numeroparcela = conta_params[:numeroparcela].present? ? conta_params[:numeroparcela] : 1
+
+    #     @conta.cod_tphitorico = Tiposhistoricoscaixa.find_by(cod_tphitorico: conta_params[:cod_tphitorico])&.cod_tphitorico
+
+    #     if @conta.save
+    #         redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+    #                     Rack::Utils.parse_nested_query(params[:return_params])
+    #         ), notice: "Conta criada com sucesso."
+    #     else
+    #         redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+    #                     Rack::Utils.parse_nested_query(params[:return_params])
+    #         ), alert: "Erro ao criar a conta. Verifique os dados."
+    #     end
+    # end
 
     def destroy
+        puts params[:return_params];
+
         @lanca = Lancamentoscaixa.where(cod_contaspagrec: @bill.cod_contaspagrec);
         # se tiver lancamento de caixa vinculado, não pode excluir a conta 
         if @lanca.present?
-            flash[:alert] = "Não é possível excluir a conta, pois existem lançamentos de caixa vinculados a ela."
+            
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
-                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }
-            )
+                        Rack::Utils.parse_nested_query(params[:return_params])
+            ), alert: "Não é possível excluir a conta, pois existem lançamentos de caixa vinculados a ela."
             return
         end
 
         if @bill.destroy
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
-                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }
+                        Rack::Utils.parse_nested_query(params[:return_params])
             ), notice: "Conta excluída com sucesso."
         else
-            flash[:alert] = "Erro ao excluir a conta."
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(
-                { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
-                :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }
-            )
+                        Rack::Utils.parse_nested_query(params[:return_params])
+            ), alert: "Erro ao excluir a conta."
         end
     end
 
@@ -183,7 +214,7 @@ private
             redirect_to collaborators_backoffice_contas_pag_rec_index_path(@bill, 
                 { :tipo_conta => params[:tipo_conta] ,:status_bill => params[:status_bill], :nrVenda => params[:nrVenda], 
                 :cliente => params[:cliente], :dataInicial => params[:dataInicial], :dataFinal => params[:dataFinal]
-                }) , notice: "Abra o caixa para baixar a conta!!"
+                }) , alert: "Abra o caixa para baixar a conta!!"
         else
 
             @launch = Lancamentoscaixa.new
@@ -255,7 +286,7 @@ private
             :numeroparcela, 
             :cod_pessoa,
             :quitada,
-            :cod_tphitorico)
+            :cod_tphitorico,)
     end
 end
 

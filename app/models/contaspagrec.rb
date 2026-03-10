@@ -28,6 +28,8 @@ class Contaspagrec < ApplicationRecord
            optional: true
 
     validate :origem_ou_descricao
+    
+    validates :dtvencimento, presence: { message: "Informe a data de vencimento" }
 
     def origem_ou_descricao
         tem_origem = venda.present? || compra.present? || frete.present?

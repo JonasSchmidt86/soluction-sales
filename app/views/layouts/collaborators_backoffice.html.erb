@@ -275,34 +275,50 @@
         });
       });
         // -------------------- FUNÇÃO PARA Validar data --------------------------------------------------------
-      document.addEventListener("DOMContentLoaded", function () {
-        const campos = document.querySelectorAll('.datepicker');
-        campos.forEach(function (campo) {
-          campo.addEventListener('blur', function () {
-            const valor = campo.value.trim();
-            const partes = valor.split('/');
-            // console.log(campo.id)
-            if (partes.length === 3) {
-              let [dia, mes, ano] = partes.map(p => parseInt(p));
-              if (!isNaN(dia) && !isNaN(mes) && !isNaN(ano)) {
-                // Testa se a data é válida
-                const dataTeste = new Date(ano, mes - 1, dia);
-                if (
-                dataTeste.getFullYear() !== ano ||
-                dataTeste.getMonth() !== mes - 1 ||
-                dataTeste.getDate() !== dia
-                ) {
-                  // Data inválida → corrigir para o último dia do mês
-                  const ultimoDia = new Date(ano, mes, 0).getDate(); // dia 0 do mês seguinte = último do mês atual
-                  const novaData = `${String(ultimoDia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
-                  campo.value = novaData;
-                  console.log(`Data inválida corrigida para ${novaData}`);
-                }
-              }
-            }
+      $(document).on('focus', '.datepicker', function () {
+        if (!$(this).data('datepicker')) {
+          $(this).datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true,
+            todayHighlight: true
           });
-        });
+        }
       });
+
+      document.addEventListener("blur", function (event) {
+
+        if (!event.target.classList.contains("datepicker")) return;
+
+        const campo = event.target;
+        const valor = campo.value.trim();
+        const partes = valor.split('/');
+
+        if (partes.length === 3) {
+
+          let [dia, mes, ano] = partes.map(p => parseInt(p));
+
+          if (!isNaN(dia) && !isNaN(mes) && !isNaN(ano)) {
+
+      const dataTeste = new Date(ano, mes - 1, dia);
+
+      if (
+        dataTeste.getFullYear() !== ano ||
+        dataTeste.getMonth() !== mes - 1 ||
+        dataTeste.getDate() !== dia
+      ) {
+
+        const ultimoDia = new Date(ano, mes, 0).getDate();
+
+        campo.value =
+          String(ultimoDia).padStart(2, '0') + "/" +
+          String(mes).padStart(2, '0') + "/" +
+          ano;
+      }
+          }
+        }
+
+      }, true);
+
         // -------------------- FUNÇÃO PARA RETORNO O ENDEREÇO COM O CEP --------------------------------------------------------
       function removerAcentos(texto) {
         return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -363,6 +379,7 @@
           $(document).ready(function () {
             $('.datepicker').datepicker();
           });
+
           function alertModal(mensagem) {
             var modal = document.getElementById('customModal');
             var alertMessage = document.getElementById('alertMessage');

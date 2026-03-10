@@ -1,0 +1,29 @@
+
+class CollaboratorsBackoffice::WhatsappContactsController < CollaboratorsBackofficeController
+
+    def index
+      @whatsapp_contacts = WhatsappContact.includes(:empresa, :funcionario).all
+    end
+
+    def new
+      @whatsapp_contact = WhatsappContact.new
+    end
+
+    def create
+      @whatsapp_contact = WhatsappContact.new(whatsapp_contact_params)
+      if @whatsapp_contact.save
+        redirect_to collaborators_backoffice_whatsapp_contacts_path, notice: "Contato criado"
+      else
+        render :new
+      end
+    end
+
+    # editar, update, destroy, etc...
+
+    private
+
+    def whatsapp_contact_params
+      params.require(:whatsapp_contact).permit(:empresa_id, :whatsapp_number, :display_name, :funcionario_id)
+    end
+  end
+end

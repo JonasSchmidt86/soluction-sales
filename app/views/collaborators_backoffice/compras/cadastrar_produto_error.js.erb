@@ -1,0 +1,5 @@
+let alert = document.createElement('div');
+alert.className = 'alert alert-danger mt-3';
+alert.innerText = 'Erro ao cadastrar produto.';
+document.body.prepend(alert);
+setTimeout(() => alert.remove(), 4000);

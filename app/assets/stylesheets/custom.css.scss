@@ -67,3 +67,23 @@ form {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+
+
+/* ===== Correção setas bootstrap-datepicker BS5 ===== */
+.datepicker .prev,
+.datepicker .next {
+  font-size: 0;
+}
+
+.datepicker .prev:after {
+  content: "‹";
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.datepicker .next:after {
+  content: "›";
+  font-size: 18px;
+  font-weight: bold;
+}

@@ -12,7 +12,11 @@
  *
  *= require_tree .
  *= require_self
+ 
+ *= require jquery-ui/core
+ *= require jquery-ui/datepicker
+ *= require jquery-ui/theme
  */
 
- @import "custom";
+@import "custom";
 @import "bootstrap/dist/css/bootstrap";

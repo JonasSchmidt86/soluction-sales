@@ -1,0 +1,27 @@
+<!-- Modal -->
+<div class="modal fade" id="editNomeModal_<%= cor.id %>" tabindex="-1" aria-labelledby="editNomeModal_<%= cor.id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Adicionando Cor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with(model: cor, url: collaborators_backoffice_core_path(cor), method: :patch, local: true) do |f| %>
+        <div class="modal-header">
+          <h5 class="modal-title" id="editNomeModal_<%= cor.id %>">Editar Nome da Cor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <%= f.label :nmcor, 'Nome da Cor', class: 'form-label' %>
+            <%= f.text_field :nmcor, class: 'form-control', required: true, maxlength: 100 %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <%= f.submit 'Salvar', class: 'btn btn-success' %>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

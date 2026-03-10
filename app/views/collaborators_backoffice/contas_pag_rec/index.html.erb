@@ -217,73 +217,84 @@
 </div>
 <%= render partial: 'collaborators_backoffice/contas_pag_rec/modal_contas_pag_rec', locals: { action_message: 'Modal', filtros: request.query_parameters } %>
 <script>
-  document.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-    }
-  });
-
   let url = window.location.origin + '/collaborators_backoffice/';
+  let apiUrl = url + "buscas/buscar_pessoas";
 
-  $(document).ready(function() {
+  var campoRecebido = document.getElementById("valorRecebido");
+  var campoReceber  = document.getElementById("valorReceber");
 
-    let apiUrl = url + "buscas/buscar_pessoas";
+  if (campoRecebido) {
+    campoRecebido.value = formatarReal(<%= somaRecebido&.to_f || 0 %>);
+  }
+
+  if (campoReceber) {
+    campoReceber.value = formatarReal(<%= somaReceber&.to_f || 0 %>);
+  }
+
+  // 🔥 ENTER na busca
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("Script de busca de pessoas carregado --- "  + (typeof $ ));
+
+    if (typeof $ === 'undefined') return;
 
     $(document).on('keydown', '.pessoa-search', function(event) {
 
-      let input = $(this);
-      let modal = input.closest('.modal');
-      let resultsList = modal.find('.results-list');
-      let selectedPersonField = modal.find('.selected-person-id');
+    if (event.key !== 'Enter') return;
 
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        filterOptions(input, resultsList);
+    event.preventDefault();
 
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
+    let input = $(this);
+    let modal = input.closest('.modal');
+    let resultsList = modal.find('.results-list');
 
-        input.val('');
-        selectedPersonField.val('');
-        resultsList.empty().hide();
-      }
+    buscarPessoa(input, resultsList);
     });
-
-    $(document).on('click', '.results-list .list-group-item', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      let modal = $(this).closest('.modal');
-
-      modal.find('.selected-person-id').val($(this).data('cod_pessoa'));
-      modal.find('.pessoa-search').val($(this).text());
-      modal.find('.results-list').empty().hide();
-    });
-
-    function filterOptions(input, resultsList) {
-
-      let query = input.val().trim().toLowerCase();
-      resultsList.empty();
-
-      $.ajax({
-        url: apiUrl,
-        method: 'GET',
-        data: { entidade: 'Pessoa', query: query },
-        success: function(data) {
-          data.forEach(function(person) {
-            $('<div>')
-              .text(person.nome)
-              .addClass('list-group-item')
-              .data('cod_pessoa', person.cod_pessoa)
-              .appendTo(resultsList);
-          });
-          resultsList.show();
-        }
-      });
-    }
-
   });
+
+  // 🔥 Clique no resultado
+  $(document).on('click', '.results-list .list-group-item', function(e) {
+
+    e.preventDefault();
+
+    let modal = $(this).closest('.modal');
+
+    modal.find('.selected-person-id')
+        .val($(this).data('cod_pessoa'));
+
+    modal.find('.pessoa-search')
+        .val($(this).text());
+
+    modal.find('.results-list')
+        .empty()
+        .hide();
+  });
+
+  // 🔥 Função principal
+  function buscarPessoa(input, resultsList) {
+
+  let query = input.val().trim().toLowerCase();
+  resultsList.empty();
+
+  if (!query.length) return;
+
+  $.ajax({
+    url: apiUrl,
+    method: 'GET',
+    data: { entidade: 'Pessoa', query: query },
+    success: function(data) {
+
+      data.forEach(function(person) {
+        $('<div>')
+          .text(person.nome)
+          .addClass('list-group-item list-group-item-action')
+          .data('cod_pessoa', person.cod_pessoa)
+          .appendTo(resultsList);
+      });
+
+      resultsList.show();
+    }
+  });
+  };
 
   // ------------------------------------------
   // ------------------------------------------
@@ -298,6 +309,7 @@
         label.innerHTML  = "Receber";
     }
   };
+
   function toggleQuitada(id_recebido) {
     if (!id_recebido) {
       console.warn(`toggleQuitada chamado sem id_recebido ${id_recebido}`);
@@ -318,20 +330,20 @@
       label.innerHTML = "Parcial";
       ttPag.value = "0,00"; // precisa ser string
     }
-  }
+  };
 
   function formatarReal(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
+  };
   // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  var campoRecebido = document.getElementById("valorRecebido");
-  var campoReceber  = document.getElementById("valorReceber");
+  // var campoRecebido = document.getElementById("valorRecebido");
+  // var campoReceber  = document.getElementById("valorReceber");
 
   if (campoRecebido) {
-    campoRecebido.value = formatarReal(<%= somaRecebido || 0 %>);
+    campoRecebido.value = formatarReal(<%= somaRecebido&.to_f || 0 %>);
   }
 
   if (campoReceber) {
-    campoReceber.value = formatarReal(<%= somaReceber || 0 %>);
+    campoReceber.value = formatarReal(<%= somaReceber&.to_f || 0 %>);
   }
 </script>
