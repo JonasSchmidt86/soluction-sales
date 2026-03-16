@@ -48,6 +48,7 @@ Rails.application.routes.draw do
 
     resources :lembretes, only: [:index, :edit, :update, :new, :create, :destroy]
     resources :funcionarios, only: [:index, :edit, :update, :new, :create, :destroy]
+    resources :acertosestoque, only: [:index, :create, :new, :destroy]
     resources :empresa_estoque, only: [:index, :edit, :destroy, :update] do
       collection do
         get 'by_color/:cor_id', to: 'empresa_estoque#by_color', as: :by_color
@@ -111,6 +112,7 @@ Rails.application.routes.draw do
 
     get 'buscas/buscar_pessoas', to: 'buscas#buscar_pessoas'
     get 'buscas/buscar_produtos', to: 'buscas#buscar_produtos'
+    get 'buscas/consulta_estoque', to: 'buscas#consulta_estoque'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'
     get 'vendas/check_cpf_cnpj_venda', to: 'vendas#check_cpf_cnpj_venda'
 

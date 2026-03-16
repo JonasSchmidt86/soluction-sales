@@ -1,0 +1,109 @@
+<div class="card mt-2" style="max-width: 600px; margin: auto;">
+  <%= link_to collaborators_backoffice_acertosestoque_index_path, class: "card-header text-center bg-primary text-white d-block" do %>
+    <h3>Novo Acerto de Estoque</h3>
+  <% end %>
+  <div class="card-body">
+    <%= form_with url: collaborators_backoffice_acertosestoque_index_path, method: :post, local: true, html: { id: 'form-acerto' } do |form| %>
+      <div class="mb-3">
+        <%= form.label :nome_produto, "Produto" %>
+        <%= form.text_field :nome_produto, class: "form-control text produto-acerto-search", placeholder: "Digite para buscar...", autocomplete: "off" %>
+        <%= form.hidden_field :cod_produto, class: "acerto-cod-produto" %>
+        <div class="acerto-results-list list-group" style="display:none; z-index:1055; position:absolute; width: 400px;"></div>
+      </div>
+      <div class="mb-3">
+        <%= form.label :cod_cor, "Cor" %>
+        <%= form.select :cod_cor, [], { prompt: "Selecione o produto primeiro" }, class: "form-select acerto-cor-select", disabled: true %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :tipo, "Tipo" %>
+        <%= form.select :tipo, [["Entrada", "E"], ["Saída", "S"]], {}, class: "form-select" %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :quantidade, "Quantidade" %>
+        <%= form.number_field :quantidade, class: "form-control", min: 1, value: 1 %>
+      </div>
+      <div class="mb-3">
+        <%= form.label :descricao, "Descrição" %>
+        <%= form.text_field :descricao, class: "form-control text", placeholder: "Motivo do acerto...", autocomplete: "off" %>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <%= link_to "Cancelar", collaborators_backoffice_acertosestoque_index_path, class: "btn btn-secondary" %>
+        <button type="button" class="btn btn-success" onclick="document.getElementById('form-acerto').submit()">Salvar</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+<script>
+  window.addEventListener('load', function() {
+    const apiUrlProdutos = window.location.origin + '/collaborators_backoffice/buscas/buscar_produtos';
+    const apiUrlCores    = window.location.origin + '/collaborators_backoffice/buscas/consulta_estoque';
+
+    // Busca ao digitar
+    $(document).on('input', '.produto-acerto-search', function() {
+      if (e.key === 'Enter') {
+        buscarProduto($(this));
+      }
+    });
+
+    // Enter busca sem submeter
+    $(document).on('keydown', '.produto-acerto-search', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        buscarProduto($(this));
+      }
+    });
+
+    function buscarProduto(input) {
+      const query       = input.val().trim();
+      const resultsList = $('.acerto-results-list');
+      resultsList.empty();
+      if (!query.length) return resultsList.hide();
+
+      $.ajax({
+        url: apiUrlProdutos,
+        method: 'GET',
+        data: { query: query },
+        success: function(data) {
+          data.forEach(function(p) {
+            $('<div>')
+              .text(p.cod_produto + ' - ' + p.nome)
+              .addClass('list-group-item list-group-item-action')
+              .data('cod_produto', p.cod_produto)
+              .appendTo(resultsList);
+          });
+          resultsList.show();
+        }
+      });
+    }
+
+    // Seleciona produto e carrega cores
+    $(document).on('click', '.acerto-results-list .list-group-item', function(e) {
+      e.preventDefault();
+      const codProduto = $(this).data('cod_produto');
+      $('.produto-acerto-search').val($(this).text());
+      $('.acerto-cod-produto').val(codProduto);
+      $('.acerto-results-list').empty().hide();
+
+      $.ajax({
+        url: apiUrlCores,
+        method: 'GET',
+        data: { id_produto: codProduto },
+        success: function(cores) {
+          const select = $('.acerto-cor-select');
+          select.empty().append('<option value="">Selecione a cor</option>');
+          cores.forEach(function(c) {
+            select.append($('<option>').val(c.cod_cor).text(c.nmcor));
+          });
+          select.prop('disabled', false);
+        }
+      });
+    });
+
+    // Fecha lista ao clicar fora
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('.produto-acerto-search, .acerto-results-list').length) {
+        $('.acerto-results-list').empty().hide();
+      }
+    });
+  });
+</script>

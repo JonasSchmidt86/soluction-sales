@@ -164,7 +164,7 @@
                   <% end %>
                   <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
                     Relatório de Compra
-                  <% end %>1
+                  <% end %>
                 </nav>
               </div>
               <% if current_collaborator.funcionario.permissao.nivel == 1 %>
@@ -200,6 +200,29 @@
                   <nav class="sb-sidenav-menu-nested nav">
                     <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
                       Lançamentos Caixa
+                    <% end %>
+                  </nav>
+                </div>
+              <% end %>
+              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                <!-- Colapso: Estoque -->
+                <a class="nav-link collapsed" href="#" data-target="#collapseEstoque" aria-expanded="false" aria-controls="collapseEstoque">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-search fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Estoque
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseEstoque" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                      Estoque
+                    <% end %>
+                    <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
+                      Estoque Mínimo
+                    <% end %>
+                    <%= link_to collaborators_backoffice_acertosestoque_index_path, class:"nav-link" do %>
+                      Acertos estoque
                     <% end %>
                   </nav>
                 </div>
@@ -296,7 +319,9 @@
           $(this).datepicker({
             format: 'dd/mm/yyyy',
             autoclose: true,
-            todayHighlight: true
+            todayHighlight: true,
+            changeMonth: true,
+            changeYear: true
           });
         }
       });
@@ -393,7 +418,13 @@
           });
           // ----------------------------------------------------------------------------------
           $(document).ready(function () {
-            $('.datepicker').datepicker();
+            $('.datepicker').datepicker({
+              format: 'dd/mm/yyyy',
+              autoclose: true,
+              todayHighlight: true,
+              changeMonth: true,
+              changeYear: true
+            });
           });
 
           function alertModal(mensagem) {

@@ -70,20 +70,23 @@ form {
 
 
 
-/* ===== Correção setas bootstrap-datepicker BS5 ===== */
-.datepicker .prev,
-.datepicker .next {
-  font-size: 0;
+/* ===== Correção setas jQuery UI datepicker ===== */
+.ui-datepicker .ui-datepicker-prev span,
+.ui-datepicker .ui-datepicker-next span {
+  display: none;
 }
 
-.datepicker .prev:after {
-  content: "‹";
-  font-size: 18px;
-  font-weight: bold;
+.ui-datepicker .ui-datepicker-prev:after,
+.ui-datepicker .ui-datepicker-next:after {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 14px;
+  color: #333;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.datepicker .next:after {
-  content: "›";
-  font-size: 18px;
-  font-weight: bold;
-}
+.ui-datepicker .ui-datepicker-prev:after { content: "\f053"; }
+.ui-datepicker .ui-datepicker-next:after { content: "\f054"; }

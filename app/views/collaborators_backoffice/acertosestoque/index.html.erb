@@ -1,0 +1,95 @@
+<div class="card mt-2">
+  <%= link_to collaborators_backoffice_acertosestoque_index_path, class: "card-header text-center bg-primary text-white" do %>
+    <h3>Acertos de Estoque</h3>
+  <% end %>
+  <div class="card-body">
+    <%= form_with(url: collaborators_backoffice_acertosestoque_index_path, local: true, method: :get, class: "dataTable-search") do |form| %>
+      <div class="row g-2 mb-2 align-items-end">
+        <div class="col-md-1">
+          <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
+        </div>
+        <div class="col-md-4">
+          <%= form.text_field :term, value: params[:term], class: "form-control", placeholder: "Código/Nome produto..." %>
+        </div>
+        <div class="col-auto">
+          <%= form.text_field :data_inicio, value: @data_inicio, class: "form-control datepicker fallback", placeholder: "Data Inicial", style: "min-width: 115px; max-width: 115px;" %>
+        </div>
+        <div class="col-auto">
+          <%= form.text_field :data_fim, value: @data_fim, class: "form-control datepicker fallback", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
+        </div>
+        <div class="col-auto d-flex gap-2">
+          <button type="submit" class="btn btn-success">Buscar</button>
+          <%= link_to new_collaborators_backoffice_acertosestoque_path, class: "btn btn-primary" do %>
+            <i class="fa fa-plus"></i>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <div class="dataTable-container">
+      <table class="table table-bordered table-striped table-hover table-sm">
+        <thead class="table-primary">
+          <tr>
+            <th class="col-data">Tipo</th>
+            <th class="col-data">Data</th>
+            <th class="col-data">Código</th>
+            <th>Produto</th>
+            <th>Cor</th>
+            <th class="col-data">Qtd</th>
+            <th >Descrição</th>
+            <th class="col-data"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @acertos.each do |acerto| %>
+            <tr class="<%= acerto.tipo == 'S' ? 'table-danger' : '' %>">
+              <td class="align-middle text-center">
+                <span class="badge <%= acerto.tipo == 'E' ? 'bg-success' : 'bg-danger' %>">
+                  <%= acerto.tipo == 'E' ? 'Entrada' : 'Saída' %>
+                </span>
+              </td>
+              <td class="align-middle"><%= acerto.datacadastro&.strftime("%d/%m/%Y") %></td>
+              <td class="align-middle"><%= acerto.cod_produto %></td>
+              <td class="align-middle"><%= acerto.produto&.nome %></td>
+              <td class="align-middle"><%= acerto.full_cod_cor %></td>
+              <td class="align-middle"><%= acerto.quantidade.to_i %></td>
+              <td class="align-middle"><%= acerto.descricao %></td>
+              <td class="align-middle text-center">
+                <%= link_to collaborators_backoffice_acertosestoque_path(acerto, params.permit(:per_page, :term, :data_inicio, :data_fim, :page).to_h),
+                      method: :delete,
+                      class: "btn btn-sm btn-danger",
+                      data: { confirm: "Deseja remover este acerto?" } do %>
+                  <i class="fa fa-trash"></i>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if @acertos.respond_to?(:total_pages) %>
+      <div class="dataTable-bottom">
+        <div class="dataTable-info"><%= page_entries_info @acertos, entry_name: 'acerto' %></div>
+        <div class="text-center"><%= paginate @acertos %></div>
+      </div>
+    <% else %>
+      <div class="dataTable-bottom mb-3">
+        <h5>Exibindo <%= @acertos.size %> registros</h5>
+      </div>
+    <% end %>
+  </div>
+</div>
+<div class="position-fixed bottom-0 end-0 m-4">
+  <div class="d-block mb-2">
+    <%= link_to new_collaborators_backoffice_acertosestoque_path, 
+                class: "btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-lg", 
+                style:"width: 60px; height: 60px;" do %>
+      <i class="fa fa-plus fa-2x"></i>
+    <% end %>
+  </div>
+</div>
+<style>
+  .col-data {
+    width: 1%;
+    white-space: nowrap;
+  }
+</style>

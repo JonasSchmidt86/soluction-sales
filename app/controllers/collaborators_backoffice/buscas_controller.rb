@@ -32,11 +32,15 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
     end
 
     def consulta_estoque
-      puts "CONSULTA CORES #{params} "
+      # puts "CONSULTA CORES #{params} "
       @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade)
                    .joins(:empresaprodutos)
                    .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
                    .order(quantidade: :desc, nmcor: :asc, cod_cor: :asc)
+      if @cores.blank?
+        @cores = Core.where(cod_cor:  1);
+      end
+
       respond_to do |format|
         format.json { render json: @cores }
       end
