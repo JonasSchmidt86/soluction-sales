@@ -40,9 +40,9 @@
         <thead>
           <tr>
             <th>Descrição</th>
-            <th>Data de Início</th>
+            <th class="col-data">Data Provisionado</th>
             <th>Histórico</th>
-            <th>Valor</th>
+            <th class="col-data">Valor</th>
             <th style="text-align: center;">Ações</th>
           </tr>
         </thead>
@@ -52,15 +52,11 @@
               <td><%= lancamento.descricao %></td>
               <td data-order="<%= lancamento.datainicio %>"><%= l(lancamento.datainicio) if lancamento.datainicio %></td>
               <td><%= lancamento.historico&.descricao %></td>
-              <td class="text-end">
-                <%= number_to_currency(
-                    lancamento.valor,
-                    unit: "R$",
-                    separator: ",",
-                    delimiter: ".",
-                    precision: 2,
-                    negative_format: "(%u %n)"
-                ) %>
+              <td style="white-space: nowrap;">
+                <div class="d-flex justify-content-between gap-3">
+                  <span class="text-muted">R$</span>
+                  <span><%= number_to_currency(lancamento.valor, unit: "", separator: ",", delimiter: ".", precision: 2) %></span>
+                </div>
               </td>
               <td class="col-acoes">
                 <%= link_to '#',
@@ -82,6 +78,11 @@
   </div>
 </div>
 <style>
+  .col-data {
+    width: 1%;
+    white-space: nowrap;
+  }
+
   table {
     table-layout: auto;
   }
@@ -102,6 +103,7 @@
         searching: false,
         ordering: true,
         info: false,
+        order: [[2, 'asc']],
         columnDefs: [
             { targets: 2, type: 'date' }
         ]

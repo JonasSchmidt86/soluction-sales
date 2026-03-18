@@ -9,7 +9,9 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
         @lancamentos_diversos = Lancamentosdiverso
         .unscoped
         .where(cod_empresa: current_collaborator.empresa.cod_empresa)
-        .order(:cod_tphitorico)
+        .where(ativo: true)
+        .order(cod_tphitorico: :desc)
+        .order(:cod_lancamento)
         .page(params[:page])
     end
 
@@ -32,8 +34,13 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
     end
 
     def destroy
-        if Lancamentoscaixa.exists?(cod_lancamentodiverso: @lancamentosdiverso.id)
-            redirect_to collaborators_backoffice_lancamentosdiversos_path, alert: 'Não é possível excluir este lançamento, pois há lançamentos caixa relacionados.'
+        if Lancamentoscaixa.exists?(cod_lancamentodiverso: @lancamentosdiverso.cod_lancamento)
+            if @lancamentosdiverso.update(ativo: false)
+                redirect_to collaborators_backoffice_lancamentosdiversos_path, notice: 'Lançamento inativado pois há lançamentos caixa relacionados.'
+            else
+                puts @lancamentosdiverso.errors.full_messages.join(', ')
+                redirect_to collaborators_backoffice_lancamentosdiversos_path, notice: 'Erro: ' + @lancamentosdiverso.errors.full_messages.join(', ')
+            end
         else
             @lancamentosdiverso.destroy
             redirect_to collaborators_backoffice_lancamentosdiversos_path, notice: 'Lançamento excluído com sucesso.'
@@ -60,7 +67,8 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
         @lancamentos_diversos = @q.result
                                     .unscoped
                                     .where(cod_empresa: current_collaborator.empresa.cod_empresa, provisionada: true)
-                                    .where("cod_lancamento NOT IN (SELECT cod_lancamentodiverso FROM lancamentoscaixa WHERE datapagto BETWEEN  ? AND ? and cod_lancamentodiverso IS NOT NULL)", inicio_mes, fim_mes)
+                                    .where(ativo: true)
+                                    .where("cod_lancamento NOT IN (SELECT cod_lancamentodiverso FROM lancamentoscaixa WHERE datapagto BETWEEN  ? AND ? and cod_lancamentodiverso IS NOT NULL)  ", inicio_mes, fim_mes)
 
         # Apply filters for descricao, historico, and date range
         @lancamentos_diversos = @lancamentos_diversos.where("descricao ILIKE ?", "%#{params[:descricao_cont]}%") if params[:descricao_cont].present?
@@ -82,7 +90,7 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
         end
 
         # @lancamentos_diversos = @lancamentos_diversos.order(Arel.sql("EXTRACT(DAY FROM datainicio) desc")).page(params[:page])
-        @lancamentos_diversos = @lancamentos_diversos.order(:cod_tphitorico).page(params[:page])
+        @lancamentos_diversos = @lancamentos_diversos.reorder(:cod_tphitorico).page(params[:page])
     end
 
     private
@@ -92,6 +100,6 @@ class CollaboratorsBackoffice::LancamentosdiversosController < CollaboratorsBack
     end
 
     def lancamentosdiverso_params
-        params.require(:lancamentosdiverso).permit(:descricao, :valor, :datainicio, :datavencimento, :entrada, :provisionada, :cod_empresa, :cod_funcionario, :cod_tphitorico)
+        params.require(:lancamentosdiverso).permit(:ativo, :descricao, :valor, :datainicio, :datavencimento, :entrada, :provisionada, :cod_empresa, :cod_funcionario, :cod_tphitorico)
     end
 end

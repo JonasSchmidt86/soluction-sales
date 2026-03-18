@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_16_162355) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_18_165358) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -173,10 +173,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_16_162355) do
     t.string "descricao"
     t.bigint "cod_pessoa"
     t.bigint "cod_funcionario"
-    t.bigint "cod_tphistorico"
+    t.bigint "cod_tphitorico"
     t.index ["cod_funcionario"], name: "index_contaspagrec_on_cod_funcionario"
     t.index ["cod_pessoa"], name: "index_contaspagrec_on_cod_pessoa"
-    t.index ["cod_tphistorico"], name: "index_contaspagrec_on_cod_tphistorico"
+    t.index ["cod_tphitorico"], name: "index_contaspagrec_on_cod_tphistorico"
     t.index ["natureza"], name: "index_contaspagrec_on_natureza"
   end
 
@@ -405,6 +405,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_16_162355) do
     t.decimal "valor", precision: 18, scale: 2, default: "0.0", null: false
     t.bigint "cod_funcionario"
     t.bigint "cod_tphitorico"
+    t.boolean "ativo", default: true, null: false
   end
 
   create_table "lembretes", primary_key: "codigo", id: :bigint, default: -> { "nextval('lembretes_sequence'::regclass)" }, force: :cascade do |t|
@@ -653,7 +654,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_16_162355) do
   add_foreign_key "contaspagrec", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "contaspagrec", "frete", column: "cod_frete", primary_key: "cod_frete", name: "fk_frete"
   add_foreign_key "contaspagrec", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario"
-  add_foreign_key "contaspagrec", "tiposhistoricoscaixa", column: "cod_tphistorico", primary_key: "cod_tphitorico"
+  add_foreign_key "contaspagrec", "tiposhistoricoscaixa", column: "cod_tphitorico", primary_key: "cod_tphitorico"
   add_foreign_key "contaspagrec", "tiposlancamento", column: "cod_tppagamento", primary_key: "cod_tppagamento", name: "fk_tppagto"
   add_foreign_key "contaspagrec", "venda", column: "cod_venda", primary_key: "cod_venda", name: "fk_venda"
   add_foreign_key "empresa", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"

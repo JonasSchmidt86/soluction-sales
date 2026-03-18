@@ -5,18 +5,22 @@ class Lancamentosdiverso < ApplicationRecord
 
     belongs_to :empresa,     :class_name => 'Empresa',              :foreign_key => 'cod_empresa' #, inverse_of: :lancamentos
     
-    belongs_to :funcionario, :class_name => 'Funcionario',          :foreign_key => 'cod_funcionario' #, inverse_of: :lancamentos
+    belongs_to :funcionario, :class_name => 'Funcionario', :foreign_key => 'cod_funcionario', optional: true
     
     belongs_to :historico,   :class_name => 'Tiposhistoricoscaixa', :foreign_key => 'cod_tphitorico', inverse_of: :lancamentos
     
-    validates :valor,numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" }
-    validates :descricao, presence: { message: "Descrição não pode estar em branco!" }, length: { maximum: 50, message: "Descrição deve ter no máximo 50 caracteres!" }
-    validates :datainicio, presence: { message: "Data de início é obrigatória!" }
+    validates :valor, numericality: { greater_than: 0, message: "Valor tem que ser maior que 0!" }, on: :create
+    validates :descricao, presence: { message: "Descrição não pode estar em branco!" }, length: { maximum: 50, message: "Descrição deve ter no máximo 50 caracteres!" }, on: :create
+    validates :datainicio, presence: { message: "Data de início é obrigatória!" }, on: :create
 
     paginates_per 30
     
     def self.ransackable_attributes(auth_object = nil)
       ["cod_empresa", "cod_funcionario", "cod_lancamento", "cod_tphitorico", "datainicio", "datavencimento", "descricao", "entrada", "enumprovisionado", "provisionada", "valor"]
+    end
+
+    def nome_historico
+      self.historico.descricao
     end
 
 end
