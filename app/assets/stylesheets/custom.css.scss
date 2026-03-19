@@ -70,7 +70,11 @@ form {
 
 
 
-/* ===== Correção setas jQuery UI datepicker ===== */
+.col-data {
+  width: 1%;
+  white-space: nowrap;
+}
+
 .ui-datepicker .ui-datepicker-prev span,
 .ui-datepicker .ui-datepicker-next span {
   display: none;

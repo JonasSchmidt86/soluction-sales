@@ -52,7 +52,7 @@
               <td><%= lancamento.descricao %></td>
               <td data-order="<%= lancamento.datainicio %>"><%= l(lancamento.datainicio) if lancamento.datainicio %></td>
               <td><%= lancamento.historico&.descricao %></td>
-              <td style="white-space: nowrap;">
+              <td class="col-data">
                 <div class="d-flex justify-content-between gap-3">
                   <span class="text-muted">R$</span>
                   <span><%= number_to_currency(lancamento.valor, unit: "", separator: ",", delimiter: ".", precision: 2) %></span>
@@ -78,11 +78,6 @@
   </div>
 </div>
 <style>
-  .col-data {
-    width: 1%;
-    white-space: nowrap;
-  }
-
   table {
     table-layout: auto;
   }

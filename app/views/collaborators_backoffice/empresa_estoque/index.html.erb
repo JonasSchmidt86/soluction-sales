@@ -72,10 +72,10 @@
         <thead class="table-primary">
           <tr>
             <th data-sortable="true" style="width: 3%;">Emp..</th>
-            <th data-sortable="true" style="width: 7%;">Codigo</th>
+            <th data-sortable="true" class="col-data">Codigo Produto</th>
             <th data-sortable="true">Nome</th>
             <th data-sortable="true" style="width: 20%;">Cor</th>
-            <th data-sortable="true" style="width: 7%;">Qtd</th>
+            <th data-sortable="true" style="width: 5%;">Qtd</th>
             <th data-sortable="true" style="width: 8%;">Vl Venda</th>
             <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
               <% if (current_collaborator.funcionario.permissao.nivel) == 1 %>
@@ -93,13 +93,23 @@
               <td class="align-middle "><%= estoque.produto.nome %> </td>
               <td class="align-middle "><%= estoque.cor.nmcor %> </td>
               <td class="align-middle "><%= estoque.quantidade.to_i %> </td>
-              <td class="align-middle "><%= "R$ #{number_to_currency(estoque.valorvenda, separator: ",", delimiter: "", unit:"")}" %> </td>
+              <td class="align-middle col-data">
+                <div class="d-flex justify-content-between gap-3">
+                  <span class="">R$</span>
+                  <span><%= number_to_currency(estoque.valorvenda, unit: "", separator: ",", delimiter: ".", precision: 2) %></span>
+                </div>
+              </td>
               <% if (current_collaborator.funcionario.permissao.nivel) == 1 %>
                 <% if estoque.quantidade > 0 %>
                   <% somaCusto += (estoque.ultimocusto.to_f * estoque.quantidade.to_i) %>
                   <% somaVenda += (estoque.valorvenda.to_f * estoque.quantidade.to_i) %>
                 <% end %>
-                <td class="align-middle fw-semibold"><%= "R$ #{number_to_currency( estoque.ultimocusto, separator: ",", delimiter: "", unit:"")}" %> </td>
+                <td class="align-middle fw-semibold col-data">
+                  <div class="d-flex justify-content-between gap-3">
+                    <span class="">R$</span>
+                    <span><%= number_to_currency(estoque.ultimocusto, unit: "", separator: ",", delimiter: ".", precision: 2) %></span>
+                  </div>
+                </td>
               <% end %>
               <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                 <td class="align-middle">
