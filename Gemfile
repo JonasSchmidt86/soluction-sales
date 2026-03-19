@@ -44,11 +44,10 @@ gem 'listen', '~> 3.5'
 # pg postgres
 gem 'pg', '>= 1.5.9'
 
-gem 'sassc'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 # Use SCSS for stylesheets
-gem 'sass-rails', '~> 5.0'
+gem 'sassc-rails'
 
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
