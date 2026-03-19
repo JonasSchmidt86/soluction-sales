@@ -18,5 +18,5 @@
  *= require jquery-ui/theme
  */
 
-@import "custom";
+@import "custom.scss";
 @import "bootstrap/dist/css/bootstrap";

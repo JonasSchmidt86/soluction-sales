@@ -31294,5 +31294,5 @@ a.ui-button:active,
  */
 
 
- @import "custom";
+ @import "custom.scss";
 @import "bootstrap/dist/css/bootstrap";
