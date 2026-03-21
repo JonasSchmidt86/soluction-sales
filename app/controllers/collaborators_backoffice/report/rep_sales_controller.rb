@@ -9,7 +9,7 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             return
         end
 
-        if params[:cancelada].present? && params[:cancelada] == 0
+        if params[:cancelada].present? && params[:cancelada].to_i == 0
             @sales = base_scope.where(cancelada: false)
         end
 
