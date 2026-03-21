@@ -37,6 +37,13 @@
               <%= form.text_field :dataFinal, value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
                     class: "form-control form-control-md datepicker fallback", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
             </div>
+            <div class="col-auto">
+              <% checked = params[:cancelada] == '1' %>
+              <%= form.check_box :cancelada, checked: checked, class: "btn-check", id: "cancelada-checkbox" %>
+              <label class="btn btn-outline-primary cancelada-label flex-grow-1" for="cancelada-checkbox">
+                Ativas
+              </label>
+            </div>
             <!-- Seletor de colaborador (somente para admin) -->
             <% if current_collaborator.funcionario.permissao.nivel == 1 %>
               <div class="col-auto">
@@ -223,4 +230,20 @@
       const title = document.querySelector('#modalVendedor .modal-title');
       title.textContent = `Alterar Vendedor - Venda ${vendaNumero}`;
     }
+
+
+    window.addEventListener('load', function() {
+      var canceladaCheckbox = document.getElementById('cancelada-checkbox');
+      var estoqueLabel = document.querySelector('.cancelada-label');
+
+      function updateLabel() {
+        estoqueLabel.textContent = canceladaCheckbox.checked ? 'Todas' : 'Ativas';
+      }
+
+      updateLabel();
+
+      canceladaCheckbox.addEventListener('change', function() {
+        updateLabel();
+      });
+    });
   </script>
