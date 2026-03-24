@@ -163,6 +163,7 @@ private
             else
                 consulta += " cod_venda in (select cod_venda from Venda where cod_empresa = " + current_collaborator.empresa.cod_empresa.to_s + " and cod_vendaempresa = " + params[:nrVenda] + ") "
             end            
+            return consulta;
         else 
             if params[:tipo_conta].present? && !params[:tipo_conta].nil? && params[:tipo_conta] == 'true'
                 consulta += " (natureza = 1 OR (natureza IS NULL AND cod_venda IS NULL)) "
