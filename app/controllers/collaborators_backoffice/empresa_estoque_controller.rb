@@ -93,21 +93,37 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
 
     def edit 
         # @empresa_produto
-        # puts params
+        #  puts "------------------ #{params} ------------------"
         
-        if params[:format].present?
-            puts params[:format]
+        if params[:format].present? && params[:format] === "produto"
+            # puts params[:format]
             @empresa_produtos = Empresaproduto
                         .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
                 .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
                 puts "Passou por aqui!! "
         else
 
-            @empresa_produtos = Empresaproduto
-                .joins("INNER JOIN itemcompra ON empresaproduto.cod_produto = itemcompra.cod_produto")
-                    .where(itemcompra: { cod_compra: params[:id] }) # Ajuste no filtro
-                    .where("empresaproduto.ativo = ? OR empresaproduto.quantidade > ?", true, 0)
-                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
+            query = Empresaproduto
+                .joins("INNER JOIN itemcompra 
+                            ON empresaproduto.cod_produto = itemcompra.cod_produto
+                        AND empresaproduto.cod_cor = itemcompra.cod_cor")
+
+                # 🔥 lógica fora da chain
+                if params[:format] == "compra"
+                query = query.joins("INNER JOIN compra 
+                                        ON compra.cod_compra = itemcompra.cod_compra")
+                            .where(compra: {
+                                cod_compraempresa: params[:id],
+                                cod_empresa: current_collaborator.empresa.cod_empresa
+                            })
+                else
+                query = query.where(itemcompra: { cod_compra: params[:id] })
+                end
+
+                @empresa_produtos = query
+                .where("empresaproduto.ativo = ? OR empresaproduto.quantidade > ?", true, 0)
+                .where.not(empresaproduto: { quantidade: 0 })
+                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc)
         end
         # puts @estoque.size;
     end
