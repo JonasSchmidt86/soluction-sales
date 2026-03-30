@@ -5,6 +5,7 @@
   <div class="card-body">
     <div class="d-flex gap-2 mb-3">
       <input type="text" id="filtro-cod-produto" class="form-control form-control-sm" placeholder="Código do Produto" style="max-width: 160px;">
+      <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;">
       <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;">
       <button type="button" id="btn-buscar-estoque" class="btn btn-success btn-sm">Buscar</button>
     </div>
@@ -63,8 +64,9 @@
       function buscarEstoque() {
         var codProduto = document.getElementById('filtro-cod-produto').value.trim();
         var codCompra  = document.getElementById('filtro-cod-compra').value.trim();
+        var codCor  = document.getElementById('filtro-cod-cor').value.trim();
         if (codProduto) {
-          window.location.href = '/collaborators_backoffice/empresa_estoque/' + codProduto + '/edit?format=produto';
+          window.location.href = '/collaborators_backoffice/empresa_estoque/' + codProduto + '/edit?cod_cor=' + codCor + '&format=produto';
         } else if (codCompra) {
           window.location.href = '/collaborators_backoffice/empresa_estoque/' + codCompra + '/edit?format=compra';
         }
@@ -72,7 +74,7 @@
 
       document.getElementById('btn-buscar-estoque').addEventListener('click', buscarEstoque);
 
-      ['filtro-cod-produto', 'filtro-cod-compra'].forEach(function(id) {
+      ['filtro-cod-produto', 'filtro-cod-compra', 'filtro-cod-cor'].forEach(function(id) {
         document.getElementById(id).addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); buscarEstoque(); }
         });

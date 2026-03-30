@@ -93,14 +93,22 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
 
     def edit 
         # @empresa_produto
-        #  puts "------------------ #{params} ------------------"
+        puts "------------------ #{params} ------------------"
         
         if params[:format].present? && params[:format] === "produto"
             # puts params[:format]
-            @empresa_produtos = Empresaproduto
-                        .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
-                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
-                puts "Passou por aqui!! "
+            if params[:cod_cor].present?
+                @empresa_produtos = Empresaproduto
+                            .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
+                            .where("empresaproduto.cod_cor = ? ", params[:cod_cor])
+                    .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
+                    puts "Passou por aqui!! "
+            else
+                @empresa_produtos = Empresaproduto
+                            .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
+                    .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
+                    puts "Passou por aqui!! "
+            end
         else
 
             query = Empresaproduto
