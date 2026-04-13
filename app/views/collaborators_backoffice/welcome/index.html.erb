@@ -176,7 +176,7 @@
                         <td class="text-center"><%= item['estoque'].to_i %></td>
                         <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
                         <td class="text-center"><%= item['quantidade_pedida'].to_i > 0 ? item['quantidade_pedida'].to_i : '-' %></td>
-                        <td class="text-center"><%= item['total_vendido'].to_i > 0 ? item['total_vendido'].to_i : '-' %></td>
+                        <td class="text-center"><%= item['vendido_3_meses'].to_i > 0 ? item['vendido_3_meses'].to_i : '-' %></td>
                       </tr>
                     <% end %>
                   </tbody>
