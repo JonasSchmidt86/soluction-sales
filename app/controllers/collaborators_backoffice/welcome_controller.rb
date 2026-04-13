@@ -88,28 +88,62 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
       @estoque_minimo = ActiveRecord::Base.connection.execute(
         ActiveRecord::Base.sanitize_sql_array([
           "
-          SELECT
+          
+          SELECT 
             CONCAT(p.cod_produto, '-', ep.cod_cor) AS codigo,
             p.nome,
             c.nmcor,
             ep.quantidademinima AS estoque_minimo,
             ep.quantidade AS estoque,
-            COALESCE(SUM(ipc.quantidade), 0) AS quantidade_pedida
+            COALESCE(SUM(ipc.quantidade), 0) AS quantidade_pedida,
+            COALESCE(MAX(v3.total_vendido), 0) AS vendido_3_meses
+
           FROM empresaproduto ep
+
           JOIN produto p ON ep.cod_produto = p.cod_produto
           JOIN cores c ON c.cod_cor = ep.cod_cor
-          LEFT JOIN pedidos_compras pc
-            ON pc.cod_empresa = ep.cod_empresa
-            AND pc.data_entrega IS NULL
-          LEFT JOIN itens_pedido_compras ipc
-            ON ipc.cod_produto = p.cod_produto
+
+          -- 🔥 CORRIGIDO
+          LEFT JOIN itens_pedido_compras ipc 
+            ON ipc.cod_produto = ep.cod_produto 
             AND ipc.cod_cor = ep.cod_cor
-            AND ipc.pedidos_compra_id = pc.id
-          WHERE ep.cod_empresa = ?
+
+          LEFT JOIN pedidos_compras pc 
+            ON pc.id = ipc.pedidos_compra_id
+            AND pc.cod_empresa = ep.cod_empresa
+
+          -- vendas
+          LEFT JOIN LATERAL (
+            SELECT SUM(iv.quantidade) AS total_vendido
+            FROM itemvenda iv
+            JOIN venda v ON v.cod_venda = iv.cod_venda
+            WHERE 
+              iv.cod_empresa = ep.cod_empresa
+              AND iv.cod_produto = ep.cod_produto
+              AND iv.cod_cor = ep.cod_cor
+              AND v.datavenda >= CURRENT_DATE - INTERVAL '3 months'
+          ) v3 ON true
+
+          WHERE ep.cod_empresa = 2
             AND ep.quantidademinima > 0
-          GROUP BY p.cod_produto, ep.cod_cor, p.nome, c.nmcor, ep.quantidademinima, ep.quantidade
-          HAVING ep.quantidademinima >= (ep.quantidade + COALESCE(SUM(ipc.quantidade), 0))
-          ORDER BY p.nome
+
+          GROUP BY 
+            p.cod_produto,
+            ep.cod_cor,
+            p.nome,
+            c.nmcor,
+            ep.quantidademinima,
+            ep.quantidade
+
+          HAVING ep.quantidademinima >= (
+            ep.quantidade + COALESCE(SUM(ipc.quantidade), 0)
+          )
+
+          ORDER BY vendido_3_meses DESC
+          LIMIT 5;
+
+          
+
           ",
           cod_empresa
         ])

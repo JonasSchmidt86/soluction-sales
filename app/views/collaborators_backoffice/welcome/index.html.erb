@@ -150,6 +150,40 @@
       <div class="row">
         <!-- Coluna Esquerda - Produtos -->
         <div class="col-md-6">
+          <!-- Estoque Mínimo Atingido -->
+          <% if @estoque_minimo.any? %>
+            <div class="card bg-light mb-3">
+              <div class="card-body p-2">
+                <h6 class="card-title text-muted text-center">
+                  <%= link_to 'Estoque Mínimo Atingido', collaborators_backoffice_report_stock_min_index_path, class: "text-muted text-decoration-none" %>
+                </h6>
+                <table class="table table-sm table-bordered table-hover mb-0" style="font-size: 0.78rem;">
+                  <thead class="table-secondary">
+                    <tr>
+                      <th>Código</th>
+                      <th>Produto</th>
+                      <th>Cor</th>
+                      <th class="text-center">Est.</th>
+                      <th class="text-center">Mín.</th>
+                      <th class="text-center">Ped.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% @estoque_minimo.each do |item| %>
+                      <tr>
+                        <td class="text-nowrap"><%= item['codigo'] %></td>
+                        <td><%= truncate(item['nome'], length: 25) %></td>
+                        <td class="text-nowrap"><%= item['nmcor'] %></td>
+                        <td class="text-center"><%= item['estoque'].to_i %></td>
+                        <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
+                        <td class="text-center"><%= item['quantidade_pedida'].to_i > 0 ? item['quantidade_pedida'].to_i : '-' %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% end %>
           <!-- Produtos Mais Vendidos -->
           <div class="card bg-light  mb-3">
             <div class="card-body">
@@ -173,38 +207,6 @@
               <% end %>
             </div>
           </div>
-          <%#  %>
-          <!-- Estoque Mínimo Atingido -->
-          <% if @estoque_minimo.present? %>
-            <div class="card bg-light mb-3">
-              <div class="card-body">
-                <h6 class="card-title text-muted text-center">Estoque Mínimo Atingido</h6>
-                <% if @estoque_minimo.present? %>
-                  <div class="list-group list-group-flush">
-                    <% @estoque_minimo.each do |item| %>
-                      <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
-                        <span class="text-truncate" style="max-width: 55%;">
-                          <span class="badge bg-danger me-1"><%= item['codigo'] %></span>
-                          <%= truncate(item['nome'], length: 25) %> - <%= item['nmcor'] %>
-                        </span>
-                        <span class="text-nowrap">
-                          <span class="badge bg-warning text-dark">Est: <%= item['estoque'].to_i %></span>
-                          <span class="badge bg-secondary">Min: <%= item['estoque_minimo'].to_i %></span>
-                          <% if item['quantidade_pedida'].to_i > 0 %>
-                            <span class="badge bg-info text-dark">Ped: <%= item['quantidade_pedida'].to_i %></span>
-                          <% end %>
-                        </span>
-                      </div>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <div class="text-center mt-3">
-                    <p class="text-muted">Nenhum produto abaixo do estoque mínimo</p>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
           <%#  %>
         </div>
         <!-- Coluna Direita - Informações Financeiras -->
