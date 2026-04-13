@@ -124,7 +124,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
               AND v.datavenda >= CURRENT_DATE - INTERVAL '3 months'
           ) v3 ON true
 
-          WHERE ep.cod_empresa = 2
+          WHERE ep.cod_empresa = ?
             AND ep.quantidademinima > 0
             AND ep.ativo = true
 
@@ -142,8 +142,6 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
 
           ORDER BY vendido_3_meses DESC
           LIMIT 5;
-
-          
 
           ",
           cod_empresa
