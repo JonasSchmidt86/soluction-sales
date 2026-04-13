@@ -1,0 +1,69 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_mais_vendidos_path do %>
+      <h4 class="text-white mb-0">Relatório de Produtos Mais Vendidos</h4>
+    <% end %>
+  </div>
+  <div class="card-body">
+    <%= form_with url: collaborators_backoffice_report_mais_vendidos_path, method: :get, local: true, class: "mb-4" do |f| %>
+      <div class="row g-2">
+        <div class="col-md-3">
+          <%= f.text_field :produto, placeholder: "Código ou nome do produto", value: params[:produto], class: "form-control" %>
+        </div>
+        <div class="col-auto">
+          <%= f.text_field :dataInicial,
+                    value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
+                    class: "form-control form-control-md datepicker fallback",
+                    placeholder: "Data Inicial",
+                    style: "min-width: 115px; max-width: 115px;" %>
+        </div>
+        <!-- Data Final -->
+        <div class="col-auto">
+          <%= f.text_field :dataFinal, value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
+                    class: "form-control form-control-md datepicker fallback", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
+        </div>
+        <div class="col-auto">
+          <%= f.collection_select(:cod_grupo, Grupo.where(ativo: true).order(:cod_grupo), :cod_grupo, :nomegrupo, 
+                                     { include_blank: 'Grupo', selected: params[:cod_grupo] }, 
+                                     class: "form-control", style: "min-width: 115px; max-width: 220px;" ) %>
+        </div>
+        <div class="col-auto">
+          <%= f.collection_select(:cod_marca, Marca.order(:cod_marca), :cod_marca, :nome, 
+                                     { include_blank: 'Marca', selected: params[:cod_marca] }, 
+                                     class: "form-control", style: "min-width: 115px; max-width: 220px;" ) %>
+        </div>
+        <div class="col-md-2">
+          <%= f.submit "Filtrar", class: "btn btn-primary" %>
+        </div>
+      </div>
+    <% end %>
+    <% if @items %>
+      <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
+        <div class="dataTable-container">
+          <table id="datatablesSimple" class="dataTable-table table-striped" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Código Cor</th>
+                <th>Produto</th>
+                <th>Cor</th>
+                <th class="text-end">Qtd Vendida</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @items.each do |item| %>
+                <tr>
+                  <td><%= item['cod_produto'] %></td>
+                  <td><%= item['cod_cor'] %></td>
+                  <td><%= item['nome_produto'] %></td>
+                  <td><%= item['nome_cor'] %></td>
+                  <td class="text-end"><%= item['total_quantidade'] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
