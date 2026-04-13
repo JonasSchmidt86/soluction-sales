@@ -162,10 +162,10 @@
                     <tr>
                       <th>Código</th>
                       <th>Produto</th>
-                      <th>Cor</th>
                       <th class="text-center">Est.</th>
                       <th class="text-center">Mín.</th>
                       <th class="text-center">Ped.</th>
+                      <th class="text-center">Ven.</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -173,10 +173,10 @@
                       <tr>
                         <td class="text-nowrap"><%= item['codigo'] %></td>
                         <td><%= truncate(item['nome'], length: 25) %></td>
-                        <td class="text-nowrap"><%= item['nmcor'] %></td>
                         <td class="text-center"><%= item['estoque'].to_i %></td>
                         <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
                         <td class="text-center"><%= item['quantidade_pedida'].to_i > 0 ? item['quantidade_pedida'].to_i : '-' %></td>
+                        <td class="text-center"><%= item['total_vendido'].to_i > 0 ? item['total_vendido'].to_i : '-' %></td>
                       </tr>
                     <% end %>
                   </tbody>
