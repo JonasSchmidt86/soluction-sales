@@ -116,7 +116,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
           LEFT JOIN LATERAL (
             SELECT SUM(iv.quantidade) AS total_vendido
             FROM itemvenda iv
-            JOIN venda v ON v.cod_venda = iv.cod_venda
+            JOIN venda v ON v.cod_venda = iv.cod_venda and v.cancelada = false and v.tipo <> 'T'
             WHERE 
               iv.cod_empresa = ep.cod_empresa
               AND iv.cod_produto = ep.cod_produto
@@ -126,6 +126,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
 
           WHERE ep.cod_empresa = 2
             AND ep.quantidademinima > 0
+            AND ep.ativp = true
 
           GROUP BY 
             p.cod_produto,
