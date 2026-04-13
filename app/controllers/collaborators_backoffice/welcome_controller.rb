@@ -126,7 +126,7 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
 
           WHERE ep.cod_empresa = 2
             AND ep.quantidademinima > 0
-            AND ep.ativp = true
+            AND ep.ativo = true
 
           GROUP BY 
             p.cod_produto,
