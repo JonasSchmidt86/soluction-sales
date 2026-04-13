@@ -82,19 +82,38 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
       ).sum(:valorparcela) || 0
         
       # 5 produtos mais lucrativos do mês
-      @produtos_mais_lucrativos = Itemvenda.joins(:venda, :produto)
-        .where(
-          "DATE_PART('month', venda.datavenda) = ? AND DATE_PART('year', venda.datavenda) = ? AND venda.cod_empresa = ? AND venda.tipo = 'V' AND itemvenda.valororiginal > 0",
-          Date.current.month, Date.current.year, current_collaborator.cod_empresa
-        )
-        .group("produto.cod_produto")
-        .select(
-          "MIN(produto.nome) AS nome,
-          produto.cod_produto,
-          SUM(((itemvenda.quantidade * itemvenda.valorunitario) + itemvenda.valor_acrescimo - itemvenda.valor_desconto) - (itemvenda.quantidade * itemvenda.valororiginal)) AS lucro_total"
-        )
-        .order("lucro_total DESC")
-        .limit(6)
+#    mudar para os 5 que estão com estoque minimo 
+
+      cod_empresa = current_collaborator.cod_empresa
+      @estoque_minimo = ActiveRecord::Base.connection.execute(
+        ActiveRecord::Base.sanitize_sql_array([
+          "
+          SELECT
+            CONCAT(p.cod_produto, '-', ep.cod_cor) AS codigo,
+            p.nome,
+            c.nmcor,
+            ep.quantidademinima AS estoque_minimo,
+            ep.quantidade AS estoque,
+            COALESCE(SUM(ipc.quantidade), 0) AS quantidade_pedida
+          FROM empresaproduto ep
+          JOIN produto p ON ep.cod_produto = p.cod_produto
+          JOIN cores c ON c.cod_cor = ep.cod_cor
+          LEFT JOIN pedidos_compras pc
+            ON pc.cod_empresa = ep.cod_empresa
+            AND pc.data_entrega IS NULL
+          LEFT JOIN itens_pedido_compras ipc
+            ON ipc.cod_produto = p.cod_produto
+            AND ipc.cod_cor = ep.cod_cor
+            AND ipc.pedidos_compra_id = pc.id
+          WHERE ep.cod_empresa = ?
+            AND ep.quantidademinima > 0
+          GROUP BY p.cod_produto, ep.cod_cor, p.nome, c.nmcor, ep.quantidademinima, ep.quantidade
+          HAVING ep.quantidademinima >= (ep.quantidade + COALESCE(SUM(ipc.quantidade), 0))
+          ORDER BY p.nome
+          ",
+          cod_empresa
+        ])
+      )
 
     end
     private

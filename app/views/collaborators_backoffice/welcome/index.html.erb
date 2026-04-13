@@ -173,28 +173,39 @@
               <% end %>
             </div>
           </div>
-          <!-- Produtos Mais Lucrativos -->
-          <div class="card bg-light mb-3">
-            <div class="card-body">
-              <h6 class="card-title text-muted text-center">Produtos + Lucrativos (Mês)</h6>
-              <% if @produtos_mais_lucrativos.present? %>
-                <div class="list-group list-group-flush">
-                  <% @produtos_mais_lucrativos.each_with_index do |produto, index| %>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
-                      <span>
-                        <span class="badge bg-<%= ['success', 'primary', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
-                        <%= truncate(produto.nome, length: 50) %>
-                      </span>
-                    </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <div class="text-center mt-3">
-                  <p class="text-muted">Sem dados de lucro</p>
-                </div>
-              <% end %>
+          <%#  %>
+          <!-- Estoque Mínimo Atingido -->
+          <% if @estoque_minimo.present? %>
+            <div class="card bg-light mb-3">
+              <div class="card-body">
+                <h6 class="card-title text-muted text-center">Estoque Mínimo Atingido</h6>
+                <% if @estoque_minimo.present? %>
+                  <div class="list-group list-group-flush">
+                    <% @estoque_minimo.each do |item| %>
+                      <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                        <span class="text-truncate" style="max-width: 55%;">
+                          <span class="badge bg-danger me-1"><%= item['codigo'] %></span>
+                          <%= truncate(item['nome'], length: 25) %> - <%= item['nmcor'] %>
+                        </span>
+                        <span class="text-nowrap">
+                          <span class="badge bg-warning text-dark">Est: <%= item['estoque'].to_i %></span>
+                          <span class="badge bg-secondary">Min: <%= item['estoque_minimo'].to_i %></span>
+                          <% if item['quantidade_pedida'].to_i > 0 %>
+                            <span class="badge bg-info text-dark">Ped: <%= item['quantidade_pedida'].to_i %></span>
+                          <% end %>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="text-center mt-3">
+                    <p class="text-muted">Nenhum produto abaixo do estoque mínimo</p>
+                  </div>
+                <% end %>
+              </div>
             </div>
-          </div>
+          <% end %>
+          <%#  %>
         </div>
         <!-- Coluna Direita - Informações Financeiras -->
         <div class="col-md-6">
