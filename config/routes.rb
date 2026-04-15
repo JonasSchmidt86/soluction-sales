@@ -30,6 +30,7 @@ Rails.application.routes.draw do
     get 'check_cpf_cnpj', to: 'check_cpf_cnpj'
     # cria varias rotas possiveis sem precisar criar uma a uma
     resources :collaborators, only: [:index, :edit, :update, :new, :create, :destroy, :check_cpf_cnpj]
+    resources :atendimentos, only: [:create, :edit, :update, :destroy]
     
     resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] do
       member do
@@ -125,6 +126,7 @@ Rails.application.routes.draw do
     get 'report_stock_min', to: 'report/rep_stock_min#index', as: 'report_stock_min_index'
     get 'report/mais_vendidos', to: 'report/rep_mais_vendidos#index', as: 'report_mais_vendidos'
     post 'report_stock_min/add_to_order', to: 'report/rep_stock_min#add_to_order', as: 'add_to_order_report_rep_stock_min'
+    get 'report_atendimentos', to: 'report/rep_atendimentos#index', as: 'report_atendimentos'
   end
 
   resources :produtos do

@@ -1,0 +1,132 @@
+<div class="modal fade" id="atendimentoModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="atendimentoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h6 class="modal-title" id="atendimentoModalLabel">Novo Atendimento</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 mt-3">
+        <div class="form-floating mb-3">
+          <select name="origem_id" id="origem_id" class="form-control">
+            <option value="">Selecione</option>
+            <% Origem.where(ativo: true).each do |origem| %>
+              <option value="<%= origem.id %>"><%= origem.descricao %></option>
+            <% end %>
+          </select>
+          <label for="origem_id">Como conheceu?</label>
+        </div>
+        <div class="form-floating mb-3">
+          <input type="text" id="atend_nome" name="nome" class="text form-control" placeholder="Nome" autocomplete="off">
+          <label for="atend_nome">Nome (opcional)</label>
+          <div id="atend_results_list" class="list-group position-absolute" style="display: none; z-index: 1060; width: 100%;"></div>
+          <input type="hidden" id="atend_cod_cliente">
+        </div>
+        <div class="form-floating mb-3">
+          <input type="text" id="atend_telefone" name="telefone" class="form-control phone_with_ddd" placeholder="Telefone">
+          <label for="atend_telefone">Telefone</label>
+        </div>
+        <div class="form-check mb-3">
+          <input type="checkbox" name="vendeu" class="form-check-input" id="vendeu">
+          <label class="form-check-label" for="vendeu">Virou venda</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="salvarAtendimento()">Salvar</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  window.addEventListener('load', function() {
+    var nomeInput     = document.getElementById('atend_nome');
+    var resultsList   = document.getElementById('atend_results_list');
+    var codCliente    = document.getElementById('atend_cod_cliente');
+    var apiUrl        = '/collaborators_backoffice/buscas/buscar_pessoas';
+
+    // Busca de pessoas ao pressionar Enter
+    nomeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var query = nomeInput.value.trim();
+        if (!query) return;
+
+        $.ajax({
+          url: apiUrl,
+          method: 'GET',
+          data: { entidade: 'Pessoa', query: query },
+          success: function(data) {
+            resultsList.innerHTML = '';
+            data.forEach(function(person) {
+              var item = document.createElement('div');
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = person.nome;
+              item.style.cursor = 'pointer';
+              item.addEventListener('click', function() {
+                nomeInput.value = person.nome;
+                codCliente.value = person.cod_pessoa;
+                document.getElementById('atend_telefone').value = person.telefone || '';
+                $(document.getElementById('atend_telefone')).trigger('input');
+                resultsList.innerHTML = '';
+                resultsList.style.display = 'none';
+              });
+              resultsList.appendChild(item);
+            });
+            resultsList.style.display = data.length ? 'block' : 'none';
+          }
+        });
+      } else if (e.key === 'Escape') {
+        resultsList.innerHTML = '';
+        resultsList.style.display = 'none';
+        codCliente.value = '';
+      }
+    });
+
+    function salvarAtendimento() {
+      var dados = {
+        atendimento: {
+          origem_id:   document.getElementById('origem_id').value,
+          nome:        nomeInput.value,
+          telefone:    document.getElementById('atend_telefone').value,
+          vendeu:      document.getElementById('vendeu').checked,
+          cod_cliente: codCliente.value || null
+        }
+      };
+
+      fetch('<%= collaborators_backoffice_atendimentos_path %>', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(dados)
+      })
+      .then(r => r.json())
+      .then(data => {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('atendimentoModal'));
+        modal.hide();
+        document.getElementById('atendimentoModal').addEventListener('hidden.bs.modal', function() {
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('padding-right');
+        }, { once: true });
+        $.bootstrapGrowl(data.message, { ele: 'body', type: 'success', offset: { from: 'top', amount: 60 }, align: 'center', width: 300, delay: 3000 });
+      })
+      .catch(() => $.bootstrapGrowl('Erro ao salvar atendimento.', { type: 'danger' }));
+    }
+
+    document.getElementById('atendimentoModal').addEventListener('hidden.bs.modal', function() {
+      document.getElementById('origem_id').value = '';
+      nomeInput.value = '';
+      document.getElementById('atend_telefone').value = '';
+      document.getElementById('vendeu').checked = false;
+      codCliente.value = '';
+      resultsList.innerHTML = '';
+      resultsList.style.display = 'none';
+    });
+
+    window.salvarAtendimento = salvarAtendimento;
+  });
+</script>

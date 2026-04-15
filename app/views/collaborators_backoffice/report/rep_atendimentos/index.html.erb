@@ -1,0 +1,129 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_atendimentos_path do %>
+      <h4 class="text-white mb-0">Relatório de Atendimentos</h4>
+    <% end %>
+    <div class="ms-auto">
+      <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
+        <i class="fa fa-plus"></i> Novo Atendimento
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <%= form_with(url: collaborators_backoffice_report_atendimentos_path, local: true, method: :get, class: "mb-3") do |form| %>
+      <div class="container-fluid">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto" style="max-width: 80px;">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]),
+                  onchange: 'this.form.submit()', class: "form-select form-select-md" %>
+          </div>
+          <div class="col-auto">
+            <%= form.text_field :term, class: "text form-control form-control-md",
+                  value: params[:term], placeholder: "Pessoa..." %>
+          </div>
+          <div class="col-auto">
+            <%= form.text_field :dataInicial,
+                  value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
+                  class: "form-control form-control-md datepicker fallback",
+                  placeholder: "Data Inicial", style: "width: 115px;" %>
+          </div>
+          <div class="col-auto">
+            <%= form.text_field :dataFinal,
+                  value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
+                  class: "form-control form-control-md datepicker fallback",
+                  placeholder: "Data Final", style: "width: 115px;" %>
+          </div>
+          <div class="col-auto">
+            <%= form.collection_select(:cod_funcionario,
+                  Funcionario.select(:cod_funcionario, :usuario).where(
+                    "cod_funcionario IN (SELECT cod_funcionario FROM funcionarioempresa WHERE ativo = true AND cod_empresa = ?) AND datademissao IS NULL",
+                    current_collaborator.cod_empresa),
+                  :cod_funcionario, :usuario,
+                  { include_blank: 'Colaborador', selected: params[:cod_funcionario] },
+                  class: "form-select form-select-md", style: "width: 150px;") %>
+          </div>
+          <div class="col-auto">
+            <%= select_tag :vendeu,
+                  options_for_select([['Todos', ''], ['Virou Venda', '1'], ['Não Vendeu', '0']], params[:vendeu]),
+                  class: "form-select form-select-md", style: "width: 140px;" %>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-success btn-md">Buscar</button>
+          </div>
+          <div class="col-auto ms-auto d-flex gap-2">
+            <div class="form-floating">
+              <input type="text" id="total_atendimentos" class="form-control form-control-sm text-bg-info" readonly style="min-width: 100px;">
+              <label>Total</label>
+            </div>
+            <div class="form-floating">
+              <input type="text" id="total_venderam" class="form-control form-control-sm text-bg-success" readonly style="min-width: 100px;">
+              <label>Venderam</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <table class="table table-bordered table-striped table-hover table-sm">
+      <thead class="table-primary">
+        <tr>
+          <th class="col-data">Data</th>
+          <th>Pessoa</th>
+          <th>Telefone</th>
+          <th>Origem</th>
+          <th>Colaborador</th>
+          <th class="text-center col-data">Vendeu?</th>
+          <th>Observação</th>
+          <th class="col-data"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @atendimentos.each do |atendimento| %>
+          <tr class="<%= atendimento.vendeu ? 'table-success' : '' %>">
+            <td class="align-middle col-data"><%= atendimento.data_atendimento.strftime("%d/%m/%Y %H:%M") %></td>
+            <td class="align-middle"><%= atendimento.nome.presence || atendimento.pessoa&.nome || '-' %></td>
+            <td class="align-middle col-data"><%= atendimento.telefone.presence || '-' %></td>
+            <td class="align-middle"><%= atendimento.origem&.descricao || '-' %></td>
+            <td class="align-middle"><%= atendimento.funcionario&.usuario || '-' %></td>
+            <td class="align-middle text-center">
+              <% if atendimento.vendeu %>
+                <span class="badge bg-success">Sim</span>
+              <% else %>
+                <span class="badge bg-secondary">Não</span>
+              <% end %>
+            </td>
+            <td class="align-middle"><%= atendimento.observacao.presence || '-' %></td>
+            <td class="align-middle">
+              <div class="d-flex gap-1">
+                <%= link_to edit_collaborators_backoffice_atendimento_path(atendimento), class: "btn btn-sm btn-warning" do %>
+                  <i class="fa fa-edit"></i>
+                <% end %>
+                <%= link_to collaborators_backoffice_atendimento_path(atendimento), method: :delete,
+                      class: "btn btn-sm btn-danger",
+                      data: { confirm: "Deseja excluir este atendimento?" } do %>
+                  <i class="fa fa-trash"></i>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @atendimentos.respond_to?(:total_pages) %>
+      <div class="dataTable-bottom">
+        <div class="dataTable-info"><%= page_entries_info @atendimentos, entry_name: 'atendimento' %></div>
+        <div class="text-center"><%= paginate @atendimentos %></div>
+      </div>
+    <% else %>
+      <div class="dataTable-bottom">
+        <h5>Exibindo <%= @atendimentos.size %> registros</h5>
+      </div>
+    <% end %>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('total_atendimentos').value = '<%= @total %>';
+    document.getElementById('total_venderam').value = '<%= @venderam %>';
+  });
+</script>
+<%= render partial: 'collaborators_backoffice/welcome/modal_atendimento' %>

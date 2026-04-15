@@ -2,7 +2,8 @@
   <!-- Painel de Acesso Rápido -->
   <div class="card mb-4 border-0 shadow-sm">
     <div class="card-header bg-primary text-white">
-      <h5 class="mb-0"><i class="fa fa-th"></i> Acesso Rápido</h5>
+      <h5 class="mb-0"><i class="fa fa-th"></i> Acesso Rápido
+      </h5>
     </div>
     <div class="card-body">
       <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -67,14 +68,17 @@
             </div>
           </div>
         </div>
-        <!-- Contas -->
+        <!-- Atendimento -->
         <div class="col">
-          <div class="card h-100 border-warning">
+          <div class="card h-100 border-success">
             <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-money-bill"></i> Contas</h5>
-              <p class="card-text">Gerencie contas a pagar e receber</p>
+              <h5 class="card-title"><i class="fa fa-headset"></i> Atendimentos</h5>
+              <p class="card-text">Registre atendimentos de clientes</p>
               <div class="d-flex gap-2">
-                <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "btn btn-outline-warning" do %>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
+                  <i class="fa fa-plus"></i> Novo Atendimento
+                </button>
+                <%= link_to collaborators_backoffice_report_atendimentos_path, class: "btn btn-outline-success" do %>
                   <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>
@@ -303,3 +307,4 @@
 </div>
 <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Welcome/index' } %>
 <%= render partial: 'collaborators_backoffice/lembretes/shared/lembrete_modal', locals: { action_message: 'Welcome/index' } %>
+<%= render partial: 'collaborators_backoffice/welcome/modal_atendimento' %>

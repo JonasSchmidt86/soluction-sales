@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_18_165358) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -62,6 +62,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_18_165358) do
     t.bigint "cod_produto", null: false
     t.bigint "cod_empresa", null: false
     t.bigint "cod_funcionario", null: false
+  end
+
+  create_table "atendimentos", force: :cascade do |t|
+    t.integer "cod_empresa", null: false
+    t.datetime "data_atendimento", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "nome"
+    t.string "telefone"
+    t.bigint "origem_id"
+    t.boolean "vendeu", default: false, null: false
+    t.integer "cod_cliente"
+    t.text "observacao"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "cod_funcionario"
+    t.index ["origem_id"], name: "index_atendimentos_on_origem_id"
   end
 
   create_table "banco", primary_key: "cod_banco", id: :bigint, default: -> { "nextval('banco_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -437,6 +452,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_18_165358) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "origems", force: :cascade do |t|
+    t.string "descricao", null: false
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "parametros", primary_key: "cod_parametro", id: :bigint, default: -> { "nextval('parametro_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo", null: false
     t.date "dataencerramento"
@@ -632,6 +654,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_18_165358) do
   add_foreign_key "assistencia", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
   add_foreign_key "assistencia", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
   add_foreign_key "assistencia", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"
+  add_foreign_key "atendimentos", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
+  add_foreign_key "atendimentos", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario"
+  add_foreign_key "atendimentos", "origems"
+  add_foreign_key "atendimentos", "pessoa", column: "cod_cliente", primary_key: "cod_pessoa"
   add_foreign_key "bancocheques", "banco", column: "cod_banco", primary_key: "cod_banco", name: "fk_banco"
   add_foreign_key "bancocheques", "contaspagrec", column: "cod_contaspagrec", primary_key: "cod_contaspagrec", name: "fk_contaspagrec"
   add_foreign_key "bancocheques", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"

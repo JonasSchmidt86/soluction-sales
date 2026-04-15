@@ -1,0 +1,117 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_atendimentos_path do %>
+      <h4 class="text-white mb-0">Editar Atendimento</h4>
+    <% end %>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: [:collaborators_backoffice, @atendimento], local: true) do |form| %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.text_field :nome, class: "text form-control", placeholder: "Nome", autocomplete: "off", id: "edit_nome" %>
+            <%= form.label :nome, "Nome" %>
+            <div id="edit_results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
+            <input type="hidden" id="edit_cod_cliente" name="atendimento[cod_cliente]" value="<%= @atendimento.cod_cliente %>">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.text_field :telefone, class: "form-control phone_with_ddd", placeholder: "Telefone" %>
+            <%= form.label :telefone, "Telefone" %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.collection_select :origem_id, Origem.where(ativo: true), :id, :descricao,
+                  { include_blank: 'Selecione', selected: @atendimento.origem_id },
+                  class: "form-control" %>
+            <%= form.label :origem_id, "Como conheceu?" %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.collection_select :cod_funcionario,
+                  Funcionario.select(:cod_funcionario, :usuario).where(
+                    "cod_funcionario IN (SELECT cod_funcionario FROM funcionarioempresa WHERE ativo = true AND cod_empresa = ?) AND datademissao IS NULL",
+                    current_collaborator.cod_empresa),
+                  :cod_funcionario, :usuario,
+                  { include_blank: 'Selecione', selected: @atendimento.cod_funcionario },
+                  class: "form-control" %>
+            <%= form.label :cod_funcionario, "Colaborador" %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.text_field :data_atendimento,
+                  value: @atendimento.data_atendimento&.strftime("%d/%m/%Y"),
+                  class: "form-control datepicker fallback",
+                  placeholder: "Data" %>
+            <%= form.label :data_atendimento, "Data Atendimento" %>
+          </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-center">
+          <div class="form-check form-switch ms-2">
+            <%= form.check_box :vendeu, class: "form-check-input", role: "switch", id: "edit_vendeu" %>
+            <%= form.label :vendeu, "Virou venda", class: "form-check-label", for: "edit_vendeu" %>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-floating">
+            <%= form.text_area :observacao, class: "text form-control", placeholder: "Observação", style: "height: 100px" %>
+            <%= form.label :observacao, "Observação" %>
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <%= form.submit "Salvar", class: "btn btn-success" %>
+          <%= link_to "Cancelar", collaborators_backoffice_report_atendimentos_path, class: "btn btn-primary" %>
+          <%= link_to "Excluir", collaborators_backoffice_atendimento_path(@atendimento), method: :delete,
+                class: "btn btn-danger ms-auto",
+                data: { confirm: "Deseja excluir este atendimento?" } %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+<script>
+  window.addEventListener('load', function() {
+    var nomeInput   = document.getElementById('edit_nome');
+    var resultsList = document.getElementById('edit_results_list');
+    var codCliente  = document.getElementById('edit_cod_cliente');
+
+    nomeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var query = nomeInput.value.trim();
+        if (!query) return;
+
+        $.ajax({
+          url: '/collaborators_backoffice/buscas/buscar_pessoas',
+          method: 'GET',
+          data: { entidade: 'Pessoa', query: query },
+          success: function(data) {
+            resultsList.innerHTML = '';
+            data.forEach(function(person) {
+              var item = document.createElement('div');
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = person.nome;
+              item.style.cursor = 'pointer';
+              item.addEventListener('click', function() {
+                nomeInput.value = person.nome;
+                codCliente.value = person.cod_pessoa;
+                document.querySelector('input[name="atendimento[telefone]"]').value = person.telefone || '';
+                resultsList.innerHTML = '';
+                resultsList.style.display = 'none';
+              });
+              resultsList.appendChild(item);
+            });
+            resultsList.style.display = data.length ? 'block' : 'none';
+          }
+        });
+      } else if (e.key === 'Escape') {
+        resultsList.innerHTML = '';
+        resultsList.style.display = 'none';
+      }
+    });
+  });
+</script>
