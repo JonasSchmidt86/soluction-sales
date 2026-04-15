@@ -9,7 +9,7 @@
         <div class="form-floating mb-3">
           <select name="origem_id" id="origem_id" class="form-control">
             <option value="">Selecione</option>
-            <% Origem.where(ativo: true).each do |origem| %>
+            <% Origem.where(ativo: true).order(:id).each do |origem| %>
               <option value="<%= origem.id %>"><%= origem.descricao %></option>
             <% end %>
           </select>
