@@ -127,6 +127,8 @@ Rails.application.routes.draw do
     get 'report/mais_vendidos', to: 'report/rep_mais_vendidos#index', as: 'report_mais_vendidos'
     post 'report_stock_min/add_to_order', to: 'report/rep_stock_min#add_to_order', as: 'add_to_order_report_rep_stock_min'
     get 'report_atendimentos', to: 'report/rep_atendimentos#index', as: 'report_atendimentos'
+    get 'report_sugestao_compra', to: 'report/rep_sugestao_compra#index', as: 'report_sugestao_compra'
+    post 'report_sugestao_compra/add_to_order', to: 'report/rep_sugestao_compra#add_to_order', as: 'add_to_order_sugestao_compra'
   end
 
   resources :produtos do

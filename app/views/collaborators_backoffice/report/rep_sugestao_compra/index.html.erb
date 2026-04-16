@@ -1,0 +1,131 @@
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_report_sugestao_compra_path do %>
+      <h4 class="text-white mb-0">Sugestão de Compra</h4>
+    <% end %>
+  </div>
+  <% if flash[:error] %>
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+      <%= flash[:error] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+  <div class="card-body">
+    <%= form_with(url: collaborators_backoffice_report_sugestao_compra_path, local: true, method: :get, class: "mb-3") do |form| %>
+      <div class="container-fluid">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <%= form.text_field :term, class: "text form-control form-control-md",
+                  value: params[:term], placeholder: "Produto..." %>
+          </div>
+          <div class="col-auto">
+            <%= form.collection_select :cod_marca,
+                  Marca.order(:nome), :cod_marca, :nome,
+                  { include_blank: 'Marca', selected: params[:cod_marca] },
+                  class: "form-select form-select-md", style: "width: 160px;" %>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-success btn-md">Buscar</button>
+          </div>
+          <div class="col-auto d-flex align-items-center gap-1">
+            <%= form.number_field :meses, value: params[:meses].presence || 3,
+                  class: "form-control form-control-md text-center",
+                  style: "width: 75px;", min: 1, max: 24, placeholder: "Meses" %>
+            <span class="text-muted">Meses</span>
+          </div>
+          <div class="col-auto d-flex align-items-center gap-1">
+            <%= form.number_field :qtd_min, value: params[:qtd_min].presence || 1,
+                  class: "form-control form-control-md text-center",
+                  style: "width: 90px;", min: 0, placeholder: "Qtd mín" %>
+            <span class="text-muted">Vendas</span>
+          </div>
+          <div class="col-auto ms-auto">
+            <span class="badge bg-secondary fs-6"><%= @produtos.count %> produto(s)</span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <table class="table table-bordered table-striped table-hover table-sm">
+      <thead class="table-primary">
+        <tr>
+          <th class="col-data">Código</th>
+          <th>Produto</th>
+          <th>Cor</th>
+          <th>Marca</th>
+          <th class="text-center col-data">Vendido<br>
+            <small><%= @meses %> meses</small></th>
+          <th class="text-center col-data">Estoque</th>
+          <th class="text-center col-data">Mín.</th>
+          <th class="text-center col-data">Média<br>
+            <small>mensal</small></th>
+          <th class="text-center col-data">Sugestão<br>
+            <small>compra</small></th>
+          <th class="text-center col-data">Qtd<br>
+            <small>pedida</small></th>
+          <th class="col-data"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @produtos.each do |item| %>
+          <tr>
+            <td class="align-middle col-data"><%= "#{item['cod_produto']}-#{item['cod_cor']}" %></td>
+            <td class="align-middle"><%= item['nome'] %></td>
+            <td class="align-middle"><%= item['nmcor'] %></td>
+            <td class="align-middle"><%= item['nome_marca'] %></td>
+            <td class="align-middle text-center"><%= item['total_vendido'].to_i %></td>
+            <td class="align-middle text-center"><%= item['estoque'].to_i %></td>
+            <td class="align-middle text-center"><%= item['quantidademinima'].to_i %></td>
+            <td class="align-middle text-center"><%= item['media_mensal'].to_i %></td>
+            <td class="align-middle text-center fw-bold text-success"><%= item['sugestao_compra'].to_i %></td>
+            <td class="align-middle text-center">
+              <% qtd = item['quantidade_pedida'].to_i %>
+              <% if qtd > 0 %>
+                <span class="badge bg-info text-dark"><%= qtd %></span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td class="align-middle text-center">
+              <% if item['ultimo_fornecedor_id'].present? %>
+                <button type="button" class="btn btn-sm btn-success btn-pedir"
+                  data-cod-produto="<%= item['cod_produto'] %>"
+                  data-cod-cor="<%= item['cod_cor'] %>"
+                  data-cod-fornecedor="<%= item['ultimo_fornecedor_id'] %>"
+                  onclick="submeterPedido(this)">
+                  <i class="fas fa-shopping-cart"></i>
+                </button>
+              <% else %>
+                <button class="btn btn-sm btn-secondary" disabled title="Sem fornecedor recente">
+                  <i class="fas fa-shopping-cart"></i>
+                </button>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @produtos.count == 0 %>
+      <div class="text-center mt-3">
+        <p class="text-muted">Nenhum produto encontrado</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+<%= form_tag collaborators_backoffice_add_to_order_sugestao_compra_path, method: :post, id: 'form-pedido', style: 'display:none' do %>
+  <%= hidden_field_tag :cod_produto, '', id: 'pedido_cod_produto' %>
+  <%= hidden_field_tag :cod_cor, '', id: 'pedido_cod_cor' %>
+  <%= hidden_field_tag :cod_fornecedor, '', id: 'pedido_cod_fornecedor' %>
+  <%= hidden_field_tag :meses, params[:meses] %>
+  <%= hidden_field_tag :qtd_min, params[:qtd_min] %>
+  <%= hidden_field_tag :term, params[:term] %>
+  <%= hidden_field_tag :cod_marca, params[:cod_marca] %>
+<% end %>
+<script>
+  function submeterPedido(btn) {
+    if (!confirm('Adicionar ao pedido?')) return;
+    document.getElementById('pedido_cod_produto').value  = btn.dataset.codProduto;
+    document.getElementById('pedido_cod_cor').value      = btn.dataset.codCor;
+    document.getElementById('pedido_cod_fornecedor').value = btn.dataset.codFornecedor;
+    document.getElementById('form-pedido').submit();
+  }
+</script>

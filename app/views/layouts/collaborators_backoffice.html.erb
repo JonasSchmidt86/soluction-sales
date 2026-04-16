@@ -153,9 +153,6 @@
               </a>
               <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
-                  <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
-                    Pedidos de Compra
-                  <% end %>
                   <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
                     XML    
                   <% end %>
@@ -164,6 +161,12 @@
                   <% end %>
                   <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
                     Relatório de Compra
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+                    Sugestão de Compra
+                  <% end %>
+                  <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
+                    Pedidos de Compra
                   <% end %>
                 </nav>
               </div>
@@ -224,6 +227,9 @@
                     <%= link_to collaborators_backoffice_acertosestoque_index_path, class:"nav-link" do %>
                       Acertos estoque
                     <% end %>
+                    <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+                      Sugestão de Compra
+                    <% end %>
                   </nav>
                 </div>
               <% end %>
@@ -254,6 +260,9 @@
                   <% end %>
                   <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
                     Produtos Mais Vendidos
+                  <% end %>
+                  <%= link_to collaborators_backoffice_report_atendimentos_path, class:"nav-link" do %>
+                    Atendimentos
                   <% end %>
                   <% if current_collaborator.funcionario.permissao.nivel == 1 %>
                     <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
