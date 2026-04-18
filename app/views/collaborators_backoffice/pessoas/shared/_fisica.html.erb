@@ -1,30 +1,37 @@
 <div class="row mb-2 g-2">
   <div class="col-md-3">
+    <div class="form-floating border border-warning rounded" style="border-width: 2px !important;">
+      <%= form.collection_select :origem_id, Origem.where(ativo: true).order(:id), :id, :descricao,
+            { include_blank: 'Não informado' }, { class: "form-control bg-warning bg-opacity-10" } %>
+      <%= form.label :origem_id, "⚠️ Como Conheceu?", class: "text-warning fw-semibold" %>
+    </div>
+  </div>
+  <div class="col-md-3">
     <div class="form-floating">
       <%= form.text_field :cpf_cnpj, class: "cpf pessoa_cpf_cnpj form-control", placeholder:"CPF" %>
       <%= form.label :cpf, class:"" %>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="form-floating">
       <%= form.text_field :rg_ie, class: "rg form-control", placeholder:"RG" %>
       <%= form.label :rg, class:"" %>
     </div>
   </div>
-  <div class="col-md-2">
+  <div class="col-md-1">
     <div class="form-floating">
-      <%= form.text_field :dtconsulta, value: ( @pessoa.dtconsulta.blank? ? nil : l(@pessoa.dtconsulta) ), class: "fallback datepicker form-control", placeholder:"Data Consulta" %>
-      <%= form.label :data_consulta, class:"" %>
+      <%= form.text_field :dtconsulta, value: ( @pessoa.dtconsulta.blank? ? nil : l(@pessoa.dtconsulta) ), class: "fallback datepicker form-control", placeholder:"Dt. Consulta" %>
+      <%= form.label :data_consulta, "Dt. Consulta" %>
     </div>
   </div>
-  <div class="col-md-2 d-flex align-items-center">
+  <div class="col-md-2 d-flex align-items-center justify-content-center">
     <div id= "venda" class="form-check form-switch">
       <label id="label_scpc" for= "registradoscpc" class="label-check d-inline-block form-check-label"> <%= registro_scpc(@pessoa.registradoscpc )%> </label>
       <%= form.check_box :registradoscpc, { checked: (@pessoa.registradoscpc.nil? ? false : @pessoa.registradoscpc),
                 class: "form-check-input", type:"checkbox" }, true, false %>
     </div>
   </div>
-  <div class="col-md-2">
+  <div class="col-md-1">
     <div class="form-floating">
       <%= form.text_field :credito, class: "form-control", placeholder:"Credito", readonly: true %>
       <%= form.label :credito, class:"" %>

@@ -64,6 +64,23 @@
         cest: CEST
         cfop: CFOP
         ncm: NCM
+      atendimento:
+        company_id: Empresa
+        attended_at: Data do Atendimento
+        name: Nome
+        phone: Telefone
+        origem_id: Como Conheceu
+        sold: Virou Venda
+        customer_id: Cliente
+        notes: Observação
+        employee_id: Colaborador
+        return_at: Data de Retorno
+        status: Status
+        status_options:
+          open: Aberto
+          in_progress: Em Andamento
+          awaiting_return: Aguardando Retorno
+          closed: Encerrado
         
     errors:
       messages:

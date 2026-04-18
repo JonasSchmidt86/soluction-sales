@@ -4,9 +4,12 @@ class CollaboratorsBackoffice::AtendimentosController < CollaboratorsBackofficeC
 
   def create
     @atendimento = Atendimento.new(atendimento_params)
-    @atendimento.cod_empresa = current_collaborator.cod_empresa
-    @atendimento.data_atendimento = Time.current
-    @atendimento.cod_funcionario = current_collaborator.cod_funcionario
+    @atendimento.company_id  = current_collaborator.cod_empresa
+    @atendimento.attended_at = Time.current
+    @atendimento.employee_id = current_collaborator.cod_funcionario
+    if @atendimento.return_at.is_a?(String) && @atendimento.return_at.match?(/\A\d{2}\/\d{2}\/\d{4}\z/)
+      @atendimento.return_at = Date.strptime(@atendimento.return_at, '%d/%m/%Y')
+    end
     buscar_cliente_por_telefone(@atendimento)
 
     respond_to do |format|
@@ -24,7 +27,7 @@ class CollaboratorsBackoffice::AtendimentosController < CollaboratorsBackofficeC
   end
 
   def update
-    buscar_cliente_por_telefone(@atendimento) if atendimento_params[:cod_cliente].blank?
+    buscar_cliente_por_telefone(@atendimento) if atendimento_params[:customer_id].blank?
     if @atendimento.update(atendimento_params)
       redirect_to collaborators_backoffice_report_atendimentos_path, notice: 'Atendimento atualizado!'
     else
@@ -44,19 +47,18 @@ class CollaboratorsBackoffice::AtendimentosController < CollaboratorsBackofficeC
   end
 
   def buscar_cliente_por_telefone(atendimento)
-    return if atendimento.cod_cliente.present? || atendimento.telefone.blank?
-    telefone_numeros = atendimento.telefone.gsub(/\D/, '')
+    return if atendimento.customer_id.present? || atendimento.phone.blank?
+    telefone_numeros = atendimento.phone.gsub(/\D/, '')
     pessoa = Pessoa.where(
       "REGEXP_REPLACE(celular, '[^0-9]', '', 'g') = ? OR REGEXP_REPLACE(telefone, '[^0-9]', '', 'g') = ?",
       telefone_numeros, telefone_numeros
     ).first
-    puts "pessoa = #{pessoa.inspect}"
-    atendimento.cod_cliente = pessoa.cod_pessoa if pessoa
-    atendimento.nome = pessoa.nome if pessoa
+    atendimento.customer_id = pessoa.cod_pessoa if pessoa
+    atendimento.name        = pessoa.nome if pessoa
   end
 
   def atendimento_params
-    params.require(:atendimento).permit(:nome, :telefone, :origem_id, :vendeu, :cod_cliente, :cod_funcionario, :observacao, :data_atendimento)
+    params.require(:atendimento).permit(:name, :phone, :origem_id, :sold, :customer_id, :employee_id, :notes, :attended_at, :return_at, :status)
   end
 
 end

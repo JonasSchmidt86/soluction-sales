@@ -9,16 +9,16 @@
       <div class="row g-3">
         <div class="col-md-6">
           <div class="form-floating">
-            <%= form.text_field :nome, class: "text form-control", placeholder: "Nome", autocomplete: "off", id: "edit_nome" %>
-            <%= form.label :nome, "Nome" %>
+            <%= form.text_field :name, class: "text form-control", placeholder: "Nome", autocomplete: "off", id: "edit_nome" %>
+            <%= form.label :name, "Nome" %>
             <div id="edit_results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
-            <input type="hidden" id="edit_cod_cliente" name="atendimento[cod_cliente]" value="<%= @atendimento.cod_cliente %>">
+            <input type="hidden" id="edit_cod_cliente" name="atendimento[customer_id]" value="<%= @atendimento.customer_id %>">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating">
-            <%= form.text_field :telefone, class: "form-control phone_with_ddd", placeholder: "Telefone" %>
-            <%= form.label :telefone, "Telefone" %>
+            <%= form.text_field :phone, class: "form-control phone_with_ddd", placeholder: "Telefone" %>
+            <%= form.label :phone, "Telefone" %>
           </div>
         </div>
         <div class="col-md-6">
@@ -31,35 +31,55 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating">
-            <%= form.collection_select :cod_funcionario,
+            <%= form.collection_select :employee_id,
                   Funcionario.select(:cod_funcionario, :usuario).where(
                     "cod_funcionario IN (SELECT cod_funcionario FROM funcionarioempresa WHERE ativo = true AND cod_empresa = ?) AND datademissao IS NULL",
                     current_collaborator.cod_empresa),
                   :cod_funcionario, :usuario,
-                  { include_blank: 'Selecione', selected: @atendimento.cod_funcionario },
+                  { include_blank: 'Selecione', selected: @atendimento.employee_id },
                   class: "form-control" %>
-            <%= form.label :cod_funcionario, "Colaborador" %>
+            <%= form.label :employee_id, "Colaborador" %>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating">
-            <%= form.text_field :data_atendimento,
-                  value: @atendimento.data_atendimento&.strftime("%d/%m/%Y"),
+            <%= form.text_field :attended_at,
+                  value: @atendimento.attended_at&.strftime("%d/%m/%Y"),
                   class: "form-control datepicker fallback",
                   placeholder: "Data" %>
-            <%= form.label :data_atendimento, "Data Atendimento" %>
+            <%= form.label :attended_at, "Data Atendimento" %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.text_field :return_at,
+                  value: @atendimento.return_at&.strftime("%d/%m/%Y"),
+                  class: "form-control datepicker fallback",
+                  placeholder: "Retorno" %>
+            <%= form.label :return_at, "Data de Retorno" %>
           </div>
         </div>
         <div class="col-md-6 d-flex align-items-center">
           <div class="form-check form-switch ms-2">
-            <%= form.check_box :vendeu, class: "form-check-input", role: "switch", id: "edit_vendeu" %>
-            <%= form.label :vendeu, "Virou venda", class: "form-check-label", for: "edit_vendeu" %>
+            <%= form.check_box :sold, class: "form-check-input", role: "switch", id: "edit_vendeu" %>
+            <%= form.label :sold, "Virou venda", class: "form-check-label", for: "edit_vendeu" %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating">
+            <%= form.select :status, [
+                  ['Aberto', 'open'],
+                  ['Em Andamento', 'in_progress'],
+                  ['Aguardando Retorno', 'awaiting_return'],
+                  ['Encerrado', 'closed']
+                ], { selected: @atendimento.status }, class: "form-control" %>
+            <%= form.label :status, "Status" %>
           </div>
         </div>
         <div class="col-12">
           <div class="form-floating">
-            <%= form.text_area :observacao, class: "text form-control", placeholder: "Observação", style: "height: 100px" %>
-            <%= form.label :observacao, "Observação" %>
+            <%= form.text_area :notes, class: "text form-control", placeholder: "Observação", style: "height: 100px" %>
+            <%= form.label :notes, "Observação" %>
           </div>
         </div>
         <div class="col-12 d-flex gap-2">
@@ -99,7 +119,7 @@
               item.addEventListener('click', function() {
                 nomeInput.value = person.nome;
                 codCliente.value = person.cod_pessoa;
-                document.querySelector('input[name="atendimento[telefone]"]').value = person.telefone || '';
+                document.querySelector('input[name="atendimento[phone]"]').value = person.telefone || '';
                 resultsList.innerHTML = '';
                 resultsList.style.display = 'none';
               });

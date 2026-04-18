@@ -44,7 +44,7 @@
           </div>
           <div class="col-auto">
             <%= select_tag :vendeu,
-                  options_for_select([['Todos', ''], ['Virou Venda', '1'], ['Não Vendeu', '0']], params[:vendeu]),
+                  options_for_select([['Todos', ''], ['Virou Venda', '1'], ['Não Vendeu', '0']], params[:sold]),
                   class: "form-select form-select-md", style: "width: 140px;" %>
           </div>
           <div class="col-auto">
@@ -73,25 +73,33 @@
           <th>Colaborador</th>
           <th class="text-center col-data">Vendeu?</th>
           <th>Observação</th>
+          <th class="text-center">Retorno</th>
+          <th class="text-center">Status</th>
           <th class="col-data"></th>
         </tr>
       </thead>
       <tbody>
         <% @atendimentos.each do |atendimento| %>
-          <tr class="<%= atendimento.vendeu ? 'table-success' : '' %>">
-            <td class="align-middle col-data"><%= atendimento.data_atendimento.strftime("%d/%m/%Y %H:%M") %></td>
-            <td class="align-middle"><%= atendimento.nome.presence || atendimento.pessoa&.nome || '-' %></td>
-            <td class="align-middle col-data"><%= atendimento.telefone.presence || '-' %></td>
+          <tr class="<%= atendimento.sold ? 'table-success' : "table-#{atendimento.status_color}" %>">
+            <td class="align-middle col-data"><%= atendimento.attended_at.strftime("%d/%m/%Y") %></td>
+            <td class="align-middle"><%= atendimento.name.presence || atendimento.pessoa&.nome || '-' %></td>
+            <td class="align-middle col-data"><%= atendimento.phone.presence || '-' %></td>
             <td class="align-middle"><%= atendimento.origem&.descricao || '-' %></td>
             <td class="align-middle"><%= atendimento.funcionario&.usuario || '-' %></td>
             <td class="align-middle text-center">
-              <% if atendimento.vendeu %>
+              <% if atendimento.sold %>
                 <span class="badge bg-success">Sim</span>
               <% else %>
                 <span class="badge bg-secondary">Não</span>
               <% end %>
             </td>
-            <td class="align-middle"><%= atendimento.observacao.presence || '-' %></td>
+            <td class="align-middle"><%= atendimento.notes.presence || '-' %></td>
+            <td class="align-middle text-center"><%= atendimento.return_at&.strftime("%d/%m/%Y") || '-' %></td>
+            <td class="align-middle text-center">
+              <span class="badge bg-<%= atendimento.status_color %>">
+                <%= I18n.t("activerecord.attributes.atendimento.status_options.#{atendimento.status}") rescue atendimento.status.humanize %>
+              </span>
+            </td>
             <td class="align-middle">
               <div class="d-flex gap-1">
                 <%= link_to edit_collaborators_backoffice_atendimento_path(atendimento), class: "btn btn-sm btn-warning" do %>

@@ -16,17 +16,34 @@
           <label for="origem_id">Como conheceu?</label>
         </div>
         <div class="form-floating mb-3">
-          <input type="text" id="atend_nome" name="nome" class="text form-control" placeholder="Nome" autocomplete="off">
-          <label for="atend_nome">Nome (opcional)</label>
+          <input type="text" id="atend_nome" name="name" class="text form-control" placeholder="Nome" autocomplete="off">
+          <label for="atend_nome">Nome</label>
           <div id="atend_results_list" class="list-group position-absolute" style="display: none; z-index: 1060; width: 100%;"></div>
           <input type="hidden" id="atend_cod_cliente">
         </div>
         <div class="form-floating mb-3">
-          <input type="text" id="atend_telefone" name="telefone" class="form-control phone_with_ddd" placeholder="Telefone">
-          <label for="atend_telefone">Telefone</label>
+          <input type="text" id="atend_telefone" name="phone" class="form-control phone_with_ddd" placeholder="Telefone">
+          <label for="atend_telefone">Telefone (Obrigatório)</label>
+        </div>
+        <div class="form-floating mb-3">
+          <textarea id="atend_observacao" name="notes" class="text form-control" placeholder="Observação" style="height: 80px"></textarea>
+          <label for="atend_observacao">Observação</label>
+        </div>
+        <div class="form-floating mb-3">
+          <input type="text" id="atend_date_return" name="return_at" class="fallback datepicker form-control" placeholder="Retorno" autocomplete="off">
+          <label for="atend_date_return">Data de Retorno</label>
+        </div>
+        <div class="form-floating mb-3">
+          <select name="status" id="atend_status" class="form-control">
+            <option value="open">Aberto</option>
+            <option value="in_progress">Em Andamento</option>
+            <option value="awaiting_return">Aguardando Retorno</option>
+            <option value="closed">Encerrado</option>
+          </select>
+          <label for="atend_status">Status</label>
         </div>
         <div class="form-check mb-3">
-          <input type="checkbox" name="vendeu" class="form-check-input" id="vendeu">
+          <input type="checkbox" name="sold" class="form-check-input" id="vendeu">
           <label class="form-check-label" for="vendeu">Virou venda</label>
         </div>
       </div>
@@ -86,10 +103,13 @@
       var dados = {
         atendimento: {
           origem_id:   document.getElementById('origem_id').value,
-          nome:        nomeInput.value,
-          telefone:    document.getElementById('atend_telefone').value,
-          vendeu:      document.getElementById('vendeu').checked,
-          cod_cliente: codCliente.value || null
+          name:        nomeInput.value,
+          phone:       document.getElementById('atend_telefone').value,
+          sold:        document.getElementById('vendeu').checked,
+          notes:       document.getElementById('atend_observacao').value,
+          return_at:   document.getElementById('atend_date_return').value || null,
+          status:      document.getElementById('atend_status').value,
+          customer_id: codCliente.value || null
         }
       };
 
@@ -122,6 +142,9 @@
       nomeInput.value = '';
       document.getElementById('atend_telefone').value = '';
       document.getElementById('vendeu').checked = false;
+      document.getElementById('atend_status').value = 'open';
+      document.getElementById('atend_observacao').value = '';
+      document.getElementById('atend_date_return').value = '';
       codCliente.value = '';
       resultsList.innerHTML = '';
       resultsList.style.display = 'none';

@@ -1,5 +1,7 @@
 class Pessoa < ApplicationRecord
 
+    after_create :link_atendimentos
+
     self.table_name = "pessoa"
     self.primary_key = "cod_pessoa"
     
@@ -21,6 +23,31 @@ class Pessoa < ApplicationRecord
 
     def to_s
         self.nome;
+    end
+
+    def link_atendimentos
+        numeros = [self.telefone, self.celular]
+            .compact
+            .map { |n| n.gsub(/\D/, '') }
+            .reject(&:blank?)
+
+        return if numeros.empty?
+
+        atendimentos = Atendimento
+            .where(customer_id: nil)
+            .where(
+                numeros.map { "REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = ?" }.join(' OR '),
+                *numeros
+            )
+
+        return if atendimentos.empty?
+
+        atendimentos.update_all(customer_id: self.cod_pessoa)
+
+        if self.origem_id.blank?
+            primeira_origem = atendimentos.order(:created_at).first&.origem_id
+            self.update_column(:origem_id, primeira_origem) if primeira_origem.present?
+        end
     end
 
     # :tipo, :cpf_cnpj, :apelido, :bairro , :celular, :cep, :complemento, 

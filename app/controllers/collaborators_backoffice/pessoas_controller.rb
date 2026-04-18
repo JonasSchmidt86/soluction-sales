@@ -93,7 +93,7 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
                                       :datacadastro, :endereco, :nome, :numero, :rg_ie, :telefone, :civil, :cpfconj, 
                                       :dtnascimento, :dtnascimentoconj, :emprego, :nomeconj, :rgconjuge, :salario, 
                                       :pessoacontato, :telefonecontato, :cod_cidade, :credito, :nrcadpro, :dtconsulta, 
-                                      :registradoscpc, :email
+                                      :registradoscpc, :email, :origem_id
       )
     end
   end

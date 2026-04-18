@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_20_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -65,18 +65,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
   end
 
   create_table "atendimentos", force: :cascade do |t|
-    t.integer "cod_empresa", null: false
-    t.datetime "data_atendimento", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.string "nome"
-    t.string "telefone"
+    t.integer "company_id", null: false
+    t.datetime "attended_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "name"
+    t.string "phone"
     t.bigint "origem_id"
-    t.boolean "vendeu", default: false, null: false
-    t.integer "cod_cliente"
-    t.text "observacao"
+    t.boolean "sold", default: false, null: false
+    t.integer "customer_id"
+    t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "cod_funcionario"
+    t.integer "employee_id"
+    t.datetime "return_at"
+    t.integer "status", default: 0, null: false
+    t.index ["company_id"], name: "index_atendimentos_on_company_id"
+    t.index ["customer_id"], name: "index_atendimentos_on_customer_id"
+    t.index ["employee_id"], name: "index_atendimentos_on_employee_id"
     t.index ["origem_id"], name: "index_atendimentos_on_origem_id"
+    t.index ["status"], name: "index_atendimentos_on_status"
   end
 
   create_table "banco", primary_key: "cod_banco", id: :bigint, default: -> { "nextval('banco_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -525,7 +531,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
     t.date "dtconsulta"
     t.boolean "registradoscpc"
     t.string "email", limit: 100
+    t.bigint "origem_id"
     t.index ["cpf_cnpj"], name: "uni_cpf_cnpj", unique: true
+    t.index ["origem_id"], name: "index_pessoa_on_origem_id"
   end
 
   create_table "produto", primary_key: "cod_produto", id: :bigint, default: nil, force: :cascade do |t|
@@ -654,10 +662,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
   add_foreign_key "assistencia", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
   add_foreign_key "assistencia", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
   add_foreign_key "assistencia", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"
-  add_foreign_key "atendimentos", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
-  add_foreign_key "atendimentos", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario"
+  add_foreign_key "atendimentos", "empresa", column: "company_id", primary_key: "cod_empresa"
+  add_foreign_key "atendimentos", "funcionario", column: "employee_id", primary_key: "cod_funcionario"
   add_foreign_key "atendimentos", "origems"
-  add_foreign_key "atendimentos", "pessoa", column: "cod_cliente", primary_key: "cod_pessoa"
+  add_foreign_key "atendimentos", "pessoa", column: "customer_id", primary_key: "cod_pessoa"
   add_foreign_key "bancocheques", "banco", column: "cod_banco", primary_key: "cod_banco", name: "fk_banco"
   add_foreign_key "bancocheques", "contaspagrec", column: "cod_contaspagrec", primary_key: "cod_contaspagrec", name: "fk_contaspagrec"
   add_foreign_key "bancocheques", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
@@ -739,6 +747,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000003) do
   add_foreign_key "pedidos_compras", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
   add_foreign_key "pedidos_compras", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa"
   add_foreign_key "pessoa", "cidade", column: "cod_cidade", primary_key: "cod_cidade", name: "fk_cidade"
+  add_foreign_key "pessoa", "origems"
   add_foreign_key "produto", "grupo", column: "grupo", primary_key: "cod_grupo", name: "fk_grupo"
   add_foreign_key "produto", "marca", column: "marca", primary_key: "cod_marca", name: "fk_marca"
   add_foreign_key "produto", "parametros", column: "cod_margem", primary_key: "cod_parametro", name: "fk_parametros"
