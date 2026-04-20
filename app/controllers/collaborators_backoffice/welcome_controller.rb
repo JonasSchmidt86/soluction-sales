@@ -148,6 +148,13 @@ class CollaboratorsBackoffice::WelcomeController < CollaboratorsBackofficeContro
         ])
       )
 
+      @atendimentos_hoje = Atendimento.where(company_id: current_collaborator.cod_empresa)
+                                       .where("DATE(attended_at) = ?", Date.current).count
+
+      @atendimentos_retorno = Atendimento.where(company_id: current_collaborator.cod_empresa)
+                                          .where.not(return_at: nil)
+                                          .where.not(status: :closed).count
+
     end
     private
 

@@ -23,7 +23,7 @@
           </div>
           <div class="col-auto">
             <%= form.text_field :dataInicial,
-                  value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
+                  value: params[:dataInicial].presence || Time.current.beginning_of_month.strftime("%d/%m/%Y"),
                   class: "form-control form-control-md datepicker fallback",
                   placeholder: "Data Inicial", style: "width: 115px;" %>
           </div>
@@ -46,6 +46,11 @@
             <%= select_tag :vendeu,
                   options_for_select([['Todos', ''], ['Virou Venda', '1'], ['Não Vendeu', '0']], params[:sold]),
                   class: "form-select form-select-md", style: "width: 140px;" %>
+          </div>
+          <div class="col-auto">
+            <%= select_tag :status,
+                  options_for_select([['Todos os Status', ''], ['Aberto', 'open'], ['Em Andamento', 'in_progress'], ['Aguardando Retorno', 'awaiting_return'], ['Encerrado', 'closed']], params[:status]),
+                  class: "form-select form-select-md", style: "width: 175px;" %>
           </div>
           <div class="col-auto">
             <button type="submit" class="btn btn-success btn-md">Buscar</button>

@@ -4,7 +4,7 @@ class CollaboratorsBackoffice::Report::RepAtendimentosController < Collaborators
     query = Atendimento.includes(:origem, :funcionario, :pessoa)
                        .where(company_id: current_collaborator.cod_empresa)
 
-    data_inicial = params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y")
+    data_inicial = params[:dataInicial].presence || Date.current.beginning_of_month.strftime("%d/%m/%Y")
     data_final   = params[:dataFinal].presence   || Date.today.end_of_month.strftime("%d/%m/%Y")
 
     query = query.where(
@@ -22,6 +22,10 @@ class CollaboratorsBackoffice::Report::RepAtendimentosController < Collaborators
 
     if params[:vendeu].present?
       query = query.where(sold: params[:vendeu] == '1')
+    end
+
+    if params[:status].present?
+      query = query.where(status: params[:status])
     end
 
     per_page = params[:per_page].present? ? params[:per_page].to_i : 30

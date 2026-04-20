@@ -23,26 +23,38 @@
               <% else %>
                 <p class="card-text">Registre e gerencie vendas</p>
               <% end %>
-              <div class="d-flex gap-2">
+              <div class="d-flex gap-2 mt-auto">
                 <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-primary" do %>
                   <i class="fa fa-plus"></i> Nova Venda
                 <% end %>
-                <%= link_to collaborators_backoffice_report_sales_path, class: "btn btn-outline-primary" do %>
+                <%= link_to collaborators_backoffice_report_sales_path, class: "btn btn-outline-success" do %>
                   <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>
             </div>
           </div>
         </div>
-        <!-- Imagens -->
+        <!-- Atendimento -->
         <div class="col">
-          <div class="card h-100 border-info">
+          <div class="card h-100 border-success">
             <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-images"></i> Imagens</h5>
-              <p class="card-text">Gerencie imagens dos produtos</p>
+              <h5 class="card-title"><i class="fa fa-headset"></i> Atendimentos</h5>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">Hoje:</small>
+                  <span class="fw-bold"><%= @atendimentos_hoje %> atendimento(s)</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">Retornos:</small>
+                  <span class="fw-bold <%= @atendimentos_retorno > 0 ? 'text-danger' : '' %>"><%= @atendimentos_retorno %></span>
+                </div>
+              </div>
               <div class="d-flex gap-2">
-                <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info" do %>
-                  <i class="fa fa-images"></i> Gerenciar Imagens
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
+                  <i class="fa fa-plus"></i> Novo Atendimento
+                </button>
+                <%= link_to collaborators_backoffice_report_atendimentos_path, class: "btn btn-outline-success" do %>
+                  <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>
             </div>
@@ -58,28 +70,13 @@
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
                   <i class="fa fa-plus"></i> Novo Produto
                 </button>
-                <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success", id: "btn-listar-produtos", style: "display: none;" do %>
-                  <i class="fa fa-list"></i> Listar
+                <% unless request.user_agent =~ /Mobile|Android|iPhone/ %>
+                  <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success", id: "btn-listar-produtos", style: "display: none;" do %>
+                    <i class="fa fa-list"></i> Listar
+                  <% end %>
                 <% end %>
                 <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-outline-primary" do %>
                   <i class="fa fa-list"></i> Estoque
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Atendimento -->
-        <div class="col">
-          <div class="card h-100 border-success">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-headset"></i> Atendimentos</h5>
-              <p class="card-text">Registre atendimentos de clientes</p>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
-                  <i class="fa fa-plus"></i> Novo Atendimento
-                </button>
-                <%= link_to collaborators_backoffice_report_atendimentos_path, class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>
             </div>
@@ -92,10 +89,10 @@
               <h5 class="card-title"><i class="fa fa-users"></i> Pessoas</h5>
               <p class="card-text">Cadastre e gerencie clientes e fornecedores</p>
               <div class="d-flex gap-2">
-                <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-secondary" do %>
+                <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-success" do %>
                   <i class="fa fa-plus"></i> Nova Pessoa
                 <% end %>
-                <%= link_to collaborators_backoffice_pessoas_path, class: "btn btn-outline-secondary" do %>
+                <%= link_to collaborators_backoffice_pessoas_path, class: "btn btn-outline-success" do %>
                   <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>
@@ -109,12 +106,26 @@
               <h5 class="card-title"><i class="fa fa-bell"></i> Lembretes</h5>
               <p class="card-text">Gerencie seus lembretes e tarefas</p>
               <div class="d-flex gap-2">
-                <button type="button", class="btn btn-danger", data-bs-toggle="modal",
+                <button type="button", class="btn btn-success", data-bs-toggle="modal",
                                 data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
                   <i class="fa fa-plus"></i> Novo Lembrete
                 </button>
-                <%= link_to collaborators_backoffice_lembretes_path, class: "btn btn-outline-danger" do %>
+                <%= link_to collaborators_backoffice_lembretes_path, class: "btn btn-outline-success" do %>
                   <i class="fa fa-list"></i> Listar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Imagens -->
+        <div class="col">
+          <div class="card h-100 border-info">
+            <div class="card-body">
+              <h5 class="card-title"><i class="fa fa-images"></i> Imagens</h5>
+              <p class="card-text">Gerencie imagens dos produtos</p>
+              <div class="d-flex gap-2">
+                <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info" do %>
+                  <i class="fa fa-images"></i> Gerenciar Imagens
                 <% end %>
               </div>
             </div>
