@@ -4,26 +4,33 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
   def index
-    if params[:cod_cor].present?
-      @produto_imagens = Core.find(params[:cod_cor]).produto_imagens
-                        .page(params[:page])
-    elsif params[:cod_marca].present?
-      @marca = Marca.find_by(cod_marca: params[:cod_marca])
-      @produto_imagens = @marca.produto_imagens
-                        .page(params[:page])
-    elsif params[:cod_grupo].present?
-      @grupo = Grupo.find_by(cod_grupo: params[:cod_grupo])
-      @produto_imagens = @grupo.produto_imagens
-                        .page(params[:page])
-    else
-      query = params[:term]
-      @produto_imagens = ProdutoImagem.joins(:produto)
-                        .where('produto_imagens.cod_produto::varchar = REPLACE(TRIM(:query), \'%\', \'\') OR 
-                                produto.nome ILIKE :query', query: "%#{query}%")
-                        .where(params[:cod_cor].present? ? ["cod_cor = ?", params[:cod_cor]] : nil)
-                        .order(:cod_produto, :cod_cor)
-                        .page(params[:page])
+    @produto_imagens = ProdutoImagem.joins(:produto)
+
+    if params[:term].present?
+      query = "%#{params[:term]}%"
+      @produto_imagens = @produto_imagens.where("produto.nome ILIKE ?", query)
     end
+
+    if params[:cod_cor].present?
+      @produto_imagens = @produto_imagens.where(cod_cor: params[:cod_cor])
+    end
+puts @produto_imagens.to_sql
+    if params[:cod_marca].present?
+      @produto_imagens = @produto_imagens.joins(produto: :cod_marca)
+                                        .where(produto: { marca: params[:cod_marca] })
+    end
+puts @produto_imagens.to_sql
+    if params[:cod_grupo].present?
+      @produto_imagens = @produto_imagens.joins(produto: :grupo)
+                                        .where(produto: { grupo: params[:cod_grupo] })
+    end
+
+    if params[:publicado].present?
+      @produto_imagens = @produto_imagens.joins(produto: :empresaprodutos)
+                                        .where(empresaprodutos: { publicado: params[:publicado] == '1' })
+    end
+
+    @produto_imagens = @produto_imagens.order(:cod_produto, :cod_cor).page(params[:page])
   end
 
   def edit

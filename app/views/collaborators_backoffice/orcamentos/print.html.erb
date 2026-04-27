@@ -60,15 +60,17 @@
     <table class="table-print">
       <thead>
         <tr>
+          <th style="width: 60px;">Codigo</th>
           <th>Produto</th>
-          <th style="width: 70px; text-align: center;">Qtd</th>
-          <th style="width: 100px;">Valor Unit.</th>
-          <th style="width: 100px;">Total</th>
+          <th style="width: 50px; text-align: center;">Qtd</th>
+          <th style="width: 90px;">Valor Unit.</th>
+          <th style="width: 90px;">Total</th>
         </tr>
       </thead>
       <tbody>
         <% @orcamento.itens_orcamentos.each do |item| %>
           <tr>
+            <td style="text-align: left;"><%= item.full_codigo %></td>
             <td><%= item.produto.nome %></td>
             <td style="text-align: center;"><%= number_with_precision(item.quantidade, precision: 0) %></td>
             <td style="text-align: right;"><%= number_to_currency(item.valorunitario) %></td>
