@@ -26,4 +26,9 @@ class ItemOrcamento < ApplicationRecord
   def estoque_disponivel
     Empresaproduto.where(cod_produto: cod_produto, cod_cor: cod_cor, cod_empresa: cod_empresa).pluck(:quantidade).first || 0
   end
+
+  def full_codigo
+    [self.cod_produto, self.cod_cor].join('-')
+  end
+
 end
