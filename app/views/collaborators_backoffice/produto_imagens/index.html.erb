@@ -43,6 +43,14 @@
                 <%= form.label :cod_marca, "Marca" %>
               </div>
             </div>
+            <div class="col-md-1 d-flex align-items-center">
+              <div class="form-check">
+                <%= form.check_box :publicado,
+          { class: "form-check-input", checked: params[:publicado] == '1' },
+          '1', '0' %>
+                <%= form.label :publicado, "Publicado", class: "form-check-label" %>
+              </div>
+            </div>
             <!-- Botão Buscar -->
             <div class="col-md-auto d-flex align-items-stretch">
               <button type="submit" class="btn btn-success btn-lg w-100">Buscar</button>
