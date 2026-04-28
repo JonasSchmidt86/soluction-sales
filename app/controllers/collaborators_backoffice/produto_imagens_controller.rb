@@ -4,7 +4,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
   def index
-    @produto_imagens = ProdutoImagem.joins(:produto)
+    @produto_imagens = ProdutoImagem.distinct.joins(:produto)
 
     if params[:term].present?
       query = "%#{params[:term]}%"
@@ -14,20 +14,20 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     if params[:cod_cor].present?
       @produto_imagens = @produto_imagens.where(cod_cor: params[:cod_cor])
     end
-puts @produto_imagens.to_sql
+
     if params[:cod_marca].present?
       @produto_imagens = @produto_imagens.joins(produto: :cod_marca)
                                         .where(produto: { marca: params[:cod_marca] })
     end
-puts @produto_imagens.to_sql
+
     if params[:cod_grupo].present?
       @produto_imagens = @produto_imagens.joins(produto: :grupo)
                                         .where(produto: { grupo: params[:cod_grupo] })
     end
 
-    if params[:publicado].present?
+    if params[:publicado].present? && params[:publicado] == '1'
       @produto_imagens = @produto_imagens.joins(produto: :empresaprodutos)
-                                        .where(empresaprodutos: { publicado: params[:publicado] == '1' })
+                                        .where(empresaprodutos: { publicado: true })
     end
 
     @produto_imagens = @produto_imagens.order(:cod_produto, :cod_cor).page(params[:page])
