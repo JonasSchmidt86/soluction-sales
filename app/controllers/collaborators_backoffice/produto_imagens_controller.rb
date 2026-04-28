@@ -7,8 +7,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     @produto_imagens = ProdutoImagem.distinct.joins(:produto)
 
     if params[:term].present?
-      query = "%#{params[:term]}%"
-      @produto_imagens = @produto_imagens.where("produto.nome ILIKE ?", query)
+      term = params[:term].strip
+      @produto_imagens = @produto_imagens.where(
+        "produto.nome ILIKE :q OR produto_imagens.cod_produto::text ILIKE :q",
+        q: "%#{term}%")
     end
 
     if params[:cod_cor].present?
