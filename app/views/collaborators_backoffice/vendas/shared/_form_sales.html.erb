@@ -22,7 +22,7 @@
           <!-- Campo de busca -->
           <div class="col-md-7">
             <div class="form-floating w-100">
-              <%= sale.text_field :nome_pessoa, class: "border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
+              <%= sale.text_field :nome_pessoa, class: "text border-top-0 border-start-0 border-end-0 border-dark form-control", placeholder: "Digite para buscar" %>
               <%= sale.label :nome_pessoa, "Pessoa" %>
               <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
               <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
@@ -61,19 +61,31 @@
         <div class="row my-2 mx-2">
           <div class="col-md-2">
             <div class="form-floating">
-              <%= sale.text_field :acrescimo, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+              <%= sale.text_field :acrescimo,
+                  value: moeda_br(sale.object.acrescimo),
+                  inputmode: "numeric",
+                  class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark",
+                  onchange: "setTotalVenda()" %>
               <%= sale.label :acrescimo, class:"" %>
             </div>
           </div>
           <div class="col-md-2">
             <div class="form-floating mb-3">
-              <%= sale.text_field :desconto, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", onchange: "setTotalVenda()" %>
+              <%= sale.text_field :desconto,
+                  value: moeda_br(sale.object.desconto),
+                  inputmode: "numeric",
+                  class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark",
+                  onchange: "setTotalVenda()" %>
               <%= sale.label :desconto, class:"" %>
             </div>
           </div>
           <div class="col-md-2">
             <div class="form-floating mb-3">
-              <%= sale.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+              <%= sale.text_field :valortotal,
+                  value: moeda_br(sale.object.valortotal),
+                  inputmode: "numeric",
+                  class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark",
+                  readonly: true %>
               <%= sale.label :valortotal, class:"" %>
             </div>
           </div>
@@ -727,6 +739,11 @@
               });
           }
       };
+      $(document).on('click', '.btn-remove-item', function() {
+          setTimeout(function() {
+              setTotalVenda();
+          }, 100); // Aguarda 100ms para garantir que o item foi removido antes de recalcular o total
+      });
 </script>
 <% if session[:orcamento_id] %>
   <script>

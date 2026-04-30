@@ -6,7 +6,9 @@
     <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
   </td>
   <td class="">
-    <%= f.text_field :valorparcela, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    <%= f.text_field :valorparcela, 
+      value: number_with_precision(f.object.valorparcela, precision: 2, separator: ',', delimiter: '.'),
+      class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark" %>
   </td>
   <%= f.hidden_field :cod_empresa, value: params[:cod_empresa] || current_collaborator.empresa.cod_empresa %>
   <%= f.hidden_field :ativo,  value: params[:ativo] || true %>

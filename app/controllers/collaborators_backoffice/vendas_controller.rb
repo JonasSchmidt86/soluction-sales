@@ -210,12 +210,24 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
       @sale.contas.each do |conta|
         if !conta.lancamentos.blank?
+          @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa.cod_empresa).first
+          puts  "CAIXA ENCONTRADO: #{@caixa.present?} - COD CAIXA: #{@caixa&.id}"
+          if @caixa.nil?
+            redirect_to collaborators_backoffice_report_sales_path, notice: "Não foi possível cancelar a venda, caixa fechado!"
+            return
+          end
+          puts "ESTORNANDO CONTA COD: #{conta.cod_contaspagrec} - COD VENDA: #{conta.venda.cod_venda}"
           # ver como vai cancelar a venda o que fazer com os lançamentos
-          redirect_to collaborators_backoffice_report_sales_path, notice: "Venda possui lançamentos de caixa!"
-          return
+          EstornarContaService.new(conta, current_collaborator, @caixa).call
+          @sale.update!(cancelada: true)          
         end
+        conta.update!(ativo: false)
       end
-
+      if @sale.cancelada
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cancelada com sucesso!"
+        return
+      end
+      
       # Se a venda veio de um orçamento, atualiza o orçamento
       orcamento = Orcamento.find_by(cod_venda: @sale.cod_venda)
       orcamento.update(status: 'pendente', cod_venda: nil) if orcamento

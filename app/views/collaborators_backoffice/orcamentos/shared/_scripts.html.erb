@@ -188,37 +188,34 @@
 
   function setValorTotal(field) {
       let index = thisIndex(field);
-      let proValor = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valorunitario`);
+      let proValor    = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valorunitario`);
       let proDesconto = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valor_desconto`);
       let proAcresimo = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_valor_acrescimo`);
-      let proQtd   = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_quantidade`);
+      let proQtd      = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_quantidade`);
 
       if (!proValor || !proQtd) return;
 
-      let valUnit = ((toFloat(proValor.value) + toFloat(proAcresimo ? proAcresimo.value : 0)) - toFloat(proDesconto ? proDesconto.value : 0)) * 100;
-      let total = ((parseFloat(valUnit) * parseFloat(proQtd.value.replace(",","."))) / 100);
+      let valUnit = toFloat(proValor.value) + toFloat(proAcresimo?.value) - toFloat(proDesconto?.value);
+      let total   = valUnit * toFloat(proQtd.value);
 
-      // Atualiza o campo de total na linha
       let row = field.closest('tr');
       let proTotal = row.querySelector('.valor-total');
       if (proTotal) {
-          proTotal.value = parseFloat(total).toFixed(2).replace(".",",");
+          proTotal.value = total.toFixed(2).replace(".",",");
       }
 
       setTotalOrcamento();
   }
 
   function setTotalOrcamento(){
-
       var tabela = document.getElementById("tblProdutos");
-
       var soma = 0;
-      console.log("Calculando total do orçamento...");
 
       for (var i = 1; i < tabela.rows.length; i++) {
-          var valorUnitarioCell = tabela.rows[i].querySelector(".valor-total");
-          var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
-          soma += (valorUnitario);
+          var row = tabela.rows[i];
+          if (row.style.display === 'none') continue;
+          var valorTotalCell = row.querySelector(".valor-total");
+          soma += valorTotalCell?.value ? parseFloat(valorTotalCell.value.replace(",",".")) : 0;
       }
 
       document.getElementById("orcamento_valortotal").value = soma.toFixed(2).replace(".",",");
@@ -229,6 +226,13 @@
           selectProduct(this);
       }
   });
+
+    $(document).on('click', '.btn-remove-item', function() {
+        console.log("ITEM REMOVIDO, ATUALIZANDO TOTAL...");
+        setTimeout(function() {
+            setTotalOrcamento();
+        }, 100); // Aguarda 100ms para garantir que o item foi removido antes de recalcular o total
+    });
 
   function selectProduct(field) {
       var index = thisIndex(field);

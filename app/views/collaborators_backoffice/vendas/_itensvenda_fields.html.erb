@@ -21,20 +21,36 @@
       oninput: "this.value = this.value.replace(/[^0-9]/g, '')" %>
   </td>
   <td>
-    <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valorunitario,
+        value: number_with_precision(f.object.valorunitario, precision: 2, separator: ',', delimiter: '.'),
+        class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark",
+        inputmode: "numeric",
+        onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_acrescimo, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valor_acrescimo,
+        value: number_with_precision(f.object.valor_acrescimo, precision: 2, separator: ',', delimiter: '.'),
+        class: "money2 valor-acrescimo form-control border-top-0 border-start-0 border-end-0 border-dark",
+        inputmode: "numeric",
+        onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_desconto, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valor_desconto,
+        value: number_with_precision(f.object.valor_desconto, precision: 2, separator: ',', delimiter: '.'),
+        class: "money2 valor-desconto form-control border-top-0 border-start-0 border-end-0 border-dark",
+        inputmode: "numeric",
+        onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_total, class: "valor-total money2 form-control border-top-0 border-start-0 border-end-0 border-dark", disabled: true %>
+    <%= f.text_field :valor_total,
+        value: number_with_precision(f.object.valor_total, precision: 2, separator: ',', delimiter: '.'),
+        class: "money2 valor-total form-control border-top-0 border-start-0 border-end-0 border-dark",
+        inputmode: "numeric",
+        onchange: "setValorTotal(this)" %>
   </td>
   <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
   <td class="align-middle fw-semibold">
-    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs', title: 'Remover' do %>
+    <%= link_to_remove_association f, class: 'btn btn-primary btn-xs btn-remove-item', title: 'Remover' do %>
       <i class="fa fa-trash-can"></i>
     <% end %>
   </td>
