@@ -137,34 +137,47 @@ class Contaspagrec < ApplicationRecord
 
     def valorPago
         valor = 0
-        if !self.lancamentos.blank?
-            if !self.venda.blank? || self.natureza_calculada == 0
-                for conta in self.lancamentos do
-                    if conta.historico != 14 # 14 credito cliente
-                        if conta.tipo == 'E'
-                            valor += conta.valor
+        if self.venda.present? || self.tipo == 'T'
+            for conta in self.lancamentos do
+                if conta.tipo == 'E' && self.venda.cod_empresa != self.venda.cod_empresa_transferida
+                    valor += conta.valor
+                    puts "Valor pago: #{valor}"
+                else
+                   # valor -= conta.valor
+                end
+            end
+            return valor
+        else
+
+            if !self.lancamentos.blank?
+                if !self.venda.blank? || self.natureza_calculada == 0
+                    for conta in self.lancamentos do
+                        if conta.historico != 14 # 14 credito cliente
+                            if conta.tipo == 'E'
+                                valor += conta.valor
+                            end
+                        end
+                        if conta.tipo == 'S'
+                            valor -= conta.valor
                         end
                     end
-                    if conta.tipo == 'S'
-                        valor -= conta.valor
-                    end
-                end
-            else
-                
-                if !self.compra.nil? || !self.frete.nil? || self.natureza_calculada == 1
-                    for conta in self.lancamentos do
-                        if conta.tipo == 'S'
-                            valor += conta.valor
-                        else
-                            if !conta.cancelada?
-                                valor -= conta.valor
+                else
+                    
+                    if !self.compra.nil? || !self.frete.nil? || self.natureza_calculada == 1
+                        for conta in self.lancamentos do
+                            if conta.tipo == 'S'
+                                valor += conta.valor
+                            else
+                                if !conta.cancelada?
+                                    valor -= conta.valor
+                                end
                             end
                         end
                     end
                 end
             end
+            return valor
         end
-        return valor
     end
     paginates_per 30;
 end

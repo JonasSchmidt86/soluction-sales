@@ -1,35 +1,73 @@
-<div class="modal fade" id="launchsModal<%= bill.cod_contaspagrec %>" data-tor-parent="show">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header text-center bg-primary text-white">
-        <h5 class="modal-title" id="exampleModalLabel">Lançamentos</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="launchsModal<%= bill.cod_contaspagrec %>" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      <!-- HEADER -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title mb-0">
+          <i class="fa fa-list me-2"></i> Lançamentos
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="container-fluid bd-example-row me-2 mt-2 mb-2">
-        <table id="datatablesSimple" class="table table-hover table-striped table-responsive  ">
-          <thead class="table-light">
-            <tr>
-              <th><a href="#" class="">Colaborador</a></th>
-              <th><a href="#" class="">Descrição</a></th>
-              <th><a href="#" class="">Parcela</a></th>
-              <th><a href="#" class="">Dt Pagto</a></th>
-              <th><a href="#" class="">Valor</a></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% sorted_lancamentos = bill.lancamentos.sort_by { |lancamento| lancamento.datapagto } %>
-            <% sorted_lancamentos.each do |launch| %>
+      <!-- BODY -->
+      <div class="modal-body p-2">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light text-center">
               <tr>
-                <td><%= launch.funcionario.usuario %></td>
-                <td><%= launch.historico_descricao %> </td>
-                <td><%= bill.nmParcela %> </td>
-                <td><%= post_datetime launch.datapagto %> </td>
-                <td><%= number_to_currency( launch.valor, separator: ",", delimiter: "", unit: "" ) %> </td>
+                <th>Colaborador</th>
+                <th>Descrição</th>
+                <th>Parcela</th>
+                <th>Data</th>
+                <th class="text-end">Valor</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% sorted_lancamentos = bill.lancamentos.sort_by(&:datapagto) %>
+              <% sorted_lancamentos.each do |launch| %>
+                <% if launch.tipo == 'S' %>
+                  <tr class="table-danger">
+                  <% else %>
+                    <tr class="table-success">
+                    <% end %>
+                    <td><%= launch.funcionario.usuario %></td>
+                    <td>
+                      <span class="text-muted small">
+                        <%= launch.historico_descricao %>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-secondary">
+                        <%= bill.nmParcela %>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <%= post_datetime launch.datapagto %>
+                    </td>
+                    <td class="text-end fw-semibold">
+                      <%= number_to_currency(launch.valor, separator: ",", delimiter: ".", unit: "R$ ") %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if sorted_lancamentos.empty? %>
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                      Nenhum lançamento encontrado
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- FOOTER -->
+        <div class="modal-footer justify-content-between">
+          <small class="text-muted">
+            Total de lançamentos: <%= sorted_lancamentos.size %>
+          </small>
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            Fechar
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>

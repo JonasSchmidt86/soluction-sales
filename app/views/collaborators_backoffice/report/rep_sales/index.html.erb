@@ -12,73 +12,81 @@
   <div class="card-body">
     <%= form_with(url: collaborators_backoffice_report_sales_path, local: true, method: :get, class: "dataTable-search mb-2") do |form| %>
       <div class="container-fluid">
-        <div class="row g-2 align-items-center">
-          <!-- Coluna de filtros -->
-          <div class="col-12 col-xl d-flex flex-wrap gap-2 align-items-center">
-            <!-- Quantidade por página -->
-            <div class="col-auto" style="max-width: 80px;">
-              <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]),
-              onchange: 'this.form.submit()', class: "form-select form-select-md" %>
-            </div>
-            <!-- Busca por pessoa -->
-            <div class="col-auto">
-              <%= form.text_field :term, class: "form-control form-control-md", value: params[:term], placeholder: "Pessoa..." %>
-            </div>
-            <!-- Data Inicial -->
-            <div class="col-auto">
-              <%= form.text_field :dataInicial,
-                    value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
-                    class: "form-control form-control-md datepicker fallback",
-                    placeholder: "Data Inicial",
-                    style: "min-width: 115px; max-width: 115px;" %>
-            </div>
-            <!-- Data Final -->
-            <div class="col-auto">
-              <%= form.text_field :dataFinal, value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
-                    class: "form-control form-control-md datepicker fallback", placeholder: "Data Final", style: "min-width: 115px; max-width: 115px;" %>
-            </div>
-            <div class="col-auto">
-              <% checked = params[:cancelada] == '1' %>
-              <%= form.check_box :cancelada, checked: checked, class: "btn-check", id: "cancelada-checkbox" %>
-              <label class="btn btn-outline-primary cancelada-label flex-grow-1" for="cancelada-checkbox">
-                Ativas
-              </label>
-            </div>
-            <!-- Seletor de colaborador (somente para admin) -->
-            <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-              <div class="col-auto">
-                <%= form.collection_select(:cod_funcionario,
-                      Funcionario.select(:cod_funcionario, :usuario).where(
-                        "cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null",
-                      current_collaborator.cod_empresa), :cod_funcionario, :usuario,
-                      { include_blank: 'Colaborador', selected: params[:cod_funcionario] }, class: "form-select form-select-md") %>
-              </div>
-            <% end %>
-            <!-- Botão de buscar -->
-            <div class="col-auto d-grid" style="width: 80px;">
-              <%= form.submit "Buscar", class: "btn btn-success btn-md w-100" %>
-            </div>
-            <!-- Botão nova venda -->
-            <div class="col-auto d-grid" style="width: 80px;">
-              <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-success w-100", data: { confirm: "Nova Venda?" } do %>
-                <i class="fa fa-plus"></i>
-              <% end %>
-            </div>
+        <!-- 🔹 LINHA 1 (filtros principais) -->
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-auto" style="max-width: 80px;">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]),
+        onchange: 'this.form.submit()', class: "form-select form-select-md" %>
           </div>
-          <!-- Totais alinhados à direita -->
-          <div class="col-12 col-xl-auto ms-auto d-flex flex-wrap justify-content-end gap-2">
+          <div class="col-auto">
+            <%= form.text_field :term, class: "form-control form-control-md", value: params[:term], placeholder: "Pessoa..." %>
+          </div>
+          <div class="col-auto">
+            <%= form.text_field :dataInicial,
+              value: params[:dataInicial].presence || Time.current.strftime("%d/%m/%Y"),
+              class: "form-control form-control-md datepicker fallback",
+              placeholder: "Data Inicial",
+              style: "max-width: 120px;" %>
+          </div>
+          <div class="col-auto">
+            <%= form.text_field :dataFinal,
+              value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"),
+              class: "form-control form-control-md datepicker fallback",
+              placeholder: "Data Final",
+              style: "max-width: 120px;" %>
+          </div>
+          <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+            <div class="col-auto">
+              <%= form.collection_select(:cod_funcionario,
+                Funcionario.select(:cod_funcionario, :usuario).where(
+                  "cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null",
+                current_collaborator.cod_empresa),
+                :cod_funcionario, :usuario,
+                { include_blank: 'Colaborador', selected: params[:cod_funcionario] },
+                class: "form-select form-select-md",
+              style: "max-width: 250px;") %>
+            </div>
+          <% end %>
+        </div>
+        <!-- 🔹 LINHA 2 (ações e opções) -->
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <% checked = params[:cancelada] == '1' %>
+            <%= form.check_box :cancelada, checked: checked, class: "btn-check", id: "cancelada-checkbox" %>
+            <label class="btn btn-outline-primary" for="cancelada-checkbox">
+              Ativas
+            </label>
+          </div>
+          <div class="col-auto">
+            <% checked_transf = params[:transferencia] == '1' %>
+            <%= form.check_box :transferencia, checked: checked_transf, class: "btn-check", id: "transferencia-checkbox" %>
+            <label class="btn btn-outline-primary" for="transferencia-checkbox">
+              Transferências
+            </label>
+          </div>
+          <div class="col-auto">
+            <%= form.submit "Buscar", class: "btn btn-success",
+              style: "min-width: 115px;" %>
+          </div>
+          <div class="col-auto">
+            <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-success", data: { confirm: "Nova Venda?" } do %>
+              <i class="fa fa-plus"></i>
+            <% end %>
+          </div>
+          <!-- 🔥 Totais à direita -->
+          <div class="col ms-auto d-flex flex-wrap justify-content-end gap-2">
             <% if current_collaborator.funcionario.permissao.nivel == 1 %>
               <div class="form-floating">
-                <%= form.text_field :valorCusto, class: "form-control form-control-sm text-bg-info", readonly: true, style: "min-width: 120px;" %>
+                <%= form.text_field :valorCusto, class: "form-control form-control-sm text-bg-info", readonly: true %>
                 <%= form.label :valorCusto, "Custo" %>
               </div>
             <% end %>
             <div class="form-floating">
-              <%= form.text_field :valorPago, class: "form-control form-control-sm text-bg-info", readonly: true, style: "min-width: 120px;" %>
+              <%= form.text_field :valorPago, class: "form-control form-control-sm text-bg-info", readonly: true %>
               <%= form.label :valorPago, "Total Recebido" %>
             </div>
             <div class="form-floating">
-              <%= form.text_field :valortotal, class: "form-control form-control-sm text-bg-success", readonly: true, style: "min-width: 120px;" %>
+              <%= form.text_field :valortotal, class: "form-control form-control-sm text-bg-success", readonly: true %>
               <%= form.label :valortotal, "Total Vendas" %>
             </div>
           </div>
@@ -245,5 +253,12 @@
       canceladaCheckbox.addEventListener('change', function() {
         updateLabel();
       });
+
+      var transfCheckbox = document.getElementById('transferencia-checkbox');
+      if (transfCheckbox) {
+        transfCheckbox.addEventListener('change', function() {
+          document.querySelector('form').submit();
+        });
+      }
     });
   </script>

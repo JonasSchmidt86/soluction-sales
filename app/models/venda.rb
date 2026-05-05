@@ -3,11 +3,18 @@ class Venda < ApplicationRecord
     self.table_name = "venda"
     self.primary_key = "cod_venda"
 
-    has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all, autosave: true
+    after_commit :gerar_transferencia, if: -> { tipo == 'T' }
+
+    def gerar_transferencia
+        return if contas.any? || Contaspagrec.exists?(cod_venda: cod_venda)
+        TransferenciaService.new(self).call
+    end
+
+    has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :destroy, autosave: true
     accepts_nested_attributes_for :itensvenda, allow_destroy: true, update_only: true #, reject_if: :all_blank
 
-    has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :delete_all, autosave: true
-    accepts_nested_attributes_for :contas, allow_destroy: true, update_only: true #, reject_if: :all_blank
+    has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :destroy, autosave: true
+    accepts_nested_attributes_for :contas, allow_destroy: true #, update_only: true , reject_if: :all_blank
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :vendas
     accepts_nested_attributes_for :pessoa, allow_destroy: false
@@ -16,7 +23,12 @@ class Venda < ApplicationRecord
     
     belongs_to :empresa, :class_name => 'Empresa', :foreign_key => 'cod_empresa', inverse_of: :vendas
 
-    validates :itensvenda, :contas, :funcionario, :empresa, :pessoa, presence: true
+    validates :itensvenda, :funcionario, :empresa, :pessoa, presence: true
+    validates :contas, presence: true, unless: :transferencia?
+
+    def transferencia?
+        tipo == 'T'
+    end
 
     paginates_per 30
 
@@ -43,10 +55,18 @@ class Venda < ApplicationRecord
     def valorRecebido
         return 0 if cancelada?
 
-        Lancamentoscaixa
-            .joins(:contaspagrec)
-            .where(contaspagrec: { cod_venda: id })
-            .sum(:valor)
+        if self.transferencia?
+            Lancamentoscaixa
+                .joins(:contaspagrec)
+                .where(contaspagrec: { cod_venda: id })
+                .where.not(tipo: 'S')
+                .sum("CASE WHEN tipo = 'E' THEN valor ELSE -valor END")
+        else
+            Lancamentoscaixa
+                .joins(:contaspagrec)
+                .where(contaspagrec: { cod_venda: id })
+                .sum(:valor)
+        end
     end
 
     def valorDevido

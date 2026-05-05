@@ -2,28 +2,42 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
     
     def index
         per_page = params[:per_page].to_i.zero? ? 30 : params[:per_page].to_i
-        base_scope = Venda.includes(:empresa, :funcionario, :pessoa, itensvenda: :produto, contas: :lancamentos)
 
+        vendas = Venda.includes(:empresa, :funcionario, :pessoa, itensvenda: :produto, contas: :lancamentos)
+
+        vendas = vendas.where(cod_empresa: current_collaborator.cod_empresa)
+        
+        # 🔎 busca direta
         if params[:codigo_venda].present?
-            @sales = base_scope.where(cod_venda: params[:codigo_venda].to_i).order(datavenda: :desc)
+            @sales = vendas.where(cod_venda: params[:codigo_venda].to_i)
+                        .order(datavenda: :desc)
             return
         end
 
-        vendas = base_scope.where(cod_empresa: current_collaborator.cod_empresa)
-                            .where(" venda.tipo <> 'T' ")
+        # 🔥 tipo (transferência)
+        if params[:transferencia] == '1'
+            vendas = vendas.where(tipo: 'T')
+        else
+            vendas = vendas.where.not(tipo: 'T')
+        end
 
+        # 🔥 cancelada
         if params[:cancelada].present? && params[:cancelada].to_i == 0
             vendas = vendas.where(cancelada: false)
         end
+
+        # 🔥 pessoa
         if params[:cod_pessoa].present?
             vendas = vendas.where(cod_pessoa: params[:cod_pessoa])
         end
 
+        # 🔥 busca por nome
         if params[:term].present?
             term = "%#{params[:term].upcase}%"
             vendas = vendas.joins(:pessoa).where("UPPER(pessoa.nome) LIKE ?", term)
         end
 
+        # 🔥 datas
         if params[:dataInicial].present? && params[:dataFinal].present?
             data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')
             data_final   = Date.strptime(params[:dataFinal], '%d/%m/%Y')
@@ -31,22 +45,25 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')
             data_final   = data_inicial.end_of_month
         else
-            data_inicial = Time.zone.today
+            data_inicial = Time.zone.today.beginning_of_month
             data_final   = Time.zone.today.end_of_month
         end
 
         vendas = vendas.where(datavenda: data_inicial.beginning_of_day..data_final.end_of_day)
 
+        # 🔥 funcionário
         if params[:cod_funcionario].present?
             vendas = vendas.where(cod_funcionario: params[:cod_funcionario])
         end
 
-        @sales = if params[:per_page].present? && params[:per_page].to_i.zero?
-                    vendas.order(datavenda: :desc)
-                else
-                    vendas.order(datavenda: :desc).page(params[:page]).per(per_page)
-                end
-    end
+        # 🔥 paginação
+        @sales =
+            if params[:per_page].present? && params[:per_page].to_i.zero?
+            vendas.order(datavenda: :desc)
+            else
+            vendas.order(datavenda: :desc).page(params[:page]).per(per_page)
+            end
+        end
 
 
     def hist_client
@@ -66,9 +83,6 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         #         consulta += " and date(datavenda) between to_date('" + Time.now.strftime("%d/%m/%Y") +"', 'DD/MM/YYYY') and to_date('" + Date.today.end_of_month.strftime("%d/%m/%Y") + "', 'DD/MM/YYYY') "
         #     end
         # end
-
-        # tipo T é transferencia 
-        consulta += " and tipo <> 'T' "
         @sales = Venda.where(consulta, current_collaborator.cod_empresa )
                                     .order(datavenda: :desc).page(params[:page])
     end
