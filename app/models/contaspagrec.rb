@@ -137,7 +137,7 @@ class Contaspagrec < ApplicationRecord
 
     def valorPago
         valor = 0
-        if self.venda.present? || self.tipo == 'T'
+        if self.venda.present? && self.venda.tipo == 'T'
             for conta in self.lancamentos do
                 if conta.tipo == 'E' && self.venda.cod_empresa != self.venda.cod_empresa_transferida
                     valor += conta.valor
