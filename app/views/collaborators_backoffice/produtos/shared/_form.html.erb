@@ -54,16 +54,24 @@
                   <th data-sortable=""><a href="#" class="dataTable-sorter">Nome Cor</a></th>
                   <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Est_Real</a></th>
                   <th data-sortable="" style="width: 10.886288%;"><a href="#" class="dataTable-sorter">Qtd</a></th>
+                  <th data-sortable="" style="width: 0.50%;"><a href="#" class="dataTable-sorter"></a></th>
                 </tr>
               </thead>
               <tbody>
-                <% @produto.empresaprodutos.where("cod_empresa = ? ", current_collaborator.cod_empresa).each do |produto| %>
+                <% @produto.empresaprodutos.where("cod_empresa = ? ", current_collaborator.cod_empresa).each do |ep| %>
                   <tr>
-                    <td><%= produto.cod_empresa %></td>
-                    <td><%= produto.cod_cor %></td>
-                    <td><%= produto.cor.nmcor %></td>
-                    <td><%= produto.estoq_real.to_i %></td>
-                    <td><%= produto.quantidade.to_i %></td>
+                    <td><%= ep.cod_empresa %></td>
+                    <td><%= ep.cod_cor %></td>
+                    <td><%= ep.cor.nmcor %></td>
+                    <td class="estoq-real-cell"><%= ep.estoq_real.to_i %></td>
+                    <td class="quantidade-cell"><%= ep.quantidade.to_i %></td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary btn-atualizar-estoque"
+                              data-url="<%= atualizar_estoque_collaborators_backoffice_produto_path(@produto) %>"
+                              data-cod-cor="<%= ep.cod_cor %>">
+                        <i class="fa fa-rotate"></i>
+                      </button>
+                    </td>
                   </tr>
                 <% end %>
               </tbody>
@@ -227,4 +235,38 @@
               //console.log("Valor "+list.innerText);
           }
       });
+</script>
+
+<script>
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-atualizar-estoque');
+    if (!btn) return;
+
+    var url    = btn.dataset.url;
+    var codCor = btn.dataset.codCor;
+    var cell   = btn.closest('tr').querySelector('.estoq-real-cell');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ cod_cor: codCor })
+    })
+    .then(r => r.json())
+    .then(data => {
+      cell.textContent = data.estoq_real;
+      btn.closest('tr').querySelector('.quantidade-cell').textContent = data.quantidade;
+      btn.innerHTML = '<i class="fa fa-check text-success"></i>';
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fa fa-rotate"></i>'; }, 2000);
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-rotate"></i>';
+    });
+  });
 </script>

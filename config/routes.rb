@@ -35,6 +35,7 @@ Rails.application.routes.draw do
     resources :produtos, only: [:index, :edit, :update, :new, :create, :destroy, :show] do
       member do
         get :estoque
+        post :atualizar_estoque
       end
     end
     resources :produto_imagens, only: [:index, :create, :edit, :destroy] do

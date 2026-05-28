@@ -73,7 +73,7 @@
             <div class="row g-2 my-2">
               <div class="col-md-3">
                 <div class="form-floating mb-3 mb-md-0">
-                  <%= form_buy.text_field :dataemissao, class: "form-control fallback datepicker", placeholder:"dt emissao", value: form_buy.object.dataemissao.strftime("%d/%m/%Y") %>
+                  <%= form_buy.text_field :dataemissao, class: "fallback form-control fallback datepicker", placeholder:"dt emissao", value: form_buy.object.dataemissao.strftime("%d/%m/%Y") %>
                   <%= form_buy.label :data_emissao, class:"" %>
                 </div>
               </div>
@@ -390,7 +390,7 @@
                   <div class="form-floating">
                     <%= form_ff.text_field :datacadastro,
                                                                     value: (form_ff.object.try(:datacadastro).nil? ? post_date(DateTime.now) : form_ff.object.datacadastro),
-                                                                    class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark",
+                                                                    class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark",
                                                                     placeholder: "Dt",
                                                                 readonly: false %>
                     <%= form_ff.label :dt_cadastro, class:"" %>
@@ -400,13 +400,13 @@
               <div class="row g-2 my-2">
                 <div class="col-md-3">
                   <div class="form-floating">
-                    <%= form_ff.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false  %>
+                    <%= form_ff.text_field :nrromaneio, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: false  %>
                     <%= form_ff.label :nr_romaneio, class:"" %>
                   </div>
                 </div>
                 <div class="col-md-3">
                   <div class="form-floating">
-                    <%= form_ff.text_field :datavencimento, class: "datepicker form-control border-top-0 border-start-0 border-end-0 border-dark", placeholder:"", readonly: false   %>
+                    <%= form_ff.text_field :datavencimento, class: "fallback datepicker form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: false   %>
                     <%= form_ff.label :dt_vencimento, class:"" %>
                   </div>
                 </div>

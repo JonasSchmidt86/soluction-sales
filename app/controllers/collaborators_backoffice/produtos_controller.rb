@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeController
 
 
-    before_action :set_produto, only: [:edit, :update, :destroy, :show]
+    before_action :set_produto, only: [:edit, :update, :destroy, :show, :atualizar_estoque]
     #before_action :get_produto, only: [:new, :edit, :update,]
 
     def index
@@ -90,6 +90,19 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         end
         
         render json: dados
+    end
+
+    def atualizar_estoque
+        ActiveRecord::Base.connection.execute(
+            ActiveRecord::Base.sanitize_sql_array([
+                "SELECT * FROM function_update_produto_consulta(?::BIGINT, ?::BIGINT, ?::BIGINT)",
+                current_collaborator.cod_empresa,
+                params[:id],
+                params[:cod_cor]
+            ])
+        )
+        ep = Empresaproduto.find_by(cod_empresa: current_collaborator.cod_empresa, cod_produto: params[:id], cod_cor: params[:cod_cor])
+        render json: { estoq_real: ep&.estoq_real.to_i, quantidade: ep&.quantidade.to_i }
     end
 
       
