@@ -318,22 +318,21 @@
           billDate.setDate(billDate.getDate() + interval);
       }
 
-      data.forEach((bill, index) => {
-          // Adiciona um novo campo para cada conta
-          $('#addConta').trigger('click');
+      window._creatingBills = true;
 
-          // Atualiza os campos recém-adicionados com os dados da fatura
-          const row = $('#conta_fields tr').eq(index); // Seleciona a linha recém-adicionada
+      data.forEach((bill, index) => {
+          $('#addConta').trigger('click');
+          const row = $('#conta_fields tr').eq(index);
           row.find('input[id*=_numeroparcela]').val(bill.number);
           row.find('input[id*=_dtvencimento]').val(formatDate(bill.dueDate));
           row.find('input[id*=_valorparcela]').val(parseFloat(bill.amount).toFixed(2).replace('.', ','));
-
-          // Preenche os campos ocultos
           row.find('input[id*=_cod_empresa]').val(<%= current_collaborator.empresa.id %>);
           row.find('input[id*=_ativo]').val(true);
           row.find('input[id*=_quitada]').val(false);
           row.find('input[id*=_cod_tppagamento]').val(1);
       });
+
+      setTimeout(function() { window._creatingBills = false; }, 500);
 
       // Listener para atualizar parcelas automaticamente ao mudar qualquer valor
       $('#conta_fields').on('change', 'input[id*=_valorparcela]', function () {

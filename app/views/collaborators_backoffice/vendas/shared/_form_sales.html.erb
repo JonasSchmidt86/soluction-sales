@@ -268,6 +268,8 @@
           billDate.setDate(billDate.getDate() + interval);
       }
 
+      window._creatingBills = true;
+
       data.forEach((bill, index) => {
           // Adiciona um novo campo para cada conta
           $('#addConta').trigger('click');
@@ -284,6 +286,8 @@
           row.find('input[id*=_quitada]').val(false);
           row.find('input[id*=_cod_tppagamento]').val(1);
       });
+
+      setTimeout(function() { window._creatingBills = false; }, 500);
 
       // Listener para atualizar parcelas automaticamente ao mudar qualquer valor
       $('#conta_fields').on('change', 'input[id*=_valorparcela]', function () {

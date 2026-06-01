@@ -37,9 +37,11 @@
         $(insertedItem).find('.fallback').mask("99/99/9999");
         $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
 
-        // Enumerar numeroparcela automaticamente
-        var parcelaCount = $('.contas .nested-fields').length;
-        $(insertedItem).find('input[name*="numeroparcela"]').val(parcelaCount);
+        // Enumerar numeroparcela automaticamente apenas se não estiver sendo preenchido pelo createBills
+        if (!window._creatingBills) {
+          var parcelaCount = $('.contas .nested-fields').length;
+          $(insertedItem).find('input[name*="numeroparcela"]').val(parcelaCount);
+        }
       }, 100);
     });
   });
