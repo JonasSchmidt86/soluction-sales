@@ -37,6 +37,8 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             vendas = vendas.joins(:pessoa).where("UPPER(pessoa.nome) LIKE ?", term)
         end
 
+        puts "inspect #{ params[:dataInicial].inspect }"
+
         # 🔥 datas
         if params[:dataInicial].present? && params[:dataFinal].present?
             data_inicial = Date.strptime(params[:dataInicial], '%d/%m/%Y')

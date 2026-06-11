@@ -1,0 +1,43 @@
+<div class="modal fade" id="modalAcertoEstoque" tabindex="-1" aria-labelledby="modalAcertoEstoqueLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalAcertoEstoqueLabel">Novo Acerto de Estoque</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <%= form_with url: collaborators_backoffice_acertosestoque_index_path, method: :post, local: true do |form| %>
+        <div class="modal-body">
+          <%# Campo fake impede submit automático do browser com Enter %>
+          <input type="text" style="display:none" />
+          <div class="mb-3">
+            <%= form.label :nome_produto, "Produto" %>
+            <%= form.text_field :nome_produto, class: "form-control text produto-acerto-search", placeholder: "Digite para buscar...", autocomplete: "off" %>
+            <%= form.hidden_field :cod_produto, class: "acerto-cod-produto" %>
+            <div class="acerto-results-list list-group position-absolute w-75" style="display:none; z-index:1055;"></div>
+          </div>
+          <div class="mb-3">
+            <%= form.label :cod_cor, "Cor" %>
+            <%= form.select :cod_cor, [], { prompt: "Selecione o produto primeiro" }, class: "form-select acerto-cor-select", disabled: true %>
+          </div>
+          <div class="mb-3">
+            <%= form.label :tipo, "Tipo" %>
+            <%= form.select :tipo, [["Entrada", "E"], ["Saída", "S"]], {}, class: "form-select" %>
+          </div>
+          <div class="mb-3">
+            <%= form.label :quantidade, "Quantidade" %>
+            <%= form.number_field :quantidade, class: "form-control", min: 1, value: 1 %>
+          </div>
+          <div class="mb-3">
+            <%= form.label :descricao, "Descrição" %>
+            <%= form.text_field :descricao, class: "form-control text", placeholder: "Motivo do acerto...", autocomplete: "off" %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          <%= form.submit "Salvar", class: "btn btn-success" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+>

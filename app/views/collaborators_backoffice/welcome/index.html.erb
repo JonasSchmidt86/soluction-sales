@@ -27,7 +27,7 @@
                 <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-primary" do %>
                   <i class="fa fa-plus"></i> Nova Venda
                 <% end %>
-                <%= link_to collaborators_backoffice_report_sales_path, class: "btn btn-outline-success" do %>
+                <%= link_to collaborators_backoffice_report_sales_path(dataInicial: Date.current.strftime('%d/%m/%Y').to_s), class: "btn btn-outline-success" do %>
                   <i class="fa fa-list"></i> Listar
                 <% end %>
               </div>

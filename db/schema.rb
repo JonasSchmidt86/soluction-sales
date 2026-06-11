@@ -438,6 +438,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000007) do
     t.bigint "cod_funcionario"
   end
 
+  create_table "links", force: :cascade do |t|
+    t.string "label"
+    t.string "url"
+    t.integer "position"
+    t.boolean "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "marca", primary_key: "cod_marca", id: :bigint, default: -> { "nextval('marca_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "nome", limit: 200
   end
