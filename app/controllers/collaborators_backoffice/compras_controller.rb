@@ -81,6 +81,10 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         compra.desconto = params[:compra][:desconto]&.gsub(',', '.').to_f || 0.0;
         compra.valorfrete = params[:compra][:valorfrete]&.gsub(',', '.').to_f || 0.0;
 
+# Preciso pegar o valor do frete da Compra e dividir e add no itemcompra vai o valor total do frete no item
+# no banco ele para achar o custo do produto ele divide o valor do frete pela quantidade do produto e soma no valor unitario do produto, assim o custo do produto fica correto.
+        
+
         # compra.valortotal = params[:compra][:valortotal]&.gsub(',', '.').to_f || 0.0;
         compra.valortotal = params[:compra][:Valor_liquido]&.gsub(',', '.').to_f || 0.0;
 
@@ -119,6 +123,17 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         if params[:compra][:itenscompra_attributes].present?
           itens = params[:compra][:itenscompra_attributes]
           
+
+          total_produtos = itens.values.sum do |item|
+            next 0 if item["_destroy"].to_s == "1"
+
+            valor = item[:valorunitario].to_s.tr(',', '.').to_d
+            quantidade = item[:quantidade].to_s.tr(',', '.').to_d
+
+            valor * quantidade
+          end
+
+
           # Verifique se itens é uma instância de ActionController::Parameters
           if itens.is_a?(ActionController::Parameters)
             # Converta itens para uma matriz de hashes
@@ -228,11 +243,27 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
               return render json: { error: "Informe a Quantidade!" }, status: :unprocessable_entity
             end
 
+# Aqui ver se a compra tem frente para add no valor do itemcompra.valorfrete
+
             # if taxa_frete > 0
             #   itemCompra.valor_frete = (itemCompra.valorunitario * itemCompra.quantidade) * taxa_frete;
             # else
               itemCompra.valor_frete = pro_temp["valor_frete"]&.gsub(',', '.').to_f || 0.0;
             # end
+
+            if itemCompra.valor_frete.nil? || itemCompra.valor_frete <= 0
+              despesas = compra.valorfrete.to_d + compra.outrasdespesas.to_d
+
+              if despesas.positive? && total_produtos.positive?
+                itemCompra.valor_frete =
+                  (itemCompra.valorunitario * itemCompra.quantidade) *
+                  (despesas / total_produtos)
+              else
+                itemCompra.valor_frete = 0.0
+              end
+            end
+            puts "Frete: #{compra.valorfrete}"
+            puts "Total produtos: #{total_produtos}"
 
             itemCompra.cod_compra = compra.cod_compra
             itemCompra.cod_empresa = compra.cod_empresa
