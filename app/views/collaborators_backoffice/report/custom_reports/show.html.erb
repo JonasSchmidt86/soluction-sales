@@ -68,6 +68,33 @@
               class: "form-control", style: "width: 180px;" , include_blank: "Selecione..."
             ) %>
           </div>
+        <% elsif field_name == 'select_funcionario' %>
+          <% selecionados = Array(params[:select_funcionario]).map(&:to_s) %>
+          <div class="col-auto">
+            <label class="form-label">Vendedores</label>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                Selecione...
+              </button>
+              <div class="dropdown-menu p-3" style="min-width:250px; max-height:300px; overflow:auto;">
+                <% Funcionario.select(:cod_funcionario, :usuario).where(
+                                          "cod_funcionario IN (
+                                          SELECT cod_funcionario
+                                          FROM funcionarioempresa
+                                          WHERE ativo = true
+                                            AND cod_empresa = ?
+                                      )
+                                      AND datademissao IS NULL",
+                                      current_collaborator.cod_empresa
+                                    ).order(:usuario).each do |f| %>
+                  <div class="form-check">
+                    <%= check_box_tag("select_funcionario[]", f.cod_funcionario.to_s, selecionados.include?(f.cod_funcionario.to_s), id: "funcionario_#{f.cod_funcionario}", class: "form-check-input" ) %>
+                    <%= label_tag( "funcionario_#{f.cod_funcionario}", f.usuario, class: "form-check-label") %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
         <% elsif field_name == 'cod_funcionario' %>
           <div class="col-auto">
             <%= form.label :cod_funcionario, "Vendedor", class: "form-label" %>

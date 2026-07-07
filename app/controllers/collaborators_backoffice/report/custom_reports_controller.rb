@@ -63,7 +63,16 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
           params.each do |k, v|
             v = nil if v.blank?
             placeholder = "{{#{k}}}"
-            sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v)) if sql.include?(placeholder)
+            next unless sql.include?(placeholder)
+            if k.start_with?("select_")
+              valores = Array(v)
+                          .reject(&:blank?)
+                          .map { |x| ActiveRecord::Base.connection.quote(x) }
+                          .join(",")
+              sql.gsub!(placeholder, valores)
+            else
+              sql.gsub!(placeholder, ActiveRecord::Base.connection.quote(v))
+            end
           end
 
           # Verificação de SELECT para não permitir comandos perigosos
