@@ -70,31 +70,79 @@
           </div>
         <% elsif field_name == 'select_funcionario' %>
           <% selecionados = Array(params[:select_funcionario]).map(&:to_s) %>
+          <% funcionarios_list = Funcionario.select(:cod_funcionario, :usuario).where(
+            "cod_funcionario IN (SELECT cod_funcionario FROM funcionarioempresa WHERE ativo = true AND cod_empresa = ?) AND datademissao IS NULL and ativo = true",
+            current_collaborator.cod_empresa
+          ).order(:usuario) %>
           <div class="col-auto">
             <label class="form-label">Vendedores</label>
-            <div class="dropdown">
-              <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
-                Selecione...
+            <div class="dropdown" id="dropdown-funcionarios">
+              <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button"
+                id="btn-funcionarios" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                style="min-width:200px;">
+                <span id="label-funcionarios">
+                  <% if selecionados.empty? %>
+                    Todos
+                  <% else %>
+                    <%= selecionados.size %> selecionado(s)
+                  <% end %>
+                </span>
               </button>
-              <div class="dropdown-menu p-3" style="min-width:250px; max-height:300px; overflow:auto;">
-                <% Funcionario.select(:cod_funcionario, :usuario).where(
-                                          "cod_funcionario IN (
-                                          SELECT cod_funcionario
-                                          FROM funcionarioempresa
-                                          WHERE ativo = true
-                                            AND cod_empresa = ?
-                                      )
-                                      AND datademissao IS NULL",
-                                      current_collaborator.cod_empresa
-                                    ).order(:usuario).each do |f| %>
-                  <div class="form-check">
-                    <%= check_box_tag("select_funcionario[]", f.cod_funcionario.to_s, selecionados.include?(f.cod_funcionario.to_s), id: "funcionario_#{f.cod_funcionario}", class: "form-check-input" ) %>
-                    <%= label_tag( "funcionario_#{f.cod_funcionario}", f.usuario, class: "form-check-label") %>
+              <div class="dropdown-menu p-2" style="min-width:250px;">
+                <input type="text" class="form-control form-control-sm mb-2" id="busca-funcionario" placeholder="Buscar...">
+                <div style="max-height:260px; overflow-y:auto;">
+                  <div class="form-check border-bottom pb-1 mb-1">
+                    <input type="checkbox" id="func-todos" class="form-check-input"
+                      <%= selecionados.empty? ? 'checked' : '' %>>
+                    <label for="func-todos" class="form-check-label fw-bold">Todos</label>
                   </div>
-                <% end %>
+                  <% funcionarios_list.each do |f| %>
+                    <div class="form-check funcionario-item">
+                      <%= check_box_tag "select_funcionario[]", f.cod_funcionario.to_s,
+                        selecionados.include?(f.cod_funcionario.to_s),
+                        id: "funcionario_#{f.cod_funcionario}", class: "form-check-input func-check" %>
+                      <%= label_tag "funcionario_#{f.cod_funcionario}", f.usuario, class: "form-check-label" %>
+                    </div>
+                  <% end %>
+                </div>
               </div>
             </div>
           </div>
+          <script>
+            (function() {
+              const btnLabel = document.getElementById('label-funcionarios');
+              const todosChk = document.getElementById('func-todos');
+              const checks = document.querySelectorAll('.func-check');
+              const busca = document.getElementById('busca-funcionario');
+
+              function updateLabel() {
+                const sel = [...checks].filter(c => c.checked);
+                btnLabel.textContent = sel.length === 0 ? 'Todos' : sel.length + ' selecionado(s)';
+                todosChk.checked = sel.length === 0;
+              }
+
+              todosChk.addEventListener('change', function() {
+                if (this.checked) checks.forEach(c => c.checked = false);
+                updateLabel();
+              });
+
+              checks.forEach(c => c.addEventListener('change', function() {
+                if (this.checked) todosChk.checked = false;
+                updateLabel();
+              }));
+
+              busca.addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                document.querySelectorAll('.funcionario-item').forEach(item => {
+                  item.style.display = item.querySelector('label').textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+              });
+
+              todosChk.closest('form') && todosChk.closest('form').addEventListener('submit', function() {
+                if (todosChk.checked) checks.forEach(c => c.checked = true);
+              });
+            })();
+          </script>
         <% elsif field_name == 'cod_funcionario' %>
           <div class="col-auto">
             <%= form.label :cod_funcionario, "Vendedor", class: "form-label" %>

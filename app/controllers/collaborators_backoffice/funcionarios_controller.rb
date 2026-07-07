@@ -125,8 +125,9 @@ class CollaboratorsBackoffice::FuncionariosController < CollaboratorsBackofficeC
     def destroy
         @funcionario.ativo = false
         if @funcionario.save
+            @funcionario.funcionarioempresas.update_all(ativo: false)
             redirect_to collaborators_backoffice_funcionarios_path, notice: "Colaborador removido com sucesso!"
-         end
+        end
     end
 
 
