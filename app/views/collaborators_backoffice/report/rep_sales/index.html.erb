@@ -157,6 +157,11 @@
                           <i class="far fa-money-bill-alt" style="width: 35px;"></i> Imprimir Nota Promissória
                         <% end %>
                       </li>
+                      <li>
+                        <%= link_to collaborators_backoffice_vendas_print_delivery_receipt_path(cod_venda: sale.cod_venda), target: '_blank', class: "dropdown-item btn btn-info btn-circle" do %>
+                          <i class="fa fa-truck" style="width: 35px;"></i> Imprimir Recibo Entrega
+                        <% end %>
+                      </li>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
                         <li>
                           <%= link_to editar_itens_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>

@@ -89,6 +89,10 @@ Rails.application.routes.draw do
       get :editar_itens, on: :member
       patch :atualizar_itens, on: :member
     end
+
+    namespace :vendas do
+      get 'prints/delivery_receipt', to: 'prints#delivery_receipt', as: :print_delivery_receipt
+    end
     
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :pedidos_compras
