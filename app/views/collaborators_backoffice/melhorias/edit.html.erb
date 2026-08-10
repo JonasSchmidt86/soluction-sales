@@ -1,0 +1,89 @@
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark d-flex align-items-center">
+          <i class="fa fa-edit me-2"></i>
+          <h5 class="mb-0">Administrar Solicitação #<%= @melhoria.id %></h5>
+        </div>
+        <div class="card-body">
+          <!-- Info da solicitação (somente leitura) -->
+          <div class="alert alert-light border mb-4">
+            <h6 class="mb-1"><%= @melhoria.titulo %></h6>
+            <small class="text-muted">
+              <i class="fa fa-user me-1"></i> <%= @melhoria.solicitante_nome %>
+              &nbsp;•&nbsp;
+              <i class="fa fa-calendar me-1"></i> <%= @melhoria.created_at.strftime("%d/%m/%Y %H:%M") %>
+              &nbsp;•&nbsp;
+              <i class="fa <%= @melhoria.tipo_icone %> me-1"></i> <%= @melhoria.tipo_label %>
+            </small>
+          </div>
+
+          <%= form_with(model: @melhoria, url: collaborators_backoffice_melhoria_path(@melhoria), method: :patch, local: true, html: { multipart: true }) do |f| %>
+
+            <% if @melhoria.errors.any? %>
+              <div class="alert alert-danger">
+                <strong><%= pluralize(@melhoria.errors.count, "erro", "erros") %> encontrado(s):</strong>
+                <ul class="mb-0 mt-1">
+                  <% @melhoria.errors.full_messages.each do |msg| %>
+                    <li><%= msg %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <%= f.label :status, "Status", class: "form-label" %>
+                <%= f.select :status,
+                      [['Aberto', 'aberto'], ['Analisando', 'analisando'], ['Em Desenvolvimento', 'em_desenvolvimento'],
+                       ['Em Teste', 'em_teste'], ['Concluído', 'concluido'], ['Recusado', 'recusado']],
+                      {},
+                      class: "form-select" %>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <%= f.label :prioridade, "Prioridade", class: "form-label" %>
+                <%= f.select :prioridade,
+                      [['Baixa', 'baixa'], ['Normal', 'normal'], ['Alta', 'alta'], ['Urgente', 'urgente']],
+                      {},
+                      class: "form-select" %>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <%= f.label :responsavel_id, "Responsável", class: "form-label" %>
+                <%
+                  funcionarios_empresa = Funcionario.joins(:funcionarioempresas)
+                    .where(funcionarioempresa: { cod_empresa: current_collaborator.cod_empresa, ativo: true })
+                    .where(ativo: true)
+                    .includes(:pessoa)
+                %>
+                <%= f.select :responsavel_id,
+                      funcionarios_empresa.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                      { include_blank: 'Nenhum' },
+                      class: "form-select" %>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :anexos, "Adicionar anexos", class: "form-label" %>
+              <%= f.file_field :anexos, multiple: true, class: "form-control",
+                    accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" %>
+              <div class="form-text">Novos anexos serão adicionados aos existentes.</div>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+              <%= link_to collaborators_backoffice_melhoria_path(@melhoria), class: "btn btn-outline-secondary" do %>
+                <i class="fa fa-arrow-left me-1"></i> Cancelar
+              <% end %>
+              <%= f.submit "Salvar Alterações", class: "btn btn-warning" %>
+            </div>
+
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

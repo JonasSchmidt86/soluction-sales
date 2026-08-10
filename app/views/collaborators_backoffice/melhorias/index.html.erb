@@ -1,0 +1,136 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+      <i class="fa fa-lightbulb-o me-2"></i> Melhorias / Sugestões / Ocorrências
+    </h4>
+    <%= link_to new_collaborators_backoffice_melhoria_path, class: "btn btn-primary" do %>
+      <i class="fa fa-plus me-1"></i> Nova Solicitação
+    <% end %>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+      <%= form_with(url: collaborators_backoffice_melhorias_path, method: :get, local: true) do |f| %>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <%= f.label :busca, "Buscar", class: "form-label small mb-0" %>
+            <%= f.text_field :busca, value: params[:busca], class: "form-control form-control-sm",
+                  placeholder: "Título ou descrição..." %>
+          </div>
+          <div class="col-md-2">
+            <%= f.label :status, "Status", class: "form-label small mb-0" %>
+            <%= f.select :status,
+                  [['Aberto', 'aberto'], ['Analisando', 'analisando'], ['Em Desenvolvimento', 'em_desenvolvimento'],
+                   ['Em Teste', 'em_teste'], ['Concluído', 'concluido'], ['Recusado', 'recusado']],
+                  { include_blank: 'Todos', selected: params[:status] },
+                  class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <%= f.label :tipo, "Tipo", class: "form-label small mb-0" %>
+            <%= f.select :tipo,
+                  [['Sugestão', 'sugestao'], ['Erro', 'erro'], ['Melhoria', 'melhoria'], ['Nova Funcionalidade', 'nova_funcionalidade']],
+                  { include_blank: 'Todos', selected: params[:tipo] },
+                  class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <%= f.label :prioridade, "Prioridade", class: "form-label small mb-0" %>
+            <%= f.select :prioridade,
+                  [['Baixa', 'baixa'], ['Normal', 'normal'], ['Alta', 'alta'], ['Urgente', 'urgente']],
+                  { include_blank: 'Todas', selected: params[:prioridade] },
+                  class: "form-select form-select-sm" %>
+          </div>
+          <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+          <div class="col-md-2">
+            <%= f.label :cod_funcionario, "Solicitante", class: "form-label small mb-0" %>
+            <%= f.select :cod_funcionario,
+                  @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                  { include_blank: 'Todos', selected: params[:cod_funcionario] },
+                  class: "form-select form-select-sm" %>
+          </div>
+          <% end %>
+          <div class="col-md-1 d-flex gap-1">
+            <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
+            <%= link_to "Limpar", collaborators_backoffice_melhorias_path, class: "btn btn-sm btn-outline-secondary" %>
+          </div>
+        </div>
+
+        <!-- Filtro de período (colapsável) -->
+        <div class="row g-2 mt-1">
+          <div class="col-md-2">
+            <%= f.label :data_inicio, "De", class: "form-label small mb-0" %>
+            <%= f.date_field :data_inicio, value: params[:data_inicio], class: "form-control form-control-sm" %>
+          </div>
+          <div class="col-md-2">
+            <%= f.label :data_fim, "Até", class: "form-label small mb-0" %>
+            <%= f.date_field :data_fim, value: params[:data_fim], class: "form-control form-control-sm" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Contagem -->
+  <p class="text-muted small mb-2">
+    <%= @melhorias.total_count %> solicitação(ões) encontrada(s)
+  </p>
+
+  <!-- Lista de solicitações -->
+  <% if @melhorias.any? %>
+    <div class="list-group shadow-sm">
+      <% @melhorias.each do |melhoria| %>
+        <%= link_to collaborators_backoffice_melhoria_path(melhoria), class: "list-group-item list-group-item-action p-3" do %>
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center mb-1">
+                <span class="text-muted me-2 small fw-bold">#<%= melhoria.id %></span>
+                <i class="fa <%= melhoria.tipo_icone %> me-2 text-muted"></i>
+                <strong class="text-dark"><%= truncate(melhoria.titulo, length: 60) %></strong>
+              </div>
+              <div class="small text-muted">
+                <span class="badge bg-<%= melhoria.status_cor %> me-1"><%= melhoria.status_label %></span>
+                <span class="badge bg-<%= melhoria.prioridade_cor %> me-2"><%= melhoria.prioridade_label %></span>
+                <i class="fa fa-user me-1"></i> <%= melhoria.solicitante_nome %>
+                <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                  &nbsp;•&nbsp;
+                  <i class="fa fa-building me-1"></i> <%= melhoria.empresa&.nome %>
+                <% end %>
+                &nbsp;•&nbsp;
+                <i class="fa fa-calendar me-1"></i> <%= melhoria.created_at.strftime("%d/%m/%Y") %>
+                <% if melhoria.responsavel.present? %>
+                  &nbsp;•&nbsp;
+                  <i class="fa fa-hand-o-right me-1"></i> <%= melhoria.responsavel_nome %>
+                <% end %>
+                <% if melhoria.comentarios.any? %>
+                  &nbsp;•&nbsp;
+                  <i class="fa fa-comments me-1"></i> <%= melhoria.comentarios.size %>
+                <% end %>
+                <% if melhoria.anexos.attached? %>
+                  &nbsp;•&nbsp;
+                  <i class="fa fa-paperclip me-1"></i> <%= melhoria.anexos.count %>
+                <% end %>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-light text-dark border"><%= melhoria.tipo_label %></span>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <!-- Paginação -->
+    <div class="mt-3 d-flex justify-content-center">
+      <%= paginate @melhorias %>
+    </div>
+  <% else %>
+    <div class="text-center py-5">
+      <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+      <p class="text-muted">Nenhuma solicitação encontrada.</p>
+      <%= link_to new_collaborators_backoffice_melhoria_path, class: "btn btn-primary" do %>
+        <i class="fa fa-plus me-1"></i> Criar a primeira solicitação
+      <% end %>
+    </div>
+  <% end %>
+</div>

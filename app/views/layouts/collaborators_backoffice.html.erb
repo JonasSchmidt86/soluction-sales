@@ -241,6 +241,13 @@
                 Relatórios
                 <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
               </a>
+              <!-- Link: Melhorias / Sugestões -->
+              <%= link_to collaborators_backoffice_melhorias_path, class: "nav-link" do %>
+                <div class="sb-nav-link-icon">
+                  <i class="fa fa-lightbulb fa-flip fa-solid" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                </div>
+                Melhorias
+              <% end %>
               <div class="collapse" id="collapseRels" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
                   <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>

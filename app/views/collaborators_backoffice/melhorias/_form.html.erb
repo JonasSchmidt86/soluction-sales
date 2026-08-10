@@ -1,0 +1,64 @@
+<%= form_with(model: melhoria, url: collaborators_backoffice_melhorias_path, local: true, html: { multipart: true }) do |f| %>
+
+  <% if melhoria.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(melhoria.errors.count, "erro", "erros") %> encontrado(s):</strong>
+      <ul class="mb-0 mt-1">
+        <% melhoria.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row">
+    <div class="col-md-8 mb-3">
+      <%= f.label :titulo, "Título *", class: "form-label" %>
+      <%= f.text_field :titulo, class: "form-control", placeholder: "Ex: Erro na impressão do orçamento", autofocus: true, maxlength: 200 %>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <%= f.label :tipo, "Tipo *", class: "form-label" %>
+      <%= f.select :tipo,
+            [['Sugestão', 'sugestao'], ['Erro / Bug', 'erro'], ['Melhoria', 'melhoria'], ['Nova Funcionalidade', 'nova_funcionalidade']],
+            { prompt: 'Selecione...' },
+            class: "form-select" %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :descricao, "Descrição *", class: "form-label" %>
+    <%= f.text_area :descricao, class: "form-control", rows: 5, placeholder: "Descreva detalhadamente o problema, sugestão ou funcionalidade desejada..." %>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <%= f.label :prioridade, "Prioridade", class: "form-label" %>
+      <%= f.select :prioridade,
+            [['Baixa', 'baixa'], ['Normal', 'normal'], ['Alta', 'alta'], ['Urgente', 'urgente']],
+            {},
+            class: "form-select" %>
+    </div>
+
+    <div class="col-md-8 mb-3">
+      <%= f.label :anexos, "Anexos", class: "form-label" %>
+      <%= f.file_field :anexos, multiple: true, class: "form-control",
+            accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt",
+            data: { max_size: "10485760" } %>
+      <div class="form-text">
+        Formatos: imagens, PDF, Word, Excel, texto. Máximo 10MB por arquivo.
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="d-flex justify-content-between">
+    <%= link_to collaborators_backoffice_melhorias_path, class: "btn btn-outline-secondary" do %>
+      <i class="fa fa-arrow-left me-1"></i> Voltar
+    <% end %>
+
+    <%= f.submit "Enviar Solicitação", class: "btn btn-primary" %>
+  </div>
+
+<% end %>

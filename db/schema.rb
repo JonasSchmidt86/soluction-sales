@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_20_000007) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -451,6 +451,47 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000007) do
     t.string "nome", limit: 200
   end
 
+  create_table "melhoria_comentarios", force: :cascade do |t|
+    t.bigint "melhoria_id", null: false
+    t.bigint "cod_funcionario", null: false
+    t.text "comentario", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_funcionario"], name: "index_melhoria_comentarios_on_cod_funcionario"
+    t.index ["melhoria_id"], name: "index_melhoria_comentarios_on_melhoria_id"
+  end
+
+  create_table "melhoria_historicos", force: :cascade do |t|
+    t.bigint "melhoria_id", null: false
+    t.bigint "cod_funcionario", null: false
+    t.string "campo", null: false
+    t.string "valor_anterior"
+    t.string "valor_novo"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_funcionario"], name: "index_melhoria_historicos_on_cod_funcionario"
+    t.index ["melhoria_id"], name: "index_melhoria_historicos_on_melhoria_id"
+  end
+
+  create_table "melhorias", force: :cascade do |t|
+    t.string "titulo", null: false
+    t.text "descricao"
+    t.integer "tipo", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.integer "prioridade", default: 1, null: false
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.bigint "responsavel_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa"], name: "index_melhorias_on_cod_empresa"
+    t.index ["cod_funcionario"], name: "index_melhorias_on_cod_funcionario"
+    t.index ["prioridade"], name: "index_melhorias_on_prioridade"
+    t.index ["responsavel_id"], name: "index_melhorias_on_responsavel_id"
+    t.index ["status"], name: "index_melhorias_on_status"
+    t.index ["tipo"], name: "index_melhorias_on_tipo"
+  end
+
   create_table "orcamentos", primary_key: "cod_orcamento", force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.bigint "cod_pessoa", null: false
@@ -748,6 +789,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_000007) do
   add_foreign_key "lembretes", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "lembretes", "empresa", column: "cod_empresasolicitada", primary_key: "cod_empresa", name: "fk_empresasolicitada"
   add_foreign_key "lembretes", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "pk_funcionario"
+  add_foreign_key "melhoria_comentarios", "melhorias"
+  add_foreign_key "melhoria_historicos", "melhorias"
   add_foreign_key "orcamentos", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
   add_foreign_key "orcamentos", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario"
   add_foreign_key "orcamentos", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa"

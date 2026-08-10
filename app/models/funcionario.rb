@@ -28,6 +28,10 @@ class Funcionario < ApplicationRecord
 
     has_many :contaspagrec,
          foreign_key: :cod_funcionario
+
+    has_many :melhorias, foreign_key: :cod_funcionario
+    has_many :melhorias_responsavel, class_name: 'Melhoria', foreign_key: :responsavel_id
+    has_many :melhoria_comentarios, foreign_key: :cod_funcionario
          
     accepts_nested_attributes_for :collaborator, reject_if: :all_blank, allow_destroy: true #cocoon gem
     

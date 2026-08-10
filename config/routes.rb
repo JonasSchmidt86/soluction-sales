@@ -94,6 +94,13 @@ Rails.application.routes.draw do
       get 'prints/delivery_receipt', to: 'prints#delivery_receipt', as: :print_delivery_receipt
     end
     
+    resources :melhorias, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      member do
+        post :comentar
+        delete 'remover_anexo/:anexo_id', action: :remover_anexo, as: :remover_anexo
+      end
+    end
+
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
     resources :pedidos_compras
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
