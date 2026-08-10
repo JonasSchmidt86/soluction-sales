@@ -14,7 +14,7 @@
     <div class="card-body py-2">
       <%= form_with(url: collaborators_backoffice_melhorias_path, method: :get, local: true) do |f| %>
         <div class="row g-2 align-items-end">
-          <div class="col-md-3">
+          <div class="col-md-4">
             <%= f.label :busca, "Buscar", class: "form-label small mb-0" %>
             <%= f.text_field :busca, value: params[:busca], class: "form-control form-control-sm",
                   placeholder: "Título ou descrição..." %>
@@ -41,8 +41,15 @@
                   { include_blank: 'Todas', selected: params[:prioridade] },
                   class: "form-select form-select-sm" %>
           </div>
+          <div class="col-md-2 d-flex gap-1 align-items-end">
+            <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
+            <%= link_to "Limpar", collaborators_backoffice_melhorias_path, class: "btn btn-sm btn-outline-secondary" %>
+          </div>
+        </div>
+
+        <div class="row g-2 mt-1">
           <% if current_collaborator.funcionario.permissao.nivel == 1 %>
-          <div class="col-md-2">
+          <div class="col-md-3">
             <%= f.label :cod_funcionario, "Solicitante", class: "form-label small mb-0" %>
             <%= f.select :cod_funcionario,
                   @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
@@ -50,14 +57,6 @@
                   class: "form-select form-select-sm" %>
           </div>
           <% end %>
-          <div class="col-md-1 d-flex gap-1">
-            <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
-            <%= link_to "Limpar", collaborators_backoffice_melhorias_path, class: "btn btn-sm btn-outline-secondary" %>
-          </div>
-        </div>
-
-        <!-- Filtro de período (colapsável) -->
-        <div class="row g-2 mt-1">
           <div class="col-md-2">
             <%= f.label :data_inicio, "De", class: "form-label small mb-0" %>
             <%= f.date_field :data_inicio, value: params[:data_inicio], class: "form-control form-control-sm" %>
