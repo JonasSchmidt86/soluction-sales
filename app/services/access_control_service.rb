@@ -18,7 +18,6 @@ class AccessControlService
   # No fallback (sem perfil), esses recursos ficam bloqueados para não-admin.
   ADMIN_ONLY_RESOURCES = %w[
     provisionados
-    lancamentoscaixas
     report_rep_dre
     report_custom_reports
     empresa_estoque
