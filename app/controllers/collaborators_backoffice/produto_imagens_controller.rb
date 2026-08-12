@@ -23,7 +23,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     end
 
     if params[:cod_grupo].present?
-      @produto_imagens = @produto_imagens.joins(produto: :grupo)
+      @produto_imagens = @produto_imagens.joins(produto: :cod_grupo)
                                         .where(produto: { grupo: params[:cod_grupo] })
     end
 

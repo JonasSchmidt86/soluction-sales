@@ -1,0 +1,15 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-pencil me-2"></i> Editar Perfil: <%= @access_role.name %></h4>
+      <div class="ms-auto">
+        <%= link_to collaborators_backoffice_access_role_path(@access_role), class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

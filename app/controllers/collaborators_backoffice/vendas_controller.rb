@@ -267,7 +267,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def editar_itens
-      unless current_collaborator.funcionario.permissao.nivel == 1
+      unless access_control.can?(:edit, 'vendas')
         redirect_to collaborators_backoffice_report_sales_path, alert: "Acesso negado."
         return
       end
@@ -291,7 +291,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
 
     def atualizar_itens
-      unless current_collaborator.funcionario.permissao.nivel == 1
+      unless access_control.can?(:edit, 'vendas')
         redirect_to collaborators_backoffice_report_sales_path, alert: "Acesso negado."
         return
       end

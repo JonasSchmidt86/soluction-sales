@@ -16,8 +16,10 @@
 <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
   Lembretes
 <% end %>
-<%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
-  whatsapp Contact
+<% if access_control.can_view?('whatsapp_contacts') %>
+  <%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
+    whatsapp Contact
+  <% end %>
 <% end %>
 <% if current_collaborator.funcionario.permissao.nivel == 1 %>
   <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>

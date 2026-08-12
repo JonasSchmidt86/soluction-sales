@@ -115,6 +115,43 @@ Rails.application.routes.draw do
     
     resources :cadinternalframes
 
+    # Módulo de Comissões
+    resources :commission_rules, except: [:destroy] do
+      member do
+        delete :destroy
+      end
+    end
+    resources :commission_assignments, only: [:index, :new, :create, :destroy]
+    resources :commission_periods, only: [:index, :new, :create, :show] do
+      member do
+        post :calculate
+        post :finalize
+        post :mark_as_paid
+        post :reopen
+      end
+    end
+    resources :commission_adjustments, only: [:index, :new, :create, :show] do
+      member do
+        post :cancel
+      end
+      collection do
+        post :detect_cancelled
+      end
+    end
+
+    # Módulo de Controle de Acesso
+    resources :access_roles do
+      member do
+        post :assign
+        delete :unassign
+      end
+      collection do
+        get :individual_permissions
+        post :create_individual_permission
+        delete :destroy_individual_permission
+      end
+    end
+
     resources :notas_fiscais, only: :index
     root to: 'notas_fiscais#index'
     

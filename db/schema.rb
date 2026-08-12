@@ -10,10 +10,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
+
+  create_table "access_role_permissions", force: :cascade do |t|
+    t.bigint "access_role_id", null: false
+    t.string "resource", null: false
+    t.boolean "can_view", default: false, null: false
+    t.boolean "can_create", default: false, null: false
+    t.boolean "can_edit", default: false, null: false
+    t.boolean "can_delete", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["access_role_id", "resource"], name: "idx_access_role_permissions_role_resource", unique: true
+    t.index ["access_role_id"], name: "index_access_role_permissions_on_access_role_id"
+  end
+
+  create_table "access_roles", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "cod_empresa", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "name"], name: "index_access_roles_on_cod_empresa_and_name", unique: true
+    t.index ["cod_empresa"], name: "index_access_roles_on_cod_empresa"
+  end
 
   create_table "acertosestoque", primary_key: "codigo", id: :bigint, default: -> { "nextval('acertoestoque_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "descricao", limit: 200
@@ -145,6 +169,30 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
     t.bigint "cod_municipio"
   end
 
+  create_table "collaborator_access_roles", force: :cascade do |t|
+    t.bigint "access_role_id", null: false
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["access_role_id"], name: "index_collaborator_access_roles_on_access_role_id"
+    t.index ["cod_funcionario", "cod_empresa"], name: "idx_collab_access_roles_func_emp", unique: true
+  end
+
+  create_table "collaborator_permissions", force: :cascade do |t|
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.string "resource", null: false
+    t.boolean "can_view", default: false, null: false
+    t.boolean "can_create", default: false, null: false
+    t.boolean "can_edit", default: false, null: false
+    t.boolean "can_delete", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa"], name: "index_collaborator_permissions_on_cod_empresa"
+    t.index ["cod_funcionario", "cod_empresa", "resource"], name: "idx_collab_permissions_func_emp_resource", unique: true
+  end
+
   create_table "collaborators", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: ""
@@ -157,6 +205,117 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
     t.bigint "cod_empresa"
     t.index ["email"], name: "index_collaborators_on_email", unique: true
     t.index ["reset_password_token"], name: "index_collaborators_on_reset_password_token", unique: true
+  end
+
+  create_table "commission_adjustments", force: :cascade do |t|
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.bigint "cod_venda"
+    t.bigint "commission_period_id"
+    t.bigint "applied_in_period_id"
+    t.string "adjustment_type", null: false
+    t.string "direction", default: "debit", null: false
+    t.text "reason"
+    t.decimal "amount", precision: 18, scale: 2, null: false
+    t.string "status", default: "pending", null: false
+    t.bigint "created_by"
+    t.datetime "applied_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["applied_in_period_id"], name: "index_commission_adjustments_on_applied_in_period_id"
+    t.index ["cod_funcionario", "cod_empresa"], name: "index_commission_adjustments_on_cod_funcionario_and_cod_empresa"
+    t.index ["cod_venda", "commission_period_id", "adjustment_type"], name: "idx_commission_adj_venda_period_type", unique: true
+    t.index ["commission_period_id"], name: "index_commission_adjustments_on_commission_period_id"
+    t.index ["status"], name: "index_commission_adjustments_on_status"
+  end
+
+  create_table "commission_assignments", force: :cascade do |t|
+    t.bigint "commission_rule_id", null: false
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.date "start_date", null: false
+    t.date "end_date"
+    t.bigint "created_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa"], name: "index_commission_assignments_on_cod_empresa"
+    t.index ["cod_funcionario", "cod_empresa", "start_date"], name: "idx_commission_assignments_func_emp_start", unique: true
+    t.index ["commission_rule_id"], name: "index_commission_assignments_on_commission_rule_id"
+  end
+
+  create_table "commission_payments", force: :cascade do |t|
+    t.bigint "commission_period_id", null: false
+    t.decimal "amount", precision: 18, scale: 2, null: false
+    t.datetime "paid_at", null: false
+    t.bigint "paid_by", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commission_period_id"], name: "index_commission_payments_on_commission_period_id"
+  end
+
+  create_table "commission_period_sales", force: :cascade do |t|
+    t.bigint "commission_period_id", null: false
+    t.bigint "cod_venda", null: false
+    t.decimal "sale_value", precision: 18, scale: 2, null: false
+    t.datetime "sale_date", null: false
+    t.decimal "commission_amount", precision: 18, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_venda"], name: "index_commission_period_sales_on_cod_venda"
+    t.index ["commission_period_id", "cod_venda"], name: "idx_commission_period_sales_period_venda", unique: true
+    t.index ["commission_period_id"], name: "index_commission_period_sales_on_commission_period_id"
+  end
+
+  create_table "commission_periods", force: :cascade do |t|
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.string "status", default: "open", null: false
+    t.decimal "total_sales", precision: 18, scale: 2
+    t.decimal "commission_amount", precision: 18, scale: 2
+    t.decimal "adjustments_amount", precision: 18, scale: 2, default: "0.0"
+    t.decimal "net_commission", precision: 18, scale: 2
+    t.bigint "commission_rule_id"
+    t.jsonb "rule_snapshot"
+    t.jsonb "tiers_breakdown"
+    t.datetime "finalized_at"
+    t.bigint "finalized_by"
+    t.datetime "paid_at"
+    t.bigint "paid_by"
+    t.datetime "reopened_at"
+    t.bigint "reopened_by"
+    t.text "reopen_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa"], name: "index_commission_periods_on_cod_empresa"
+    t.index ["cod_funcionario", "cod_empresa", "start_date"], name: "idx_commission_periods_func_emp_start"
+    t.index ["commission_rule_id"], name: "index_commission_periods_on_commission_rule_id"
+    t.index ["status"], name: "index_commission_periods_on_status"
+  end
+
+  create_table "commission_rules", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "cod_empresa", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "name"], name: "index_commission_rules_on_cod_empresa_and_name", unique: true
+    t.index ["cod_empresa"], name: "index_commission_rules_on_cod_empresa"
+  end
+
+  create_table "commission_tiers", force: :cascade do |t|
+    t.bigint "commission_rule_id", null: false
+    t.integer "position", null: false
+    t.decimal "min_value", precision: 18, scale: 2, null: false
+    t.decimal "max_value", precision: 18, scale: 2
+    t.decimal "percentage", precision: 8, scale: 4, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commission_rule_id", "position"], name: "index_commission_tiers_on_commission_rule_id_and_position", unique: true
+    t.index ["commission_rule_id"], name: "index_commission_tiers_on_commission_rule_id"
   end
 
   create_table "compra", primary_key: "cod_compra", force: :cascade do |t|
@@ -703,6 +862,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
     t.index ["pessoa_id"], name: "index_xml_files_on_pessoa_id"
   end
 
+  add_foreign_key "access_role_permissions", "access_roles"
   add_foreign_key "acertosestoque", "cores", column: "cod_cor", primary_key: "cod_cor", name: "fk_cor"
   add_foreign_key "acertosestoque", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"
   add_foreign_key "acertosestoque", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"
@@ -730,6 +890,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_10_000003) do
   add_foreign_key "caixa", "funcionario", column: "cod_funcionarioabertura", primary_key: "cod_funcionario", name: "fk3ddd7d4ee46d608"
   add_foreign_key "caixa", "funcionario", column: "cod_funcionariofechamento", primary_key: "cod_funcionario", name: "fk3ddd7d4cdb9987e"
   add_foreign_key "cidade", "estado", column: "cod_estado", primary_key: "cod_estado", name: "fk784b43443c803df8"
+  add_foreign_key "collaborator_access_roles", "access_roles"
+  add_foreign_key "commission_adjustments", "commission_periods"
+  add_foreign_key "commission_adjustments", "commission_periods", column: "applied_in_period_id"
+  add_foreign_key "commission_assignments", "commission_rules"
+  add_foreign_key "commission_payments", "commission_periods"
+  add_foreign_key "commission_period_sales", "commission_periods"
+  add_foreign_key "commission_periods", "commission_rules"
+  add_foreign_key "commission_tiers", "commission_rules"
   add_foreign_key "compra", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk78a4219e3eac1b66"
   add_foreign_key "compra", "frete", column: "cod_frete", primary_key: "cod_frete", name: "fk_frete"
   add_foreign_key "compra", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "fk78a4219e17048c0a"

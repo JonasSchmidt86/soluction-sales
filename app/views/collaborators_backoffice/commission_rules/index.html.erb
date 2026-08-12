@@ -1,0 +1,76 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-percent me-2"></i> Regras de Comissão</h4>
+      <div class="ms-auto">
+        <%= link_to new_collaborators_backoffice_commission_rule_path, class: "btn btn-light" do %>
+          <i class="fa fa-plus me-1"></i> Nova Regra
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+
+  <% if @commission_rules.any? %>
+    <div class="row">
+      <% @commission_rules.each do |rule| %>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong><%= rule.name %></strong>
+              <span class="badge bg-<%= rule.active? ? 'success' : 'secondary' %>">
+                <%= rule.active? ? 'Ativa' : 'Inativa' %>
+              </span>
+            </div>
+            <div class="card-body">
+              <% if rule.description.present? %>
+                <p class="text-muted small mb-2"><%= rule.description %></p>
+              <% end %>
+              <table class="table table-sm table-bordered mb-2">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-center">Faixa</th>
+                    <th class="text-end">Até</th>
+                    <th class="text-end">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% rule.commission_tiers.each do |tier| %>
+                    <tr>
+                      <td class="text-center"><%= tier.position %></td>
+                      <td class="text-end">
+                        <%= tier.max_value ? number_to_currency(tier.max_value, unit: 'R$ ', separator: ',', delimiter: '.') : 'Ilimitado' %>
+                      </td>
+                      <td class="text-end"><%= number_with_precision(tier.percentage, precision: 2, separator: ',') %>%</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+              <div class="small text-muted">
+                <i class="fa fa-users me-1"></i>
+                <%= rule.current_assignments.count %> vendedor(es) atribuído(s)
+              </div>
+            </div>
+            <div class="card-footer text-end">
+              <%= link_to collaborators_backoffice_commission_rule_path(rule), class: "btn btn-sm btn-outline-primary" do %>
+                <i class="fa fa-eye me-1"></i> Ver
+              <% end %>
+              <%= link_to edit_collaborators_backoffice_commission_rule_path(rule), class: "btn btn-sm btn-outline-warning" do %>
+                <i class="fa fa-pencil me-1"></i> Editar
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-5">
+      <i class="fa fa-percent fa-3x text-muted mb-3"></i>
+      <p class="text-muted">Nenhuma regra de comissão cadastrada.</p>
+      <%= link_to new_collaborators_backoffice_commission_rule_path, class: "btn btn-primary" do %>
+        <i class="fa fa-plus me-1"></i> Criar primeira regra
+      <% end %>
+    </div>
+  <% end %>
+    </div>
+  </div>
+</div>

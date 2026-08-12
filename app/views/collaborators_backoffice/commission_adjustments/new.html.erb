@@ -1,0 +1,50 @@
+<div class="container-fluid">
+  <h4 class="mb-3">
+    <i class="fa fa-plus me-2"></i> Novo Ajuste Manual
+  </h4>
+
+  <div class="card shadow-sm">
+    <%= form_with(model: [:collaborators_backoffice, @adjustment], url: collaborators_backoffice_commission_adjustments_path, local: true) do |f| %>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <%= f.label :cod_funcionario, 'Vendedor', class: 'form-label' %>
+            <%= f.select :cod_funcionario,
+                  @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                  { include_blank: 'Selecione...' },
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-3 mb-3">
+            <%= f.label :amount, 'Valor (R$)', class: 'form-label' %>
+            <%= f.number_field :amount, class: 'form-control', step: '0.01', min: '0.01' %>
+          </div>
+          <div class="col-md-3 mb-3">
+            <%= f.label :direction, 'Tipo', class: 'form-label' %>
+            <%= f.select :direction,
+                  [['Débito (desconto)', 'debit'], ['Crédito (bônus)', 'credit']],
+                  {},
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-2 mb-3">
+            <%= f.label :cod_venda, 'Venda (opcional)', class: 'form-label' %>
+            <%= f.number_field :cod_venda, class: 'form-control', placeholder: '#' %>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <%= f.label :reason, 'Motivo', class: 'form-label' %>
+            <%= f.text_area :reason, class: 'form-control', rows: 3, required: true,
+                placeholder: 'Descreva o motivo do ajuste...' %>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer text-end">
+        <%= link_to collaborators_backoffice_commission_adjustments_path, class: 'btn btn-secondary me-2' do %>
+          <i class="fa fa-arrow-left me-1"></i> Cancelar
+        <% end %>
+        <%= f.submit 'Criar Ajuste', class: 'btn btn-primary' %>
+      </div>
+    <% end %>
+  </div>
+</div>

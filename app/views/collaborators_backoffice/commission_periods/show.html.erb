@@ -1,0 +1,291 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-calculator me-2"></i> Comissão: <%= @period.funcionario_nome %></h4>
+      <div class="ms-auto">
+        <%= link_to collaborators_backoffice_commission_periods_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+
+  <!-- Resumo -->
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3">
+              <div class="text-muted small">Total Vendas</div>
+              <div class="fs-5 fw-bold"><%= @period.total_sales ? number_to_currency(@period.total_sales, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Comissão Bruta</div>
+              <div class="fs-5 fw-bold text-primary"><%= @period.commission_amount ? number_to_currency(@period.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Ajustes</div>
+              <div class="fs-5 fw-bold text-danger">
+                <% if @period.adjustments_amount && @period.adjustments_amount > 0 %>
+                  -<%= number_to_currency(@period.adjustments_amount, unit: 'R$ ', separator: ',', delimiter: '.') %>
+                <% else %>
+                  R$ 0,00
+                <% end %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Comissão Líquida</div>
+              <div class="fs-4 fw-bold text-success"><%= @period.net_commission ? number_to_currency(@period.net_commission, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-6">Período</dt>
+            <dd class="col-6"><%= @period.start_date.strftime('%d/%m/%Y') %> — <%= @period.end_date.strftime('%d/%m/%Y') %></dd>
+            <dt class="col-6">Regra</dt>
+            <dd class="col-6"><%= @period.commission_rule&.name || '—' %></dd>
+            <dt class="col-6">Status</dt>
+            <dd class="col-6">
+              <% case @period.status %>
+              <% when 'open' %>
+                <span class="badge bg-warning text-dark">Aberta</span>
+              <% when 'finalized' %>
+                <span class="badge bg-info">Finalizada</span>
+              <% when 'paid' %>
+                <span class="badge bg-success">Paga</span>
+              <% end %>
+            </dd>
+            <% if @period.finalized_at %>
+              <dt class="col-6">Finalizada em</dt>
+              <dd class="col-6"><%= @period.finalized_at.strftime('%d/%m/%Y %H:%M') %></dd>
+            <% end %>
+            <% if @period.paid_at %>
+              <dt class="col-6">Paga em</dt>
+              <dd class="col-6"><%= @period.paid_at.strftime('%d/%m/%Y %H:%M') %></dd>
+            <% end %>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações (admin) -->
+  <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-body d-flex gap-2 flex-wrap">
+        <% if @period.open? %>
+          <%= link_to calculate_collaborators_backoffice_commission_period_path(@period),
+              method: :post, class: "btn btn-primary",
+              data: { confirm: 'Calcular/recalcular comissão deste período?' } do %>
+            <i class="fa fa-refresh me-1"></i> Calcular
+          <% end %>
+          <% if @period.commission_amount.present? %>
+            <%= link_to finalize_collaborators_backoffice_commission_period_path(@period),
+                method: :post, class: "btn btn-success",
+                data: { confirm: 'Finalizar esta comissão? Os valores serão congelados.' } do %>
+              <i class="fa fa-check me-1"></i> Finalizar
+            <% end %>
+          <% end %>
+        <% end %>
+
+        <% if @period.finalized? %>
+          <%= link_to mark_as_paid_collaborators_backoffice_commission_period_path(@period),
+              method: :post, class: "btn btn-success",
+              data: { confirm: 'Marcar esta comissão como paga?' } do %>
+            <i class="fa fa-money me-1"></i> Marcar como Paga
+          <% end %>
+        <% end %>
+
+        <% if (@period.finalized? || @period.paid?) && current_collaborator.funcionario.super_admin? %>
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reopenModal">
+            <i class="fa fa-unlock me-1"></i> Reabrir
+          </button>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Detalhamento das Faixas -->
+  <% if @period.tiers_breakdown.present? %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header">
+        <strong>Detalhamento Progressivo</strong>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center">Faixa</th>
+              <th class="text-end">De</th>
+              <th class="text-end">Até</th>
+              <th class="text-end">Percentual</th>
+              <th class="text-end">Base de Cálculo</th>
+              <th class="text-end">Comissão</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @period.tiers_breakdown.each do |tier| %>
+              <tr>
+                <td class="text-center"><%= tier['position'] %></td>
+                <td class="text-end"><%= number_to_currency(tier['min_value'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td class="text-end"><%= tier['max_value'] ? number_to_currency(tier['max_value'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') : 'Ilimitado' %></td>
+                <td class="text-end"><%= number_with_precision(tier['percentage'].to_f, precision: 2, separator: ',') %>%</td>
+                <td class="text-end"><%= number_to_currency(tier['taxable_amount'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td class="text-end fw-bold"><%= number_to_currency(tier['commission'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Vendas utilizadas -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header d-flex justify-content-between">
+      <strong>Vendas Consideradas</strong>
+      <span class="badge bg-primary"><%= @sales.count %></span>
+    </div>
+    <div class="card-body p-0">
+      <% if @sales.any? %>
+        <table class="table table-sm table-striped table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center">#</th>
+              <th class="text-center">Venda</th>
+              <th class="text-center">Data</th>
+              <th class="text-end">Valor</th>
+              <th class="text-end">Comissão</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @sales.each_with_index do |sale, idx| %>
+              <tr>
+                <td class="text-center"><%= idx + 1 %></td>
+                <td class="text-center">#<%= sale.cod_venda %></td>
+                <td class="text-center"><%= sale.sale_date.strftime('%d/%m/%Y') %></td>
+                <td class="text-end"><%= number_to_currency(sale.sale_value, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td class="text-end fw-bold"><%= number_to_currency(sale.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot class="table-light">
+            <tr class="fw-bold">
+              <td colspan="3" class="text-end">Totais:</td>
+              <td class="text-end"><%= number_to_currency(@sales.sum(&:sale_value), unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+              <td class="text-end"><%= number_to_currency(@sales.sum(&:commission_amount), unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+            </tr>
+          </tfoot>
+        </table>
+      <% else %>
+        <div class="text-center py-3 text-muted">
+          Nenhuma venda calculada. Clique em "Calcular" para processar.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Ajustes Pendentes -->
+  <% if @pending_adjustments.any? && @period.open? %>
+    <div class="card shadow-sm mb-3 border-warning">
+      <div class="card-header bg-warning text-dark">
+        <strong>Ajustes Pendentes (serão aplicados ao finalizar)</strong>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Motivo</th>
+              <th class="text-end">Valor</th>
+              <th class="text-center">Direção</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @pending_adjustments.each do |adj| %>
+              <tr>
+                <td><%= adj.adjustment_type == 'cancelled_sale' ? 'Venda Cancelada' : 'Manual' %></td>
+                <td class="small"><%= truncate(adj.reason, length: 60) %></td>
+                <td class="text-end"><%= number_to_currency(adj.amount, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td class="text-center">
+                  <span class="badge bg-<%= adj.debit? ? 'danger' : 'success' %>">
+                    <%= adj.debit? ? 'Débito' : 'Crédito' %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Pagamentos -->
+  <% if @payments.any? %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header">
+        <strong>Pagamentos</strong>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center">Data</th>
+              <th class="text-end">Valor</th>
+              <th>Registrado por</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @payments.each do |payment| %>
+              <tr>
+                <td class="text-center"><%= payment.paid_at.strftime('%d/%m/%Y %H:%M') %></td>
+                <td class="text-end"><%= number_to_currency(payment.amount, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td><%= payment.paid_by_nome %></td>
+                <td><%= payment.notes %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reabertura -->
+<% if current_collaborator.funcionario.super_admin? && (@period.finalized? || @period.paid?) %>
+  <div class="modal fade" id="reopenModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <%= form_with(url: reopen_collaborators_backoffice_commission_period_path(@period), method: :post, local: true) do |f| %>
+          <div class="modal-header">
+            <h5 class="modal-title">Reabrir Comissão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger small">
+              <i class="fa fa-exclamation-triangle me-1"></i>
+              Esta ação reabrirá a comissão para recálculo. Os ajustes aplicados voltarão ao status pendente.
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Motivo da Reabertura</label>
+              <textarea name="reopen_reason" class="form-control" rows="3" required placeholder="Informe o motivo..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <%= f.submit 'Confirmar Reabertura', class: 'btn btn-danger' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

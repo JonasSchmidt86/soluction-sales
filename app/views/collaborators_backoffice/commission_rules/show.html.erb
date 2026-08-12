@@ -1,0 +1,114 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-percent me-2"></i> <%= @commission_rule.name %></h4>
+      <div class="ms-auto d-flex gap-2">
+        <%= link_to edit_collaborators_backoffice_commission_rule_path(@commission_rule), class: "btn btn-warning btn-sm" do %>
+          <i class="fa fa-pencil me-1"></i> Editar
+        <% end %>
+        <%= link_to collaborators_backoffice_commission_rules_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+
+  <div class="row">
+    <!-- Faixas -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">
+          <strong>Faixas Progressivas</strong>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">Faixa</th>
+                <th class="text-end">De</th>
+                <th class="text-end">Até</th>
+                <th class="text-end">Percentual</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @commission_rule.commission_tiers.each do |tier| %>
+                <tr>
+                  <td class="text-center"><%= tier.position %></td>
+                  <td class="text-end"><%= number_to_currency(tier.min_value, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                  <td class="text-end">
+                    <%= tier.max_value ? number_to_currency(tier.max_value, unit: 'R$ ', separator: ',', delimiter: '.') : 'Ilimitado' %>
+                  </td>
+                  <td class="text-end"><%= number_with_precision(tier.percentage, precision: 2, separator: ',') %>%</td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendedores atribuídos -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex justify-content-between">
+          <strong>Vendedores Atribuídos</strong>
+          <span class="badge bg-primary"><%= @commission_rule.current_assignments.count %></span>
+        </div>
+        <div class="card-body p-0">
+          <% if @assignments.any? %>
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Vendedor</th>
+                  <th class="text-center">Início</th>
+                  <th class="text-center">Fim</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @assignments.each do |assign| %>
+                  <tr>
+                    <td><%= assign.funcionario_nome %></td>
+                    <td class="text-center"><%= assign.start_date.strftime('%d/%m/%Y') %></td>
+                    <td class="text-center"><%= assign.end_date ? assign.end_date.strftime('%d/%m/%Y') : '—' %></td>
+                    <td class="text-center">
+                      <span class="badge bg-<%= assign.end_date.nil? ? 'success' : 'secondary' %>">
+                        <%= assign.end_date.nil? ? 'Vigente' : 'Encerrada' %>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          <% else %>
+            <div class="text-center py-3 text-muted">
+              Nenhum vendedor atribuído a esta regra.
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Informações -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">
+              <span class="badge bg-<%= @commission_rule.active? ? 'success' : 'secondary' %>">
+                <%= @commission_rule.active? ? 'Ativa' : 'Inativa' %>
+              </span>
+            </dd>
+            <% if @commission_rule.description.present? %>
+              <dt class="col-sm-4">Descrição</dt>
+              <dd class="col-sm-8"><%= @commission_rule.description %></dd>
+            <% end %>
+            <dt class="col-sm-4">Criada em</dt>
+            <dd class="col-sm-8"><%= @commission_rule.created_at.strftime('%d/%m/%Y %H:%M') %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+</div>

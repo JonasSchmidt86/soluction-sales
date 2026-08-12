@@ -1,0 +1,109 @@
+<%= form_with(model: [:collaborators_backoffice, @access_role], local: true) do |f| %>
+  <% if @access_role.errors.any? %>
+    <div class="alert alert-danger">
+      <% @access_role.errors.full_messages.each do |msg| %>
+        <div><%= msg %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <%= f.label :name, 'Nome do Perfil', class: 'form-label' %>
+      <%= f.text_field :name, class: 'form-control text', placeholder: 'Ex: Vendedor, Gerente, Financeiro' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :active, 'Status', class: 'form-label' %>
+      <%= f.select :active, [['Ativo', true], ['Inativo', false]], {}, class: 'form-select' %>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-12">
+      <%= f.label :description, 'Descrição (opcional)', class: 'form-label' %>
+      <%= f.text_area :description, class: 'form-control', rows: 2, placeholder: 'Descreva o que este perfil pode acessar...' %>
+    </div>
+  </div>
+
+  <hr>
+  <h5 class="mb-3">Permissões por Recurso</h5>
+  <p class="text-muted small mb-3">Marque as ações permitidas para cada recurso. Recursos não marcados ficam bloqueados para este perfil.</p>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered table-hover">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 30%">Recurso</th>
+          <th class="text-center" style="width: 12%">Visualizar</th>
+          <th class="text-center" style="width: 12%">Criar</th>
+          <th class="text-center" style="width: 12%">Editar</th>
+          <th class="text-center" style="width: 12%">Excluir</th>
+          <th class="text-center" style="width: 12%">Todos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @available_resources.each do |resource_key, resource_label| %>
+          <%
+            existing = @access_role.persisted? ?
+              @access_role.access_role_permissions.find { |p| p.resource == resource_key } : nil
+          %>
+          <tr>
+            <td><%= resource_label %></td>
+            <td class="text-center">
+              <input type="checkbox" name="permissions[<%= resource_key %>][can_view]" value="1"
+                     class="form-check-input perm-check" data-resource="<%= resource_key %>" <%= 'checked' if existing&.can_view %>>
+            </td>
+            <td class="text-center">
+              <input type="checkbox" name="permissions[<%= resource_key %>][can_create]" value="1"
+                     class="form-check-input perm-check" data-resource="<%= resource_key %>" <%= 'checked' if existing&.can_create %>>
+            </td>
+            <td class="text-center">
+              <input type="checkbox" name="permissions[<%= resource_key %>][can_edit]" value="1"
+                     class="form-check-input perm-check" data-resource="<%= resource_key %>" <%= 'checked' if existing&.can_edit %>>
+            </td>
+            <td class="text-center">
+              <input type="checkbox" name="permissions[<%= resource_key %>][can_delete]" value="1"
+                     class="form-check-input perm-check" data-resource="<%= resource_key %>" <%= 'checked' if existing&.can_delete %>>
+            </td>
+            <td class="text-center">
+              <input type="checkbox" class="form-check-input check-all-row" data-resource="<%= resource_key %>"
+                     <%= 'checked' if existing&.can_view && existing&.can_create && existing&.can_edit && existing&.can_delete %>>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="text-end mt-3">
+    <%= link_to collaborators_backoffice_access_roles_path, class: 'btn btn-secondary me-2' do %>
+      Cancelar
+    <% end %>
+    <%= f.submit 'Salvar Perfil', class: 'btn btn-primary' %>
+  </div>
+<% end %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Checkbox "Todos" por linha: marca/desmarca todas as permissões da linha
+  document.querySelectorAll('.check-all-row').forEach(function(rowCheck) {
+    rowCheck.addEventListener('change', function() {
+      var resource = this.dataset.resource;
+      document.querySelectorAll('.perm-check[data-resource="' + resource + '"]').forEach(function(cb) {
+        cb.checked = rowCheck.checked;
+      });
+    });
+  });
+
+  // Atualizar o "Todos" quando os individuais mudam
+  document.querySelectorAll('.perm-check').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var resource = this.dataset.resource;
+      var allChecks = document.querySelectorAll('.perm-check[data-resource="' + resource + '"]');
+      var allChecked = Array.from(allChecks).every(function(c) { return c.checked; });
+      var rowCheck = document.querySelector('.check-all-row[data-resource="' + resource + '"]');
+      if (rowCheck) rowCheck.checked = allChecked;
+    });
+  });
+});
+</script>

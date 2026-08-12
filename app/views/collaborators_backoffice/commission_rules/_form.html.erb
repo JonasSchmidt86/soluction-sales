@@ -1,0 +1,116 @@
+<%= form_with(model: [:collaborators_backoffice, @commission_rule], local: true) do |f| %>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <%= f.label :name, 'Nome da Regra', class: 'form-label' %>
+          <%= f.text_field :name, class: 'form-control text', placeholder: 'Ex: Comissão Padrão' %>
+          <% if @commission_rule.errors[:name].any? %>
+            <div class="text-danger small"><%= @commission_rule.errors[:name].join(', ') %></div>
+          <% end %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :active, 'Status', class: 'form-label' %>
+          <%= f.select :active, [['Ativa', true], ['Inativa', false]], {}, class: 'form-select' %>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <%= f.label :description, 'Descrição (opcional)', class: 'form-label' %>
+          <%= f.text_area :description, class: 'form-control', rows: 2 %>
+        </div>
+      </div>
+
+      <hr>
+      <h5 class="mb-3">Faixas Progressivas</h5>
+
+      <div id="tiers-container">
+        <%= f.fields_for :commission_tiers do |tier_f| %>
+          <div class="tier-row row mb-2 align-items-end">
+            <%= tier_f.hidden_field :id %>
+            <div class="col-md-1">
+              <%= tier_f.label :position, 'Faixa', class: 'form-label small' %>
+              <%= tier_f.number_field :position, class: 'form-control form-control-sm text-center', min: 1 %>
+            </div>
+            <div class="col-md-3">
+              <%= tier_f.label :min_value, 'Valor Mínimo (R$)', class: 'form-label small' %>
+              <%= tier_f.number_field :min_value, class: 'form-control form-control-sm', step: '0.01', min: 0 %>
+            </div>
+            <div class="col-md-3">
+              <%= tier_f.label :max_value, 'Valor Máximo (R$)', class: 'form-label small' %>
+              <%= tier_f.number_field :max_value, class: 'form-control form-control-sm', step: '0.01', placeholder: 'Vazio = ilimitado' %>
+            </div>
+            <div class="col-md-2">
+              <%= tier_f.label :percentage, 'Percentual (%)', class: 'form-label small' %>
+              <%= tier_f.number_field :percentage, class: 'form-control form-control-sm', step: '0.01', min: 0 %>
+            </div>
+            <div class="col-md-2">
+              <%= tier_f.label :_destroy, 'Remover', class: 'form-label small' %>
+              <div class="form-check">
+                <%= tier_f.check_box :_destroy, class: 'form-check-input' %>
+                <label class="form-check-label small text-danger">Excluir</label>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-outline-success mt-2" id="add-tier-btn">
+        <i class="fa fa-plus me-1"></i> Adicionar Faixa
+      </button>
+    </div>
+    <div class="card-footer text-end">
+      <%= link_to collaborators_backoffice_commission_rules_path, class: 'btn btn-secondary me-2' do %>
+        <i class="fa fa-arrow-left me-1"></i> Cancelar
+      <% end %>
+      <%= f.submit 'Salvar Regra', class: 'btn btn-primary' %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('add-tier-btn');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var container = document.getElementById('tiers-container');
+      var count = container.querySelectorAll('.tier-row').length;
+      var newPosition = count + 1;
+      var timestamp = new Date().getTime();
+      var html = `
+        <div class="tier-row row mb-2 align-items-end">
+          <div class="col-md-1">
+            <label class="form-label small">Faixa</label>
+            <input type="number" name="commission_rule[commission_tiers_attributes][${timestamp}][position]" value="${newPosition}" class="form-control form-control-sm text-center" min="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Valor Mínimo (R$)</label>
+            <input type="number" name="commission_rule[commission_tiers_attributes][${timestamp}][min_value]" value="0" class="form-control form-control-sm" step="0.01" min="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Valor Máximo (R$)</label>
+            <input type="number" name="commission_rule[commission_tiers_attributes][${timestamp}][max_value]" class="form-control form-control-sm" step="0.01" placeholder="Vazio = ilimitado">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Percentual (%)</label>
+            <input type="number" name="commission_rule[commission_tiers_attributes][${timestamp}][percentage]" class="form-control form-control-sm" step="0.01" min="0">
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-tier-btn">
+              <i class="fa fa-trash"></i> Remover
+            </button>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-tier-btn')) {
+      e.target.closest('.tier-row').remove();
+    }
+  });
+});
+</script>

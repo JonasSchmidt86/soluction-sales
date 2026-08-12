@@ -1,0 +1,97 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-adjust me-2"></i> Ajuste #<%= @adjustment.id %></h4>
+      <div class="ms-auto">
+        <%= link_to collaborators_backoffice_commission_adjustments_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Vendedor</dt>
+        <dd class="col-sm-9"><%= @adjustment.funcionario_nome %></dd>
+
+        <dt class="col-sm-3">Tipo</dt>
+        <dd class="col-sm-9">
+          <% case @adjustment.adjustment_type %>
+          <% when 'cancelled_sale' %>
+            <span class="badge bg-danger">Venda Cancelada</span>
+          <% when 'manual' %>
+            <span class="badge bg-secondary">Manual</span>
+          <% when 'sale_change' %>
+            <span class="badge bg-warning text-dark">Alteração de Venda</span>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-3">Valor</dt>
+        <dd class="col-sm-9 fs-5 fw-bold"><%= number_to_currency(@adjustment.amount, unit: 'R$ ', separator: ',', delimiter: '.') %></dd>
+
+        <dt class="col-sm-3">Direção</dt>
+        <dd class="col-sm-9">
+          <span class="badge bg-<%= @adjustment.debit? ? 'danger' : 'success' %>">
+            <%= @adjustment.debit? ? 'Débito (desconto)' : 'Crédito (bônus)' %>
+          </span>
+        </dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+          <% case @adjustment.status %>
+          <% when 'pending' %>
+            <span class="badge bg-warning text-dark">Pendente</span>
+          <% when 'applied' %>
+            <span class="badge bg-success">Aplicado</span>
+          <% when 'cancelled' %>
+            <span class="badge bg-secondary">Cancelado</span>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-3">Motivo</dt>
+        <dd class="col-sm-9"><%= @adjustment.reason %></dd>
+
+        <% if @adjustment.cod_venda %>
+          <dt class="col-sm-3">Venda</dt>
+          <dd class="col-sm-9">#<%= @adjustment.cod_venda %></dd>
+        <% end %>
+
+        <% if @adjustment.commission_period %>
+          <dt class="col-sm-3">Comissão Origem</dt>
+          <dd class="col-sm-9">
+            <%= link_to "Período #{@adjustment.commission_period.start_date.strftime('%d/%m/%Y')} a #{@adjustment.commission_period.end_date.strftime('%d/%m/%Y')}",
+                collaborators_backoffice_commission_period_path(@adjustment.commission_period) %>
+          </dd>
+        <% end %>
+
+        <% if @adjustment.applied_in_period %>
+          <dt class="col-sm-3">Aplicado em</dt>
+          <dd class="col-sm-9">
+            <%= link_to "Período #{@adjustment.applied_in_period.start_date.strftime('%d/%m/%Y')} a #{@adjustment.applied_in_period.end_date.strftime('%d/%m/%Y')}",
+                collaborators_backoffice_commission_period_path(@adjustment.applied_in_period) %>
+          </dd>
+        <% end %>
+
+        <dt class="col-sm-3">Criado em</dt>
+        <dd class="col-sm-9"><%= @adjustment.created_at.strftime('%d/%m/%Y %H:%M') %></dd>
+
+        <% if @adjustment.applied_at %>
+          <dt class="col-sm-3">Processado em</dt>
+          <dd class="col-sm-9"><%= @adjustment.applied_at.strftime('%d/%m/%Y %H:%M') %></dd>
+        <% end %>
+      </dl>
+    </div>
+    <% if @adjustment.pending? %>
+      <div class="card-footer">
+        <%= link_to cancel_collaborators_backoffice_commission_adjustment_path(@adjustment),
+            method: :post, class: "btn btn-danger",
+            data: { confirm: 'Cancelar este ajuste?' } do %>
+          <i class="fa fa-times me-1"></i> Cancelar Ajuste
+        <% end %>
+      </div>
+    <% end %>
+    </div>
+  </div>
+</div>

@@ -87,15 +87,22 @@
               </a>
               <div class="collapse" id="collapseCads" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
-                  <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
-                    <i class="fa fa-dashboard fa-fw"></i> Dashboard
+                  <% if access_control.can_view?('welcome') %>
+                    <%= link_to collaborators_backoffice_welcome_index_path, class:"nav-link" do %>
+                      <i class="fa fa-dashboard fa-fw"></i> Dashboard
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
-                    <i class="fa fa-dashboard fa-fw"></i> Caixa
+                  <% if access_control.can_view?('caixa') %>
+                    <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
+                      <i class="fa fa-dashboard fa-fw"></i> Caixa
+                    <% end %>
                   <% end %>
                   <% if current_collaborator.funcionario.permissao.nivel == 1 && current_collaborator.funcionario.cod_funcionario != 82 %>
                     <%= link_to collaborators_backoffice_collaborators_path, class:"nav-link" do %>
                       <i class="fa fa-users fa-fw"></i> Colaboradores
+                    <% end %>
+                    <%= link_to collaborators_backoffice_access_roles_path, class:"nav-link" do %>
+                      <i class="fa fa-shield fa-fw"></i> Perfis de Acesso
                     <% end %>
                   <% end %>
                 </nav>
@@ -115,7 +122,8 @@
                   <%= render 'layouts/shared/menu_lateral' %>
                 </nav>
               </div>
-              <!-- Colapso: Cadastros -->
+              <!-- Colapso: Vendas -->
+              <% if access_control.can_view?('vendas') || access_control.can_view?('contas_pag_rec') || access_control.can_view?('orcamentos') %>
               <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
                 <div class="sb-nav-link-icon">
                   <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
@@ -127,21 +135,31 @@
               </a>
               <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
-                  <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                    Cadastro Venda
+                  <% if access_control.can_view?('vendas') %>
+                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                      Cadastro Venda
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                    Contas pagar/Receber
+                  <% if access_control.can_view?('contas_pag_rec') %>
+                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                      Contas pagar/Receber
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
-                    Orçamentos
+                  <% if access_control.can_view?('orcamentos') %>
+                    <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
+                      Orçamentos
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
-                    Relatório de Vendas
+                  <% if access_control.can_view?('report_sales') %>
+                    <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                      Relatório de Vendas
+                    <% end %>
                   <% end %>
                 </nav>
               </div>
+              <% end %>
               <!-- Colapso: Compras -->
+              <% if access_control.can_view?('compras') || access_control.can_view?('xml_files') || access_control.can_view?('pedidos_compras') %>
               <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
                 <div class="sb-nav-link-icon">
                   <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
@@ -153,24 +171,35 @@
               </a>
               <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
-                  <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                    XML    
+                  <% if access_control.can_view?('xml_files') %>
+                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+                      XML    
+                    <% end %>
                   <% end %>
-                  <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
-                    Cad Compra
+                  <% if access_control.can_view?('compras') %>
+                    <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
+                      Cad Compra
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
-                    Relatório de Compra
+                  <% if access_control.can_view?('report_buy') %>
+                    <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                      Relatório de Compra
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
-                    Sugestão de Compra
+                  <% if access_control.can_view?('report_sugestao_compra') %>
+                    <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+                      Sugestão de Compra
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
-                    Pedidos de Compra
+                  <% if access_control.can_view?('pedidos_compras') %>
+                    <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
+                      Pedidos de Compra
+                    <% end %>
                   <% end %>
                 </nav>
               </div>
-              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <% end %>
+              <% if access_control.can_view?('lancamentosdiversos') || access_control.can_view?('contas_pag_rec') || access_control.can_view?('report_rep_dre') || access_control.can_view?('report_put_box') %>
                 <!-- Colapso: Financeiro -->
                 <a class="nav-link collapsed" href="#" data-target="#collapseFinanceiro" aria-expanded="false" aria-controls="collapseFinanceiro">
                   <div class="sb-nav-link-icon">
@@ -181,33 +210,67 @@
                 </a>
                 <div class="collapse" id="collapseFinanceiro" data-bs-parent="#sidenavAccordion">
                   <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Cadastro de Provisionados
+                    <% if access_control.can_view?('provisionados') %>
+                      <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                        Cadastro de Provisionados
+                      <% end %>
+                      <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+                        Pagamentos Provisionados
+                      <% end %>
                     <% end %>
-                  </nav>
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
-                      Pagamentos Provisionados
+                    <% if access_control.can_view?('contas_pag_rec') %>
+                      <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                        Contas pagar/Receber
+                      <% end %>
                     <% end %>
-                  </nav>
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                      Contas pagar/Receber
+                    <% if access_control.can_view?('report_rep_dre') %>
+                      <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
+                        Relatório de DRE
+                      <% end %>
                     <% end %>
-                  </nav>
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
-                      Relatório de DRE
-                    <% end %>
-                  </nav>
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
-                      Lançamentos Caixa
+                    <% if access_control.can_view?('report_put_box') %>
+                      <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+                        Lançamentos Caixa
+                      <% end %>
                     <% end %>
                   </nav>
                 </div>
               <% end %>
-              <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+              <!-- Colapso: Comissões -->
+              <% if access_control.can_view?('commission_periods') || access_control.can_view?('commission_rules') %>
+              <a class="nav-link collapsed" href="#" data-target="#collapseComissoes" aria-expanded="false" aria-controls="collapseComissoes">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-percent fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                </div>
+                Comissões
+                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+              </a>
+              <div class="collapse" id="collapseComissoes" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <% if access_control.can_view?('commission_periods') %>
+                    <%= link_to collaborators_backoffice_commission_periods_path, class: "nav-link" do %>
+                      <i class="fa fa-calculator me-1"></i> Apurações
+                    <% end %>
+                  <% end %>
+                  <% if access_control.can_view?('commission_rules') %>
+                    <%= link_to collaborators_backoffice_commission_rules_path, class: "nav-link" do %>
+                      <i class="fa fa-percent me-1"></i> Regras
+                    <% end %>
+                  <% end %>
+                  <% if access_control.can_view?('commission_assignments') %>
+                    <%= link_to collaborators_backoffice_commission_assignments_path, class: "nav-link" do %>
+                      <i class="fa fa-link me-1"></i> Atribuições
+                    <% end %>
+                  <% end %>
+                  <% if access_control.can_view?('commission_adjustments') %>
+                    <%= link_to collaborators_backoffice_commission_adjustments_path, class: "nav-link" do %>
+                      <i class="fa fa-adjust me-1"></i> Ajustes
+                    <% end %>
+                  <% end %>
+                </nav>
+              </div>
+              <% end %>
+              <% if access_control.can_view?('empresa_estoque') || access_control.can_view?('acertosestoque') %>
                 <!-- Colapso: Estoque -->
                 <a class="nav-link collapsed" href="#" data-target="#collapseEstoque" aria-expanded="false" aria-controls="collapseEstoque">
                   <div class="sb-nav-link-icon">
@@ -218,17 +281,30 @@
                 </a>
                 <div class="collapse" id="collapseEstoque" data-bs-parent="#sidenavAccordion">
                   <nav class="sb-sidenav-menu-nested nav">
-                    <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
-                      Estoque
+                    <% if access_control.can_view?('empresa_estoque') %>
+                      <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+                        Estoque
+                      <% end %>
                     <% end %>
-                    <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
-                      Estoque Mínimo
+                    <% if access_control.can_view?('report_stock_min') %>
+                      <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
+                        Estoque Mínimo
+                      <% end %>
                     <% end %>
-                    <%= link_to collaborators_backoffice_acertosestoque_index_path, class:"nav-link" do %>
-                      Acertos estoque
+                    <% if access_control.can_view?('report_mais_vendidos') %>
+                      <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
+                        Produtos Mais Vendidos
+                      <% end %>
                     <% end %>
-                    <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
-                      Sugestão de Compra
+                    <% if access_control.can_view?('acertosestoque') %>
+                      <%= link_to collaborators_backoffice_acertosestoque_index_path, class:"nav-link" do %>
+                        Acertos estoque
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('report_sugestao_compra') %>
+                      <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+                        Sugestão de Compra
+                      <% end %>
                     <% end %>
                   </nav>
                 </div>
@@ -241,46 +317,54 @@
                 Relatórios
                 <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
               </a>
-              <!-- Link: Melhorias / Sugestões -->
-              <%= link_to collaborators_backoffice_melhorias_path, class: "nav-link" do %>
-                <div class="sb-nav-link-icon">
-                  <i class="fa fa-lightbulb fa-flip fa-solid" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
-                </div>
-                Melhorias
-              <% end %>
               <div class="collapse" id="collapseRels" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
-                  <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
-                    Estoque
+                  <% if access_control.can_view?('report_sales') %>
+                    <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                      Relatório de Vendas
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
-                    Relatório de Vendas
+                  <% if access_control.can_view?('report_put_box') %>
+                    <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+                      Lançamentos Caixa
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
-                    Lançamentos Caixa
+                  <% if access_control.can_view?('report_buy') %>
+                    <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                      Relatório de Compra
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
-                    Relatório de Compra
+                  <% if access_control.can_view?('report_mais_vendidos') %>
+                    <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
+                      Produtos Mais Vendidos
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
-                    Estoque Mínimo
+                  <% if access_control.can_view?('atendimentos') %>
+                    <%= link_to collaborators_backoffice_report_atendimentos_path, class:"nav-link" do %>
+                      Atendimentos
+                    <% end %>
                   <% end %>
-                  <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
-                    Produtos Mais Vendidos
-                  <% end %>
-                  <%= link_to collaborators_backoffice_report_atendimentos_path, class:"nav-link" do %>
-                    Atendimentos
-                  <% end %>
-                  <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+                  <% if access_control.can_view?('report_rep_dre') %>
                     <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
                       Relatório de DRE
                     <% end %>
+                  <% end %>
+                  <% if access_control.can_view?('report_custom_reports') %>
                     <%= link_to collaborators_backoffice_report_custom_reports_path, class:"nav-link" do %>
                       Ots Relatórios
                     <% end %>
                   <% end %>
                 </nav>
               </div>
+              <!-- Link: Melhorias / Sugestões -->
+              <% if access_control.can_view?('melhorias') %>
+                <%= link_to collaborators_backoffice_melhorias_path, class: "nav-link" do %>
+                  <div class="sb-nav-link-icon">
+                    <i class="fa fa-lightbulb fa-flip fa-solid" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Melhorias
+                <% end %>
+              <% end %>
             </div>
           </div>
           <!-- Footer do Sidebar -->
@@ -293,7 +377,7 @@
       <!-- Conteúdo Principal -->
       <div id="layoutSidenav_content">
         <main>
-          <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11">
+          <div id="conteudo-dinamico" class="position-relative px-3 col-lg-11 mt-3">
             <%= yield %>
           </div>
         </main>

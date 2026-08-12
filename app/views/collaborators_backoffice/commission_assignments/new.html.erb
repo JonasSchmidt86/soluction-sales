@@ -1,0 +1,52 @@
+<div class="container-fluid">
+  <h4 class="mb-3">
+    <i class="fa fa-link me-2"></i> Nova Atribuição de Regra
+  </h4>
+
+  <div class="card shadow-sm">
+    <%= form_with(model: [:collaborators_backoffice, @assignment], local: true) do |f| %>
+      <div class="card-body">
+        <% if @assignment.errors.any? %>
+          <div class="alert alert-danger">
+            <% @assignment.errors.full_messages.each do |msg| %>
+              <div><%= msg %></div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <%= f.label :cod_funcionario, 'Vendedor', class: 'form-label' %>
+            <%= f.select :cod_funcionario,
+                  @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                  { include_blank: 'Selecione...' },
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-4 mb-3">
+            <%= f.label :commission_rule_id, 'Regra de Comissão', class: 'form-label' %>
+            <%= f.select :commission_rule_id,
+                  @commission_rules.map { |r| [r.name, r.id] },
+                  { include_blank: 'Selecione...' },
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-4 mb-3">
+            <%= f.label :start_date, 'Data de Início', class: 'form-label' %>
+            <%= f.date_field :start_date, class: 'form-control' %>
+          </div>
+        </div>
+
+        <div class="alert alert-info small">
+          <i class="fa fa-info-circle me-1"></i>
+          Se o vendedor já possuir uma atribuição vigente, ela será encerrada automaticamente no dia anterior à nova data de início.
+          O histórico será preservado.
+        </div>
+      </div>
+      <div class="card-footer text-end">
+        <%= link_to collaborators_backoffice_commission_assignments_path, class: 'btn btn-secondary me-2' do %>
+          <i class="fa fa-arrow-left me-1"></i> Cancelar
+        <% end %>
+        <%= f.submit 'Atribuir Regra', class: 'btn btn-primary' %>
+      </div>
+    <% end %>
+  </div>
+</div>

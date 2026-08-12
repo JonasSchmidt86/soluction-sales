@@ -1,0 +1,125 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-user me-2"></i> Permissões Individuais</h4>
+      <div class="ms-auto">
+        <%= link_to collaborators_backoffice_access_roles_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar para Perfis
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info small">
+        <i class="fa fa-info-circle me-1"></i>
+        Permissões individuais <strong>sobrepõem</strong> as permissões do grupo.
+        Use para liberar um recurso extra para um colaborador específico, ou para bloquear algo que o grupo permite.
+      </div>
+
+      <!-- Formulário para adicionar -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header"><strong>Adicionar Permissão Individual</strong></div>
+        <div class="card-body">
+          <%= form_with(url: create_individual_permission_collaborators_backoffice_access_roles_path, method: :post, local: true) do %>
+            <div class="row g-2 align-items-end">
+              <div class="col-md-3">
+                <label class="form-label small">Colaborador</label>
+                <select name="collaborator_permission[cod_funcionario]" class="form-select form-select-sm" required>
+                  <option value="">Selecione...</option>
+                  <% @funcionarios.each do |func| %>
+                    <option value="<%= func.cod_funcionario %>"><%= func.pessoa_nome || func.usuario %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Recurso</label>
+                <select name="collaborator_permission[resource]" class="form-select form-select-sm" required>
+                  <option value="">Selecione...</option>
+                  <% @available_resources.each do |key, label| %>
+                    <option value="<%= key %>"><%= label %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div class="col-md-1 text-center">
+                <label class="form-label small d-block">Ver</label>
+                <input type="checkbox" name="collaborator_permission[can_view]" value="1" class="form-check-input" checked>
+              </div>
+              <div class="col-md-1 text-center">
+                <label class="form-label small d-block">Criar</label>
+                <input type="checkbox" name="collaborator_permission[can_create]" value="1" class="form-check-input">
+              </div>
+              <div class="col-md-1 text-center">
+                <label class="form-label small d-block">Editar</label>
+                <input type="checkbox" name="collaborator_permission[can_edit]" value="1" class="form-check-input">
+              </div>
+              <div class="col-md-1 text-center">
+                <label class="form-label small d-block">Excluir</label>
+                <input type="checkbox" name="collaborator_permission[can_delete]" value="1" class="form-check-input">
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-success btn-sm w-100">
+                  <i class="fa fa-plus me-1"></i> Adicionar
+                </button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Filtro -->
+      <%= form_with(url: individual_permissions_collaborators_backoffice_access_roles_path, method: :get, local: true, class: "mb-3") do |f| %>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <%= f.select :cod_funcionario,
+                  @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                  { include_blank: 'Todos os colaboradores', selected: params[:cod_funcionario] },
+                  class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Lista -->
+      <% if @permissions.any? %>
+        <table class="table table-sm table-striped table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Colaborador</th>
+              <th>Recurso</th>
+              <th class="text-center">Ver</th>
+              <th class="text-center">Criar</th>
+              <th class="text-center">Editar</th>
+              <th class="text-center">Excluir</th>
+              <th class="text-center">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @permissions.each do |perm| %>
+              <tr>
+                <td><%= perm.funcionario_nome %></td>
+                <td><%= perm.resource_label %></td>
+                <td class="text-center"><%= perm.can_view ? '<i class="fa fa-check text-success"></i>'.html_safe : '<i class="fa fa-times text-danger"></i>'.html_safe %></td>
+                <td class="text-center"><%= perm.can_create ? '<i class="fa fa-check text-success"></i>'.html_safe : '<i class="fa fa-times text-danger"></i>'.html_safe %></td>
+                <td class="text-center"><%= perm.can_edit ? '<i class="fa fa-check text-success"></i>'.html_safe : '<i class="fa fa-times text-danger"></i>'.html_safe %></td>
+                <td class="text-center"><%= perm.can_delete ? '<i class="fa fa-check text-success"></i>'.html_safe : '<i class="fa fa-times text-danger"></i>'.html_safe %></td>
+                <td class="text-center">
+                  <%= link_to destroy_individual_permission_collaborators_backoffice_access_roles_path(permission_id: perm.id),
+                      method: :delete, class: "btn btn-sm btn-outline-danger",
+                      data: { confirm: 'Remover esta permissão individual?' } do %>
+                    <i class="fa fa-trash"></i>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="text-center py-4 text-muted">
+          <i class="fa fa-user fa-2x mb-2"></i>
+          <p>Nenhuma permissão individual cadastrada.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
