@@ -129,6 +129,9 @@ Rails.application.routes.draw do
         post :mark_as_paid
         post :reopen
       end
+      collection do
+        post :quick_create
+      end
     end
     resources :commission_adjustments, only: [:index, :new, :create, :show] do
       member do

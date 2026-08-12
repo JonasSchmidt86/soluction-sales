@@ -16,6 +16,30 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
 
     @periods = @periods.page(params[:page]).per(20)
     @funcionarios = funcionarios_da_empresa
+
+    # Simulação em tempo real do período atual
+    sim_start = params[:sim_start].present? ? Date.parse(params[:sim_start]) : Date.today.beginning_of_month
+    sim_end = params[:sim_end].present? ? Date.parse(params[:sim_end]) : Date.today
+
+    if admin?
+      @simulations = CommissionSimulationService.simulate_all(
+        cod_empresa: current_empresa_id,
+        start_date: sim_start,
+        end_date: sim_end
+      )
+    else
+      # Vendedor vê só a própria simulação
+      sim = CommissionSimulationService.simulate_one(
+        cod_funcionario: current_collaborator.cod_funcionario,
+        cod_empresa: current_empresa_id,
+        start_date: sim_start,
+        end_date: sim_end
+      )
+      @simulations = sim ? [sim] : []
+    end
+
+    @sim_start = sim_start
+    @sim_end = sim_end
   end
 
   def show
@@ -48,6 +72,29 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
       @funcionarios = funcionarios_da_empresa
       render :new, status: :unprocessable_entity
     end
+  end
+
+  # Cria apuração e já calcula de uma vez (botão rápido da simulação)
+  def quick_create
+    ensure_admin!
+    period = CommissionPeriod.new(
+      cod_funcionario: params[:cod_funcionario],
+      cod_empresa: current_empresa_id,
+      start_date: params[:start_date],
+      end_date: params[:end_date]
+    )
+
+    if period.save
+      service = CommissionPeriodService.new(period)
+      service.calculate
+      redirect_to collaborators_backoffice_commission_period_path(period),
+                  notice: "Apuração criada e calculada! Comissão: R$ #{period.reload.net_commission}"
+    else
+      redirect_to collaborators_backoffice_commission_periods_path,
+                  alert: "Erro ao criar apuração: #{period.errors.full_messages.join(', ')}"
+    end
+  rescue CommissionPeriodService::Error => e
+    redirect_to collaborators_backoffice_commission_periods_path, alert: e.message
   end
 
   def calculate

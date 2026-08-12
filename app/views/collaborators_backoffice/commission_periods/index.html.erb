@@ -12,99 +12,198 @@
     </div>
     <div class="card-body">
 
-  <!-- Filtros -->
-  <div class="card shadow-sm mb-3">
-    <div class="card-body py-2">
-      <%= form_with(url: collaborators_backoffice_commission_periods_path, method: :get, local: true) do |f| %>
-        <div class="row g-2 align-items-end">
-          <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
-            <div class="col-md-3">
-              <%= f.label :cod_funcionario, "Vendedor", class: "form-label small mb-0" %>
-              <%= f.select :cod_funcionario,
-                    @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
-                    { include_blank: 'Todos', selected: params[:cod_funcionario] },
-                    class: "form-select form-select-sm" %>
-            </div>
-          <% end %>
-          <div class="col-md-2">
-            <%= f.label :status, "Status", class: "form-label small mb-0" %>
-            <%= f.select :status,
-                  [['Aberta', 'open'], ['Finalizada', 'finalized'], ['Paga', 'paid']],
-                  { include_blank: 'Todos', selected: params[:status] },
-                  class: "form-select form-select-sm" %>
+      <!-- Simulação em Tempo Real -->
+      <% if @simulations.any? %>
+        <div class="card shadow-sm mb-3 border-success">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <strong><i class="fa fa-bolt me-1 text-warning"></i> Estimativa do Período Atual</strong>
+            <span class="text-muted small"><%= @sim_start.strftime('%d/%m/%Y') %> — <%= @sim_end.strftime('%d/%m/%Y') %></span>
           </div>
-          <div class="col-md-2 d-flex gap-1 align-items-end">
-            <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
-            <%= link_to "Limpar", collaborators_backoffice_commission_periods_path, class: "btn btn-sm btn-outline-secondary" %>
+          <div class="card-body p-0">
+            <!-- Filtro de datas da simulação -->
+            <div class="p-2 bg-light border-bottom">
+              <%= form_with(url: collaborators_backoffice_commission_periods_path, method: :get, local: true) do |f| %>
+                <div class="row g-2 align-items-end">
+                  <div class="col-auto">
+                    <label class="form-label small mb-0">De</label>
+                    <%= f.date_field :sim_start, value: @sim_start, class: "form-control form-control-sm" %>
+                  </div>
+                  <div class="col-auto">
+                    <label class="form-label small mb-0">Até</label>
+                    <%= f.date_field :sim_end, value: @sim_end, class: "form-control form-control-sm" %>
+                  </div>
+                  <div class="col-auto">
+                    <%= f.submit "Atualizar", class: "btn btn-sm btn-outline-success" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Vendedor</th>
+                  <th>Regra</th>
+                  <th class="text-center">Vendas</th>
+                  <th class="text-end">Total Vendas</th>
+                  <th class="text-end">Comissão</th>
+                  <th class="text-end">Ajustes</th>
+                  <th class="text-end">Líquido</th>
+                  <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
+                    <th class="text-center">Ação</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% @simulations.each do |sim| %>
+                  <tr>
+                    <td><%= sim[:funcionario_nome] %></td>
+                    <td class="small text-muted"><%= sim[:rule_name] %></td>
+                    <td class="text-center"><%= sim[:sales_count] %></td>
+                    <td class="text-end"><%= number_to_currency(sim[:total_sales], unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <td class="text-end"><%= number_to_currency(sim[:commission_amount], unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <td class="text-end">
+                      <% if sim[:adjustments_amount] > 0 %>
+                        <span class="text-danger">-<%= number_to_currency(sim[:adjustments_amount], unit: 'R$ ', separator: ',', delimiter: '.') %></span>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                    <td class="text-end fw-bold text-success"><%= number_to_currency(sim[:net_commission], unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
+                      <td class="text-center">
+                        <%= link_to quick_create_collaborators_backoffice_commission_periods_path(
+                              cod_funcionario: sim[:cod_funcionario],
+                              start_date: @sim_start,
+                              end_date: @sim_end
+                            ), method: :post, class: "btn btn-sm btn-success",
+                            data: { confirm: "Criar apuração para #{sim[:funcionario_nome]}?" } do %>
+                          <i class="fa fa-check me-1"></i> Apurar
+                        <% end %>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+              <% if @simulations.size > 1 %>
+                <tfoot class="table-light">
+                  <tr class="fw-bold">
+                    <td colspan="3" class="text-end">Totais:</td>
+                    <td class="text-end"><%= number_to_currency(@simulations.sum { |s| s[:total_sales].to_f }, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <td class="text-end"><%= number_to_currency(@simulations.sum { |s| s[:commission_amount].to_f }, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <td class="text-end">
+                      <% total_adj = @simulations.sum { |s| s[:adjustments_amount].to_f } %>
+                      <% if total_adj > 0 %>
+                        <span class="text-danger">-<%= number_to_currency(total_adj, unit: 'R$ ', separator: ',', delimiter: '.') %></span>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                    <td class="text-end text-success"><%= number_to_currency(@simulations.sum { |s| s[:net_commission].to_f }, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                    <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
+                      <td></td>
+                    <% end %>
+                  </tr>
+                </tfoot>
+              <% end %>
+            </table>
           </div>
         </div>
       <% end %>
-    </div>
-  </div>
 
-  <% if @periods.any? %>
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <table class="table table-striped table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Vendedor</th>
-              <th class="text-center">Período</th>
-              <th class="text-end">Total Vendas</th>
-              <th class="text-end">Comissão</th>
-              <th class="text-end">Ajustes</th>
-              <th class="text-end">Líquido</th>
-              <th class="text-center">Status</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @periods.each do |period| %>
-              <tr>
-                <td><%= period.funcionario_nome %></td>
-                <td class="text-center">
-                  <%= period.start_date.strftime('%d/%m/%Y') %> — <%= period.end_date.strftime('%d/%m/%Y') %>
-                </td>
-                <td class="text-end"><%= period.total_sales ? number_to_currency(period.total_sales, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
-                <td class="text-end"><%= period.commission_amount ? number_to_currency(period.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
-                <td class="text-end">
-                  <% if period.adjustments_amount && period.adjustments_amount > 0 %>
-                    <span class="text-danger">-<%= number_to_currency(period.adjustments_amount, unit: 'R$ ', separator: ',', delimiter: '.') %></span>
-                  <% else %>
-                    —
-                  <% end %>
-                </td>
-                <td class="text-end fw-bold"><%= period.net_commission ? number_to_currency(period.net_commission, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
-                <td class="text-center">
-                  <% case period.status %>
-                  <% when 'open' %>
-                    <span class="badge bg-warning text-dark">Aberta</span>
-                  <% when 'finalized' %>
-                    <span class="badge bg-info">Finalizada</span>
-                  <% when 'paid' %>
-                    <span class="badge bg-success">Paga</span>
-                  <% end %>
-                </td>
-                <td class="text-center">
-                  <%= link_to collaborators_backoffice_commission_period_path(period), class: "btn btn-sm btn-outline-primary" do %>
-                    <i class="fa fa-eye"></i>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+      <!-- Filtros das apurações existentes -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+          <%= form_with(url: collaborators_backoffice_commission_periods_path, method: :get, local: true) do |f| %>
+            <div class="row g-2 align-items-end">
+              <% if current_collaborator.funcionario.permissao&.nivel == 1 %>
+                <div class="col-md-3">
+                  <%= f.label :cod_funcionario, "Vendedor", class: "form-label small mb-0" %>
+                  <%= f.select :cod_funcionario,
+                        @funcionarios.map { |func| [func.pessoa_nome || func.usuario, func.cod_funcionario] },
+                        { include_blank: 'Todos', selected: params[:cod_funcionario] },
+                        class: "form-select form-select-sm" %>
+                </div>
+              <% end %>
+              <div class="col-md-2">
+                <%= f.label :status, "Status", class: "form-label small mb-0" %>
+                <%= f.select :status,
+                      [['Aberta', 'open'], ['Finalizada', 'finalized'], ['Paga', 'paid']],
+                      { include_blank: 'Todos', selected: params[:status] },
+                      class: "form-select form-select-sm" %>
+              </div>
+              <div class="col-md-2 d-flex gap-1 align-items-end">
+                <%= f.submit "Filtrar", class: "btn btn-sm btn-outline-primary" %>
+                <%= link_to "Limpar", collaborators_backoffice_commission_periods_path, class: "btn btn-sm btn-outline-secondary" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
-    <div class="mt-3 d-flex justify-content-center">
-      <%= paginate @periods %>
-    </div>
-  <% else %>
-    <div class="text-center py-5 text-muted">
-      <i class="fa fa-calculator fa-3x mb-3"></i>
-      <p>Nenhuma apuração encontrada.</p>
-    </div>
-  <% end %>
+
+      <!-- Apurações existentes -->
+      <% if @periods.any? %>
+        <div class="card shadow-sm">
+          <div class="card-header"><strong>Apurações Registradas</strong></div>
+          <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Vendedor</th>
+                  <th class="text-center">Período</th>
+                  <th class="text-end">Total Vendas</th>
+                  <th class="text-end">Comissão</th>
+                  <th class="text-end">Ajustes</th>
+                  <th class="text-end">Líquido</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @periods.each do |period| %>
+                  <tr>
+                    <td><%= period.funcionario_nome %></td>
+                    <td class="text-center">
+                      <%= period.start_date.strftime('%d/%m/%Y') %> — <%= period.end_date.strftime('%d/%m/%Y') %>
+                    </td>
+                    <td class="text-end"><%= period.total_sales ? number_to_currency(period.total_sales, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
+                    <td class="text-end"><%= period.commission_amount ? number_to_currency(period.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
+                    <td class="text-end">
+                      <% if period.adjustments_amount && period.adjustments_amount > 0 %>
+                        <span class="text-danger">-<%= number_to_currency(period.adjustments_amount, unit: 'R$ ', separator: ',', delimiter: '.') %></span>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                    <td class="text-end fw-bold"><%= period.net_commission ? number_to_currency(period.net_commission, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></td>
+                    <td class="text-center">
+                      <% case period.status %>
+                      <% when 'open' %>
+                        <span class="badge bg-warning text-dark">Aberta</span>
+                      <% when 'finalized' %>
+                        <span class="badge bg-info">Finalizada</span>
+                      <% when 'paid' %>
+                        <span class="badge bg-success">Paga</span>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <%= link_to collaborators_backoffice_commission_period_path(period), class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="fa fa-eye"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="mt-3 d-flex justify-content-center">
+          <%= paginate @periods %>
+        </div>
+      <% else %>
+        <div class="text-center py-4 text-muted">
+          <p>Nenhuma apuração registrada ainda.</p>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
