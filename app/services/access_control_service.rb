@@ -61,17 +61,19 @@ class AccessControlService
   # @param resource [String] nome do recurso (ex: 'vendas', 'commission_periods')
   # @return [Boolean]
   def can?(action, resource)
+    # Recursos super_admin_only: só super_admin pode ver (nem outros admins)
+    if SUPER_ADMIN_ONLY_RESOURCES.include?(resource)
+      return super_admin?
+    end
+
+    # Admin (nivel 1) sempre pode tudo (exceto super_admin_only acima)
+    return true if admin?
 
     # Se não está sob controle de acesso, comportamento legado
     unless under_access_control?
       # No legado, recursos admin-only ficam bloqueados para não-admin
       return false if ADMIN_ONLY_RESOURCES.include?(resource)
       return true
-    end
-    
-    # Recursos super_admin_only: só super_admin (cod_funcionario == 1, nivel == 1) pode ver
-    if SUPER_ADMIN_ONLY_RESOURCES.include?(resource)
-      return super_admin?
     end
 
     # Admin (nivel 1) sempre pode tudo
