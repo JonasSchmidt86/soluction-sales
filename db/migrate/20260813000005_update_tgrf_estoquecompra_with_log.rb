@@ -222,8 +222,6 @@ class UpdateTgrfEstoquecompraWithLog < ActiveRecord::Migration[6.1]
 
       END;
       $BODY$;
-
-      ALTER FUNCTION public.tgrf_estoquecompra() OWNER TO postgres;
     SQL
   end
 

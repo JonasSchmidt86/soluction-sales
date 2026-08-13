@@ -611,8 +611,6 @@ class UpdateTgrfEstoquevendaWithLog < ActiveRecord::Migration[6.1]
           RETURN NULL;
       END;
       $BODY$;
-
-      ALTER FUNCTION public.tgrf_estoquevenda() OWNER TO postgres;
     SQL
   end
 

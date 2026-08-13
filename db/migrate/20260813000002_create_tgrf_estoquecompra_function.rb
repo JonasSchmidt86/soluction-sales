@@ -174,8 +174,6 @@ class CreateTgrfEstoquecompraFunction < ActiveRecord::Migration[6.1]
       END;
       $BODY$;
 
-      ALTER FUNCTION public.tgrf_estoquecompra() OWNER TO postgres;
-
       -- Recria o trigger (drop + create para garantir que está atualizado)
       DROP TRIGGER IF EXISTS "UPDATE_ESTOQUE" ON public.itemcompra;
 

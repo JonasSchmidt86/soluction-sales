@@ -387,8 +387,6 @@ class CreateTgrfEstoquevendaFunction < ActiveRecord::Migration[6.1]
       END;
       $BODY$;
 
-      ALTER FUNCTION public.tgrf_estoquevenda() OWNER TO postgres;
-
       -- Recria o trigger (dropa o antigo com typo e cria com nome correto)
       DROP TRIGGER IF EXISTS "UDPATE_ESTOQUE" ON public.itemvenda;
       DROP TRIGGER IF EXISTS "UPDATE_ESTOQUE" ON public.itemvenda;
