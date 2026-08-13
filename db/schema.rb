@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_13_000008) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_13_000011) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -47,6 +47,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000008) do
     t.decimal "quantidade", precision: 18, scale: 2, default: "0.0"
     t.datetime "datacadastro", precision: nil
     t.bigint "cod_empresa", null: false
+    t.bigint "cod_funcionario", default: 1
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|

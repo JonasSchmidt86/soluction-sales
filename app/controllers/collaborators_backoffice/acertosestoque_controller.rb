@@ -11,13 +11,14 @@ class CollaboratorsBackoffice::AcertosestoqueController < CollaboratorsBackoffic
 
   def create
     acerto = Acertoestoque.new(
-      cod_empresa:   current_collaborator.cod_empresa,
-      cod_produto:   params[:cod_produto],
-      cod_cor:       params[:cod_cor],
-      tipo:          params[:tipo],
-      quantidade:    params[:quantidade],
-      descricao:     params[:descricao],
-      datacadastro:  Time.current
+      cod_empresa:     current_collaborator.cod_empresa,
+      cod_produto:     params[:cod_produto],
+      cod_cor:         params[:cod_cor],
+      tipo:            params[:tipo],
+      quantidade:      params[:quantidade],
+      descricao:       params[:descricao],
+      cod_funcionario: current_collaborator.cod_funcionario,
+      datacadastro:    Time.current
     )
     if acerto.save
       redirect_to collaborators_backoffice_acertosestoque_index_path, notice: "Acerto registrado com sucesso!"
