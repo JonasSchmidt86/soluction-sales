@@ -28,11 +28,6 @@ class AccessControlService
     commission_assignments
     commission_adjustments
     commission_periods
-    xml_files
-    compras
-    report_buy
-    report_sugestao_compra
-    pedidos_compras
     whatsapp_contacts
   ].freeze
 
