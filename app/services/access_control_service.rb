@@ -17,10 +17,8 @@ class AccessControlService
   # Recursos que no sistema original eram restritos a nivel == 1 (admin).
   # No fallback (sem perfil), esses recursos ficam bloqueados para não-admin.
   ADMIN_ONLY_RESOURCES = %w[
-    provisionados
     report_rep_dre
     report_custom_reports
-    acertosestoque
     funcionarios
     collaborators
     access_roles

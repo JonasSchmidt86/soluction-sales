@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_13_000006) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_13_000008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -440,6 +440,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000006) do
     t.string "usuario", limit: 100
     t.string "observacao", limit: 255
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.bigint "cod_funcionario"
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
     t.index ["created_at"], name: "idx_estoque_logs_data"
     t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"
