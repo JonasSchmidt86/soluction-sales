@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_13_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -195,7 +195,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
 
   create_table "collaborators", force: :cascade do |t|
     t.string "email", default: "", null: false
-    t.string "encrypted_password", default: ""
+    t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
     t.datetime "reset_password_sent_at", precision: nil
     t.datetime "remember_created_at", precision: nil
@@ -356,7 +356,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
     t.bigint "cod_tphitorico"
     t.index ["cod_funcionario"], name: "index_contaspagrec_on_cod_funcionario"
     t.index ["cod_pessoa"], name: "index_contaspagrec_on_cod_pessoa"
-    t.index ["cod_tphitorico"], name: "index_contaspagrec_on_cod_tphistorico"
+    t.index ["cod_tphitorico"], name: "index_contaspagrec_on_cod_tphitorico"
     t.index ["natureza"], name: "index_contaspagrec_on_natureza"
   end
 
@@ -407,6 +407,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
     t.boolean "ativo", default: true
     t.decimal "valor_site", precision: 18, scale: 2, default: "0.0"
     t.boolean "publicado", default: false
+    t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_empresaproduto_lookup"
   end
 
   create_table "entrega", primary_key: "cod_entrega", id: :bigint, default: -> { "nextval('entrega_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -422,6 +423,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
     t.string "nomeestado", limit: 255
     t.string "sigla", limit: 2
     t.bigint "cod_estado_ibge"
+  end
+
+  create_table "estoque_logs", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.bigint "cod_produto", null: false
+    t.bigint "cod_cor", null: false
+    t.string "operacao", limit: 10, null: false
+    t.string "origem", limit: 15, null: false
+    t.decimal "quantidade_antes", precision: 15, scale: 2
+    t.decimal "quantidade_movida", precision: 15, scale: 2
+    t.decimal "quantidade_depois", precision: 15, scale: 2
+    t.bigint "cod_referencia"
+    t.bigint "cod_item"
+    t.decimal "custofinal", precision: 15, scale: 2
+    t.string "usuario", limit: 100
+    t.string "observacao", limit: 255
+    t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
+    t.index ["created_at"], name: "idx_estoque_logs_data"
+    t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"
   end
 
   create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: -> { "nextval('formaspagamento_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -505,6 +526,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_100004) do
     t.bigint "cod_cor"
     t.boolean "cancelado", default: false, null: false
     t.decimal "valor_frete", precision: 10, scale: 2, default: "0.0"
+    t.decimal "custofinal_unitario", precision: 15, scale: 2, default: "0.0"
   end
 
   create_table "itemvenda", primary_key: "cod_item", id: :bigint, default: -> { "nextval('itemvenda_codigo_seq'::regclass)" }, force: :cascade do |t|

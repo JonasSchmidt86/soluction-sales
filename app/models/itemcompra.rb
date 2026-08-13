@@ -28,7 +28,11 @@ class Itemcompra < ApplicationRecord
     end
 
     def valorunitario_o
-        self.valorunitario
+        custo_unitario_final.presence || valorunitario
+    end
+
+    def custo_final
+        custofinal_unitario
     end
 
 end
