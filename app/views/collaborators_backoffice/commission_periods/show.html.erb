@@ -39,6 +39,18 @@
               <div class="fs-4 fw-bold text-success"><%= @period.net_commission ? number_to_currency(@period.net_commission, unit: 'R$ ', separator: ',', delimiter: '.') : '—' %></div>
             </div>
           </div>
+          <% if @period.tiers_breakdown.present? %>
+            <hr class="my-2">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+              <% @period.tiers_breakdown.each do |tier| %>
+                <div class="text-center px-2">
+                  <div class="text-muted small">Faixa <%= tier['position'] %> (<%= number_with_precision(tier['percentage'].to_f, precision: 2, separator: ',') %>%)</div>
+                  <div class="fw-bold"><%= number_to_currency(tier['commission'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') %></div>
+                  <div class="text-muted" style="font-size: 0.7rem;">s/ <%= number_to_currency(tier['taxable_amount'].to_f, unit: 'R$ ', separator: ',', delimiter: '.') %></div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>
@@ -92,14 +104,17 @@
               <i class="fa fa-check me-1"></i> Finalizar
             <% end %>
           <% end %>
+          <%= link_to collaborators_backoffice_commission_period_path(@period),
+              method: :delete, class: "btn btn-outline-danger",
+              data: { confirm: 'Excluir esta apuração? Esta ação não pode ser desfeita.' } do %>
+            <i class="fa fa-trash me-1"></i> Excluir
+          <% end %>
         <% end %>
 
         <% if @period.finalized? %>
-          <%= link_to mark_as_paid_collaborators_backoffice_commission_period_path(@period),
-              method: :post, class: "btn btn-success",
-              data: { confirm: 'Marcar esta comissão como paga?' } do %>
+          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#markPaidModal">
             <i class="fa fa-money me-1"></i> Marcar como Paga
-          <% end %>
+          </button>
         <% end %>
 
         <% if (@period.finalized? || @period.paid?) && current_collaborator.funcionario.super_admin? %>
@@ -110,7 +125,7 @@
       </div>
     </div>
   <% end %>
-
+  
   <!-- Detalhamento das Faixas -->
   <% if @period.tiers_breakdown.present? %>
     <div class="card shadow-sm mb-3">
@@ -171,7 +186,19 @@
                 <td class="text-center">#<%= sale.cod_venda %></td>
                 <td class="text-center"><%= sale.sale_date.strftime('%d/%m/%Y') %></td>
                 <td class="text-end"><%= number_to_currency(sale.sale_value, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
-                <td class="text-end fw-bold"><%= number_to_currency(sale.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') %></td>
+                <td class="text-end fw-bold">
+                  <% if @period.open? && current_collaborator.funcionario.permissao&.nivel == 1 %>
+                    <%= form_with(url: update_sale_commission_collaborators_backoffice_commission_period_path(@period),
+                          method: :patch, local: true, class: "d-inline-flex align-items-center gap-1 justify-content-end") do |f| %>
+                      <%= f.hidden_field :sale_id, value: sale.id %>
+                      <%= f.text_field :commission_amount, value: number_with_precision(sale.commission_amount, precision: 2, separator: ','),
+                            class: "form-control form-control-sm text-end", style: "width: 100px;" %>
+                      <%= f.submit "✓", class: "btn btn-sm btn-outline-success", title: "Salvar" %>
+                    <% end %>
+                  <% else %>
+                    <%= number_to_currency(sale.commission_amount, unit: 'R$ ', separator: ',', delimiter: '.') %>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>
@@ -283,6 +310,39 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <%= f.submit 'Confirmar Reabertura', class: 'btn btn-danger' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Modal Marcar como Paga -->
+<% if current_collaborator.funcionario.permissao&.nivel == 1 && @period.finalized? %>
+  <div class="modal fade" id="markPaidModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <%= form_with(url: mark_as_paid_collaborators_backoffice_commission_period_path(@period), method: :post, local: true) do |f| %>
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title"><i class="fa fa-money me-2"></i>Marcar como Paga</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small">
+              O valor calculado é <strong><%= number_to_currency(@period.net_commission, unit: 'R$ ', separator: ',', delimiter: '.') %></strong>.
+              Edite abaixo para informar o valor efetivamente pago (ex: arredondamento).
+            </p>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Valor Pago</label>
+              <%= f.text_field :paid_amount,
+                    value: number_with_precision(@period.net_commission, precision: 2, separator: ','),
+                    class: "form-control form-control-lg text-end fw-bold",
+                    placeholder: "0,00" %>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <%= f.submit 'Confirmar Pagamento', class: 'btn btn-success' %>
           </div>
         <% end %>
       </div>

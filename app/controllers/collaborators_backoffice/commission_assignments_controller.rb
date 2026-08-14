@@ -4,6 +4,7 @@ class CollaboratorsBackoffice::CommissionAssignmentsController < CollaboratorsBa
 
   def index
     @assignments = CommissionAssignment.where(cod_empresa: current_empresa_id)
+                                       .where(end_date: nil)
                                         .includes(:commission_rule)
                                         .order(start_date: :desc)
 

@@ -122,12 +122,13 @@ Rails.application.routes.draw do
       end
     end
     resources :commission_assignments, only: [:index, :new, :create, :destroy]
-    resources :commission_periods, only: [:index, :new, :create, :show] do
+    resources :commission_periods, only: [:index, :new, :create, :show, :destroy] do
       member do
         post :calculate
         post :finalize
         post :mark_as_paid
         post :reopen
+        patch :update_sale_commission
       end
       collection do
         post :quick_create

@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackofficeController
   before_action :authorize_access!
   before_action :authorize_admin!, except: [:index, :show]
-  before_action :set_commission_period, only: [:show, :calculate, :finalize, :mark_as_paid, :reopen]
+  before_action :set_commission_period, only: [:show, :calculate, :finalize, :mark_as_paid, :reopen, :update_sale_commission, :destroy]
 
   def index
     @periods = base_scope.includes(:commission_rule).order(start_date: :desc)
@@ -14,12 +14,16 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
       @periods = @periods.where(status: params[:status])
     end
 
-    @periods = @periods.page(params[:page]).per(20)
-    @funcionarios = funcionarios_da_empresa
-
     # Simulação em tempo real do período atual
     sim_start = params[:sim_start].present? ? Date.parse(params[:sim_start]) : Date.today.beginning_of_month
     sim_end = params[:sim_end].present? ? Date.parse(params[:sim_end]) : Date.today
+
+    # Filtrar apurações registradas pelo período da simulação:
+    # Apurações pagas só aparecem se o período da apuração se sobrepõe ao período informado
+    @periods = @periods.where("start_date <= ? AND end_date >= ?", sim_end, sim_start)
+
+    @periods = @periods.page(params[:page]).per(20)
+    @funcionarios = funcionarios_da_empresa
 
     if admin?
       @simulations = CommissionSimulationService.simulate_all(
@@ -119,6 +123,13 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
 
   def mark_as_paid
     ensure_admin!
+
+    # Permite editar o valor efetivamente pago (arredondamento)
+    if params[:paid_amount].present?
+      valor_pago = BigDecimal(params[:paid_amount].to_s.gsub('.', '').gsub(',', '.'))
+      @period.update!(net_commission: valor_pago)
+    end
+
     service = CommissionPeriodService.new(@period)
     service.mark_as_paid(paid_by: current_collaborator.cod_funcionario)
     redirect_to collaborators_backoffice_commission_period_path(@period),
@@ -142,6 +153,55 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
                 notice: 'Comissão reaberta com sucesso!'
   rescue CommissionPeriodService::Error => e
     redirect_to collaborators_backoffice_commission_period_path(@period), alert: e.message
+  end
+
+  # PATCH /commission_periods/:id/update_sale_commission
+  # Permite editar o valor de comissão de uma venda individual antes de finalizar
+  def update_sale_commission
+    ensure_admin!
+
+    unless @period.open?
+      redirect_to collaborators_backoffice_commission_period_path(@period),
+                  alert: 'Só é possível editar valores em apurações abertas.'
+      return
+    end
+
+    sale = @period.commission_period_sales.find(params[:sale_id])
+    novo_valor = BigDecimal(params[:commission_amount].to_s.gsub(',', '.'))
+
+    if novo_valor < 0
+      redirect_to collaborators_backoffice_commission_period_path(@period),
+                  alert: 'O valor da comissão não pode ser negativo.'
+      return
+    end
+
+    sale.update!(commission_amount: novo_valor)
+
+    # Recalcular totais do período
+    total_commission = @period.commission_period_sales.sum(:commission_amount)
+    adjustments = @period.adjustments_amount || 0
+    @period.update!(
+      commission_amount: total_commission,
+      net_commission: total_commission - adjustments
+    )
+
+    redirect_to collaborators_backoffice_commission_period_path(@period),
+                notice: "Comissão da venda ##{sale.cod_venda} atualizada para R$ #{novo_valor.round(2)}."
+  end
+
+  def destroy
+    ensure_admin!
+
+    unless @period.open?
+      redirect_to collaborators_backoffice_commission_periods_path,
+                  alert: 'Só é possível excluir apurações que ainda estão abertas (não finalizadas/pagas).'
+      return
+    end
+
+    @period.commission_period_sales.destroy_all
+    @period.destroy
+    redirect_to collaborators_backoffice_commission_periods_path,
+                notice: 'Apuração excluída com sucesso!'
   end
 
   private

@@ -69,7 +69,8 @@ class CommissionPeriodService
         total_sales: result[:total_sales],
         commission_amount: result[:total_commission],
         adjustments_amount: adjustments_total,
-        net_commission: result[:total_commission] - adjustments_total
+        net_commission: result[:total_commission] - adjustments_total,
+        tiers_breakdown: result[:tiers_breakdown].map { |t| t.transform_values { |v| v.is_a?(BigDecimal) ? v.to_s : v } }
       )
     end
 

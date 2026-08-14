@@ -38,7 +38,11 @@ class CommissionSimulationService
         end_date: end_date,
         assignment: assignment
       )
-      results << result if result
+      # Não incluir vendedores sem vendas no período
+      next unless result
+      next if result[:sales_count] == 0
+
+      results << result
     end
 
     results.sort_by { |r| -r[:total_sales].to_f }
