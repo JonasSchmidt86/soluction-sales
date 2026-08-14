@@ -379,6 +379,85 @@
       }
 
       $(document).ready(function() {
+          // Inicializa máscaras nos campos existentes
+          $(".money2").mask("000000000,00", {reverse: true});
+          $(".datepicker").datepicker({ dateFormat: "dd/mm/yy" });
+          $(".fallback").mask("99/99/9999");
+
+          // Enumerar parcelas existentes
+          $('.contas .nested-fields').each(function(index) {
+            $(this).find('input[name*="numeroparcela"]').val(index + 1);
+          });
+
+          // Seleciona todo o texto ao clicar nos campos
+          $(document).on('mouseup', '.money2, .quantidade', function() {
+            $(this).select();
+          });
+
+          // Re-inicializa máscaras nos novos campos adicionados pelo Cocoon
+          $(document).on('cocoon:after-insert', function(e, insertedItem) {
+            setTimeout(function() {
+              $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
+              $(insertedItem).find('.datepicker').datepicker({ dateFormat: "dd/mm/yy" });
+              $(insertedItem).find('.fallback').mask("99/99/9999");
+
+              // Renumera todas as parcelas
+              if (!window._creatingBills) {
+                $('.contas .nested-fields:visible').each(function(index) {
+                  $(this).find('input[name*="numeroparcela"]').val(index + 1);
+                });
+              }
+            }, 100);
+          });
+
+          // Renumera parcelas ao remover
+          $(document).on('cocoon:after-remove', function() {
+            setTimeout(function() {
+              $('.contas .nested-fields:visible').each(function(index) {
+                $(this).find('input[name*="numeroparcela"]').val(index + 1);
+              });
+            }, 100);
+          });
+
+          // Recalcular parcelas ao alterar valor de qualquer parcela
+          $(document).on('change', '#conta_fields input[id*=_valorparcela]', function() {
+            var totalvenda = parseFloat(document.getElementById("venda_valortotal")?.value.replace(",", ".") || "0") || 0;
+            const total = totalvenda;
+            let updatedIndex = $(this).closest('tr').index();
+            let soma = 0;
+
+            const rows = $('#conta_fields tr');
+            const numParcelas = rows.length;
+
+            for (let i = 0; i <= updatedIndex; i++) {
+              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+              if (isNaN(val)) val = 0;
+              soma += val;
+            }
+
+            let restante = total - soma;
+            let parcelasRestantes = numParcelas - (updatedIndex + 1);
+            if (parcelasRestantes <= 0) return;
+
+            let novoValor = parseFloat((restante / parcelasRestantes).toFixed(2));
+            for (let i = updatedIndex + 1; i < numParcelas; i++) {
+              rows.eq(i).find('input[id*=_valorparcela]').val(novoValor.toFixed(2).replace('.', ','));
+            }
+
+            let totalAtual = 0;
+            for (let i = 0; i < numParcelas; i++) {
+              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
+              if (isNaN(val)) val = 0;
+              totalAtual += val;
+            }
+            let diff = parseFloat((total - totalAtual).toFixed(2));
+            if (Math.abs(diff) >= 0.01) {
+              let ultimaParcela = rows.eq(numParcelas - 1);
+              let val = parseFloat(ultimaParcela.find('input[id*=_valorparcela]').val().replace(',', '.'));
+              ultimaParcela.find('input[id*=_valorparcela]').val((val + diff).toFixed(2).replace('.', ','));
+            }
+          });
+
           var categorySearch = $('#venda_nome_pessoa'); //document.getElementById('venda_pessoa'); //
           var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
           var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
@@ -682,14 +761,9 @@
 
           var index = thisIndex(field);
 
-          // Obtém a referência da div pelo id atual
-          var productsListDiv = document.getElementById("products_list");
-
-          // Verifica se a div com id "products_list" existe
-          if (productsListDiv) {
-              // Define o novo id
-              productsListDiv.id = `products_list_${index}`;
-          }
+          // Obtém a div de resultados relativa ao campo (usando classe em vez de ID)
+          var productsListDiv = $(field).closest('td').find('.products_list');
+          productsListDiv.attr('id', `products_list_${index}`);
 
           var selectedProductIdField = document.getElementById(`venda_itensvenda_attributes_${index}_cod_produto`);
 

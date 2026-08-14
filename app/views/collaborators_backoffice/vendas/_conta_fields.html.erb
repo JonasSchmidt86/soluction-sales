@@ -20,29 +20,3 @@
     <% end %>
   </td>
 </tr>
-<script>
-  $(document).ready(function() {
-    $('.contas .nested-fields').each(function(index) {
-      $(this).find('input[name*="numeroparcela"]').val(index + 1);
-    });
-    // Inicializa datepickers e fallback existentes
-    $(".datepicker").datepicker({ dateFormat: "dd/mm/yy" });
-    $(".fallback").mask("99/99/9999");
-    $(".money2").mask("000000000,00", {reverse: true})
-
-    // Para novos campos adicionados pelo Cocoon
-    $(document).on('cocoon:after-insert', function(e, insertedItem) {
-      setTimeout(function() {
-        $(insertedItem).find('.datepicker').datepicker({ dateFormat: "dd/mm/yy" });
-        $(insertedItem).find('.fallback').mask("99/99/9999");
-        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
-
-        // Enumerar numeroparcela automaticamente apenas se não estiver sendo preenchido pelo createBills
-        if (!window._creatingBills) {
-          var parcelaCount = $('.contas .nested-fields').length;
-          $(insertedItem).find('input[name*="numeroparcela"]').val(parcelaCount);
-        }
-      }, 100);
-    });
-  });
-</script>

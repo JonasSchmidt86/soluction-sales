@@ -4,7 +4,7 @@
     <%= f.text_field :produto, 
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
             placeholder: "Pressione Enter para buscar!", autocomplete:"off" %>
-    <div id="products_list" class="list-group position-absolute " style="display: none; z-index: 100; width: 35%;"></div>
+    <div class="products_list list-group position-absolute" style="display: none; z-index: 100; width: 35%;"></div>
   </td>
   <td class="col-auto">
     <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
@@ -42,19 +42,3 @@
     <% end %>
   </td>
 </tr>
-<script>
-  $(document).ready(function() {
-    // Inicializa datepickers e fallback existentes
-    $(".money2").mask("000000000,00", {reverse: true})
-
-    $(document).on('mouseup', '.money2, .quantidade', function() {
-      $(this).select();
-    });
-    // Para novos campos adicionados pelo Cocoon
-    $(document).on('cocoon:after-insert', function(e, insertedItem) {
-      setTimeout(function() {
-        $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
-      }, 100);
-    });
-  });
-</script>
