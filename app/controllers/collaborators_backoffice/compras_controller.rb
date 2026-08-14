@@ -252,12 +252,15 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             # end
 
             if itemCompra.valor_frete.nil? || itemCompra.valor_frete <= 0
-              despesas = compra.valorfrete.to_d + compra.outrasdespesas.to_d
+              # Subtrai o ST total dos itens do outrasdespesas para não duplicar
+              # (o ST já é gravado no campo valorst de cada item)
+              total_st_itens = params[:compra][:vST].to_f rescue 0.0
+              despesas_sem_st = compra.valorfrete.to_d + (compra.outrasdespesas.to_d - total_st_itens.to_d)
 
-              if despesas.positive? && total_produtos.positive?
+              if despesas_sem_st.positive? && total_produtos.positive?
                 itemCompra.valor_frete =
                   (itemCompra.valorunitario * itemCompra.quantidade) *
-                  (despesas / total_produtos)
+                  (despesas_sem_st / total_produtos)
               else
                 itemCompra.valor_frete = 0.0
               end
