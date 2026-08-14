@@ -227,13 +227,18 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       if !@sale.cancelada
         @sale.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
         @sale.itensvenda.where(cancelado: [false, nil]).update_all(cancelado: true)
-      end
-
-      if @sale.cancelada
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cancelada com sucesso!"
         return
       end
       
+      # Se já estava cancelada, pode excluir apenas se não teve movimentação no caixa
+      teve_lancamentos = @sale.contas.joins(:lancamentos).exists?
+
+      if teve_lancamentos
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cancelada mantida para auditoria (possui lançamentos no caixa)."
+        return
+      end
+
       # Se a venda veio de um orçamento, atualiza o orçamento
       orcamento = Orcamento.find_by(cod_venda: @sale.cod_venda)
       orcamento.update(status: 'pendente', cod_venda: nil) if orcamento
