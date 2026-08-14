@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_13_000011) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_13_000012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -430,7 +430,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000011) do
     t.bigint "cod_empresa", null: false
     t.bigint "cod_produto", null: false
     t.bigint "cod_cor", null: false
-    t.string "operacao", limit: 10, null: false
+    t.string "operacao", limit: 15, null: false
     t.string "origem", limit: 15, null: false
     t.decimal "quantidade_antes", precision: 15, scale: 2
     t.decimal "quantidade_movida", precision: 15, scale: 2

@@ -401,6 +401,8 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           
         ActiveRecord::Base.transaction do
           @compra.xml_file = nil;
+          # Marca quem está excluindo para o log do trigger
+          @compra.update_column(:cod_funcionario, current_collaborator.cod_funcionario)
           if @compra.destroy
             redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Compra Excluída!"
           else

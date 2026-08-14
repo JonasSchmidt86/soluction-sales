@@ -219,10 +219,16 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
           puts "ESTORNANDO CONTA COD: #{conta.cod_contaspagrec} - COD VENDA: #{conta.venda.cod_venda}"
           # ver como vai cancelar a venda o que fazer com os lançamentos
           EstornarContaService.new(conta, current_collaborator, @caixa).call
-          @sale.update!(cancelada: true)          
         end
         conta.update!(ativo: false)
       end
+
+      # Cancela a venda e os itens para devolver estoque
+      if !@sale.cancelada
+        @sale.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
+        @sale.itensvenda.where(cancelado: [false, nil]).update_all(cancelado: true)
+      end
+
       if @sale.cancelada
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cancelada com sucesso!"
         return
@@ -231,6 +237,9 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       # Se a venda veio de um orçamento, atualiza o orçamento
       orcamento = Orcamento.find_by(cod_venda: @sale.cod_venda)
       orcamento.update(status: 'pendente', cod_venda: nil) if orcamento
+
+      # Marca quem está excluindo para o log do trigger
+      @sale.update_column(:cod_funcionario, current_collaborator.cod_funcionario)
 
       if @sale.destroy
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Excluida com sucesso!"
