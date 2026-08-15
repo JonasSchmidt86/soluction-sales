@@ -7,6 +7,11 @@ class CollaboratorsBackoffice::CommissionAssignmentsController < CollaboratorsBa
                                         .includes(:commission_rule)
                                         .order(start_date: :desc)
 
+    # Por padrão mostra apenas vigentes; com checkbox mostra todas
+    unless params[:mostrar_encerradas] == '1'
+      @assignments = @assignments.where(end_date: nil)
+    end
+
     if params[:cod_funcionario].present?
       @assignments = @assignments.where(cod_funcionario: params[:cod_funcionario])
     end
