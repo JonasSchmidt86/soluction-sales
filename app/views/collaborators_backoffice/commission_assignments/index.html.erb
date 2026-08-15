@@ -66,9 +66,15 @@
                     <%= link_to collaborators_backoffice_commission_assignment_path(assign),
                         method: :delete,
                         data: { confirm: 'Deseja encerrar esta atribuição?' },
-                        class: "btn btn-sm btn-outline-danger" do %>
+                        class: "btn btn-sm btn-outline-warning" do %>
                       <i class="fa fa-stop me-1"></i> Encerrar
                     <% end %>
+                  <% end %>
+                  <%= link_to collaborators_backoffice_commission_assignment_path(assign, force_delete: true),
+                      method: :delete,
+                      data: { confirm: 'Excluir permanentemente esta atribuição? Esta ação não pode ser desfeita.' },
+                      class: "btn btn-sm btn-outline-danger ms-1" do %>
+                    <i class="fa fa-trash"></i> Excluir
                   <% end %>
                 </td>
               </tr>

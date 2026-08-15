@@ -4,7 +4,6 @@ class CollaboratorsBackoffice::CommissionAssignmentsController < CollaboratorsBa
 
   def index
     @assignments = CommissionAssignment.where(cod_empresa: current_empresa_id)
-                                       .where(end_date: nil)
                                         .includes(:commission_rule)
                                         .order(start_date: :desc)
 
@@ -54,7 +53,20 @@ class CollaboratorsBackoffice::CommissionAssignmentsController < CollaboratorsBa
   end
 
   def destroy
-    if @assignment.end_date.nil?
+    # Verificar se há apurações vinculadas a esta atribuição
+    has_periods = CommissionPeriod
+      .where(cod_funcionario: @assignment.cod_funcionario, cod_empresa: @assignment.cod_empresa)
+      .where("start_date >= ?", @assignment.start_date)
+      .where("end_date <= ?", @assignment.end_date || Date.new(9999, 12, 31))
+      .exists?
+
+    if params[:force_delete] == 'true' || !has_periods
+      # Deletar de fato — sem apurações vinculadas ou exclusão forçada
+      @assignment.destroy
+      redirect_to collaborators_backoffice_commission_assignments_path,
+                  notice: 'Atribuição excluída com sucesso!'
+    elsif @assignment.end_date.nil?
+      # Encerrar normalmente (comportamento anterior)
       @assignment.update!(end_date: Date.today)
       redirect_to collaborators_backoffice_commission_assignments_path,
                   notice: 'Atribuição encerrada com sucesso!'
