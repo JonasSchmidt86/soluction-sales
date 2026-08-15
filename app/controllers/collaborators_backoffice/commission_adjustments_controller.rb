@@ -105,6 +105,7 @@ class CollaboratorsBackoffice::CommissionAdjustmentsController < CollaboratorsBa
   def funcionarios_da_empresa
     Funcionario.joins(:funcionarioempresas)
                .where(funcionarioempresa: { cod_empresa: current_empresa_id, ativo: true })
+               .where(ativo: true)
                .includes(:pessoa)
                .order(:usuario)
   end
