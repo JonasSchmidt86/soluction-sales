@@ -23,16 +23,25 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
           V_COD_COMPRA        BIGINT;
       BEGIN
 
-          -- Buscar cod_funcionario da compra para log
-          IF TG_OP = 'DELETE' THEN
-              V_COD_COMPRA = OLD.COD_COMPRA;
-          ELSE
-              V_COD_COMPRA = NEW.COD_COMPRA;
-          END IF;
+          -- Buscar cod_funcionario da sessão (quem está logado agora)
+          -- Fallback: se não tiver sessão, pega da compra
+          BEGIN
+              V_COD_FUNCIONARIO = NULLIF(current_setting('app.current_funcionario', true), '')::BIGINT;
+          EXCEPTION WHEN OTHERS THEN
+              V_COD_FUNCIONARIO = NULL;
+          END;
 
-          SELECT c.cod_funcionario INTO V_COD_FUNCIONARIO
-            FROM compra c
-           WHERE c.cod_compra = V_COD_COMPRA;
+          IF V_COD_FUNCIONARIO IS NULL THEN
+              IF TG_OP = 'DELETE' THEN
+                  V_COD_COMPRA = OLD.COD_COMPRA;
+              ELSE
+                  V_COD_COMPRA = NEW.COD_COMPRA;
+              END IF;
+
+              SELECT c.cod_funcionario INTO V_COD_FUNCIONARIO
+                FROM compra c
+               WHERE c.cod_compra = V_COD_COMPRA;
+          END IF;
 
           -- =====================
           -- DELETE
