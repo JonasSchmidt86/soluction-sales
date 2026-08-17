@@ -389,30 +389,111 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
     def destroy
       @compra = Compra.find(params[:id])
-    puts "PARAMETROS ---------- #{params}"
+      puts "PARAMETROS ---------- #{params}"
       unless @compra.blank?
 
-        xml = @compra.xml_file;
+        # === FASE 1: Compra ainda não cancelada — cancela com estorno ===
+        if !@compra.cancelada
+          ActiveRecord::Base.transaction do
+            # Verificar se há lançamentos em alguma conta
+            tem_lancamentos = @compra.contas.joins(:lancamentos).exists? ||
+                              (@compra.frete.present? && @compra.frete.contas.joins(:lancamentos).exists?)
 
-        unless xml.blank? 
-          xml.compra = nil
-          xml.save
-        end
-          
-        ActiveRecord::Base.transaction do
-          @compra.xml_file = nil;
-          # Marca quem está excluindo para o log do trigger
-          @compra.update_column(:cod_funcionario, current_collaborator.cod_funcionario)
-          if @compra.destroy
-            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Compra Excluída!"
-          else
-            raise ActiveRecord::Rollback, "Não foi possível Excluir a Compra!"
-            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Não foi possível Excluir a Compra!"
+            if tem_lancamentos
+              # Precisa de caixa aberto para estornar
+              @caixa = Caixa.where("cod_empresa = ? AND datafechamento IS NULL", current_collaborator.empresa.cod_empresa).first
+
+              if @caixa.nil?
+                redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                            notice: "Não foi possível cancelar a compra, caixa fechado!"
+                return
+              end
+
+              # Estornar lançamentos das contas da compra
+              @compra.contas.each do |conta|
+                if conta.lancamentos.present?
+                  EstornarContaService.new(conta, current_collaborator, @caixa).call
+                end
+                conta.update!(ativo: false)
+              end
+
+              # Estornar lançamentos das contas do frete
+              if @compra.frete.present?
+                @compra.frete.contas.each do |conta_frete|
+                  if conta_frete.lancamentos.present?
+                    EstornarContaService.new(conta_frete, current_collaborator, @caixa).call
+                  end
+                  conta_frete.update!(ativo: false)
+                end
+              end
+            else
+              # Sem lançamentos — apenas inativar contas
+              @compra.contas.update_all(ativo: false)
+              if @compra.frete.present?
+                @compra.frete.contas.update_all(ativo: false)
+              end
+            end
+
+            # Marcar compra como cancelada
+            @compra.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
+
+            # Marcar itens como cancelados — trigger devolve estoque
+            @compra.itenscompra.where(cancelado: [false, nil]).each do |item|
+              item.update_columns(cancelado: true)
+            end
+
+            # Marcar frete como inativo
+            if @compra.frete.present?
+              @compra.frete.update_columns(ativo: false)
+            end
+
+            # Desassociar XML
+            xml = @compra.xml_file
+            if xml.present?
+              xml.compra = nil
+              xml.save
+            end
           end
+
+          redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                      notice: "Compra cancelada com sucesso!"
+
+        # === FASE 2: Compra já cancelada — pode excluir se não teve lançamento ===
+        else
+          teve_lancamentos = @compra.contas.joins(:lancamentos).exists? ||
+                             (@compra.frete.present? && @compra.frete.contas.joins(:lancamentos).exists?)
+
+          if teve_lancamentos
+            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                        notice: "Compra cancelada mantida para auditoria (possui lançamentos no caixa)."
+            return
+          end
+
+          # Sem lançamentos — pode destruir de fato
+          ActiveRecord::Base.transaction do
+            xml = @compra.xml_file
+            if xml.present?
+              xml.compra = nil
+              xml.save
+            end
+
+            @compra.update_column(:cod_funcionario, current_collaborator.cod_funcionario)
+            @compra.destroy
+          end
+
+          redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                      notice: "Compra excluída com sucesso!"
         end
+
       else
-        redirect_to collaborators_backoffice_report_buy_path(request.query_parameters), notice: "Compra não encontrada!"
+        redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                    notice: "Compra não encontrada!"
       end
+
+    rescue => e
+      puts "ERRO AO CANCELAR/EXCLUIR COMPRA: #{e.message}"
+      redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                  notice: "Erro ao processar a compra: #{e.message}"
     end    
 
     private 
