@@ -19,7 +19,20 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
           VALORCOMPRA         NUMERIC(15,2);
           ITEMQUANTIDADE      NUMERIC(15,2);
           QTD_ANTES           NUMERIC(15,2);
+          V_COD_FUNCIONARIO   BIGINT;
+          V_COD_COMPRA        BIGINT;
       BEGIN
+
+          -- Buscar cod_funcionario da compra para log
+          IF TG_OP = 'DELETE' THEN
+              V_COD_COMPRA = OLD.COD_COMPRA;
+          ELSE
+              V_COD_COMPRA = NEW.COD_COMPRA;
+          END IF;
+
+          SELECT c.cod_funcionario INTO V_COD_FUNCIONARIO
+            FROM compra c
+           WHERE c.cod_compra = V_COD_COMPRA;
 
           -- =====================
           -- DELETE
@@ -30,11 +43,11 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
               IF OLD.cancelado = TRUE THEN
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
-                      cod_referencia, cod_item, custofinal, usuario, observacao)
+                      cod_referencia, cod_item, custofinal, usuario, cod_funcionario, observacao)
                   VALUES (
                       OLD.COD_EMPRESA, OLD.COD_PRODUTO, OLD.COD_COR, 'DELETE', 'COMPRA',
                       0, 0, 0,
-                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user,
+                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user, V_COD_FUNCIONARIO,
                       'Delete item compra ja cancelado - estoque nao alterado'
                   );
                   RETURN OLD;
@@ -65,11 +78,11 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
 
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
-                      cod_referencia, cod_item, custofinal, usuario, observacao)
+                      cod_referencia, cod_item, custofinal, usuario, cod_funcionario, observacao)
                   VALUES (
                       OLD.COD_EMPRESA, OLD.COD_PRODUTO, OLD.COD_COR, 'DELETE', 'COMPRA',
                       QTD_ANTES, (0 - OLD.QUANTIDADE), (QTD_ANTES - OLD.QUANTIDADE),
-                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user,
+                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user, V_COD_FUNCIONARIO,
                       'Delete item compra'
                   );
               ELSE
@@ -84,11 +97,11 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
 
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
-                      cod_referencia, cod_item, custofinal, usuario, observacao)
+                      cod_referencia, cod_item, custofinal, usuario, cod_funcionario, observacao)
                   VALUES (
                       OLD.COD_EMPRESA, OLD.COD_PRODUTO, OLD.COD_COR, 'DELETE', 'COMPRA',
                       0, (0 - OLD.QUANTIDADE), (0 - OLD.QUANTIDADE),
-                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user,
+                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user, V_COD_FUNCIONARIO,
                       'Delete item compra - produto novo criado com qtd negativa'
                   );
               END IF;
@@ -126,11 +139,11 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
 
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
-                      cod_referencia, cod_item, custofinal, usuario, observacao)
+                      cod_referencia, cod_item, custofinal, usuario, cod_funcionario, observacao)
                   VALUES (
                       OLD.COD_EMPRESA, OLD.COD_PRODUTO, OLD.COD_COR, 'CANCELAMENTO', 'COMPRA',
                       QTD_ANTES, (0 - OLD.QUANTIDADE), (QTD_ANTES - OLD.QUANTIDADE),
-                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user,
+                      OLD.COD_COMPRA, OLD.COD_ITEM, NULL, current_user, V_COD_FUNCIONARIO,
                       'Cancelamento item compra - estoque devolvido'
                   );
               END IF;
@@ -259,11 +272,11 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
               -- Log
               INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                   quantidade_antes, quantidade_movida, quantidade_depois,
-                  cod_referencia, cod_item, custofinal, usuario, observacao)
+                  cod_referencia, cod_item, custofinal, usuario, cod_funcionario, observacao)
               VALUES (
                   NEW.COD_EMPRESA, NEW.COD_PRODUTO, NEW.COD_COR, TG_OP, 'COMPRA',
                   QTD_ANTES, ITEMQUANTIDADE, (QTD_ANTES + ITEMQUANTIDADE),
-                  NEW.COD_COMPRA, NEW.COD_ITEM, CUSTOFINAL, current_user,
+                  NEW.COD_COMPRA, NEW.COD_ITEM, CUSTOFINAL, current_user, V_COD_FUNCIONARIO,
                   CASE TG_OP
                       WHEN 'INSERT' THEN 'Novo item compra'
                       WHEN 'UPDATE' THEN 'Alteracao item compra (diff: ' || ITEMQUANTIDADE || ')'
@@ -279,6 +292,6 @@ class UpdateTgrfEstoquecompraCancelado < ActiveRecord::Migration[7.1]
   end
 
   def down
-    # Rollback para versão anterior sem tratamento de cancelado
+    # Rollback para versão anterior sem cod_funcionario
   end
 end
