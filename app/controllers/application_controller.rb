@@ -18,6 +18,9 @@ class ApplicationController < ActionController::Base
      # Seta o cod_funcionario logado na sessão do PostgreSQL
      # para que triggers possam saber quem está operando
      def set_pg_current_user
+       # Marca a origem como WEB para os triggers de auditoria (estoque_logs)
+       ActiveRecord::Base.connection.execute("SET LOCAL app.origem = 'WEB'")
+
        if defined?(current_collaborator) && current_collaborator.present?
          ActiveRecord::Base.connection.execute(
            "SET LOCAL app.current_funcionario = '#{current_collaborator.cod_funcionario}'"

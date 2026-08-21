@@ -442,6 +442,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
     t.string "observacao", limit: 255
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "cod_funcionario"
+    t.string "origem_sistema", limit: 15
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
     t.index ["created_at"], name: "idx_estoque_logs_data"
     t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"
