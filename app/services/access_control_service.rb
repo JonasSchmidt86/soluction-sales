@@ -37,7 +37,6 @@ class AccessControlService
     commission_assignments
     commission_periods
     commission_adjustments
-    report_custom_reports
   ].freeze
 
   def initialize(collaborator)
@@ -157,6 +156,7 @@ class AccessControlService
   end
 
   # Verifica se é super admin (nivel 1 E cod_funcionario == 1)
+  # Apensa o Jonas
   def super_admin?
     @permissao_nivel == 1 && @cod_funcionario == 1
   end
