@@ -2,6 +2,7 @@ class CollaboratorsBackofficeController < ApplicationController
 
     before_action :authenticate_collaborator!
     before_action :authorize_resource!
+    before_action :set_origem_sistema
     #before_action :verificar_horario_comercial
     layout 'collaborators_backoffice'
 
@@ -26,6 +27,18 @@ class CollaboratorsBackofficeController < ApplicationController
     helper_method :access_control
 
     private
+
+    # Informa ao PostgreSQL o funcionario logado e a origem (WEB)
+    # As triggers de estoque leem current_setting('app.current_funcionario') e current_setting('app.origem_sistema')
+    def set_origem_sistema
+      return unless current_collaborator
+
+      cod_func = current_collaborator.cod_funcionario
+      ActiveRecord::Base.connection.execute("SET app.current_funcionario = '#{cod_func}'")
+      ActiveRecord::Base.connection.execute("SET app.origem_sistema = 'WEB'")
+    rescue => e
+      Rails.logger.warn "[OrigemSistema] Falha ao setar variavel de sessao: #{e.message}"
+    end
 
     # Mapeamento de controller_name → resource do controle de acesso
     CONTROLLER_RESOURCE_MAP = {
