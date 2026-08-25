@@ -82,6 +82,19 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
 
           # Executa
           @results = ActiveRecord::Base.connection.exec_query(sql)
+          
+          @results = ActiveRecord::Result.new(
+            @results.columns,
+            @results.rows.map do |row|
+              row.map do |value|
+                if value.is_a?(Time) || value.is_a?(DateTime)
+                  value.in_time_zone("America/Sao_Paulo")
+                else
+                  value
+                end
+              end
+            end
+          )
 
         rescue => e
           @error = "Erro: #{e.message}"
