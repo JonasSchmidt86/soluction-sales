@@ -80,21 +80,23 @@ class CollaboratorsBackoffice::Report::CustomReportsController  < CollaboratorsB
             raise "Apenas SELECTs são permitidos." unless sql.strip.downcase.start_with?("select")
           end
 
-          # Executa
-          @results = ActiveRecord::Base.connection.exec_query(sql)
-          
-          @results = ActiveRecord::Result.new(
-            @results.columns,
-            @results.rows.map do |row|
-              row.map do |value|
-                if value.is_a?(Time) || value.is_a?(DateTime)
-                  value.in_time_zone("America/Sao_Paulo")
-                else
-                  value
-                end
+        # Executa
+        @results = ActiveRecord::Base.connection.exec_query(sql)
+
+        @results = ActiveRecord::Result.new(
+          @results.columns,
+          @results.rows.map do |row|
+            row.map do |value|
+              if value.is_a?(Time)
+                value.in_time_zone("UTC").in_time_zone("America/Sao_Paulo")
+              elsif value.is_a?(DateTime)
+                value.in_time_zone("UTC").in_time_zone("America/Sao_Paulo")
+              else
+                value
               end
             end
-          )
+          end
+        )
 
         rescue => e
           @error = "Erro: #{e.message}"
