@@ -15,18 +15,27 @@
             <th style="text-align: center;">Data</th>
             <th style="text-align: center;">Validade</th>
             <th style="text-align: center;">Valor Total</th>
+            <th style="text-align: center;">Acessos</th>
             <th style="width: 100px;">Status</th>
+            <th style="text-align: center;">Link</th>
             <th style="text-align: center;">Ações</th>
           </tr>
         </thead>
         <tbody>
           <% @orcamentos.each do |orcamento| %>
+            <% cliente_link = orcamento_publico_url(orcamento, nome_cliente: orcamento.pessoa.nome.to_s.parameterize) %>
+            <% mensagem_orcamento = "Olá! Aqui está o link do orçamento: #{cliente_link}" %>
+            <% mensagem_orcamento += "\nSenha de acesso: #{orcamento.senha_publica}" if orcamento.link_requer_senha? %>
+            <% whatsapp_text = CGI.escape(mensagem_orcamento) %>
             <tr>
               <td class="col-acoes" style="text-align: center;"><%= orcamento.cod_orcamento %></td>
               <td><%= orcamento.pessoa.nome %></td>
               <td class="col-acoes"><%= l(orcamento.data_orcamento, format: :default) %></td>
               <td class="col-acoes"><%= orcamento.data_validade ? l(orcamento.data_validade) : '-' %></td>
               <td class="col-acoes"><%= "R$ #{number_to_currency(orcamento.valortotal, separator: ",", delimiter: "", unit:"")}" %></td>
+              <td class="col-acoes text-center">
+                <span class="badge bg-primary rounded-pill"><%= orcamento.views_count.to_i %></span>
+              </td>
               <td>
                 <% case orcamento.status %>
                 <% when 'pendente' %>
@@ -37,6 +46,20 @@
                   <span class="badge bg-info">Convertido</span>
                 <% when 'rejeitado' %>
                   <span class="badge bg-danger">Rejeitado</span>
+                <% end %>
+              </td>
+              <td class="col-acoes">
+                <% if orcamento.tem_fotos? && orcamento.link_publico_disponivel? %>
+                  <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm copy-client-link" data-link="<%= cliente_link %>" title="Copiar link">
+                      <i class="fa fa-copy"></i>
+                    </button>
+                    <a href="https://wa.me/?text=<%= whatsapp_text %>" target="_blank" rel="noopener" class="btn btn-success btn-sm" title="Enviar por WhatsApp">
+                      <i class="fa fa-whatsapp"></i>
+                    </a>
+                  </div>
+                <% else %>
+                  <span class="text-muted small">Sem link</span>
                 <% end %>
               </td>
               <td class="col-acoes">
@@ -88,9 +111,32 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     $('#orcamentos-table').DataTable({
-      "paging": false,  // Desabilita a paginação
-      "searching": false, // Permite a pesquisa na tabela (opcional)
-      "ordering": true,  // Habilita ordenação nas colunas (opcional)
-      "info": false}); // Habilita ordenação nas colunas (opcional)
+      "paging": false,
+      "searching": false,
+      "ordering": true,
+      "info": false
+    });
+
+    document.querySelectorAll('.copy-client-link').forEach(function(button) {
+      button.addEventListener('click', async function() {
+        const link = button.dataset.link;
+
+        try {
+          await navigator.clipboard.writeText(link);
+          const originalHtml = button.innerHTML;
+          button.classList.remove('btn-outline-secondary');
+          button.classList.add('btn-success');
+          button.innerHTML = '<i class="fa fa-check"></i>';
+
+          setTimeout(function() {
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+            button.innerHTML = originalHtml;
+          }, 1200);
+        } catch (error) {
+          window.prompt('Copie o link do cliente:', link);
+        }
+      });
+    });
   });
 </script>

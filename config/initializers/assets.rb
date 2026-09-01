@@ -14,7 +14,7 @@ Rails.application.config.assets.paths << Rails.root.join('node_modules')
 # Rails.application.config.assets.precompile += %w( admin.js admin.css )
 
 # coisas que estao na pasta /app/assets
-Rails.application.config.assets.precompile += %w( collaborators_backoffice.css collaborators_backoffice.js )
+Rails.application.config.assets.precompile += %w( collaborators_backoffice.css collaborators_backoffice.js orcamento_editor.js )
 
 # /lib/assets
 Rails.application.config.assets.precompile += %w( style.css scripts.js)

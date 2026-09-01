@@ -3,6 +3,64 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   before_action :set_produto, only: [:create]
   before_action :set_produto_imagem, only: [:destroy, :update_ordem, :toggle_principal]
   
+  # POST — salva foto do orçamento na biblioteca do produto
+  def salvar_da_orcamento
+    produto = Produto.find(params[:cod_produto])
+    cor     = Core.find(params[:cod_cor])
+    arquivo = params[:foto]
+
+    return render json: { success: false, error: 'Parâmetros inválidos' }, status: :bad_request unless produto && cor && arquivo
+
+    imagem_minimagick = MiniMagick::Image.read(arquivo.tempfile)
+    imagem_minimagick.resize "1920x1080"
+
+    nome_base = produto.nome.split(' ')[0..1].join(' ')
+    extensao  = File.extname(arquivo.original_filename).downcase
+    nome_arquivo = "#{nome_base}_#{File.basename(arquivo.original_filename, extensao)}.jpeg"
+
+    produto_imagem = ProdutoImagem.new(produto: produto, cor: cor)
+    produto_imagem.imagem.attach(
+      io: StringIO.new(imagem_minimagick.to_blob),
+      filename: nome_arquivo,
+      content_type: 'image/jpeg'
+    )
+
+    if produto_imagem.save
+      render json: { success: true }
+    else
+      render json: { success: false, error: produto_imagem.errors.full_messages.join(', ') }, status: :unprocessable_entity
+    end
+  end
+
+  # GET para o modal da biblioteca no editor de orçamento
+  def biblioteca
+    @produto_imagens = ProdutoImagem
+      .joins(:imagem_attachment => :blob)
+      .where(active_storage_blobs: { service_name: "produtos_storage" })
+      .includes(:produto)
+
+    if params[:term].present?
+      @produto_imagens = @produto_imagens
+        .joins(:produto)
+        .where("produto.nome ILIKE :q", q: "%#{params[:term].strip}%")
+    end
+
+    @produto_imagens = @produto_imagens.order(:cod_produto).page(params[:page]).per(24)
+
+    # Filtrar apenas os que têm arquivo físico no disco
+    @produto_imagens = @produto_imagens.select do |img|
+      begin
+        blob = img.imagem.blob
+        path = blob.service.send(:path_for, blob.key)
+        File.exist?(path)
+      rescue
+        false
+      end
+    end
+
+    render partial: "biblioteca_modal", locals: { produto_imagens: @produto_imagens }
+  end
+
   def index
     @produto_imagens = ProdutoImagem.distinct.joins(:produto)
 

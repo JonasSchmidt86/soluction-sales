@@ -1,0 +1,25 @@
+<% f = tema.estilos_footer(orcamento) %>
+<% linha_footer = f[:line_color] || "rgba(255,255,255,0.35)" %>
+<% texto_mutado = f[:muted_color] || "rgba(255,255,255,0.8)" %>
+<div class="orcamento-footer"
+     style="background:<%= f[:background] %>; color:<%= f[:color] %>; padding:<%= f[:padding] %>; font-size:.72rem; <%= "border-top:#{f[:border_top]};" if f[:border_top] %>; box-sizing:border-box;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; text-align:left;">
+    <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; color:<%= texto_mutado %>;">
+      <div style="font-weight:700; letter-spacing:.04em; text-transform:uppercase;"><%= orcamento.empresa.pessoa.apelido.presence || orcamento.empresa.pessoa.nome.presence || "Loja" %></div>
+      <span style="display:inline-block; width:1px; height:12px; background:<%= linha_footer %>;"></span>
+      <span>Orçamento <%= orcamento.cod_orcamento %></span>
+    </div>
+    <% tel = orcamento.empresa.pessoa.telefone.presence || orcamento.empresa.pessoa.celular.presence %>
+    <% celular = orcamento.empresa.pessoa.celular.presence || orcamento.empresa.pessoa.telefone.presence %>
+    <% if tel.present? || celular.present? %>
+      <div style="color:<%= texto_mutado %>; text-align:right;">
+        <% if tel.present? %>
+          <div><span style="font-weight:700;">Telefone:</span> <%= tel %></div>
+        <% end %>
+        <% if celular.present? && celular != tel %>
+          <div><span style="font-weight:700;">Celular:</span> <%= celular %></div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -103,10 +103,11 @@
           <% end %>
         </tbody>
         <tfoot>
+          <% subtotal = @itens.sum(&:valor_total) %>
           <tr>
             <th colspan="6" class="text-end">Subtotal:</th>
             <th colspan="2" class="text-end">
-              <%= number_to_currency(@orcamento.valortotal - @orcamento.acrescimo + @orcamento.desconto) %>
+              <%= number_to_currency(subtotal) %>
             </th>
           </tr>
           <% if @orcamento.desconto > 0 %>
@@ -128,7 +129,53 @@
         </tfoot>
       </table>
     </div>
+    <div class="card border-info mt-4">
+      <div class="card-header bg-info-subtle text-dark">
+        <strong>Analytics do orçamento público</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Visualizações</div>
+              <div class="fs-4 fw-bold mt-2"><%= @orcamento.views_count.to_i %></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Tempo total</div>
+              <div class="fs-4 fw-bold mt-2"><%= OrcamentoAnalyticsService.format_duration(@orcamento.total_view_seconds.to_i) %></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Primeira visualização</div>
+              <div class="mt-2"><%= @orcamento.first_viewed_at ? l(@orcamento.first_viewed_at, format: :short) : '—' %></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Última visualização</div>
+              <div class="mt-2"><%= @orcamento.last_viewed_at ? l(@orcamento.last_viewed_at, format: :short) : '—' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- RODAPÉ DE AÇÕES -->
+    <% cliente_link = orcamento_publico_url(@orcamento, nome_cliente: @orcamento.pessoa.nome.to_s.parameterize) %>
+    <div class="alert alert-info mt-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <strong>Link do cliente:</strong>
+          <div class="mt-1"><%= cliente_link %></div>
+        </div>
+        <div class="text-end">
+          <strong>Proteção:</strong>
+          <div class="fw-bold">Últimos 4 dígitos do celular</div>
+        </div>
+      </div>
+    </div>
     <div class="acoes-footer mt-5 d-flex justify-content-end gap-3">
       <!-- IMPRIMIR -->
       <%= link_to '#',
@@ -146,6 +193,12 @@
         title: 'Converter em venda' do %>
           <i class="fa fa-check me-2"></i> Converter em venda
         <% end %>
+      <% end %>
+      <!-- EDITOR VISUAL -->
+      <%= link_to collaborators_backoffice_orcamento_editor_path(@orcamento),
+      class: 'btn btn-primary btn-md btn-acao-footer',
+      title: 'Editor Visual' do %>
+        <i class="fa fa-palette me-2"></i> Editor Visual
       <% end %>
       <!-- EDITAR -->
       <% unless @orcamento.convertido? %>

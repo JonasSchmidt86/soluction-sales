@@ -1,0 +1,26 @@
+<style>
+  .orcamento-tema-executivo .orcamento-header {
+    position: relative;
+    overflow: hidden;
+  }
+  .orcamento-tema-executivo .orcamento-header::after {
+    content: "";
+    position: absolute;
+    top: -30%; right: -10%;
+    width: 40%; height: 160%;
+    background: rgba(255,255,255,.03);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .orcamento-tema-executivo .orcamento-header h1 {
+    font-weight: 300;
+    letter-spacing: .1em;
+  }
+  .orcamento-tema-executivo .orcamento-produto-foto {
+    border-radius: 6px !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,.08);
+  }
+  .orcamento-tema-executivo .orcamento-produto h3 { font-weight: 600; color: #222; }
+  .orcamento-tema-executivo .orcamento-totais { border-top: 1px solid #eaeaea; background: transparent; }
+  .orcamento-tema-executivo .orcamento-titulo h2 { color: <%= orcamento.cor_destaque %>; }
+</style>

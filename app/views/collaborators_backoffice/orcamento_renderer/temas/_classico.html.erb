@@ -1,0 +1,25 @@
+<style>
+  .orcamento-tema-classico .orcamento-header {
+    border-bottom: 1px solid #e8e8e8;
+  }
+  .orcamento-tema-classico .orcamento-header h1 {
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: <%= orcamento.cor_primaria %>;
+  }
+  .orcamento-tema-classico .orcamento-produto {
+    border-left: 3px solid <%= orcamento.cor_destaque %> !important;
+    background: #f9fafb !important;
+    border-radius: 4px !important;
+    padding: 1.5rem !important;
+  }
+  .orcamento-tema-classico .orcamento-produto-foto {
+    border-radius: 4px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .orcamento-tema-classico .orcamento-produto h3 {
+    color: <%= orcamento.cor_primaria %>;
+    font-weight: 600;
+  }
+  .orcamento-tema-classico .orcamento-totais { background: #f9fafb; border-top: 1px solid #eee; }
+</style>

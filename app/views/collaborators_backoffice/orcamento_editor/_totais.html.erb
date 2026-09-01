@@ -1,0 +1,22 @@
+<% itens_fresh = orcamento.itens_orcamentos.reload %>
+<% subtotal = itens_fresh.sum(&:valor_total) %>
+<% desconto = orcamento.desconto || 0 %>
+<% acrescimo = orcamento.acrescimo || 0 %>
+<% total = subtotal - desconto + acrescimo %>
+
+<div class="border-top bg-white px-4 py-3">
+  <div class="d-flex justify-content-between small text-muted mb-1">
+    <span>Subtotal (<%= itens_fresh.count %> itens)</span>
+    <span><%= number_to_currency(subtotal, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+  </div>
+  <% if desconto > 0 %>
+    <div class="d-flex justify-content-between small text-danger mb-1">
+      <span>Desconto</span>
+      <span>- <%= number_to_currency(desconto, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+    </div>
+  <% end %>
+  <div class="d-flex justify-content-between fw-bold mt-1 pt-2 border-top" style="font-size:1.1rem;">
+    <span>Total</span>
+    <span class="text-success"><%= number_to_currency(total, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<% doc = tema.estilos_documento(orcamento) %>
+
+<div class="orcamento-documento orcamento-tema-<%= tema.name %>"
+     style="font-family:<%= doc[:font_family] %>; line-height:<%= doc[:line_height] %>; background:<%= doc[:background] %>; color:<%= doc[:color] %>; -webkit-font-smoothing:antialiased;">
+
+  <%= render "collaborators_backoffice/orcamento_renderer/temas/#{tema.name}", orcamento: orcamento, tema: tema %>
+
+  <%= render "collaborators_backoffice/orcamento_renderer/header", orcamento: orcamento, tema: tema %>
+
+  <% if orcamento.titulo.present? %>
+    <div class="orcamento-titulo" style="padding:1.8rem 2.5rem .6rem;">
+      <h2 style="font-size:1.05rem; font-weight:600; color:<%= orcamento.cor_destaque %>; margin:0; letter-spacing:-.01em;"><%= orcamento.titulo %></h2>
+    </div>
+  <% end %>
+
+  <div class="orcamento-produtos" style="padding:1.2rem 2.5rem 2rem;">
+    <% if itens.any? %>
+      <% itens.each do |item| %>
+        <%= render "collaborators_backoffice/orcamento_renderer/produto", item: item, orcamento: orcamento, tema: tema %>
+      <% end %>
+    <% else %>
+      <div style="text-align:center; padding:4rem 1rem; color:rgba(128,128,128,.4); font-size:.88rem;">
+        <svg width="48" height="48" fill="currentColor" opacity=".3" viewBox="0 0 16 16" style="display:block;margin:0 auto .8rem;"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6z"/></svg>
+        Adicione produtos para visualizar a proposta
+      </div>
+    <% end %>
+  </div>
+
+  <% if itens.any? %>
+    <%= render "collaborators_backoffice/orcamento_renderer/totais", orcamento: orcamento, itens: itens, tema: tema %>
+  <% end %>
+
+  <%= render "collaborators_backoffice/orcamento_renderer/observacoes", orcamento: orcamento %>
+
+  <%= render "collaborators_backoffice/orcamento_renderer/footer", orcamento: orcamento, tema: tema %>
+</div>

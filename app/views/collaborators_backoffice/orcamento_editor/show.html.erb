@@ -1,0 +1,246 @@
+<% content_for :page_title, "Editor — Orçamento ##{@orcamento.cod_orcamento}" %>
+<div id="orcamento-editor"
+     data-orcamento-id="<%= @orcamento.cod_orcamento %>"
+     data-auto-save-url="<%= auto_save_collaborators_backoffice_orcamento_editor_path(@orcamento) %>"
+     data-trocar-tema-url="<%= trocar_tema_collaborators_backoffice_orcamento_editor_path(@orcamento) %>"
+     data-itens-url="<%= collaborators_backoffice_orcamento_itens_path(@orcamento) %>"
+     data-reordenar-url="<%= reordenar_collaborators_backoffice_orcamento_itens_path(@orcamento) %>"
+     data-salvar-link-url="<%= salvar_link_collaborators_backoffice_orcamento_editor_path(@orcamento) %>"
+     data-csrf="<%= form_authenticity_token %>">
+  <%# ── Toolbar ── %>
+  <div class="editor-toolbar border-bottom bg-white px-3 py-2 d-flex align-items-center gap-3"
+       style="position:sticky; top:0; z-index:100; box-shadow:0 1px 3px rgba(0,0,0,.05);">
+    <%= link_to collaborators_backoffice_orcamento_path(@orcamento), class: "btn btn-sm btn-outline-secondary" do %>
+      <i class="fa fa-arrow-left"></i>
+    <% end %>
+    <div class="d-flex align-items-center gap-2">
+      <strong style="font-size:.85rem;">Orçamento #<%= @orcamento.cod_orcamento %></strong>
+      <span class="text-muted" style="font-size:.75rem;">· <%= @orcamento.pessoa.nome %></span>
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <%# Seletor de tema %>
+      <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">Tema</span>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle py-0 px-2"
+                  type="button" data-bs-toggle="dropdown" style="font-size:.8rem;">
+            <%= @orcamento.tema.capitalize %>
+          </button>
+          <ul class="dropdown-menu shadow-sm" style="font-size:.8rem;">
+            <% cores_tema = { "premium" => "#8b7355", "classico" => "#3498db", "executivo" => "#c9a96e" } %>
+            <% Orcamento::TEMAS.each do |t| %>
+              <li>
+                <button class="dropdown-item d-flex align-items-center gap-2 <%= 'active' if @orcamento.tema == t %>"
+                        onclick="editorTrocarTema('<%= t %>')">
+                  <span class="rounded-circle" style="width:10px;height:10px;display:inline-block;background:<%= cores_tema[t] %>;"></span>
+                  <%= t.capitalize %>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+      <%# Compartilhamento do link %>
+      <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCompartilhar" title="Opções do link público">
+        <i class="fa fa-share-nodes me-1"></i>Compartilhar
+      </button>
+      <%# Toggle desktop/mobile %>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary active" id="btn-desktop" onclick="editorToggleDevice('desktop')">
+          <i class="fa fa-desktop"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" id="btn-mobile" onclick="editorToggleDevice('mobile')">
+          <i class="fa fa-mobile"></i>
+        </button>
+      </div>
+      <%# Indicador de save %>
+      <span class="text-success small" id="save-indicator" style="font-size:.72rem;">
+        <i class="fa fa-check-circle me-1"></i>Salvo
+      </span>
+    </div>
+  </div>
+  <%# ── Preview ── %>
+  <div class="d-flex justify-content-center py-4 px-3" style="background:#f0f2f5; min-height:calc(100vh - 56px);">
+    <div id="preview-frame" class="preview-desktop">
+      <%# Documento com itens editáveis inline %>
+      <div id="preview-documento">
+        <%= render "collaborators_backoffice/orcamento_editor/documento_inline",
+                   orcamento: @orcamento, renderer: @renderer %>
+      </div>
+      <%# Campos da proposta (auto-save) %>
+      <div class="px-4 py-3 border-top bg-white">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small text-muted mb-1">Título</label>
+            <input type="text" id="campo-titulo" value="<%= @orcamento.titulo %>"
+                   class="form-control form-control-sm"
+                   placeholder="Ex: Proposta sala de estar"
+                   oninput="editorAutoSave()">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Validade</label>
+            <input type="text" id="campo-validade"
+                   value="<%= @orcamento.data_validade&.strftime('%d/%m/%Y') %>"
+                   class="form-control form-control-sm datepicker"
+                   onchange="editorAutoSave()">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Desconto (R$)</label>
+            <input type="text" id="campo-desconto"
+                   value="<%= number_with_precision(@orcamento.desconto.to_f, precision: 2, separator: ',', delimiter: '.') %>"
+                   class="form-control form-control-sm money2"
+                   onchange="editorAutoSave()">
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-muted mb-1">Observações</label>
+            <textarea id="campo-observacoes" class="form-control form-control-sm" rows="2"
+                      oninput="editorAutoSave()"><%= @orcamento.observacoes %></textarea>
+          </div>
+        </div>
+      </div>
+      <%# Totais do editor %>
+      <div id="editor-totais">
+        <%= render "collaborators_backoffice/orcamento_editor/totais", orcamento: @orcamento %>
+      </div>
+    </div>
+  </div>
+</div>
+<%# Modal biblioteca de imagens do produto %>
+<div class="modal fade" id="modalBiblioteca" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Imagens do Produto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modal-biblioteca-body">
+        <p class="text-muted text-center">Carregando...</p>
+      </div>
+    </div>
+  </div>
+</div>
+<%# Modal confirmação salvar na biblioteca %>
+<div class="modal fade" id="modalSalvarBiblioteca" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-images me-2"></i>Salvar na biblioteca?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Esta foto está vinculada a um produto. Deseja salvá-la também na biblioteca de imagens do produto para uso futuro?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="btn-nao-salvar-biblioteca">Não, só no orçamento</button>
+        <button type="button" class="btn btn-primary" id="btn-sim-salvar-biblioteca">
+          <i class="fa fa-images me-1"></i> Sim, salvar na biblioteca
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<%# Modal opções do link público %>
+<div class="modal fade" id="modalCompartilhar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content"
+         data-sugestao-senha="<%= @orcamento.sugestao_senha %>"
+         data-link-protegido="<%= @orcamento.link_protegido? %>"
+         data-senha-atual="<%= @orcamento.senha_publica_customizada %>"
+         data-validade-atual="<%= @orcamento.opcao_validade_atual %>">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-share-nodes me-2"></i>Opções do link</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <%# Proteção por senha %>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="link-protegido">
+          <label class="form-check-label" for="link-protegido">Proteger com senha</label>
+        </div>
+        <div id="bloco-senha" class="mb-3" style="display:none;">
+          <label class="form-label small text-muted mb-1">Senha (4 dígitos)</label>
+          <input type="text" id="link-senha" class="form-control" maxlength="4" inputmode="numeric"
+                 placeholder="0000" style="letter-spacing:.3em; text-align:center; max-width:160px;">
+          <div class="form-text">Sugestão: os 4 últimos dígitos do telefone do cliente. Você pode alterar.</div>
+        </div>
+        <%# Validade do link %>
+        <div class="mb-2">
+          <label class="form-label small text-muted mb-1">Validade do link</label>
+          <select id="link-validade" class="form-select form-select-sm" style="max-width:280px;">
+            <option value="24h">24 horas</option>
+            <option value="48h">48 horas</option>
+            <option value="7d">7 dias</option>
+            <option value="orcamento">Até a validade do orçamento</option>
+          </select>
+          <div class="form-text">Após esse prazo o link deixa de abrir.</div>
+        </div>
+        <div id="link-feedback" class="small mt-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-success" id="btn-salvar-link">
+          <i class="fa fa-check me-1"></i> Salvar opções
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .preview-desktop {
+    width: 210mm;
+    max-width: 100%;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: width .3s ease;
+  }
+  .preview-mobile {
+    width: 375px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: width .3s ease;
+    border: 8px solid #1a1a1a;
+  }
+  .preview-mobile .orcamento-produto { flex-direction: column !important; }
+  .preview-mobile .orcamento-produto-foto { width: 100% !important; height: auto !important; aspect-ratio: 16/10; }
+
+  .item-editavel { position: relative; cursor: grab; }
+  .item-editavel:hover { outline: 2px dashed rgba(0,0,0,.08); outline-offset: 4px; border-radius: 8px; }
+  .item-controles {
+    opacity: 0; transition: opacity .15s;
+    position: absolute; top: .5rem; right: .5rem;
+    display: flex; gap: .25rem;
+  }
+  .item-editavel:hover .item-controles { opacity: 1; }
+
+  .input-inline {
+    background: transparent; border: none;
+    border-bottom: 1px dashed transparent;
+    padding: 0; margin: 0; font: inherit; color: inherit;
+    width: 100%; outline: none;
+  }
+  .input-inline:hover { border-bottom-color: rgba(0,0,0,.15); }
+  .input-inline:focus { border-bottom-color: #3498db; border-bottom-style: solid; }
+
+  .textarea-inline {
+    background: transparent; border: none;
+    border-bottom: 1px dashed transparent;
+    padding: 0; margin: 0; font: inherit; color: inherit;
+    width: 100%; resize: none; outline: none; overflow: hidden;
+  }
+  .textarea-inline:hover { border-bottom-color: rgba(0,0,0,.15); }
+  .textarea-inline:focus { border-bottom-color: #3498db; border-bottom-style: solid; }
+
+  .foto-overlay {
+    display: none; position: absolute; inset: 0;
+    background: rgba(0,0,0,.6); border-radius: 6px;
+    flex-direction: column; align-items: center; justify-content: center; gap: .6rem;
+  }
+  .foto-wrapper:hover .foto-overlay { display: flex; }
+
+  .dragging { opacity: .4; }
+</style>
+<%= javascript_include_tag 'orcamento_editor' %>

@@ -1,0 +1,38 @@
+<% p_styles = tema.estilos_produto(orcamento) %>
+<% foto_principal = item.foto_principal %>
+<% foto_esquerda = foto_principal ? foto_principal.posicao_foto == "left" : true %>
+<% tamanho_foto = foto_principal&.tamanho_foto || "medium" %>
+<% largura_foto = tema.dimensoes_foto[tamanho_foto] || "180px" %>
+
+<div class="orcamento-produto"
+     style="display:flex; gap:1.8rem; margin-bottom:<%= p_styles[:margin_bottom] %>; padding:<%= p_styles[:padding] %>; background:<%= p_styles[:background] %>; border:<%= p_styles[:border] %>; border-radius:<%= p_styles[:border_radius] %>; flex-direction:<%= foto_esquerda ? 'row' : 'row-reverse' %>; align-items:flex-start; <%= "border-bottom:#{p_styles[:border_bottom]};" if p_styles[:border_bottom] %> <%= "border-left:#{p_styles[:border_left]};" if p_styles[:border_left] %>">
+
+  <div class="orcamento-produto-foto"
+       style="flex-shrink:0; width:<%= largura_foto %>; height:<%= largura_foto %>; border-radius:6px; overflow:hidden; background:#f5f5f5;">
+    <% foto_src = foto_principal&.url_exibicao %>
+    <% if foto_src %>
+      <img src="<%= foto_src %>" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">
+    <% else %>
+      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.15;">
+        <svg width="36" height="36" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>
+      </div>
+    <% end %>
+  </div>
+
+  <div style="flex:1; min-width:0; padding-top:.2rem;">
+    <h3 style="font-size:.88rem; font-weight:600; margin:0 0 .4rem; letter-spacing:.01em;">
+      <%= item.nome_produto_livre.presence || item.produto&.nome %>
+    </h3>
+    <% if item.descricao_item.present? %>
+      <p style="font-size:.78rem; margin:0 0 .9rem; white-space:pre-wrap; line-height:1.6;"><%= item.descricao_item %></p>
+    <% end %>
+    <div style="display:flex; align-items:baseline; gap:.4rem; flex-wrap:wrap;">
+      <span style="font-size:1.1rem; font-weight:600; color:<%= orcamento.cor_destaque %>; letter-spacing:-.01em;">
+        <%= number_to_currency(item.valorunitario, unit: "R$ ", separator: ",", delimiter: ".") %>
+      </span>
+      <% if item.quantidade > 1 %>
+        <span style="font-size:.7rem; opacity:.45;">× <%= item.quantidade.to_i %> = <%= number_to_currency(item.valor_total, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+      <% end %>
+    </div>
+  </div>
+</div>

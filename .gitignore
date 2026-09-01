@@ -53,6 +53,9 @@
 /storage/*
 !/storage/.keep
 
+# Ignore uploaded files at runtime (dados de upload, não código)
+/public/uploads
+
 /node_modules
 /yarn-error.log
 

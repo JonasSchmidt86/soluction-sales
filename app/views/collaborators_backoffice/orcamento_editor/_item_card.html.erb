@@ -1,0 +1,100 @@
+<% p_styles = tema.estilos_produto(orcamento) %>
+<% foto_principal = item.foto_principal %>
+<% foto_esquerda = foto_principal ? foto_principal.posicao_foto == "left" : true %>
+<% tamanho_foto = foto_principal&.tamanho_foto || "medium" %>
+<% largura_foto = tema.dimensoes_foto[tamanho_foto] || "180px" %>
+<% proximo_tamanho = { "small" => "medium", "medium" => "large", "large" => "small" }[tamanho_foto] %>
+<% update_url = collaborators_backoffice_orcamento_iten_path(orcamento, item) %>
+<% toggle_url = toggle_posicao_foto_collaborators_backoffice_orcamento_iten_path(orcamento, item) %>
+<% tamanho_url = trocar_tamanho_foto_collaborators_backoffice_orcamento_iten_path(orcamento, item) %>
+<% remover_foto_url = remover_foto_collaborators_backoffice_orcamento_iten_path(orcamento, item) %>
+<% destroy_url = collaborators_backoffice_orcamento_iten_path(orcamento, item) %>
+<div id="item-card-<%= item.cod_item %>"
+     class="orcamento-produto item-editavel"
+     data-item-id="<%= item.cod_item %>"
+     data-cod-produto="<%= item.cod_produto %>"
+     data-cod-cor="<%= item.cod_cor %>"
+     draggable="true"
+     style="display:flex; gap:1.8rem; margin-bottom:<%= p_styles[:margin_bottom] %>; padding:<%= p_styles[:padding] %>; background:<%= p_styles[:background] %>; border:<%= p_styles[:border] %>; border-radius:<%= p_styles[:border_radius] %>; flex-direction:<%= foto_esquerda ? 'row' : 'row-reverse' %>; align-items:flex-start; <%= "border-bottom:#{p_styles[:border_bottom]};" if p_styles[:border_bottom] %> <%= "border-left:#{p_styles[:border_left]};" if p_styles[:border_left] %>">
+  <%# Controles flutuantes %>
+  <div class="item-controles" style="<%= foto_esquerda ? 'right:.5rem;' : 'left:.5rem; right:auto;' %>">
+    <button type="button" class="btn btn-sm btn-light shadow-sm" style="font-size:.65rem; padding:2px 6px;"
+            title="Inverter foto" onclick="editorToggleFoto(<%= item.cod_item %>, '<%= toggle_url %>')">
+      <i class="fa fa-arrows-left-right"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-light shadow-sm" style="font-size:.65rem; padding:2px 6px;"
+            title="Tamanho: <%= proximo_tamanho %>"
+            onclick="editorTrocarTamanho(<%= item.cod_item %>, '<%= tamanho_url %>')">
+      <i class="fa fa-expand"></i> <%= tamanho_foto[0].upcase %>
+    </button>
+    <button type="button" class="btn btn-sm btn-light shadow-sm text-danger" style="font-size:.65rem; padding:2px 6px;"
+            title="Remover" onclick="editorRemoverItem(<%= item.cod_item %>, '<%= destroy_url %>')">
+      <i class="fa fa-trash"></i>
+    </button>
+  </div>
+  <%# Foto — clicável para upload ou biblioteca %>
+  <div class="foto-wrapper"
+       style="flex-shrink:0; width:<%= largura_foto %>; height:<%= largura_foto %>; border-radius:6px; overflow:hidden; background:#f5f5f5; position:relative; cursor:pointer;"
+       onclick="editorAbrirMenuFoto(<%= item.cod_item %>)">
+    <% foto_src = foto_principal&.url_exibicao %>
+    <% if foto_src %>
+      <img src="<%= foto_src %>" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">
+    <% else %>
+      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.15;">
+        <svg width="36" height="36" fill="currentColor" viewBox="0 0 16 16"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>
+      </div>
+    <% end %>
+    <div class="foto-overlay" id="foto-menu-<%= item.cod_item %>">
+      <button type="button" class="btn btn-sm btn-light" style="font-size:.75rem; min-width:130px;"
+              onclick="event.stopPropagation(); editorUploadFoto(<%= item.cod_item %>)">
+        <i class="fa fa-upload me-1"></i> Do computador
+      </button>
+      <button type="button" class="btn btn-sm btn-light" style="font-size:.75rem; min-width:130px;"
+              onclick="event.stopPropagation(); editorAbrirBiblioteca(<%= item.cod_item %>, '<%= update_url %>')">
+        <i class="fa fa-images me-1"></i> Da biblioteca
+      </button>
+      <% if foto_principal %>
+        <button type="button" class="btn btn-sm btn-light text-danger" style="font-size:.75rem; min-width:130px;"
+                onclick="event.stopPropagation(); editorRemoverFoto(<%= item.cod_item %>, '<%= remover_foto_url %>')">
+          <i class="fa fa-trash me-1"></i> Excluir foto
+        </button>
+      <% end %>
+    </div>
+    <%# Input de upload oculto %>
+    <form id="form-foto-<%= item.cod_item %>" style="display:none;">
+      <input type="file" id="file-foto-<%= item.cod_item %>" accept="image/*"
+             onchange="editorSubmitFoto(<%= item.cod_item %>, '<%= update_url %>')">
+    </form>
+  </div>
+  <%# Texto editável inline %>
+  <div style="flex:1; min-width:0; height:<%= largura_foto %>; overflow-y:auto; display:flex; flex-direction:column; justify-content:flex-start;">
+    <input type="text"
+           value="<%= item.nome_produto_livre.presence || item.produto&.nome %>"
+           class="input-inline"
+           style="font-size:.88rem; font-weight:600; margin-bottom:.3rem; flex-shrink:0;"
+           placeholder="Nome do produto"
+           oninput="editorSalvarCampo(<%= item.cod_item %>, 'nome_produto_livre', this.value, '<%= update_url %>', true)">
+    <textarea class="textarea-inline"
+              style="font-size:.78rem; margin-bottom:.8rem; line-height:1.6; opacity:.65; flex:1;"
+              placeholder="Descrição do produto..."
+              oninput="editorSalvarCampo(<%= item.cod_item %>, 'descricao_item', this.value, '<%= update_url %>', true)"><%= item.descricao_item %></textarea>
+    <div style="display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap; flex-shrink:0;">
+      <span style="font-size:.75rem; opacity:.5;">R$</span>
+      <input type="text"
+             value="<%= number_with_precision(item.valorunitario, precision: 2, separator: ',', delimiter: '.') %>"
+             class="input-inline money2"
+             style="font-size:1.1rem; font-weight:600; width:100px; color:<%= orcamento.cor_destaque %>;"
+             inputmode="decimal"
+             onchange="editorSalvarPreco(<%= item.cod_item %>, this.value, '<%= update_url %>')">
+      <span style="font-size:.7rem; opacity:.45;">×</span>
+      <input type="text"
+             value="<%= item.quantidade.to_i %>"
+             class="input-inline"
+             style="font-size:.8rem; width:30px; opacity:.6;"
+             inputmode="numeric"
+             oninput="this.value=this.value.replace(/\D/g,'')"
+             onchange="editorSalvarCampo(<%= item.cod_item %>, 'quantidade', this.value, '<%= update_url %>', false)">
+      <span style="font-size:.7rem; opacity:.4;">un.</span>
+    </div>
+  </div>
+</div>

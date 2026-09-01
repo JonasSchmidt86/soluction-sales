@@ -1,0 +1,32 @@
+<% h = tema.estilos_header(orcamento) %>
+<% nome_loja = orcamento.empresa.pessoa.apelido.presence || orcamento.empresa.pessoa.nome.presence || "Loja" %>
+<% telefone_loja = orcamento.empresa.pessoa.telefone.presence || "Telefone não informado" %>
+<% celular_loja = orcamento.empresa.pessoa.celular.presence %>
+<% linha_separadora = h[:line_color] || "rgba(255,255,255,0.35)" %>
+<% texto_mutado = h[:muted_color] || "rgba(255,255,255,0.85)" %>
+<% filtro_logo = h[:logo_invert] ? "brightness(0) invert(1)" : "none" %>
+<div class="orcamento-header"
+     style="background:<%= h[:background] %>; color:<%= h[:color] %>; padding:<%= h[:padding] %>; <%= "border-bottom:#{h[:border_bottom]};" if h[:border_bottom] %>; box-sizing:border-box;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:1.5rem; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; justify-content:center; min-width:180px; flex:1;">
+      <%= image_tag "/assets/logo-b9f22b9da9fb78162609a90b790c13247458ca278e2fc6f61ce3411af6b2977f.png", alt: nome_loja, style: "max-height:90px; width:auto; display:block; filter: #{filtro_logo}; margin:0 auto;" %>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+      <div style="border-left:1px solid <%= linha_separadora %>; padding-left:1rem; min-width:240px; color:<%= texto_mutado %>;">
+        <div style="display:grid; gap:.12rem; text-align:right; font-size:.72rem; line-height:1.6;">
+          <div><span style="font-weight:700;">Nº Orçamento:</span> <%= orcamento.cod_orcamento %></div>
+          <div><span style="font-weight:700;">Data:</span> <%= l(orcamento.data_orcamento.to_date, format: :default) %></div>
+          <% if telefone_loja.present? && telefone_loja != "Telefone não informado" %>
+            <div><span style="font-weight:700;">Telefone:</span> <%= telefone_loja %></div>
+          <% end %>
+          <% if celular_loja.present? %>
+            <div><span style="font-weight:700;">Celular:</span> <%= celular_loja %></div>
+          <% end %>
+          <% if telefone_loja == "Telefone não informado" && celular_loja.blank? %>
+            <div><span style="font-weight:700;">Contato:</span> Não informado</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

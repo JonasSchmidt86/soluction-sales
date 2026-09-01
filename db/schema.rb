@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -516,6 +516,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
     t.bigint "produto"
   end
 
+  create_table "item_orcamento_fotos", force: :cascade do |t|
+    t.bigint "cod_item", null: false
+    t.string "foto"
+    t.string "biblioteca_foto_url"
+    t.string "origem", default: "upload", null: false
+    t.string "posicao_foto", default: "left", null: false
+    t.string "tamanho_foto", default: "medium", null: false
+    t.integer "posicao_ordem", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "itemcompra", primary_key: "cod_item", id: :bigint, default: -> { "nextval('itemcompra_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.bigint "cod_compra"
     t.bigint "cod_empresa", null: false
@@ -558,6 +570,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
     t.decimal "valor_acrescimo", precision: 10, scale: 2, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "descricao_item"
+    t.integer "posicao_ordem", default: 0, null: false
+    t.string "nome_produto_livre"
   end
 
   create_table "itens_pedido_compras", force: :cascade do |t|
@@ -690,6 +705,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
     t.bigint "cod_venda"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "titulo"
+    t.string "tema", default: "premium", null: false
+    t.string "cor_primaria", default: "#2c2c2c", null: false
+    t.string "cor_secundaria", default: "#666666", null: false
+    t.string "cor_destaque", default: "#8b7355", null: false
+    t.integer "views_count", default: 0, null: false
+    t.datetime "first_viewed_at"
+    t.datetime "last_viewed_at"
+    t.integer "total_view_seconds", default: 0, null: false
+    t.string "share_token"
+    t.integer "share_failed_attempts", default: 0, null: false
+    t.datetime "share_blocked_until"
+    t.boolean "link_protegido", default: false, null: false
+    t.string "senha_publica_customizada", limit: 4
+    t.datetime "link_expira_em"
   end
 
   create_table "origems", force: :cascade do |t|
@@ -952,6 +982,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_000013) do
   add_foreign_key "funcionarioempresa", "funcionario", column: "cod_funcionario", primary_key: "cod_funcionario", name: "fk_funcionarioempresas"
   add_foreign_key "grupo", "parametros", column: "cod_margem", primary_key: "cod_parametro", name: "fk41e1c499ecb7837"
   add_foreign_key "imagem", "produto", column: "produto", primary_key: "cod_produto", name: "fk82bf6e92e3c9080d"
+  add_foreign_key "item_orcamento_fotos", "itens_orcamentos", column: "cod_item", primary_key: "cod_item"
   add_foreign_key "itemcompra", "compra", column: "cod_compra", primary_key: "cod_compra", name: "fk_compra"
   add_foreign_key "itemcompra", "cores", column: "cod_cor", primary_key: "cod_cor", name: "fk_cor"
   add_foreign_key "itemcompra", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"

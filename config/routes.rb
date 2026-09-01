@@ -3,6 +3,10 @@ Rails.application.routes.draw do
   get 'produto/:cod_produto/:cod_cor', to: 'home#produto', as: 'produto'
   get 'portfolio', to: 'home#portfolio'
 
+  match 'orcamentos/:id/:nome_cliente', to: 'orcamentos_publicos#show', via: [:get, :post], as: :orcamento_publico
+  post 'orcamentos/:id/:nome_cliente/duration', to: 'orcamentos_publicos#record_duration', as: :orcamento_publico_duration
+  get 'orcamentos/:id/pdf', to: 'orcamentos_publicos#pdf', as: :orcamento_publico_pdf
+
   devise_for :collaborators, skip: [:registrations]
   devise_for :users, skip: [:registrations]
 
@@ -41,6 +45,8 @@ Rails.application.routes.draw do
     resources :produto_imagens, only: [:index, :create, :edit, :destroy] do
       collection do
         get :get_cor_data
+        get :biblioteca
+        post :salvar_da_orcamento
       end
     end
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]
@@ -81,6 +87,23 @@ Rails.application.routes.draw do
       member do
         post :converter_venda
         get :print
+      end
+
+      resource :editor, controller: "orcamento_editor", only: [:show] do
+        patch :auto_save, on: :member
+        patch :trocar_tema, on: :member
+        patch :salvar_link, on: :member
+      end
+
+      resources :itens, controller: "orcamento_itens", only: [:create, :update, :destroy] do
+        member do
+          patch :toggle_posicao_foto
+          patch :trocar_tamanho_foto
+          patch :remover_foto
+        end
+        collection do
+          patch :reordenar
+        end
       end
     end
     

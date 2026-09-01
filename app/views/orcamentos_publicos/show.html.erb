@@ -1,0 +1,113 @@
+<% renderer = OrcamentoRendererService.new(orcamento) %>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Orçamento #<%= orcamento.cod_orcamento %></title>
+    <meta name="csrf-token" content="<%= form_authenticity_token %>">
+    <style>
+      html, body {
+        margin: 0;
+        background: #eceff3;
+        font-family: Arial, sans-serif;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        padding: 28px 16px 40px;
+      }
+      .visualizador-externo {
+        width: min(100%, 210mm);
+        min-height: 297mm;
+        background: white;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+        .visualizador-externo {
+          width: 100%;
+          min-height: auto;
+          box-shadow: none;
+          border-radius: 0;
+        }
+      }
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .visualizador-externo {
+          width: 100%;
+          min-height: auto;
+          box-shadow: none;
+          border-radius: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="visualizador-externo">
+      <%= render partial: 'collaborators_backoffice/orcamento_renderer/documento',
+                 locals: { orcamento: orcamento, tema: renderer.tema, itens: renderer.itens } %>
+    </div>
+    <script>
+      (function() {
+        const durationUrl = '<%= orcamento_publico_duration_path(orcamento, nome_cliente: orcamento.pessoa.nome.to_s.parameterize) %>';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        let start = Date.now();
+        let lastSent = Date.now();
+
+        function sendDuration() {
+          if (document.visibilityState !== 'visible') {
+            lastSent = Date.now();
+            return;
+          }
+
+          const now = Date.now();
+          const seconds = Math.max(1, Math.round((now - lastSent) / 1000));
+          if (seconds <= 0) return;
+          lastSent = now;
+
+          const fd = new FormData();
+          fd.append('seconds', seconds);
+          if (csrfToken) fd.append('authenticity_token', csrfToken);
+
+          navigator.sendBeacon(durationUrl, fd);
+        }
+
+        const heartbeat = setInterval(function() {
+          sendDuration();
+        }, 10000);
+
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState !== 'visible') {
+            lastSent = Date.now();
+            return;
+          }
+          sendDuration();
+        });
+
+        window.addEventListener('pagehide', function() {
+          if (document.visibilityState === 'visible') {
+            sendDuration();
+          }
+          clearInterval(heartbeat);
+        });
+
+        window.addEventListener('beforeunload', function() {
+          if (document.visibilityState !== 'visible') return;
+
+          const elapsed = Math.max(1, Math.round((Date.now() - start) / 1000));
+          const fd = new FormData();
+          fd.append('seconds', elapsed);
+          if (csrfToken) fd.append('authenticity_token', csrfToken);
+          navigator.sendBeacon(durationUrl, fd);
+        });
+      })();
+    </script>
+  </body>
+</html>

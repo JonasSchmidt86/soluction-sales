@@ -5,12 +5,18 @@ class ItemOrcamento < ApplicationRecord
   attr_accessor :produto_nome
 
   belongs_to :orcamento, class_name: 'Orcamento', foreign_key: 'cod_orcamento', inverse_of: :itens_orcamentos
-  belongs_to :produto, class_name: 'Produto', foreign_key: 'cod_produto'
+  belongs_to :produto, class_name: 'Produto', foreign_key: 'cod_produto', optional: true
   belongs_to :cor, class_name: 'Core', foreign_key: 'cod_cor', optional: true
   belongs_to :empresa, class_name: 'Empresa', foreign_key: 'cod_empresa'
+  has_many :fotos, class_name: 'ItemOrcamentoFoto', foreign_key: 'cod_item',
+           dependent: :destroy, inverse_of: :item_orcamento
 
   validates :quantidade, :valorunitario, presence: true
   validates :quantidade, numericality: { greater_than: 0 }
+
+  def foto_principal
+    fotos.order(:posicao_ordem).first
+  end
 
   def valor_total
     subtotal = (valorunitario || 0) * (quantidade || 0)

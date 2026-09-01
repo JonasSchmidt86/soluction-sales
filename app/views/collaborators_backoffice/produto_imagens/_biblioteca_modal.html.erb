@@ -1,0 +1,21 @@
+<% if produto_imagens.any? %>
+  <div class="mb-3">
+    <input type="text" class="form-control form-control-sm" placeholder="Buscar produto..."
+           oninput="editorBuscarBiblioteca(this.value)">
+  </div>
+  <div class="row g-2" id="biblioteca-grid">
+    <% produto_imagens.each do |img| %>
+      <div class="col-4 col-md-3">
+        <div class="border rounded overflow-hidden" style="cursor:pointer; aspect-ratio:1;"
+             onclick="editorSelecionarDaBiblioteca(<%= img.id %>)"
+             title="<%= img.produto.nome %>">
+          <img src="<%= rails_blob_path(img.imagem, only_path: true) %>"
+               style="width:100%;height:100%;object-fit:cover;display:block;" alt="">
+        </div>
+        <p class="text-truncate mt-1 mb-0" style="font-size:.7rem;"><%= img.produto.nome %></p>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-center text-muted py-4">Nenhuma imagem disponível localmente.</p>
+<% end %>

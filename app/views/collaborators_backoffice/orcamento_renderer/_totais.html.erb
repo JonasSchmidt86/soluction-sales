@@ -1,0 +1,31 @@
+<% subtotal = itens.sum(&:valor_total) %>
+<% desconto = orcamento.desconto || 0 %>
+<% acrescimo = orcamento.acrescimo || 0 %>
+<% total = subtotal - desconto + acrescimo %>
+
+<div class="orcamento-totais" style="padding:1.8rem 2.5rem; border-top:1px solid rgba(128,128,128,.12);">
+  <div style="display:flex; justify-content:flex-end; gap:2.5rem; align-items:baseline; flex-wrap:wrap;">
+    <% if desconto > 0 || acrescimo > 0 %>
+      <div style="text-align:right;">
+        <span style="font-size:.7rem; opacity:.5; display:block; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.15rem;">Subtotal</span>
+        <span style="font-size:.9rem; font-weight:500;"><%= number_to_currency(subtotal, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+      </div>
+    <% end %>
+    <% if desconto > 0 %>
+      <div style="text-align:right;">
+        <span style="font-size:.7rem; opacity:.5; display:block; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.15rem;">Desconto</span>
+        <span style="font-size:.9rem; font-weight:500; color:#dc3545;">- <%= number_to_currency(desconto, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+      </div>
+    <% end %>
+    <% if acrescimo > 0 %>
+      <div style="text-align:right;">
+        <span style="font-size:.7rem; opacity:.5; display:block; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.15rem;">Acréscimo</span>
+        <span style="font-size:.9rem; font-weight:500; color:#198754;">+ <%= number_to_currency(acrescimo, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+      </div>
+    <% end %>
+    <div style="text-align:right;">
+      <span style="font-size:.7rem; opacity:.5; display:block; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.15rem;">Total</span>
+      <span style="font-size:1.6rem; font-weight:800; letter-spacing:-.03em;"><%= number_to_currency(total, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+    </div>
+  </div>
+</div>
