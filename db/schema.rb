@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_20_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -720,6 +720,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_000003) do
     t.boolean "link_protegido", default: false, null: false
     t.string "senha_publica_customizada", limit: 4
     t.datetime "link_expira_em"
+    t.index ["share_token"], name: "index_orcamentos_on_share_token", unique: true
   end
 
   create_table "origems", force: :cascade do |t|
