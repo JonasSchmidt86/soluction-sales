@@ -9,7 +9,7 @@
         <p>Escolha com quem gostaria de conversar sobre:
           <h5><%= " #{produto.titulo}" if defined?(produto) && produto %></h5>
         </p>
-        <% WhatsappContact.all.each do |contato| %>
+        <% WhatsappContact.where("empresa_id = 5").each do |contato| %>
           <div class="d-grid gap-2 mb-2">
             <% if defined?(produto) && produto && defined?(cod_cor) && cod_cor %>
               <% mensagem = "👋 Oi! Estou interessado(a) no produto #{produto.titulo&.capitalize} (#{produto.cod_produto}). Veja: #{produto_url(produto.cod_produto, cod_cor)}" %>
