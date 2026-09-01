@@ -28,9 +28,21 @@ class CommissionSimulationService
       by_func[a.cod_funcionario] = a
     end
 
+    # Funcionários que já têm apuração gerada sobreposta ao período:
+    # não devem mais aparecer na simulação (a comissão já foi gerada).
+    funcs_com_apuracao = CommissionPeriod
+      .for_empresa(cod_empresa)
+      .where("start_date <= ? AND end_date >= ?", end_date, start_date)
+      .distinct
+      .pluck(:cod_funcionario)
+      .to_set
+
     results = []
 
     by_func.each do |cod_funcionario, assignment|
+      # Pular quem já teve a comissão apurada neste período
+      next if funcs_com_apuracao.include?(cod_funcionario)
+
       result = simulate_one(
         cod_funcionario: cod_funcionario,
         cod_empresa: cod_empresa,
@@ -65,6 +77,15 @@ class CommissionSimulationService
       .first
 
     return nil unless assignment
+
+    # Se já existe apuração gerada sobreposta ao período, não simula mais
+    # (a comissão já foi apurada para este intervalo).
+    ja_apurado = CommissionPeriod
+      .for_funcionario(cod_funcionario)
+      .for_empresa(cod_empresa)
+      .where("start_date <= ? AND end_date >= ?", end_date, start_date)
+      .exists?
+    return nil if ja_apurado
 
     rule = assignment.commission_rule
     tiers = rule.commission_tiers.ordered

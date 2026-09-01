@@ -14,9 +14,19 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
       @periods = @periods.where(status: params[:status])
     end
 
-    # Simulação em tempo real do período atual
-    sim_start = params[:sim_start].present? ? Date.parse(params[:sim_start]) : Date.today.beginning_of_month
-    sim_end = params[:sim_end].present? ? Date.parse(params[:sim_end]) : Date.today
+    # Simulação por mês: do dia 01 ao último dia do mês selecionado.
+    # Aceita ?mes=YYYY-MM (novo) ou ?sim_start=... (compatibilidade com links antigos).
+    ref_month =
+      if params[:mes].present?
+        Date.parse("#{params[:mes]}-01") rescue Date.today.beginning_of_month
+      elsif params[:sim_start].present?
+        (Date.parse(params[:sim_start]) rescue Date.today).beginning_of_month
+      else
+        Date.today.beginning_of_month
+      end
+
+    sim_start = ref_month.beginning_of_month
+    sim_end   = ref_month.end_of_month
 
     # Filtrar apurações registradas pelo período da simulação:
     # Apurações pagas só aparecem se o período da apuração se sobrepõe ao período informado
@@ -44,6 +54,7 @@ class CollaboratorsBackoffice::CommissionPeriodsController < CollaboratorsBackof
 
     @sim_start = sim_start
     @sim_end = sim_end
+    @sim_month = ref_month.strftime('%Y-%m')
   end
 
   def show

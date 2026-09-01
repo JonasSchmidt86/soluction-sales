@@ -12,32 +12,57 @@
     </div>
     <div class="card-body">
 
+      <!-- Filtro de mês da simulação (sempre visível) -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+          <strong><i class="fa fa-calendar me-1 text-primary"></i> Mês da Apuração</strong>
+        </div>
+        <div class="card-body py-2">
+          <%= form_with(url: collaborators_backoffice_commission_periods_path, method: :get, local: true) do |f| %>
+            <%= f.hidden_field :cod_funcionario, value: params[:cod_funcionario] %>
+            <%= f.hidden_field :status, value: params[:status] %>
+            <div class="row g-2 align-items-end">
+              <div class="col-auto">
+                <label class="form-label small mb-0">Mês</label>
+                <%= f.month_field :mes, value: @sim_month, class: "form-control form-control-sm" %>
+              </div>
+              <div class="col-auto">
+                <%= f.submit "Atualizar", class: "btn btn-sm btn-outline-success" %>
+              </div>
+              <div class="col-auto d-flex gap-1">
+                <%= link_to "Mês passado",
+                      collaborators_backoffice_commission_periods_path(
+                        mes: Date.today.prev_month.strftime('%Y-%m'),
+                        cod_funcionario: params[:cod_funcionario],
+                        status: params[:status]
+                      ),
+                      class: "btn btn-sm btn-outline-primary" %>
+                <%= link_to "Mês atual",
+                      collaborators_backoffice_commission_periods_path(
+                        mes: Date.today.strftime('%Y-%m'),
+                        cod_funcionario: params[:cod_funcionario],
+                        status: params[:status]
+                      ),
+                      class: "btn btn-sm btn-outline-secondary" %>
+              </div>
+              <div class="col-auto ms-auto">
+                <span class="text-muted small">
+                  Período: <%= @sim_start.strftime('%d/%m/%Y') %> — <%= @sim_end.strftime('%d/%m/%Y') %>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
       <!-- Simulação em Tempo Real -->
       <% if @simulations.any? %>
         <div class="card shadow-sm mb-3 border-success">
           <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <strong><i class="fa fa-bolt me-1 text-warning"></i> Estimativa do Período Atual</strong>
+            <strong><i class="fa fa-bolt me-1 text-warning"></i> Estimativa do Período</strong>
             <span class="text-muted small"><%= @sim_start.strftime('%d/%m/%Y') %> — <%= @sim_end.strftime('%d/%m/%Y') %></span>
           </div>
           <div class="card-body p-0">
-            <!-- Filtro de datas da simulação -->
-            <div class="p-2 bg-light border-bottom">
-              <%= form_with(url: collaborators_backoffice_commission_periods_path, method: :get, local: true) do |f| %>
-                <div class="row g-2 align-items-end">
-                  <div class="col-auto">
-                    <label class="form-label small mb-0">De</label>
-                    <%= f.date_field :sim_start, value: @sim_start, class: "form-control form-control-sm" %>
-                  </div>
-                  <div class="col-auto">
-                    <label class="form-label small mb-0">Até</label>
-                    <%= f.date_field :sim_end, value: @sim_end, class: "form-control form-control-sm" %>
-                  </div>
-                  <div class="col-auto">
-                    <%= f.submit "Atualizar", class: "btn btn-sm btn-outline-success" %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
             <table class="table table-sm table-hover mb-0">
               <thead class="table-light">
                 <tr>
@@ -107,6 +132,13 @@
               <% end %>
             </table>
           </div>
+        </div>
+      <% else %>
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <i class="fa fa-info-circle me-2"></i>
+          Nenhuma venda encontrada para o período
+          <strong class="mx-1"><%= @sim_start.strftime('%d/%m/%Y') %> — <%= @sim_end.strftime('%d/%m/%Y') %></strong>.
+          Ajuste o período acima (ex.: clique em "Mês passado") para gerar as comissões.
         </div>
       <% end %>
 
