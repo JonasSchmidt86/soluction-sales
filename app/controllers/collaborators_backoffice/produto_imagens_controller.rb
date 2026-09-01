@@ -7,28 +7,14 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   def salvar_da_orcamento
     produto = Produto.find(params[:cod_produto])
     cor     = Core.find(params[:cod_cor])
-    arquivo = params[:foto]
 
-    return render json: { success: false, error: 'Parâmetros inválidos' }, status: :bad_request unless produto && cor && arquivo
+    resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: params[:foto])
 
-    imagem_minimagick = MiniMagick::Image.read(arquivo.tempfile)
-    imagem_minimagick.resize "1920x1080"
-
-    nome_base = produto.nome.split(' ')[0..1].join(' ')
-    extensao  = File.extname(arquivo.original_filename).downcase
-    nome_arquivo = "#{nome_base}_#{File.basename(arquivo.original_filename, extensao)}.jpeg"
-
-    produto_imagem = ProdutoImagem.new(produto: produto, cor: cor)
-    produto_imagem.imagem.attach(
-      io: StringIO.new(imagem_minimagick.to_blob),
-      filename: nome_arquivo,
-      content_type: 'image/jpeg'
-    )
-
-    if produto_imagem.save
+    if resultado.sucesso?
       render json: { success: true }
     else
-      render json: { success: false, error: produto_imagem.errors.full_messages.join(', ') }, status: :unprocessable_entity
+      status = params[:foto].blank? ? :bad_request : :unprocessable_entity
+      render json: { success: false, error: resultado.erro }, status: status
     end
   end
 

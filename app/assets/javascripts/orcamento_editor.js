@@ -220,57 +220,21 @@
     const input = document.getElementById(`file-foto-${itemId}`);
     if (!input.files[0]) return;
 
-    const card = document.getElementById(`item-card-${itemId}`);
-    const codProduto = card?.dataset.codProduto;
-    const codCor     = card?.dataset.codCor;
-    const arquivo    = input.files[0];
+    const arquivo = input.files[0];
 
-    // Envia a foto para o item do orçamento
-    function _enviarParaItem(arquivo) {
-      const fd = new FormData();
-      fd.append("item[foto]", arquivo);
-      fd.append("_method", "patch");
-      fetch(url, {
-        method: "POST",
-        headers: { "X-CSRF-Token": csrf(), "Accept": "application/json" },
-        body: fd
-      }).then(r => r.json()).then(data => {
-        if (data.success) _substituirCard(itemId, data.item_html);
-      });
-    }
-
-    // Salva também na biblioteca do produto
-    function _enviarParaBiblioteca(arquivo) {
-      const fd = new FormData();
-      fd.append("foto", arquivo);
-      fd.append("cod_produto", codProduto);
-      fd.append("cod_cor", codCor);
-      fetch("/collaborators_backoffice/produto_imagens/salvar_da_orcamento", {
-        method: "POST",
-        headers: { "X-CSRF-Token": csrf() },
-        body: fd
-      });
-    }
-
-    // Se tem produto e cor, pergunta se quer salvar na biblioteca
-    if (codProduto && codCor) {
-      const modalEl = document.getElementById("modalSalvarBiblioteca");
-      const modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
-      modal.show();
-
-      document.getElementById("btn-sim-salvar-biblioteca").onclick = function () {
-        modal.hide();
-        _enviarParaItem(arquivo);
-        _enviarParaBiblioteca(arquivo);
-      };
-
-      document.getElementById("btn-nao-salvar-biblioteca").onclick = function () {
-        modal.hide();
-        _enviarParaItem(arquivo);
-      };
-    } else {
-      _enviarParaItem(arquivo);
-    }
+    // O backend decide o destino automaticamente:
+    // - item COM produto e cor  -> salva na biblioteca do produto e referencia (sem duplicar)
+    // - item SEM produto/cor     -> upload local no orçamento
+    const fd = new FormData();
+    fd.append("item[foto]", arquivo);
+    fd.append("_method", "patch");
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrf(), "Accept": "application/json" },
+      body: fd
+    }).then(r => r.json()).then(data => {
+      if (data.success) _substituirCard(itemId, data.item_html);
+    });
   };
 
   window.editorAbrirBiblioteca = function (itemId, url) {

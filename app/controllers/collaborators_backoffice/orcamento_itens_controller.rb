@@ -39,34 +39,29 @@ class CollaboratorsBackoffice::OrcamentoItensController < CollaboratorsBackoffic
 
   # PATCH /collaborators_backoffice/orcamentos/:orcamento_id/itens/:id
   def update
-    # Upload de foto do computador — cria/substitui ItemOrcamentoFoto com origem: upload
+    # Upload de foto do computador
     if params.dig(:item, :foto).present?
+      arquivo = params[:item][:foto]
+
+      # Item COM produto e cor: salva direto na biblioteca do produto (ProdutoImagem)
+      # e referencia por URL, sem duplicar o arquivo no servidor.
+      if @item.cod_produto.present? && @item.cod_cor.present?
+        return _anexar_foto_da_biblioteca(arquivo)
+      end
+
+      # Item SEM produto/cor: sem biblioteca onde guardar, mantém upload local.
       foto = _foto_principal_ou_nova
       foto.origem = "upload"
       foto.biblioteca_foto_url = nil
-      foto.foto = params[:item][:foto]
+      foto.foto = arquivo
       foto.save!(validate: false)
       return render_item_json
     end
 
-    # Foto da biblioteca — cria/substitui ItemOrcamentoFoto com origem: biblioteca
+    # Foto escolhida na biblioteca — referencia por URL (origem: biblioteca)
     if params[:produto_imagem_id].present?
       imagem = ProdutoImagem.find(params[:produto_imagem_id])
-      if imagem.imagem.attached?
-        url = Rails.application.routes.url_helpers.rails_blob_path(imagem.imagem, only_path: true)
-        foto = _foto_principal_ou_nova
-        foto.remove_foto = true if foto.foto.present?
-        foto.origem = "biblioteca"
-        foto.biblioteca_foto_url = url
-        foto.save!(validate: false)
-
-        # Preencher nome e descrição do produto se ainda estiverem vazios
-        produto = imagem.produto
-        updates = {}
-        updates[:nome_produto_livre] = produto.titulo.presence || produto.nome if @item.nome_produto_livre.blank?
-        updates[:descricao_item]     = produto.descricao if @item.descricao_item.blank? && produto.descricao.present?
-        @item.update_columns(updates) if updates.any?
-      end
+      _referenciar_produto_imagem(imagem)
       return render_item_json
     end
 
@@ -142,6 +137,43 @@ class CollaboratorsBackoffice::OrcamentoItensController < CollaboratorsBackoffic
 
   def _foto_principal_ou_nova
     @item.foto_principal || @item.fotos.build(posicao_ordem: 0)
+  end
+
+  # Faz upload do arquivo para a biblioteca do produto (ProdutoImagem) e referencia
+  # no item como origem "biblioteca" — um arquivo só no servidor, sem duplicação.
+  def _anexar_foto_da_biblioteca(arquivo)
+    produto = Produto.find_by(cod_produto: @item.cod_produto)
+    cor     = Core.find_by(cod_cor: @item.cod_cor)
+
+    resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: arquivo)
+
+    unless resultado.sucesso?
+      return render json: { success: false, errors: [resultado.erro] }, status: :unprocessable_entity
+    end
+
+    _referenciar_produto_imagem(resultado.produto_imagem)
+    render_item_json
+  end
+
+  # Referencia uma ProdutoImagem existente como foto do item (origem "biblioteca"),
+  # guardando apenas a URL do blob. Não duplica o arquivo.
+  def _referenciar_produto_imagem(imagem)
+    return unless imagem.imagem.attached?
+
+    url = Rails.application.routes.url_helpers.rails_blob_path(imagem.imagem, only_path: true)
+
+    foto = _foto_principal_ou_nova
+    foto.remove_foto = true if foto.foto.present?
+    foto.origem = "biblioteca"
+    foto.biblioteca_foto_url = url
+    foto.save!(validate: false)
+
+    # Preenche nome/descrição a partir do produto, se ainda estiverem vazios.
+    produto = imagem.produto
+    updates = {}
+    updates[:nome_produto_livre] = produto.titulo.presence || produto.nome if @item.nome_produto_livre.blank?
+    updates[:descricao_item]     = produto.descricao if @item.descricao_item.blank? && produto.descricao.present?
+    @item.update_columns(updates) if updates.any?
   end
 
   def render_item_json
