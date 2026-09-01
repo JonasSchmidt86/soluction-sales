@@ -15,12 +15,14 @@
                     <div class="carousel-inner">
                       <% imagens.each_with_index do |imagem, index| %>
                         <div class="carousel-item <%= 'active' if index == 0 %>">
-                          <%= image_tag(imagem.imagem.variant(resize_to_limit: [300, 250]),
-                                class: "card-img-top", 
-                                style: "height: 250px; object-fit: cover; cursor: zoom-in;",
-                                data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
-                                ondblclick: "openImageModal(this)" 
-                              ) %>
+                          <div class="watermark-wrap">
+                            <%= image_tag(imagem.imagem.variant(resize_to_limit: [300, 250]),
+                                  class: "card-img-top", 
+                                  style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                                  data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
+                                  ondblclick: "openImageModal(this)" 
+                                ) %>
+                          </div>
                         </div>
                       <% end %>
                     </div>
@@ -32,12 +34,14 @@
                     </button>
                   </div>
                 <% else %>
-                  <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [300, 250]),
-                        class: "card-img-top", 
-                        style: "height: 250px; object-fit: cover; cursor: zoom-in;",
-                        data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
-                        ondblclick: "openImageModal(this)" 
-                      ) %>
+                  <div class="watermark-wrap">
+                    <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [300, 250]),
+                          class: "card-img-top", 
+                          style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                          data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
+                          ondblclick: "openImageModal(this)" 
+                        ) %>
+                  </div>
                 <% end %>
                 <div class="position-absolute top-0 end-0 m-2">
                   <span class="badge bg-primary"><%= produto.cod_produto %></span>
@@ -81,6 +85,56 @@
 <style>
   .card-text p:first-letter {
     text-transform: uppercase;
+  }
+  /* Marca d'água sobre as fotos do portfólio */
+  .watermark-wrap {
+    position: relative;
+    display: block;
+    overflow: hidden;
+  }
+  .watermark-wrap img {
+    display: block;
+    width: 100%;
+  }
+  /* Texto central */
+  .watermark-wrap::after {
+    content: "Móveis Rosa Store";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 700;
+    font-size: clamp(14px, 3vw, 22px);
+    letter-spacing: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    transform: rotate(-20deg);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+  /* Logo colorida no canto inferior direito */
+  .watermark-wrap::before {
+    content: "";
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 56px;
+    height: 56px;
+    background-image: url('/images/mrosa.png');
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-size: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
   }
 </style>
 <%= render partial: 'home/shared/image_modal' %>
