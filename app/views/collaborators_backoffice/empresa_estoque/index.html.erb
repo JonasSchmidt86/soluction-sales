@@ -191,8 +191,13 @@
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
   // Atualizar o conteúdo do elemento com ID "valortotal" com a soma formatada como reais
-  document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
-  document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
+  const valorCusto = document.getElementById("valorCusto");
+  if (valorCusto) {
+    valorCusto.value = formatarReal(<%= somaCusto %>);
+    document.getElementById("valorVenda").value = formatarReal(<%= somaVenda %>);
+  }
+
+  
   document.addEventListener('DOMContentLoaded', function() {
       $('#report-stock').DataTable({
         "paging": false,  // Desabilita a paginação
