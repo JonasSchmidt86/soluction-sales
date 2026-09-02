@@ -39,13 +39,13 @@
           <div class="col-md-4">
             <div class="">
               <%= form.text_field :dataInicial, value: ((!(params[:dataInicial]).blank? ? params[:dataInicial] : Time.current.strftime("01/%m/%Y")  )),
-                      class: "dataTable-input datepicker", placeholder:"Data Inicial", id: "dtInicial" %>
+                      class: "dataTable-input datepicker fallback", placeholder:"Data Inicial", id: "dtInicial" %>
             </div>
           </div>
           <div class="col-md-4">
             <div class="">
               <%= form.text_field :dataFinal, value: ((!(params[:dataFinal]).blank? ? params[:dataFinal] : Time.current.end_of_month.strftime("%d/%m/%Y") )),
-                      class: "dataTable-input datepicker", placeholder:"Data Final", id: "dtFinal" %>
+                      class: "dataTable-input datepicker fallback", placeholder:"Data Final", id: "dtFinal" %>
             </div>
           </div>
           <div class="ms-auto col-md-5">

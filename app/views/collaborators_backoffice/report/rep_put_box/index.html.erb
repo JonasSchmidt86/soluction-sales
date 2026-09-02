@@ -32,7 +32,7 @@
               <div class="col-auto">
                 <%= form.text_field :dataFinal, 
                       value: params[:dataFinal].presence || Date.today.end_of_month.strftime("%d/%m/%Y"), 
-                      class: "form-control form-control-md datepicker", style: "width: 115px;", placeholder: "Data Final" %>
+                      class: "form-control form-control-md datepicker fallback", style: "width: 115px;", placeholder: "Data Final" %>
               </div>
               <div class="col-auto">
                 <%= select_tag(:cod_historico, 

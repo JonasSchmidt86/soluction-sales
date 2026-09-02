@@ -29,13 +29,13 @@
           <!-- Valor -->
           <div class="mb-3">
             <%= form.label :valorparcela, "Valor" %>
-            <%= form.text_field :valorparcela, value: "#{number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"")}",
-                input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00" %>
+            <%= form.text_field :valorparcela, value: "#{number_to_currency((bill.valorparcela), separator: ",", delimiter: "", unit:"")}",
+                input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00", disabled: bill.cod_compra.present? || bill.cod_venda.present? %>
           </div>
           <!-- Data de Vencimento -->
           <div class="mb-3">
             <%= form.label :dtvencimento, "Data de Vencimento" %>
-            <%= form.text_field :dtvencimento, value: l(bill.dtvencimento), class: "form-control datepicker" %>
+            <%= form.text_field :dtvencimento, value: l(bill.dtvencimento), class: "form-control datepicker fallback" %>
           </div>
           <!-- Pessoa -->
           <div class="mb-3">
