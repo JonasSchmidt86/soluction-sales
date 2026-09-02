@@ -1,0 +1,27 @@
+<div class="nested-fields social-link-row border rounded p-3 mb-2">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">
+      <%= f.label :tipo, "Tipo" %>
+      <%= f.select :tipo, SocialLink.tipos_para_select, {}, class: "form-select" %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :titulo, "Título do botão" %>
+      <%= f.text_field :titulo, class: "form-control", placeholder: "Opcional" %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :url, "URL / Link" %>
+      <%= f.text_field :url, class: "form-control", placeholder: "https://..." %>
+    </div>
+    <div class="col-md-1">
+      <%= f.label :ordem, "Ordem" %>
+      <%= f.number_field :ordem, class: "form-control", value: (f.object.ordem || 0) %>
+    </div>
+    <div class="col-md-1 text-end">
+      <div class="form-check mb-1">
+        <%= f.check_box :ativo, class: "form-check-input", checked: (f.object.new_record? ? true : f.object.ativo) %>
+        <%= f.label :ativo, "Ativo", class: "form-check-label" %>
+      </div>
+      <%= link_to_remove_association "Remover", f, class: "btn btn-sm btn-outline-danger" %>
+    </div>
+  </div>
+</div>

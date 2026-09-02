@@ -15,6 +15,7 @@ manter tudo num só lugar.
 | [ORCAMENTOS_README.md](ORCAMENTOS_README.md) | Módulo de orçamentos. |
 | [ORCAMENTOS_EDITOR_VISUAL.md](ORCAMENTOS_EDITOR_VISUAL.md) | Editor visual de orçamentos. |
 | [EDITAR_ITENS_VENDA.md](EDITAR_ITENS_VENDA.md) | Edição de itens de venda. |
+| [PAGINAS_LINK_INSTAGRAM.md](PAGINAS_LINK_INSTAGRAM.md) | Páginas "link na bio" por empresa (Linktree) para Instagram. |
 
 ## Convenção
 

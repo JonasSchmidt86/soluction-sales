@@ -1,0 +1,83 @@
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="card mb-4 shadow">
+      <div class="card-header bg-primary text-white">
+        <div class="d-flex align-items-center">
+          <h4 class="mb-0">Páginas de Links (Instagram)</h4>
+          <%= link_to 'Nova Página', new_collaborators_backoffice_company_link_page_path, class: 'btn btn-light ms-auto' %>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if flash[:notice] %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= flash[:notice] %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+
+        <table class="table table-bordered table-hover table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Empresa</th>
+              <th>Título</th>
+              <th>Link público</th>
+              <th class="text-center">Publicado</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @company_link_pages.each do |page| %>
+              <tr>
+                <td><%= page.empresa&.nome %></td>
+                <td><%= page.titulo_exibido %></td>
+                <td>
+                  <% url = link_page_url(page.slug) %>
+                  <div class="input-group input-group-sm" style="max-width: 320px;">
+                    <input type="text" class="form-control" value="<%= url %>" readonly
+                           onclick="this.select()" id="link-<%= page.id %>">
+                    <button class="btn btn-outline-secondary" type="button"
+                            onclick="navigator.clipboard.writeText(document.getElementById('link-<%= page.id %>').value)">
+                      <i class="fa fa-copy"></i>
+                    </button>
+                    <a class="btn btn-outline-primary" href="<%= url %>" target="_blank">
+                      <i class="fa fa-external-link-alt"></i>
+                    </a>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <% if page.publicado? %>
+                    <span class="badge bg-success">Sim</span>
+                  <% else %>
+                    <span class="badge bg-secondary">Não</span>
+                  <% end %>
+                </td>
+                <td class="text-center">
+                  <div class="dropdown">
+                    <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <%= link_to edit_collaborators_backoffice_company_link_page_path(page), class: 'dropdown-item' do %>
+                          <i class="fa fa-edit me-1"></i> Editar
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to collaborators_backoffice_company_link_page_path(page), method: :delete, data: { confirm: 'Deseja realmente excluir?' }, class: 'dropdown-item' do %>
+                          <i class="fa fa-trash-can me-1"></i> Excluir
+                        <% end %>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <% if @company_link_pages.empty? %>
+          <p class="text-muted">Nenhuma página cadastrada ainda.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

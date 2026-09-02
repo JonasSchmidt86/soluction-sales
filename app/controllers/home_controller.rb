@@ -31,4 +31,5 @@ class HomeController < ApplicationController
     @produtos = []
     logger.error "Erro na página de portfólio: #{e.message}"
   end
+
 end

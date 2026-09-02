@@ -3,6 +3,9 @@ Rails.application.routes.draw do
   get 'produto/:cod_produto/:cod_cor', to: 'home#produto', as: 'produto'
   get 'portfolio', to: 'home#portfolio'
 
+  # Página pública "link na bio" (Instagram) por empresa
+  get 'l/:slug', to: 'link_pages#show', as: :link_page
+
   match 'orcamentos/:id/:nome_cliente', to: 'orcamentos_publicos#show', via: [:get, :post], as: :orcamento_publico
   post 'orcamentos/:id/:nome_cliente/duration', to: 'orcamentos_publicos#record_duration', as: :orcamento_publico_duration
   get 'orcamentos/:id/pdf', to: 'orcamentos_publicos#pdf', as: :orcamento_publico_pdf
@@ -129,6 +132,7 @@ Rails.application.routes.draw do
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :whatsapp_contacts #, only: [:index, :edit, :new, :create, :destroy, :update]
+    resources :company_link_pages
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
       post 'import/:id', on: :member, to: 'xml_files#import', as: :import
     end

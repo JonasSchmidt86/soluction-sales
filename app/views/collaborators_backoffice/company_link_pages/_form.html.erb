@@ -1,0 +1,320 @@
+<div class="card mt-3 shadow">
+  <div class="card-header bg-primary text-white">
+    <div class="d-flex">
+      <h4 class="mb-0">
+        <%= @company_link_page.new_record? ? "Nova Página de Links" : "Editando Página de Links" %>
+      </h4>
+      <%= link_to 'Voltar', collaborators_backoffice_company_link_pages_path, class: 'btn btn-light ms-auto' %>
+    </div>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: [:collaborators_backoffice, @company_link_page], local: true, html: { multipart: true }) do |form| %>
+      <% if @company_link_page.errors.any? %>
+        <div class="alert alert-danger">
+          <h5><%= pluralize(@company_link_page.errors.count, "erro") %> impediram o salvamento:</h5>
+          <ul>
+            <% @company_link_page.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <%= form.label :empresa_id, "Empresa" %>
+          <%= form.collection_select :empresa_id, Empresa.all.order(:nome), :cod_empresa, :nome,
+                { prompt: "Selecione" }, class: "form-select" %>
+        </div>
+        <div class="col-md-6 mb-3">
+          <%= form.label :slug, "Slug (endereço do link)" %>
+          <div class="input-group">
+            <span class="input-group-text"><%= root_url %>l/</span>
+            <%= form.text_field :slug, class: "form-control", placeholder: "moveisrosa_toledo" %>
+          </div>
+          <small class="text-muted">Deixe em branco para gerar a partir do nome. Só letras minúsculas, números, hífen ou underline.</small>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <%= form.label :titulo, "Título exibido" %>
+          <%= form.text_field :titulo, class: "form-control", placeholder: "Nome da loja (opcional)" %>
+        </div>
+        <div class="col-md-6 mb-3">
+          <%= form.label :descricao, "Descrição / subtítulo" %>
+          <%= form.text_field :descricao, class: "form-control", placeholder: "Ex: Móveis e decoração desde 1996" %>
+        </div>
+      </div>
+
+      <div class="form-check form-switch mb-4">
+        <%= form.check_box :publicado, class: "form-check-input" %>
+        <%= form.label :publicado, "Publicar página (visível no link)", class: "form-check-label" %>
+      </div>
+
+      <!-- Imagem do topo (fachada / logo) -->
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <strong><i class="fas fa-image me-1"></i> Imagem do topo (fachada ou logo)</strong>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8 mb-3">
+              <%= form.label :imagem, "Escolher imagem" %>
+              <%= form.file_field :imagem, accept: "image/*", class: "form-control", id: "imagem-input" %>
+              <small class="text-muted">
+                Selecione a imagem e ajuste a área que quer usar (arraste e redimensione).
+                O recorte é sempre quadrado; o formato redondo é só a borda na exibição.
+              </small>
+            </div>
+            <div class="col-md-4 mb-3">
+              <%= form.label :formato_imagem, "Formato de exibição" %>
+              <%= form.select :formato_imagem,
+                    [["Redonda (avatar pequeno)", "redonda"],
+                     ["Quadrada (imagem grande)", "quadrada"],
+                     ["Cabeçalho (faixa larga no topo)", "cabecalho"]],
+                    {}, class: "form-select", id: "formato-imagem-select" %>
+              <small class="text-muted">
+                Redonda: avatar circular. Quadrada: imagem grande estilo post.
+                Cabeçalho: faixa larga no topo com o título por cima.
+              </small>
+            </div>
+          </div>
+
+          <!-- Área do cropper (aparece ao escolher uma imagem) -->
+          <div id="cropper-area" class="row" style="display: none;">
+            <div class="col-md-8 mb-2">
+              <div style="max-height: 360px;">
+                <img id="cropper-image" style="max-width: 100%; display: block;">
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <p class="mb-1">Prévia:</p>
+              <div id="cropper-preview"
+                   style="width: 140px; height: 140px; overflow: hidden; background: #eee;"></div>
+            </div>
+          </div>
+
+          <!-- Campo escondido que carrega o recorte (base64) -->
+          <%= form.hidden_field :imagem_recortada, id: "imagem-recortada" %>
+
+          <% if @company_link_page.imagem.attached? %>
+            <div class="mt-3" id="imagem-atual">
+              <p class="mb-1">Imagem atual:</p>
+              <%= image_tag @company_link_page.imagem.variant(resize_to_limit: [120, 120]),
+                    class: (@company_link_page.imagem_redonda? ? "rounded-circle" : "rounded"),
+                    style: "width: 120px; height: 120px; object-fit: cover;" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Cores de fundo -->
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <strong><i class="fas fa-palette me-1"></i> Cor de fundo da página</strong>
+        </div>
+        <div class="card-body">
+          <div class="row align-items-end">
+            <div class="col-md-3 mb-3">
+              <%= form.label :cor_fundo_inicio, "Cor inicial" %>
+              <%= form.color_field :cor_fundo_inicio, class: "form-control form-control-color",
+                    value: @company_link_page.cor_inicio %>
+            </div>
+            <div class="col-md-3 mb-3">
+              <%= form.label :cor_fundo_fim, "Cor final" %>
+              <%= form.color_field :cor_fundo_fim, class: "form-control form-control-color",
+                    value: @company_link_page.cor_fim %>
+            </div>
+            <div class="col-md-3 mb-3">
+              <%= form.label :cor_texto, "Cor do texto" %>
+              <%= form.color_field :cor_texto, class: "form-control form-control-color",
+                    value: @company_link_page.cor_do_texto %>
+            </div>
+            <div class="col-md-3 mb-3">
+              <small class="text-muted d-block mb-1">Prévia:</small>
+              <div id="preview-fundo"
+                   style="height: 48px; border-radius: 8px; border: 1px solid #ddd;
+                          display: flex; align-items: center; justify-content: center;
+                          background: <%= @company_link_page.css_fundo %>;">
+                <span id="preview-texto" style="color: <%= @company_link_page.cor_do_texto %>; font-weight: 600;">
+                  Exemplo
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <small class="text-muted">
+                Fundo: use a mesma cor nos dois campos para cor sólida, ou cores
+                diferentes para um degradê. Escolha a cor do texto de acordo com o
+                fundo (texto claro em fundo escuro e vice-versa).
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telefones/WhatsApp da empresa -->
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <strong><i class="fab fa-whatsapp text-success me-1"></i> Telefones que aparecem na página</strong>
+        </div>
+        <div class="card-body">
+          <% contatos = @company_link_page.empresa_id.present? ? WhatsappContact.where(empresa_id: @company_link_page.empresa_id) : [] %>
+          <% if contatos.present? %>
+            <% contatos.each do |contato| %>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="whatsapp_contact_ids[]"
+                       value="<%= contato.id %>" id="wc-<%= contato.id %>"
+                       <%= "checked" if contato.publicar_link %>>
+                <label class="form-check-label" for="wc-<%= contato.id %>">
+                  <%= contato.display_name.presence || "Contato" %> — <%= contato.whatsapp_number %>
+                </label>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-muted mb-0">
+              Selecione e salve a empresa primeiro para escolher quais telefones aparecem.
+              Os contatos vêm do cadastro de <em>Contatos de WhatsApp</em>.
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Redes sociais / links (cocoon) -->
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <strong><i class="fas fa-link me-1"></i> Redes sociais e outros links</strong>
+        </div>
+        <div class="card-body">
+          <div id="social-links">
+            <%= form.fields_for :social_links do |social_form| %>
+              <%= render "social_link_fields", f: social_form %>
+            <% end %>
+          </div>
+          <div class="mt-2">
+            <%= link_to_add_association "Adicionar link", form, :social_links,
+                  class: "btn btn-outline-primary btn-sm",
+                  data: { association_insertion_node: "#social-links",
+                          association_insertion_method: :append } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end">
+        <%= form.submit "Salvar", class: "btn btn-success" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Cropper.js para recorte interativo da imagem -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script>
+  (function () {
+    var input = document.getElementById('imagem-input');
+    if (!input) return;
+
+    var area = document.getElementById('cropper-area');
+    var image = document.getElementById('cropper-image');
+    var preview = document.getElementById('cropper-preview');
+    var hidden = document.getElementById('imagem-recortada');
+    var formatoSelect = document.getElementById('formato-imagem-select');
+    var cropper = null;
+
+    // Configuração de cada formato: proporção do recorte e tamanho de saída.
+    function configFormato() {
+      var v = formatoSelect ? formatoSelect.value : 'redonda';
+      if (v === 'cabecalho') {
+        // Faixa panorâmica (largura x altura ~ 2.6:1)
+        return { aspect: 1200 / 460, out: [1200, 460], previewW: 260, previewH: 100, radius: '10px' };
+      } else if (v === 'quadrada') {
+        return { aspect: 1, out: [640, 640], previewW: 200, previewH: 200, radius: '14px' };
+      }
+      // redonda
+      return { aspect: 1, out: [400, 400], previewW: 140, previewH: 140, radius: '50%' };
+    }
+
+    function aplicarPreviewEstilo() {
+      var cfg = configFormato();
+      preview.style.width = cfg.previewW + 'px';
+      preview.style.height = cfg.previewH + 'px';
+      preview.style.borderRadius = cfg.radius;
+    }
+
+    function iniciarCropper() {
+      if (!image.src) return;
+      var cfg = configFormato();
+      if (cropper) { cropper.destroy(); }
+      cropper = new Cropper(image, {
+        aspectRatio: cfg.aspect,
+        viewMode: 1,
+        autoCropArea: 1,
+        preview: preview,
+        background: false
+      });
+      aplicarPreviewEstilo();
+    }
+
+    // Ao escolher um arquivo, mostra o cropper
+    input.addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        image.src = ev.target.result;
+        area.style.display = 'flex';
+        iniciarCropper();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Ao trocar o formato, reinicia o cropper com a nova proporção
+    if (formatoSelect) {
+      formatoSelect.addEventListener('change', function () {
+        if (cropper) {
+          iniciarCropper();
+        } else {
+          aplicarPreviewEstilo();
+        }
+      });
+    }
+
+    // Antes de enviar o form, gera o recorte e coloca no campo escondido
+    var formEl = input.closest('form');
+    if (formEl) {
+      formEl.addEventListener('submit', function () {
+        if (cropper) {
+          var cfg = configFormato();
+          var canvas = cropper.getCroppedCanvas({ width: cfg.out[0], height: cfg.out[1] });
+          if (canvas) {
+            hidden.value = canvas.toDataURL('image/png');
+          }
+        }
+      });
+    }
+
+    // Prévia ao vivo das cores (fundo + texto)
+    var corInicio = document.getElementById('company_link_page_cor_fundo_inicio');
+    var corFim = document.getElementById('company_link_page_cor_fundo_fim');
+    var corTexto = document.getElementById('company_link_page_cor_texto');
+    var previewFundo = document.getElementById('preview-fundo');
+    var previewTexto = document.getElementById('preview-texto');
+    function atualizarPreviewCores() {
+      if (previewFundo) {
+        var ini = corInicio ? corInicio.value : '#1f2a33';
+        var fim = corFim ? corFim.value : '#343a40';
+        previewFundo.style.background = 'linear-gradient(160deg, ' + ini + ' 0%, ' + fim + ' 100%)';
+      }
+      if (previewTexto && corTexto) {
+        previewTexto.style.color = corTexto.value;
+      }
+    }
+    if (corInicio) corInicio.addEventListener('input', atualizarPreviewCores);
+    if (corFim) corFim.addEventListener('input', atualizarPreviewCores);
+    if (corTexto) corTexto.addEventListener('input', atualizarPreviewCores);
+  })();
+</script>

@@ -69,7 +69,10 @@ Rails.application.configure do
   # config.active_job.queue_name_prefix = "soluction_sales_#{Rails.env}"
 
   config.action_mailer.perform_caching = false
-  
+
+  # Host padrão para geração de URLs completas (_url helpers, ex: link_page_url)
+  Rails.application.routes.default_url_options = { host: 'moveisrosa.shop', protocol: 'https' }
+
   # Configuração de email para produção
   config.action_mailer.default_url_options = { host: 'moveisrosa.shop', protocol: 'https' }
   config.action_mailer.raise_delivery_errors = true

@@ -40,6 +40,7 @@
                   <th>Nome Exibido</th>
                   <th>Número WhatsApp</th>
                   <th>Email</th>
+                  <th class="text-center">No Link</th>
                   <th class="text-center">Foto</th>
                   <th class="text-center">Ações</th>
                 </tr>
@@ -52,6 +53,13 @@
                     <td><%= contact.display_name %></td>
                     <td><%= contact.whatsapp_number %></td>
                     <td><%= contact.email.present? ? contact.email : '-' %></td>
+                    <td class="text-center">
+                      <% if contact.publicar_link %>
+                        <span class="badge bg-success">Sim</span>
+                      <% else %>
+                        <span class="badge bg-secondary">Não</span>
+                      <% end %>
+                    </td>
                     <td class="text-center">
                       <% if contact.photo.attached? %>
                         <%= image_tag contact.photo.variant(resize_to_limit: [60, 60]), class: "rounded-circle" %>

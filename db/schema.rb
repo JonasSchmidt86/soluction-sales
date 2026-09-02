@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_02_120005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -317,6 +317,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
     t.datetime "updated_at", null: false
     t.index ["commission_rule_id", "position"], name: "index_commission_tiers_on_commission_rule_id_and_position", unique: true
     t.index ["commission_rule_id"], name: "index_commission_tiers_on_commission_rule_id"
+  end
+
+  create_table "company_link_pages", force: :cascade do |t|
+    t.integer "empresa_id", null: false
+    t.string "slug", null: false
+    t.string "titulo"
+    t.string "descricao"
+    t.boolean "publicado", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "formato_imagem", default: "redonda", null: false
+    t.string "cor_fundo_inicio", default: "#1f2a33", null: false
+    t.string "cor_fundo_fim", default: "#343a40", null: false
+    t.string "cor_texto", default: "#ffffff", null: false
+    t.index ["empresa_id"], name: "index_company_link_pages_on_empresa_id", unique: true
+    t.index ["slug"], name: "index_company_link_pages_on_slug", unique: true
   end
 
   create_table "compra", primary_key: "cod_compra", force: :cascade do |t|
@@ -844,6 +860,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
     t.string "cest", limit: 15
   end
 
+  create_table "social_links", force: :cascade do |t|
+    t.bigint "company_link_page_id", null: false
+    t.string "tipo", default: "outro", null: false
+    t.string "titulo"
+    t.string "url", null: false
+    t.integer "ordem", default: 0, null: false
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_link_page_id", "ordem"], name: "index_social_links_on_company_link_page_id_and_ordem"
+    t.index ["company_link_page_id"], name: "index_social_links_on_company_link_page_id"
+  end
+
   create_table "tiposhistoricoscaixa", primary_key: "cod_tphitorico", id: :bigint, default: -> { "nextval('tphistorico_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo"
     t.string "descricao", limit: 100
@@ -903,6 +932,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "email"
+    t.boolean "publicar_link", default: false, null: false
+    t.integer "ordem", default: 0, null: false
     t.index ["empresa_id"], name: "index_whatsapp_contacts_on_empresa_id"
   end
 
@@ -1034,6 +1065,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_01_000001) do
   add_foreign_key "produtoxml", "cores", column: "cod_cor", primary_key: "cod_cor", name: "fk_cor"
   add_foreign_key "produtoxml", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
   add_foreign_key "produtoxml", "produto", column: "cod_produto", primary_key: "cod_produto", name: "fk_produto"
+  add_foreign_key "social_links", "company_link_pages"
   add_foreign_key "tiposlancamento", "banco", column: "cod_banco", primary_key: "cod_banco", name: "fk_banco"
   add_foreign_key "tiposlancamento", "bancoconta", column: "cod_bancoconta", primary_key: "cod_bancoconta", name: "fk_bancoconta"
   add_foreign_key "tiposlancamento", "empresa", column: "cod_empresa", primary_key: "cod_empresa", name: "fk_empresa"

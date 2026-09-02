@@ -39,6 +39,18 @@
         <%= form.label :email, "Email" %>
         <%= form.text_field :email, class: "form-control", placeholder: "contato@exemplo.com" %>
       </div>
+      <div class="row">
+        <div class="col-md-8 mb-3">
+          <div class="form-check form-switch mt-2">
+            <%= form.check_box :publicar_link, class: "form-check-input" %>
+            <%= form.label :publicar_link, "Exibir este número na página de links (Instagram)", class: "form-check-label" %>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <%= form.label :ordem, "Ordem de exibição" %>
+          <%= form.number_field :ordem, class: "form-control", value: (@whatsapp_contact.ordem || 0) %>
+        </div>
+      </div>
       <div class="mb-3">
         <%= form.label :photo, "Foto do Contato" %>
         <%= form.file_field :photo, class: "form-control" %>

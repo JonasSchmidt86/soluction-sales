@@ -25,6 +25,9 @@
   <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
     Funcionário
   <% end %>
+  <%= link_to collaborators_backoffice_company_link_pages_path, class: "nav-link" do %>
+    <i class="fa fa-share-nodes fa-fw"></i> Páginas de Links
+  <% end %>
   <% if current_collaborator.id == 1 %>
     <%= link_to collaborators_backoffice_cadinternalframes_path, class: "nav-link" do %>
       Cadastro de Layouts

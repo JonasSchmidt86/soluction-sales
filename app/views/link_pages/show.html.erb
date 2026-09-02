@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @link_page.titulo_exibido %> - Links</title>
+  <meta name="description" content="<%= @link_page.descricao.presence || "Fale conosco no WhatsApp, veja nossa localização e redes sociais." %>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 40px 18px;
+    }
+
+    .wrapper { width: 100%; max-width: 440px; text-align: center; }
+
+    .logo {
+      width: 120px; height: 120px;
+      object-fit: cover;
+      background: #fff;
+      margin: 0 auto 18px;
+      display: block;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo-redonda { border-radius: 50%; padding: 6px; }
+
+    /* Imagem quadrada em tamanho total (estilo post do Instagram) */
+    .banner-quadrado {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 18px;
+      background: #fff;
+      margin: 0 auto 20px;
+      display: block;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Formato cabeçalho: faixa larga edge-to-edge no topo, título sobreposto */
+    body.tem-cabecalho { padding: 0 0 40px; flex-direction: column; align-items: center; }
+    body.tem-cabecalho .wrapper { padding: 0 18px; }
+
+    .cabecalho {
+      position: relative;
+      width: 100vw;
+      height: 230px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .cabecalho img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Degradê escuro para o título ficar legível e transição com o fundo */
+    .cabecalho::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 70%, var(--cor-fim, #2b333a) 100%);
+    }
+
+    .cabecalho-texto {
+      position: absolute;
+      left: 0; right: 0; bottom: 16px;
+      z-index: 2;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .cabecalho-texto h1 { margin: 0 0 4px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    .cabecalho-texto .subtitle { margin: 0; opacity: 0.95; }
+
+    h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 6px; }
+    .subtitle { font-size: 0.95rem; opacity: 0.8; margin: 0 0 32px; }
+
+    .section-label {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.55;
+      margin: 22px 4px 10px;
+    }
+
+    .link-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 15px 18px;
+      margin-bottom: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: inherit;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .link-btn:hover, .link-btn:active {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .link-btn .icon {
+      width: 42px; height: 42px; min-width: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; color: #fff;
+      overflow: hidden;
+    }
+
+    .link-btn .icon img { width: 100%; height: 100%; object-fit: cover; }
+
+    .link-btn .label { flex: 1; text-align: left; }
+    .link-btn .label small {
+      display: block; font-weight: 400; font-size: 0.78rem; opacity: 0.7;
+    }
+    .link-btn .chevron { opacity: 0.5; }
+
+    .ic-whatsapp { background: #25d366; }
+
+    footer { margin-top: 26px; font-size: 0.8rem; opacity: 0.6; }
+  </style>
+</head>
+<% cabecalho = (@link_page.formato_imagem == "cabecalho") %>
+<body class="<%= 'tem-cabecalho' if cabecalho %>"
+      style="background: <%= @link_page.css_fundo %>; color: <%= @link_page.cor_do_texto %>; --cor-fim: <%= @link_page.cor_fim %>;">
+  <% if cabecalho %>
+    <%# Faixa larga no topo (edge-to-edge) com título sobreposto %>
+    <header class="cabecalho">
+      <% if @link_page.imagem.attached? %>
+        <%= image_tag @link_page.imagem.variant(resize_to_fill: [1200, 460]),
+              alt: @link_page.titulo_exibido %>
+      <% else %>
+        <img src="/images/logo.png" alt="<%= @link_page.titulo_exibido %>">
+      <% end %>
+      <div class="cabecalho-texto">
+        <h1><%= @link_page.titulo_exibido %></h1>
+        <% if @link_page.descricao.present? %>
+          <p class="subtitle"><%= @link_page.descricao %></p>
+        <% end %>
+      </div>
+    </header>
+  <% end %>
+
+  <main class="wrapper">
+    <% unless cabecalho %>
+      <% if @link_page.imagem_redonda? %>
+        <%# Avatar circular pequeno %>
+        <% if @link_page.imagem.attached? %>
+          <%= image_tag @link_page.imagem.variant(resize_to_fill: [240, 240]),
+                alt: @link_page.titulo_exibido, class: "logo logo-redonda" %>
+        <% else %>
+          <img src="/images/logo.png" alt="<%= @link_page.titulo_exibido %>" class="logo logo-redonda">
+        <% end %>
+      <% else %>
+        <%# Banner quadrado em tamanho total (estilo Instagram) %>
+        <% if @link_page.imagem.attached? %>
+          <%= image_tag @link_page.imagem.variant(resize_to_fill: [640, 640]),
+                alt: @link_page.titulo_exibido, class: "banner-quadrado" %>
+        <% else %>
+          <img src="/images/logo.png" alt="<%= @link_page.titulo_exibido %>" class="banner-quadrado">
+        <% end %>
+      <% end %>
+
+      <h1><%= @link_page.titulo_exibido %></h1>
+      <% if @link_page.descricao.present? %>
+        <p class="subtitle"><%= @link_page.descricao %></p>
+      <% end %>
+    <% end %>
+
+    <% mensagem_padrao = "Olá! Vim pelo Instagram e gostaria de mais informações." %>
+
+    <% if @whatsapp_contacts.any? %>
+      <div class="section-label">Fale conosco</div>
+      <% @whatsapp_contacts.each do |contact| %>
+        <% wa_url = contact.whatsapp_url(mensagem_padrao) %>
+        <% next if wa_url.blank? %>
+        <a class="link-btn" href="<%= wa_url %>" target="_blank" rel="noopener">
+          <span class="icon ic-whatsapp">
+            <% if contact.photo.attached? %>
+              <%= image_tag contact.photo.variant(resize_to_fill: [84, 84]) %>
+            <% else %>
+              <i class="fab fa-whatsapp"></i>
+            <% end %>
+          </span>
+          <span class="label">
+            <%= contact.display_name.presence || "WhatsApp" %>
+            <small><%= contact.whatsapp_number %></small>
+          </span>
+          <i class="fas fa-chevron-right chevron"></i>
+        </a>
+      <% end %>
+    <% end %>
+
+    <% if @social_links.any? %>
+      <div class="section-label">Redes e links</div>
+      <% @social_links.each do |link| %>
+        <a class="link-btn" href="<%= link.url %>" target="_blank" rel="noopener">
+          <span class="icon" style="background: <%= link.cor %>;">
+            <i class="<%= link.icon %>"></i>
+          </span>
+          <span class="label"><%= link.label %></span>
+          <i class="fas fa-chevron-right chevron"></i>
+        </a>
+      <% end %>
+    <% end %>
+
+    <footer>&copy; <%= Time.now.year %> <%= @link_page.titulo_exibido %></footer>
+  </main>
+</body>
+</html>
