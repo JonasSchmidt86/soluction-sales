@@ -47,6 +47,18 @@
         </div>
         <div class="col-md-3">
           <div class="form-floating">
+            <%= f.collection_select :cod_funcionario,
+                  Funcionario.select(:cod_funcionario, :usuario).where(
+                    "cod_funcionario in (select cod_funcionario from funcionarioempresa where ativo = true and cod_empresa = ?) and datademissao is null",
+                    current_collaborator.cod_empresa).order(:usuario),
+                  :cod_funcionario, :usuario,
+                  { prompt: "Selecione" },
+                  class: "form-select border-top-0 border-start-0 border-end-0 border-dark" %>
+            <%= f.label :cod_funcionario, "Funcionário" %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-floating">
             <%= f.text_field :valortotal, class: "money2 form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
             <%= f.label :valortotal, "Valor Total" %>
           </div>
@@ -65,7 +77,8 @@
           <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
             <thead>
               <tr>
-                <th style="width: 35%;">Nome</th>
+                <th style="width: 8%;">Código</th>
+                <th style="width: 30%;">Nome</th>
                 <th>Cor</th>
                 <th style="width: 7%;">Qtd</th>
                 <th style="width: 10%;">Valor</th>

@@ -3,15 +3,56 @@
     <h4>Orçamentos</h4>
   </div>
   <div class="card-body">
-    <div class="mb-3">
-      <%= link_to 'Novo Orçamento', new_collaborators_backoffice_orcamento_path, class: 'btn btn-primary' %>
-    </div>
+    <%= form_with url: collaborators_backoffice_orcamentos_path, method: :get, local: true, class: 'row g-2 align-items-center mb-3' do %>
+      <%= hidden_field_tag :filtrado, '1' %>
+      <div class="col-auto" style="max-width: 90px;">
+        <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]),
+              onchange: 'this.form.submit()', class: 'form-select form-select-md' %>
+      </div>
+      <div class="col-auto">
+        <%= text_field_tag :data_inicio,
+              params[:data_inicio],
+              class: 'form-control form-control-md datepicker fallback',
+              placeholder: 'Data Inicial',
+              style: 'max-width: 120px;',
+              autocomplete: 'off' %>
+      </div>
+      <div class="col-auto">
+        <%= text_field_tag :data_fim,
+              params[:data_fim],
+              class: 'form-control form-control-md datepicker fallback',
+              placeholder: 'Data Final',
+              style: 'max-width: 120px;',
+              autocomplete: 'off' %>
+      </div>
+      <div class="col-auto">
+        <%= select_tag :status,
+              options_for_select([
+                ['Todos', ''],
+                ['Pendente', 'pendente'],
+                ['Aprovado', 'aprovado'],
+                ['Convertido', 'convertido'],
+                ['Rejeitado', 'rejeitado']
+              ], @status_selecionado),
+              class: 'form-select form-select-md', style: 'max-width: 200px;' %>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <%= submit_tag 'Filtrar', class: 'btn btn-success', style: 'min-width: 115px;' %>
+        <%= link_to 'Limpar', collaborators_backoffice_orcamentos_path, class: 'btn btn-outline-secondary' %>
+      </div>
+      <div class="col ms-auto d-flex justify-content-end">
+        <%= link_to new_collaborators_backoffice_orcamento_path, class: 'btn btn-primary' do %>
+          <i class="fa fa-plus"></i> Novo Orçamento
+        <% end %>
+      </div>
+    <% end %>
     <div class="table-responsive">
       <table id="orcamentos-table" class="table table-striped table-hover table-bordered table-sm">
         <thead>
           <tr>
             <th>Código</th>
             <th>Cliente</th>
+            <th>Criado por</th>
             <th style="text-align: center;">Data</th>
             <th style="text-align: center;">Validade</th>
             <th style="text-align: center;">Valor Total</th>
@@ -30,7 +71,8 @@
             <tr>
               <td class="col-acoes" style="text-align: center;"><%= orcamento.cod_orcamento %></td>
               <td><%= orcamento.pessoa.nome %></td>
-              <td class="col-acoes"><%= l(orcamento.data_orcamento, format: :default) %></td>
+              <td><%= orcamento.funcionario&.usuario %></td>
+              <td class="col-acoes"><%= orcamento.data_orcamento&.strftime('%d/%m/%Y') %></td>
               <td class="col-acoes"><%= orcamento.data_validade ? l(orcamento.data_validade) : '-' %></td>
               <td class="col-acoes"><%= "R$ #{number_to_currency(orcamento.valortotal, separator: ",", delimiter: "", unit:"")}" %></td>
               <td class="col-acoes text-center">
@@ -89,7 +131,12 @@
       </table>
     </div>
     <div class="mt-3">
-      <%= paginate @orcamentos %>
+      <% if @orcamentos.respond_to?(:total_pages) %>
+        <div class="dataTable-info"><%= page_entries_info @orcamentos, entry_name: 'orçamento' %></div>
+        <%= paginate @orcamentos %>
+      <% else %>
+        <h6>Exibindo <%= @orcamentos.size %> registros</h6>
+      <% end %>
     </div>
   </div>
 </div>
@@ -114,7 +161,8 @@
       "paging": false,
       "searching": false,
       "ordering": true,
-      "info": false
+      "info": false,
+      "order": [[0, "desc"]]  // ordena por Código decrescente (maior para o menor)
     });
 
     document.querySelectorAll('.copy-client-link').forEach(function(button) {

@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  # Silencia requisições automáticas do Chrome DevTools e sourcemaps ausentes
+  # (evitam ActionController::RoutingError no log de desenvolvimento)
+  get '/.well-known/appspecific/com.chrome.devtools.json', to: proc { [204, {}, ['']] }
+  get '/assets/*path.map', to: proc { [204, {}, ['']] }
+
   root 'home#index'
   get 'produto/:cod_produto/:cod_cor', to: 'home#produto', as: 'produto'
   get 'portfolio', to: 'home#portfolio'

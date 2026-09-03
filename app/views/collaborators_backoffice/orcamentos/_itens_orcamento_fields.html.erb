@@ -1,7 +1,15 @@
 <tr class="nested-fields">
   <%= f.hidden_field :cod_produto %>
+  <td class="col-auto">
+    <input type="text"
+           value="<%= f.object.cod_produto %>"
+           class="text form-control border-top-0 border-start-0 border-end-0 border-dark codigo_search"
+           placeholder="Código + Enter"
+           inputmode="numeric">
+  </td>
   <td class="col-1">
     <%= f.text_field :produto, 
+            value: (f.object.produto&.nome if f.object.cod_produto.present?),
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
             placeholder: "Pressione Enter para buscar!" %>
     <div id="products_list" class="list-group position-absolute bg-light" style="display: none; z-index: 100; width: 35%;"></div>
@@ -21,13 +29,22 @@
       oninput: "this.value = this.value.replace(/[^0-9]/g, '')" %>
   </td>
   <td>
-    <%= f.text_field :valorunitario, class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valorunitario, 
+      value: number_with_precision(f.object.valorunitario, precision: 2, separator: ',', delimiter: '.'),
+      class: "money2 valor-unitario form-control border-top-0 border-start-0 border-end-0 border-dark", 
+      inputmode: "numeric", onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_acrescimo, class: "money2 valor-acrescimo form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valor_acrescimo, 
+      value: number_with_precision(f.object.valor_acrescimo, precision: 2, separator: ',', delimiter: '.'),
+      class:"money2 valor-acrescimo form-control border-top-0 border-start-0 border-end-0 border-dark", 
+      inputmode: "numeric", onchange: "setValorTotal(this)" %>
   </td>
   <td>
-    <%= f.text_field :valor_desconto, class: "money2 valor-desconto form-control border-top-0 border-start-0 border-end-0 border-dark", inputmode: "numeric", onchange: "setValorTotal(this)" %>
+    <%= f.text_field :valor_desconto,
+        value: number_with_precision(f.object.valor_desconto, precision: 2, separator: ',', delimiter: '.'),
+        class: "money2 valor-desconto form-control border-top-0 border-start-0 border-end-0 border-dark", 
+        inputmode: "numeric", onchange: "setValorTotal(this)" %>
   </td>
   <td>
     <input type="text" class="valor-total money2 form-control border-top-0 border-start-0 border-end-0 border-dark" disabled>

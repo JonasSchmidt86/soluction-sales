@@ -90,6 +90,12 @@
               var commentField = document.getElementById(selector);
               if ( commentField ){
                   commentField.value = inputField.value;
+                  // Reflete o código no campo visível de código da mesma linha
+                  var row = commentField.closest('tr');
+                  if (row) {
+                      var codigoField = row.querySelector('.codigo_search');
+                      if (codigoField) { codigoField.value = inputField.value; }
+                  }
               }
               selectColorProduct(inputField)
               inputField = "";
@@ -138,7 +144,7 @@
               corSelect.value = data[0].cod_cor;
               proQtd.value = 1;
               option.setAttribute("data-valor-attribute", data[0].valorvenda);
-              proValor.value = data[0].valorvenda;
+              proValor.value = parseFloat(data[0].valorvenda).toFixed(2).replace(".",",");
               setValorTotal(field);
           } else if (data.length > 0) {
               data.forEach(cor => {
@@ -227,6 +233,65 @@
       }
   });
 
+  // Busca por CÓDIGO do produto: digita o código e pressiona Enter
+  $(document).on('keydown', '.codigo_search', function(event) {
+      if (event.key === 'Enter') {
+          event.preventDefault();
+          selectProductByCode(this);
+      }
+  });
+
+  function selectProductByCode(field) {
+      var codigo = field.value.trim();
+      if (!codigo) return;
+
+      // Deriva o índice a partir do hidden cod_produto da mesma linha
+      var row = field.closest('tr');
+      var selectedProductIdField = row ? row.querySelector('input[id*="_cod_produto"]') : null;
+      if (!selectedProductIdField) { return; }
+      var index = thisIndex(selectedProductIdField);
+      var nomeField = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_produto`);
+
+      let apiUrl = url + "buscas/buscar_produtos";
+
+      $.ajax({
+          url: apiUrl,
+          method: 'GET',
+          data: { entidade: 'Produto', query: codigo },
+          success: function(data) {
+              // Procura por correspondência exata de código
+              var produto = data.find(function(p) {
+                  return String(p.cod_produto) === String(codigo);
+              });
+
+              // Se não houver correspondência exata mas retornou apenas um item, usa ele
+              if (!produto && data.length === 1) {
+                  produto = data[0];
+              }
+
+              if (produto) {
+                  if (selectedProductIdField) {
+                      selectedProductIdField.value = produto.cod_produto;
+                  }
+                  if (nomeField) {
+                      nomeField.value = produto.nome;
+                  }
+                  field.value = produto.cod_produto;
+                  // Dispara consulta de estoque/cor/valor
+                  selectColorProduct(selectedProductIdField);
+                  // Foca no próximo campo (quantidade)
+                  var proQtd = document.getElementById(`orcamento_itens_orcamentos_attributes_${index}_quantidade`);
+                  if (proQtd) { proQtd.focus(); }
+              } else {
+                  alert('Produto não encontrado para o código informado: ' + codigo);
+              }
+          },
+          error: function(err) {
+              console.error('Erro na busca por código:', err);
+          }
+      });
+  }
+
     $(document).on('click', '.btn-remove-item', function() {
         console.log("ITEM REMOVIDO, ATUALIZANDO TOTAL...");
         setTimeout(function() {
@@ -249,7 +314,7 @@
       productOptions();
 
       productsList.on('click', `div.list-group-item`, function() {
-          let selectedProduct = $(this).data('produto');
+          let selectedProduct = $(this).data('nome');
           let selectedProductId = $(this).data('cod_produto');
           selectedProductIdField.value = ( selectedProductId );
           field.value =  selectedProduct ;
@@ -272,6 +337,7 @@
                       listItem.addClass('list-group-item');
                       listItem.data('cod_produto', product.cod_produto);
                       listItem.data('produto', product.produto);
+                      listItem.data('nome', product.nome);
                       productsList.append(listItem);
                   });
                   productsList.show();
@@ -284,12 +350,14 @@
   };
 
   $(document).ready(function() {
-    $(".money2").mask("000000000,00", {reverse: true})
+    // Inicializa máscaras nos campos existentes
+    $(".money2").mask("000000000,00", {reverse: true});
 
     $(document).on('mouseup', '.money2, .quantidade', function() {
       $(this).select();
     });
 
+    // Re-inicializa máscaras nos novos campos adicionados pelo Cocoon
     $(document).on('cocoon:after-insert', function(e, insertedItem) {
       setTimeout(function() {
         $(insertedItem).find('.money2').mask("000000000,00", {reverse: true});
