@@ -38,7 +38,7 @@ class Produto < ApplicationRecord
       joins(:produto_imagens, :empresaprodutos)
         .where('empresaprodutos.cod_produto = produto_imagens.cod_produto AND empresaprodutos.cod_cor = produto_imagens.cod_cor')
         .where(empresaprodutos: { publicado: true })
-        .order(cod_produto: :asc)
+        .order(nome: :asc, cod_produto: :asc)
         .distinct
   }
 
