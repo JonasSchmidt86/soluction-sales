@@ -12,7 +12,7 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       # puts "CONSULTA ESTOQUE #{params} "x
       @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade, :ultimocusto)
                    .joins(:empresaprodutos)
-                   .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
+                   .where("cod_produto = ? and cod_empresa = ? and cores.ativo = true and empresaproduto.ativo = true", params[:id_produto], current_collaborator.cod_empresa)
                    .order(quantidade: :desc, nmcor: :asc, cod_cor: :asc)
       if @cores.empty?
         @cores = Core.select(:nmcor, :cod_cor, :valorvenda, :quantidade, :ultimocusto)

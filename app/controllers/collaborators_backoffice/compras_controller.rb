@@ -42,7 +42,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
 
       @cores = Core.select(:nmcor, :cod_cor, :ultimocusto)
                    .joins(:empresaprodutos)
-                   .where("cod_produto = ? and cod_empresa = ?", params[:id_produto], current_collaborator.cod_empresa)
+                   .where("cod_produto = ? and cod_empresa = ? and empresaproduto.ativo = true and cores.ativo = true", params[:id_produto], current_collaborator.cod_empresa)
                    .order(nmcor: :asc, cod_cor: :asc)
       if @cores.empty?
         @cores = Core.select(:nmcor, :cod_cor, :ultimocusto)
