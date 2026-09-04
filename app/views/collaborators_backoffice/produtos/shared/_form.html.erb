@@ -58,19 +58,36 @@
                 </tr>
               </thead>
               <tbody>
-                <% @produto.empresaprodutos.where("cod_empresa = ? ", current_collaborator.cod_empresa).each do |ep| %>
-                  <tr>
+                <% @produto.empresaprodutos.where("cod_empresa = ? ", current_collaborator.cod_empresa).order(quantidade: :desc, ativo: :desc).each do |ep| %>
+                  <tr class="<%= 'table-secondary text-muted' unless ep.ativo %>">
                     <td><%= ep.cod_empresa %></td>
                     <td><%= ep.cod_cor %></td>
                     <td><%= ep.cor.nmcor %></td>
                     <td class="estoq-real-cell"><%= ep.estoq_real.to_i %></td>
                     <td class="quantidade-cell"><%= ep.quantidade.to_i %></td>
                     <td>
-                      <button class="btn btn-sm btn-outline-primary btn-atualizar-estoque"
-                              data-url="<%= atualizar_estoque_collaborators_backoffice_produto_path(@produto) %>"
-                              data-cod-cor="<%= ep.cod_cor %>">
-                        <i class="fa fa-rotate"></i>
-                      </button>
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-danger btn-desativar-estoque"
+                                data-url="<%= desativar_estoque_collaborators_backoffice_produto_path(@produto) %>"
+                                data-cod-cor="<%= ep.cod_cor %>"
+                                title="Desativar estoque desta cor"
+                                <%= 'style=display:none;' unless ep.ativo %>>
+                          <i class="fa fa-ban"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success btn-ativar-estoque"
+                                data-url="<%= ativar_estoque_collaborators_backoffice_produto_path(@produto) %>"
+                                data-cod-cor="<%= ep.cod_cor %>"
+                                title="Ativar estoque desta cor"
+                                <%= 'style=display:none;' if ep.ativo %>>
+                          <i class="fa fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary btn-atualizar-estoque"
+                                data-url="<%= atualizar_estoque_collaborators_backoffice_produto_path(@produto) %>"
+                                data-cod-cor="<%= ep.cod_cor %>"
+                                title="Atualizar estoque">
+                          <i class="fa fa-rotate"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 <% end %>
@@ -267,6 +284,94 @@
     .catch(() => {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-rotate"></i>';
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-desativar-estoque');
+    if (!btn) return;
+
+    if (!confirm('Deseja realmente desativar o estoque desta cor para esta empresa?')) return;
+
+    var url    = btn.dataset.url;
+    var codCor = btn.dataset.codCor;
+    var row    = btn.closest('tr');
+    var ativarBtn = row.querySelector('.btn-ativar-estoque');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ cod_cor: codCor })
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data: data })))
+    .then(res => {
+      if (!res.ok) {
+        alert(res.data.error || 'Erro ao desativar estoque.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-ban"></i>';
+        return;
+      }
+      row.classList.add('table-secondary', 'text-muted');
+      btn.style.display = 'none';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-ban"></i>';
+      if (ativarBtn) ativarBtn.style.display = '';
+    })
+    .catch(() => {
+      alert('Erro ao desativar estoque.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-ban"></i>';
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-ativar-estoque');
+    if (!btn) return;
+
+    var url    = btn.dataset.url;
+    var codCor = btn.dataset.codCor;
+    var row    = btn.closest('tr');
+    var desativarBtn = row.querySelector('.btn-desativar-estoque');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ cod_cor: codCor })
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data: data })))
+    .then(res => {
+      if (!res.ok) {
+        alert(res.data.error || 'Erro ao ativar estoque.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check"></i>';
+        return;
+      }
+      row.classList.remove('table-secondary', 'text-muted');
+      btn.style.display = 'none';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i>';
+      if (desativarBtn) desativarBtn.style.display = '';
+    })
+    .catch(() => {
+      alert('Erro ao ativar estoque.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i>';
     });
   });
 </script>

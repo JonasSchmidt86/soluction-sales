@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeController
 
 
-    before_action :set_produto, only: [:edit, :update, :destroy, :show, :atualizar_estoque]
+    before_action :set_produto, only: [:edit, :update, :destroy, :show, :atualizar_estoque, :desativar_estoque, :ativar_estoque]
     #before_action :get_produto, only: [:new, :edit, :update,]
 
     def index
@@ -105,7 +105,47 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         render json: { estoq_real: ep&.estoq_real.to_i, quantidade: ep&.quantidade.to_i }
     end
 
-      
+    # Desativa (ativo = false) o estoque de uma cor especifica apenas para a empresa logada
+    def desativar_estoque
+        ep = Empresaproduto.find_by(
+            cod_empresa: current_collaborator.cod_empresa,
+            cod_produto: params[:id],
+            cod_cor: params[:cod_cor]
+        )
+
+        if ep.nil?
+            render json: { error: "Registro de estoque nao encontrado." }, status: :not_found
+            return
+        end
+
+        if ep.update(ativo: false)
+            render json: { ativo: ep.ativo }
+        else
+            render json: { error: ep.errors.full_messages.join(", ") }, status: :unprocessable_entity
+        end
+    end
+
+    # Reativa (ativo = true) o estoque de uma cor especifica apenas para a empresa logada
+    def ativar_estoque
+        ep = Empresaproduto.find_by(
+            cod_empresa: current_collaborator.cod_empresa,
+            cod_produto: params[:id],
+            cod_cor: params[:cod_cor]
+        )
+
+        if ep.nil?
+            render json: { error: "Registro de estoque nao encontrado." }, status: :not_found
+            return
+        end
+
+        if ep.update(ativo: true)
+            render json: { ativo: ep.ativo }
+        else
+            render json: { error: ep.errors.full_messages.join(", ") }, status: :unprocessable_entity
+        end
+    end
+
+
     private 
 
     def params_produto

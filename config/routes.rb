@@ -48,6 +48,8 @@ Rails.application.routes.draw do
       member do
         get :estoque
         post :atualizar_estoque
+        post :desativar_estoque
+        post :ativar_estoque
       end
     end
     resources :produto_imagens, only: [:index, :create, :edit, :destroy] do
