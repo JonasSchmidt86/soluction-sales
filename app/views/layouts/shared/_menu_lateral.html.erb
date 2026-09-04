@@ -13,6 +13,11 @@
 <%= link_to collaborators_backoffice_cores_path, class: "nav-link" do %>
   Cores
 <% end %>
+<% if access_control.can_view?('produto_imagens') %>
+  <%= link_to cadastro_rapido_collaborators_backoffice_produto_imagens_path, class: "nav-link" do %>
+    Cadastro Rápido de Imagens
+  <% end %>
+<% end %>
 <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
   Lembretes
 <% end %>

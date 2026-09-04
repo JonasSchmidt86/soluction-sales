@@ -3,7 +3,10 @@
     <%= link_to collaborators_backoffice_produto_imagens_path do %>
       <h4 class="text-white mb-0">Imagens</h4>
     <% end %>
-    <div class="ms-auto">
+    <div class="ms-auto d-flex gap-2">
+      <%= link_to cadastro_rapido_collaborators_backoffice_produto_imagens_path, class: "btn btn-light" do %>
+        <i class="fa fa-bolt"></i> Cadastro rápido
+      <% end %>
       <%= link_to edit_collaborators_backoffice_produto_imagen_path(0), class: "btn btn-light" do %>
         <i class="fa fa-plus"></i> Novo
       <% end %>
@@ -118,6 +121,15 @@
                           </li>
                         </ul>
                       </div>
+                    </div>
+                  </div>
+                  <!-- Legenda abaixo da imagem -->
+                  <div class="text-center mt-1">
+                    <span class="badge bg-secondary">
+                      <%= imagem.cod_produto %>-<%= imagem.cod_cor %>
+                    </span>
+                    <div class="small text-truncate" style="max-width: 220px; margin: 0 auto;" title="<%= imagem.produto&.nome %>">
+                      <%= imagem.produto&.nome %>
                     </div>
                   </div>
                 </div>

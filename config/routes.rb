@@ -55,6 +55,10 @@ Rails.application.routes.draw do
         get :get_cor_data
         get :biblioteca
         post :salvar_da_orcamento
+        get :cadastro_rapido
+        post :cadastro_rapido_salvar
+        post :cadastro_rapido_linha
+        post :cadastro_rapido_verificar
       end
     end
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]

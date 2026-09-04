@@ -30,6 +30,7 @@ class AccessRolePermission < ApplicationRecord
     'cores' => 'Cores',
     'marcas' => 'Marcas',
     'grupos' => 'Grupos',
+    'produto_imagens' => 'Imagens de Produtos',
     'melhorias' => 'Melhorias/Sugestões',
     'commission_rules' => 'Comissões - Regras',
     'commission_assignments' => 'Comissões - Atribuições',

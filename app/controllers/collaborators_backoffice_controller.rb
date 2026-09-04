@@ -60,6 +60,7 @@ class CollaboratorsBackofficeController < ApplicationController
       'cores' => 'cores',
       'marcas' => 'marcas',
       'grupos' => 'grupos',
+      'produto_imagens' => 'produto_imagens',
       'melhorias' => 'melhorias',
       'commission_rules' => 'commission_rules',
       'commission_assignments' => 'commission_assignments',
@@ -96,11 +97,27 @@ class CollaboratorsBackofficeController < ApplicationController
       'converter_venda' => :create,
       'comentar' => :create,
       'pagamentos' => :view,
-      'estoque' => :view
+      'estoque' => :view,
+      'cadastro_rapido' => :view,
+      'cadastro_rapido_salvar' => :create,
+      'cadastro_rapido_linha' => :create,
+      'cadastro_rapido_verificar' => :view
+    }.freeze
+
+    # Actions auxiliares (AJAX) que são consumidas por outros fluxos que já
+    # possuem sua própria permissão (ex.: editor de orçamento usa a biblioteca
+    # de imagens). Ficam isentas da verificação do recurso do controller.
+    EXEMPT_ACTIONS = {
+      'produto_imagens' => %w[biblioteca salvar_da_orcamento get_cor_data]
     }.freeze
 
     def authorize_resource!
       return unless current_collaborator
+
+      # Libera actions auxiliares expressamente isentas
+      if EXEMPT_ACTIONS[controller_name]&.include?(action_name)
+        return
+      end
 
       # Permitir que o colaborador atualize a si mesmo (troca de empresa)
       if controller_name == 'collaborators' && %w[edit update].include?(action_name)

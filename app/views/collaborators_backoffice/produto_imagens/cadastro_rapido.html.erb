@@ -1,0 +1,599 @@
+<!-- Área de mensagens (toast) no topo da tela -->
+<div id="toast_cadastro_rapido"
+     style="position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 4000; min-width: 260px; text-align: center; display: none;">
+</div>
+
+<div class="card mt-3">
+  <div class="card-header bg-primary d-flex align-items-center">
+    <%= link_to collaborators_backoffice_produto_imagens_path do %>
+      <h4 class="text-white mb-0">Cadastro Rápido de Imagens</h4>
+    <% end %>
+    <div class="ms-auto">
+      <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-light" do %>
+        <i class="fa fa-images"></i> Ver imagens
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="alert alert-info">
+      Selecione várias imagens de uma vez. Para cada imagem escolha o
+      <strong>produto</strong> (buscando por código ou nome), a <strong>cor</strong>
+      e informe uma <strong>descrição</strong>. Em seguida clique em <strong>Salvar tudo</strong>.
+    </div>
+
+    <!-- Seleção das imagens -->
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col-md-9">
+        <label for="seletor_imagens" class="form-label mb-1">Selecionar imagens</label>
+        <input type="file" id="seletor_imagens" class="form-control" accept="image/*" multiple>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button type="button" id="limpar_imagens" class="btn btn-outline-secondary w-100">
+          Limpar seleção
+        </button>
+      </div>
+    </div>
+
+    <%= form_with(url: cadastro_rapido_salvar_collaborators_backoffice_produto_imagens_path,
+                  local: true, method: :post, multipart: true, id: "form_cadastro_rapido") do |form| %>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="tabela_cadastro_rapido">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 200px;">Imagem</th>
+              <th style="width: 320px;">Produto / Cor</th>
+              <th>Descrição</th>
+              <th style="width: 60px;"></th>
+            </tr>
+          </thead>
+          <tbody id="linhas_imagens">
+            <tr id="linha_vazia">
+              <td colspan="4" class="text-center text-muted py-4">
+                Nenhuma imagem selecionada.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button type="submit" id="btn_salvar_tudo" class="btn btn-success" disabled>
+          <i class="fa fa-save"></i> Salvar tudo
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Picker de emojis (estilo WhatsApp) - único, reutilizado por todas as linhas -->
+<div id="emoji_picker_wrapper" style="display: none; position: absolute; z-index: 3000;">
+  <emoji-picker></emoji-picker>
+</div>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
+<!-- Template de uma linha (imagem + campos) -->
+<template id="template_linha">
+  <tr class="linha-imagem">
+    <td class="text-center">
+      <img class="preview-img rounded border" style="max-width: 200px; max-height: 150px; object-fit: contain;" />
+      <div class="small text-muted mt-1 nome-arquivo text-truncate" style="max-width: 200px;"></div>
+    </td>
+    <!-- Coluna 2: Produto (2 linhas: busca + cor) -->
+    <td style="vertical-align: top;">
+      <div class="d-flex flex-column gap-2">
+        <!-- Linha 1: Busca de produto -->
+        <div style="position: relative;">
+          <div class="form-floating">
+            <input type="text" class="form-control produto_search" placeholder="Código ou nome do produto" autocomplete="off">
+            <label>Produto (código ou nome)</label>
+          </div>
+          <div class="products_list position-absolute bg-light rounded border p-2 mt-1"
+               style="display: none; z-index: 1000; width: 100%; max-height: 260px; overflow-y: auto;"></div>
+          <input type="hidden" class="campo_cod_produto" data-name="cod_produto">
+        </div>
+
+        <!-- Linha 2: Cor -->
+        <div class="form-floating">
+          <select class="form-select campo_cod_cor" data-name="cod_cor" disabled>
+            <option value="">Selecione o produto primeiro</option>
+          </select>
+          <label>Cor</label>
+        </div>
+      </div>
+    </td>
+
+    <!-- Coluna 3: Descrição (com barra de emojis) -->
+    <td style="vertical-align: top;">
+      <div class="emoji-bar mb-1 d-flex flex-wrap gap-1">
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🛋️" title="Produto/Móvel">🛋️</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="📏" title="Tamanho/Medidas">📏</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🌳" title="Madeira">🌳</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🧵" title="Tecido">🧵</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🎨" title="Cor/Acabamento">🎨</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🛡️" title="Garantia">🛡️</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="✅" title="Item/Check">✅</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="⭐" title="Destaque">⭐</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="📦" title="Embalagem/Entrega">📦</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🚚" title="Frete/Entrega">🚚</button>
+        <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="💲" title="Preço">💲</button>
+        <button type="button" class="btn btn-sm btn-outline-primary border abrir-picker" title="Mais emojis">😀 +</button>
+      </div>
+      <textarea class="form-control campo_descricao" data-name="descricao" rows="8"
+                placeholder="Ex.:&#10;🛋️ Nome do produto&#10;📏 Tamanho: 2,10m&#10;🌳 Madeira: eucalipto&#10;🧵 Tecido: veludo&#10;🛡️ Garantia: 1 ano"
+                style="min-height: 200px; white-space: pre-wrap;"></textarea>
+    </td>
+
+    <td class="text-center" style="vertical-align: top;">
+      <div class="d-flex flex-column gap-2 align-items-center">
+        <button type="button" class="btn btn-outline-success btn-sm gravar-linha" title="Gravar esta imagem" disabled>
+          <i class="fa fa-save"></i>
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm remover-linha" title="Remover">
+          <i class="fa fa-trash"></i>
+        </button>
+        <span class="status-linha small"></span>
+      </div>
+    </td>
+  </tr>
+</template>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const urlBase        = window.location.origin + '/collaborators_backoffice/';
+    const seletor        = document.getElementById('seletor_imagens');
+    const corpoTabela    = document.getElementById('linhas_imagens');
+    const linhaVazia     = document.getElementById('linha_vazia');
+    const template       = document.getElementById('template_linha');
+    const btnSalvar      = document.getElementById('btn_salvar_tudo');
+    const btnLimpar      = document.getElementById('limpar_imagens');
+    const form           = document.getElementById('form_cadastro_rapido');
+
+    // Mantém os arquivos associados a cada linha
+    const arquivosPorLinha = new Map();
+    let contadorLinhas = 0;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const toastEl = document.getElementById('toast_cadastro_rapido');
+    let toastTimer = null;
+
+    // Mensagem no topo da tela (some sozinha). tipo: 'success' | 'danger' | 'warning'
+    function mostrarToast(mensagem, tipo = 'success') {
+      toastEl.className = 'alert alert-' + tipo + ' shadow-sm py-2 px-3 mb-0';
+      toastEl.textContent = mensagem;
+      toastEl.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toastEl.style.display = 'none'; }, 2500);
+    }
+
+    function atualizarEstado() {
+      const temLinhas = corpoTabela.querySelectorAll('tr.linha-imagem').length > 0;
+      linhaVazia.style.display = temLinhas ? 'none' : '';
+      btnSalvar.disabled = !temLinhas;
+    }
+
+    // ---- Bloqueia Enter em campos de texto (mantém quebra de linha só no textarea) ----
+    corpoTabela.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+      }
+    });
+
+    // Habilita o botão de gravar somente quando a linha tem produto E cor
+    function atualizarBotaoGravar(linha) {
+      if (!linha) return;
+      const temProduto = !!linha.querySelector('.campo_cod_produto').value;
+      const temCor     = !!linha.querySelector('.campo_cod_cor').value;
+      const btn        = linha.querySelector('.gravar-linha');
+      const jaSalva    = linha.dataset.salva === '1';
+      btn.disabled = !(temProduto && temCor) || jaSalva;
+    }
+
+    // ---- Seleção de imagens: cria uma linha por arquivo ----
+    seletor.addEventListener('change', function () {
+      Array.from(this.files).forEach(file => adicionarLinha(file));
+      // permite selecionar de novo os mesmos arquivos
+      this.value = '';
+      atualizarEstado();
+    });
+
+    btnLimpar.addEventListener('click', function () {
+      corpoTabela.querySelectorAll('tr.linha-imagem').forEach(tr => tr.remove());
+      arquivosPorLinha.clear();
+      atualizarEstado();
+    });
+
+    function adicionarLinha(file) {
+      const idx = contadorLinhas++;
+      const fragment = template.content.cloneNode(true);
+      const tr = fragment.querySelector('tr');
+      tr.dataset.idx = idx;
+
+      arquivosPorLinha.set(idx, file);
+
+      // preview
+      const img = tr.querySelector('.preview-img');
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+      tr.querySelector('.nome-arquivo').textContent = file.name;
+
+      // remover
+      tr.querySelector('.remover-linha').addEventListener('click', function () {
+        arquivosPorLinha.delete(idx);
+        tr.remove();
+        atualizarEstado();
+      });
+
+      corpoTabela.appendChild(tr);
+    }
+
+    // ---- Autocomplete de produto (por linha) ----
+    $(document).on('keydown', '.produto_search', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        buscarProdutos(this);
+      } else if (event.key === 'Escape') {
+        fecharListas();
+      }
+    });
+
+    // busca também ao clicar/parar de digitar (debounce)
+    let debounceTimer = null;
+    $(document).on('input', '.produto_search', function () {
+      const campo = this;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => buscarProdutos(campo), 400);
+    });
+
+    function fecharListas() {
+      document.querySelectorAll('.products_list').forEach(el => {
+        el.style.display = 'none';
+        el.innerHTML = '';
+      });
+    }
+
+    function buscarProdutos(campo) {
+      const query = campo.value.trim().toLowerCase();
+      const linha = campo.closest('tr.linha-imagem');
+      const lista = linha.querySelector('.products_list');
+      if (!query) { lista.style.display = 'none'; lista.innerHTML = ''; return; }
+
+      $.ajax({
+        url: urlBase + 'buscas/buscar_produtos',
+        method: 'GET',
+        data: { entidade: 'Produto', query: query },
+        success: function (data) {
+          lista.innerHTML = '';
+          if (!data.length) {
+            lista.innerHTML = '<div class="text-muted small px-1">Nenhum produto encontrado</div>';
+            lista.style.display = 'block';
+            return;
+          }
+          data.forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item list-group-item-action';
+            item.style.cursor = 'pointer';
+            item.textContent = product.produto;
+            item.addEventListener('click', function () {
+              selecionarProduto(linha, product);
+              lista.style.display = 'none';
+              lista.innerHTML = '';
+            });
+            lista.appendChild(item);
+          });
+          lista.style.display = 'block';
+        },
+        error: function (err) { console.error('Erro na busca de produtos:', err); }
+      });
+    }
+
+    function selecionarProduto(linha, product) {
+      linha.querySelector('.produto_search').value = product.produto;
+      linha.querySelector('.campo_cod_produto').value = product.cod_produto;
+      atualizarBotaoGravar(linha);
+      carregarCores(linha, product.cod_produto);
+      verificarDuplicada(linha, product.cod_produto);
+    }
+
+    // Verifica no servidor se a imagem desta linha já existe para o produto.
+    function verificarDuplicada(linha, codProduto) {
+      const idx = parseInt(linha.dataset.idx, 10);
+      const file = arquivosPorLinha.get(idx);
+      const status = linha.querySelector('.status-linha');
+      if (!file || !codProduto) return;
+
+      // reseta estado anterior
+      linha.dataset.duplicada = '0';
+      linha.dataset.confirmada = '0';
+
+      const dados = new FormData();
+      dados.append('cod_produto', codProduto);
+      dados.append('arquivo', file);
+
+      status.textContent = 'Verificando...';
+      status.className = 'status-linha small text-muted';
+
+      fetch('<%= cadastro_rapido_verificar_collaborators_backoffice_produto_imagens_path %>', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
+        body: dados
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.duplicada) {
+            linha.dataset.duplicada = '1';
+            linha.classList.add('table-warning');
+            status.textContent = '⚠ Imagem já cadastrada para este produto';
+            status.className = 'status-linha small text-warning';
+          } else {
+            linha.classList.remove('table-warning');
+            status.textContent = '';
+          }
+        })
+        .catch(() => { status.textContent = ''; });
+    }
+
+    // ao mudar a cor, carrega a descrição atual do produto (produto.descricao)
+    $(document).on('change', '.campo_cod_cor', function () {
+      const linha = this.closest('tr.linha-imagem');
+      atualizarBotaoGravar(linha);
+      const codProduto = linha.querySelector('.campo_cod_produto').value;
+      const codCor = this.value;
+      const campoDescricao = linha.querySelector('.campo_descricao');
+      if (!codProduto || !codCor) return;
+
+      fetch(`<%= get_cor_data_collaborators_backoffice_produto_imagens_path %>?cod_produto=${codProduto}&cod_cor=${codCor}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && !data.error && !campoDescricao.value) {
+            campoDescricao.value = data.descricao || '';
+          }
+        })
+        .catch(() => {});
+    });
+
+    // ---- Carrega as cores já cadastradas para o produto ----
+    function carregarCores(linha, codProduto) {
+      const select = linha.querySelector('.campo_cod_cor');
+      select.disabled = true;
+      select.innerHTML = '<option value="">Carregando...</option>';
+
+      $.ajax({
+        url: urlBase + 'buscas/consulta_estoque',
+        method: 'GET',
+        data: { id_produto: codProduto },
+        success: function (cores) {
+          select.innerHTML = '';
+          if (!cores || !cores.length) {
+            select.innerHTML = '<option value="">Sem cores cadastradas</option>';
+            select.disabled = false;
+            return;
+          }
+          cores.forEach(cor => {
+            const opt = document.createElement('option');
+            opt.value = cor.cod_cor;
+            opt.textContent = cor.nmcor + ' - ' + cor.cod_cor;
+            select.appendChild(opt);
+          });
+          select.disabled = false;
+          // dispara para já carregar a descrição da primeira cor
+          // (bubbles: true para acionar o handler delegado no document)
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          atualizarBotaoGravar(linha);
+        },
+        error: function (err) {
+          console.error('Erro ao carregar cores:', err);
+          select.innerHTML = '<option value="">Erro ao carregar cores</option>';
+          select.disabled = false;
+        }
+      });
+    }
+
+    // fecha listas ao clicar fora
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.produto_search') && !e.target.closest('.products_list')) {
+        fecharListas();
+      }
+    });
+
+    // ---- Gravar UMA linha (imagem) via AJAX ----
+    $(document).on('click', '.gravar-linha', function () {
+      const btn = this;
+      const linha = btn.closest('tr.linha-imagem');
+      const idx = parseInt(linha.dataset.idx, 10);
+      const file = arquivosPorLinha.get(idx);
+
+      const codProduto = linha.querySelector('.campo_cod_produto').value;
+      const codCor     = linha.querySelector('.campo_cod_cor').value;
+      const descricao  = linha.querySelector('.campo_descricao').value;
+      const status     = linha.querySelector('.status-linha');
+
+      if (!codProduto || !codCor || !file) {
+        status.textContent = '⚠ Selecione produto e cor';
+        status.className = 'status-linha small text-danger';
+        return;
+      }
+
+      // Se for duplicada e ainda não foi confirmada, pede confirmação
+      if (linha.dataset.duplicada === '1' && linha.dataset.confirmada !== '1') {
+        const ok = confirm('Esta imagem já foi cadastrada para este produto. Deseja gravar mesmo assim?');
+        if (!ok) return;
+        linha.dataset.confirmada = '1';
+      }
+
+      const forcar = linha.dataset.confirmada === '1' ? '1' : '0';
+
+      const dados = new FormData();
+      dados.append('cod_produto', codProduto);
+      dados.append('cod_cor', codCor);
+      dados.append('descricao', descricao);
+      dados.append('arquivo', file);
+      dados.append('forcar', forcar);
+
+      btn.disabled = true;
+      status.textContent = 'Gravando...';
+      status.className = 'status-linha small text-muted';
+
+      fetch('<%= cadastro_rapido_linha_collaborators_backoffice_produto_imagens_path %>', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
+        body: dados
+      })
+        .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
+        .then(res => {
+          if (res.ok && res.body.success) {
+            linha.dataset.salva = '1';
+            status.textContent = '✅ Gravada';
+            status.className = 'status-linha small text-success';
+            // desativa os campos e o botão gravar; mantém remover
+            linha.querySelectorAll('input, select, textarea, .emoji-btn, .abrir-picker').forEach(el => el.disabled = true);
+            btn.disabled = true;
+            mostrarToast('Imagem gravada com sucesso!', 'success');
+          } else if (res.body.duplicada) {
+            // backend detectou duplicidade e ainda não foi confirmado
+            linha.dataset.duplicada = '1';
+            linha.classList.add('table-warning');
+            status.textContent = '⚠ Imagem já cadastrada — clique gravar para confirmar';
+            status.className = 'status-linha small text-warning';
+            btn.disabled = false;
+          } else {
+            status.textContent = '⚠ ' + (res.body.error || 'Falha ao gravar');
+            status.className = 'status-linha small text-danger';
+            btn.disabled = false;
+            mostrarToast('Falha ao gravar: ' + (res.body.error || 'erro desconhecido'), 'danger');
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao gravar linha:', err);
+          status.textContent = '⚠ Erro de conexão';
+          status.className = 'status-linha small text-danger';
+          btn.disabled = false;
+          mostrarToast('Erro de conexão ao gravar a imagem.', 'danger');
+        });
+    });
+
+    // ---- Inserção de emojis na descrição (atalhos rápidos) ----
+    $(document).on('click', '.emoji-btn', function (e) {
+      e.preventDefault();
+      const linha = this.closest('tr.linha-imagem');
+      const textarea = linha.querySelector('.campo_descricao');
+      const emoji = this.getAttribute('data-emoji');
+      inserirNoCursor(textarea, emoji + ' ');
+    });
+
+    // ---- Picker completo (estilo WhatsApp) ----
+    const pickerWrapper = document.getElementById('emoji_picker_wrapper');
+    const picker = pickerWrapper.querySelector('emoji-picker');
+    let textareaDoPicker = null; // textarea alvo enquanto o picker está aberto
+
+    $(document).on('click', '.abrir-picker', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const linha = this.closest('tr.linha-imagem');
+      textareaDoPicker = linha.querySelector('.campo_descricao');
+
+      // já estava aberto para este botão? fecha (toggle)
+      if (pickerWrapper.style.display === 'block' && pickerWrapper.dataset.botao === (linha.dataset.idx)) {
+        fecharPicker();
+        return;
+      }
+      pickerWrapper.dataset.botao = linha.dataset.idx;
+
+      // posiciona o picker logo abaixo do botão
+      const rect = this.getBoundingClientRect();
+      pickerWrapper.style.top  = (window.scrollY + rect.bottom + 4) + 'px';
+      pickerWrapper.style.left = (window.scrollX + rect.left) + 'px';
+      pickerWrapper.style.display = 'block';
+    });
+
+    // seleção de emoji dentro do picker
+    picker.addEventListener('emoji-click', function (event) {
+      const unicode = event.detail.unicode;
+      if (textareaDoPicker && unicode) {
+        inserirNoCursor(textareaDoPicker, unicode + ' ');
+      }
+      // não fecha automaticamente: permite escolher vários seguidos
+    });
+
+    function fecharPicker() {
+      pickerWrapper.style.display = 'none';
+      pickerWrapper.dataset.botao = '';
+    }
+
+    // fecha o picker ao clicar fora dele e fora do botão que o abre
+    document.addEventListener('click', function (e) {
+      if (pickerWrapper.style.display !== 'block') return;
+      if (!e.target.closest('#emoji_picker_wrapper') && !e.target.closest('.abrir-picker')) {
+        fecharPicker();
+      }
+    });
+
+    function inserirNoCursor(textarea, texto) {
+      if (!textarea) return;
+      const inicio = textarea.selectionStart ?? textarea.value.length;
+      const fim    = textarea.selectionEnd ?? textarea.value.length;
+      const antes  = textarea.value.substring(0, inicio);
+      const depois = textarea.value.substring(fim);
+
+      // se estiver no meio do texto e não houver quebra antes, mantém como está;
+      // a ideia é o usuário posicionar o cursor onde quer (normalmente início de linha)
+      textarea.value = antes + texto + depois;
+
+      const novaPos = inicio + texto.length;
+      textarea.focus();
+      textarea.setSelectionRange(novaPos, novaPos);
+    }
+
+    // ---- Monta os campos com name[] no submit ----
+    form.addEventListener('submit', function (e) {
+      const linhas = corpoTabela.querySelectorAll('tr.linha-imagem');
+
+      // valida produto em todas as linhas
+      let invalida = null;
+      linhas.forEach(linha => {
+        const cod = linha.querySelector('.campo_cod_produto').value;
+        if (!cod && !invalida) invalida = linha;
+      });
+      if (invalida) {
+        e.preventDefault();
+        mostrarToast('Selecione um produto para todas as imagens antes de salvar.', 'danger');
+        invalida.querySelector('.produto_search').focus();
+        return;
+      }
+
+      // remove campos gerados anteriormente (reenvio)
+      form.querySelectorAll('.campo-gerado').forEach(el => el.remove());
+
+      let i = 0;
+      linhas.forEach(linha => {
+        const idx = parseInt(linha.dataset.idx, 10);
+        const file = arquivosPorLinha.get(idx);
+        if (!file) return;
+
+        // arquivo
+        const inputFile = document.createElement('input');
+        inputFile.type = 'file';
+        inputFile.name = `itens[${i}][arquivo]`;
+        inputFile.className = 'campo-gerado';
+        inputFile.style.display = 'none';
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inputFile.files = dt.files;
+        form.appendChild(inputFile);
+
+        // demais campos
+        linha.querySelectorAll('[data-name]').forEach(campo => {
+          const hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = `itens[${i}][${campo.dataset.name}]`;
+          hidden.className = 'campo-gerado';
+          hidden.value = campo.value || '';
+          form.appendChild(hidden);
+        });
+
+        i++;
+      });
+    });
+  });
+</script>

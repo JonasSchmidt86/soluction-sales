@@ -96,6 +96,109 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
     end
   end
 
+  # GET — tela de cadastro rápido: seleciona várias imagens e, para cada uma,
+  # escolhe produto (busca por código/nome), cor e descrição.
+  def cadastro_rapido
+  end
+
+  # POST — salva em lote. Recebe uma linha por imagem:
+  #   itens[<i>][arquivo], itens[<i>][cod_produto], itens[<i>][cod_cor], itens[<i>][descricao]
+  def cadastro_rapido_salvar
+    itens = params[:itens]
+
+    if itens.blank?
+      redirect_to cadastro_rapido_collaborators_backoffice_produto_imagens_path,
+                  alert: 'Nenhuma imagem foi enviada!'
+      return
+    end
+
+    salvas = 0
+    erros  = []
+
+    itens.each_value do |item|
+      arquivo = item[:arquivo]
+      next if arquivo.blank?
+
+      produto = Produto.find_by(cod_produto: item[:cod_produto])
+      if produto.nil?
+        erros << "Selecione um produto para todas as imagens."
+        next
+      end
+
+      cor = if item[:cod_cor].present?
+              Core.find_by(cod_cor: item[:cod_cor])
+            end
+      cor ||= Core.find_by(cod_cor: 1)
+
+      # Atualiza a descrição no próprio produto (por hora usamos produto.descricao)
+      if item[:descricao].present?
+        produto.update(descricao: item[:descricao])
+      end
+
+      resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: arquivo)
+
+      if resultado.sucesso?
+        salvas += 1
+      else
+        erros << "#{produto.nome}: #{resultado.erro}"
+      end
+    end
+
+    if salvas.positive? && erros.empty?
+      redirect_to cadastro_rapido_collaborators_backoffice_produto_imagens_path,
+                  notice: "#{salvas} imagem(ns) cadastrada(s) com sucesso!"
+    elsif salvas.positive?
+      redirect_to cadastro_rapido_collaborators_backoffice_produto_imagens_path,
+                  alert: "#{salvas} salva(s). Falhas: #{erros.uniq.join(' | ')}"
+    else
+      redirect_to cadastro_rapido_collaborators_backoffice_produto_imagens_path,
+                  alert: "Nenhuma imagem foi salva. #{erros.uniq.join(' | ')}"
+    end
+  end
+
+  # POST (AJAX) — verifica se a imagem já existe para o produto (sem gravar).
+  # Espera: cod_produto, arquivo. Responde { duplicada: true/false }.
+  def cadastro_rapido_verificar
+    produto = Produto.find_by(cod_produto: params[:cod_produto])
+
+    if produto.nil? || params[:arquivo].blank?
+      render json: { duplicada: false }
+      return
+    end
+
+    duplicada = ProdutoImagemUploadService.duplicada?(produto: produto, arquivo: params[:arquivo])
+    render json: { duplicada: duplicada }
+  end
+
+  # POST (AJAX) — grava UMA imagem (uma linha da tabela de cadastro rápido).
+  # Espera: cod_produto, cod_cor, arquivo, descricao (opcional), forcar (opcional)
+  def cadastro_rapido_linha
+    produto = Produto.find_by(cod_produto: params[:cod_produto])
+    cor     = Core.find_by(cod_cor: params[:cod_cor])
+
+    if produto.nil? || cor.nil?
+      render json: { success: false, error: 'Selecione produto e cor.' }, status: :unprocessable_entity
+      return
+    end
+
+    if params[:arquivo].blank?
+      render json: { success: false, error: 'Nenhuma imagem enviada.' }, status: :bad_request
+      return
+    end
+
+    produto.update(descricao: params[:descricao]) if params[:descricao].present?
+
+    forcar    = params[:forcar].to_s == '1' || params[:forcar].to_s == 'true'
+    resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: params[:arquivo], forcar: forcar)
+
+    if resultado.sucesso?
+      render json: { success: true }
+    else
+      render json: { success: false, duplicada: resultado.duplicada?, error: resultado.erro },
+             status: :unprocessable_entity
+    end
+  end
+
   def get_cor_data
     if params[:cod_produto].present? && params[:cod_cor].present?
       empresa_produto = Empresaproduto.where(cod_produto: params[:cod_produto], cod_cor: params[:cod_cor], cod_empresa: current_collaborator.empresa.cod_empresa).first
