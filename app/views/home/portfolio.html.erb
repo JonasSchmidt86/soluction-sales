@@ -96,36 +96,14 @@
     display: block;
     width: 100%;
   }
-  /* Texto central */
-  .watermark-wrap::after {
-    content: "Móveis Rosa Store";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.45);
-    font-weight: 700;
-    font-size: clamp(14px, 3vw, 22px);
-    letter-spacing: 1px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-    transform: rotate(-20deg);
-    pointer-events: none;
-    user-select: none;
-    white-space: nowrap;
-  }
   /* Logo colorida no canto inferior direito */
   .watermark-wrap::before {
     content: "";
     position: absolute;
     right: 8px;
     bottom: 8px;
-    width: 56px;
-    height: 56px;
+    width: 26px;
+    height: 26px;
     background-image: url('/images/mrosa.png');
     background-repeat: no-repeat;
     background-position: bottom right;
