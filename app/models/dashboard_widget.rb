@@ -15,7 +15,7 @@ class DashboardWidget < ApplicationRecord
   # (Acesso Rápido completo, Estoque Mínimo, Top Produtos, Caixa e Resumo
   # Financeiro). Os demais ficam disponíveis, porém desligados por padrão.
   CATALOG = {
-    'acesso_rapido'         => { label: 'Acesso Rápido (completo)',  resource: nil,                  default_span: 12, default_rows: 4, default_visible: true },
+    'acesso_rapido'         => { label: 'Acesso Rápido (completo)',  resource: nil,                  default_span: 12, default_rows: 5, default_visible: true },
     'acesso_rapido_botoes'  => { label: 'Acesso Rápido (só botões)', resource: nil,                  default_span: 12, default_rows: 2, default_visible: false },
     'vendas_dia'      => { label: 'Vendas do Dia',            resource: 'vendas',            default_span: 4,  default_rows: 2, default_visible: false },
     'minhas_vendas'   => { label: 'Minhas Vendas (Mês)',      resource: 'vendas',            default_span: 4,  default_rows: 2, default_visible: false },
