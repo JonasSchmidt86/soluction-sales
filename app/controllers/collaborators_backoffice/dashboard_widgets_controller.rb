@@ -4,6 +4,10 @@ class CollaboratorsBackoffice::DashboardWidgetsController < CollaboratorsBackoff
   # Lista os widgets configuráveis do colaborador (apenas os permitidos).
   def index
     widgets = current_layout.select { |w| widget_allowed?(w) }
+    # A lista do modal usa uma ORDEM FIXA (a do catálogo/DEFAULT_LAYOUT),
+    # independente da ordem que o usuário deu aos widgets no dashboard.
+    ordem_fixa = DashboardWidget::DEFAULT_LAYOUT.each_with_index.to_h
+    widgets = widgets.sort_by { |w| ordem_fixa[w.widget_type] || 999 }
     render json: widgets.map { |w|
       {
         id: w.id,
