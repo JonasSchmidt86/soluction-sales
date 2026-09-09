@@ -1,14 +1,19 @@
 # Dashboard de Widgets Configuráveis
 
 Documentação do dashboard do backoffice (`collaborators_backoffice`), que substituiu o
-dashboard fixo por um painel de **widgets configuráveis** por colaborador/empresa.
+dashboard fixo por um painel de **widgets configuráveis** por colaborador.
 
 ## Visão geral
 
-Cada colaborador (por empresa) monta o próprio dashboard: liga/desliga widgets,
-reordena por arrasto, e redimensiona **largura e altura** livremente. O conteúdo
-de cada widget escala junto com o tamanho. A configuração é salva por
-`cod_funcionario` + `cod_empresa`.
+Cada colaborador monta o próprio dashboard: liga/desliga widgets, reordena por
+arrasto, e redimensiona **largura e altura** livremente. O conteúdo de cada widget
+escala junto com o tamanho.
+
+O layout é **único por usuário** (`cod_funcionario`), independente da empresa: o que
+o colaborador configura vale igual em todas as empresas em que ele tem acesso.
+Os **dados** de cada widget, porém, são sempre da empresa logada (ex.: o widget de
+Caixa mostra o caixa da empresa atual), e o **controle de acesso continua por
+empresa** (um widget sem permissão na empresa atual fica oculto).
 
 O painel fica em `GET /collaborators_backoffice/welcome/index` dentro de um card
 "Dashboard". O botão **Configurar Widgets** aparece na navbar apenas nessa página.
@@ -27,12 +32,12 @@ O painel fica em `GET /collaborators_backoffice/welcome/index` dentro de um card
 ### Tabela `dashboard_widgets`
 
 Migrations: `create_dashboard_widgets`, `add_col_span_to_dashboard_widgets`,
-`add_row_span_to_dashboard_widgets`.
+`add_row_span_to_dashboard_widgets`, `make_dashboard_widgets_per_user`.
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| `cod_funcionario` | bigint | Colaborador dono do layout |
-| `cod_empresa` | bigint | Empresa (multi-tenant) |
+| `cod_funcionario` | bigint | Colaborador dono do layout (chave do layout) |
+| `cod_empresa` | bigint | Empresa de origem do registro (referência; NÃO faz parte da chave) |
 | `widget_type` | string | Tipo do widget (chave do catálogo) |
 | `position` | integer | Ordem no dashboard |
 | `col_span` | integer | Largura em colunas do grid de 12 (1–12) |
@@ -41,7 +46,9 @@ Migrations: `create_dashboard_widgets`, `add_col_span_to_dashboard_widgets`,
 | `size` | string | Legado (não usado para largura) |
 | `config` | jsonb | Reservado para configurações futuras |
 
-Índice único por `(cod_funcionario, cod_empresa, widget_type)`.
+Índice único por `(cod_funcionario, widget_type)` — um layout por usuário,
+independente da empresa. A migration `make_dashboard_widgets_per_user` consolidou
+os registros que antes existiam por empresa, mantendo um único layout por usuário.
 
 ## Catálogo de widgets (`DashboardWidget::CATALOG`)
 
@@ -73,6 +80,10 @@ Resumo Financeiro ligados; o restante disponível, porém desligado.
 Cada widget mapeia um recurso do `AccessControlService`. Um widget só é exibido
 (e listado na configuração) se `access_control.can_view?(resource)` for verdadeiro.
 Assim, por exemplo, o widget de Caixa não aparece para quem não tem permissão de caixa.
+
+Como o layout é único por usuário mas a permissão é por empresa, um widget presente
+no layout do colaborador pode aparecer em uma empresa e ficar oculto em outra,
+conforme as permissões daquela empresa.
 
 ## Comportamento do layout
 

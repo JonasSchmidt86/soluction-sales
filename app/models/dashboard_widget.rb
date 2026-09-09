@@ -77,7 +77,7 @@ class DashboardWidget < ApplicationRecord
   validates :col_span, numericality: { only_integer: true, greater_than_or_equal_to: MIN_SPAN, less_than_or_equal_to: MAX_SPAN }
   validates :row_span, numericality: { only_integer: true, greater_than_or_equal_to: MIN_ROWS, less_than_or_equal_to: MAX_ROWS }
   validates :widget_type, uniqueness: {
-    scope: [:cod_funcionario, :cod_empresa],
+    scope: [:cod_funcionario],
     message: 'já está no dashboard'
   }
 
@@ -139,11 +139,14 @@ class DashboardWidget < ApplicationRecord
     rows * ROW_UNIT_PX
   end
 
-  # Retorna o layout do colaborador, criando o layout padrão na primeira vez
-  # e completando com widgets novos do catálogo que ainda não existam no
-  # layout já configurado (sync incremental, sem perder a configuração atual).
-  def self.layout_for(cod_funcionario, cod_empresa)
-    scope = for_funcionario(cod_funcionario).for_empresa(cod_empresa)
+  # Retorna o layout do colaborador (ÚNICO por usuário, independente de empresa),
+  # criando o layout padrão na primeira vez e completando com widgets novos do
+  # catálogo que ainda não existam (sync incremental, sem perder a config atual).
+  #
+  # `cod_empresa` é usado apenas para preencher a coluna na criação de novos
+  # registros (referência de origem); NÃO faz parte da chave de busca.
+  def self.layout_for(cod_funcionario, cod_empresa = nil)
+    scope = for_funcionario(cod_funcionario)
     if scope.none?
       ensure_defaults!(cod_funcionario, cod_empresa)
     else
@@ -153,9 +156,10 @@ class DashboardWidget < ApplicationRecord
   end
 
   # Cria os widgets padrão para um colaborador que ainda não tem layout.
-  def self.ensure_defaults!(cod_funcionario, cod_empresa)
+  def self.ensure_defaults!(cod_funcionario, cod_empresa = nil)
     DEFAULT_LAYOUT.each_with_index do |type, index|
-      find_or_create_by(cod_funcionario: cod_funcionario, cod_empresa: cod_empresa, widget_type: type) do |w|
+      find_or_create_by(cod_funcionario: cod_funcionario, widget_type: type) do |w|
+        w.cod_empresa = cod_empresa
         w.position = index
         w.col_span = default_span_for(type)
         w.row_span = default_rows_for(type)
@@ -172,9 +176,13 @@ class DashboardWidget < ApplicationRecord
     faltando = DEFAULT_LAYOUT - existentes
     return if faltando.empty?
 
+    # Empresa de referência para novos registros (usa a já existente se houver)
+    empresa_ref = cod_empresa || scope.first&.cod_empresa
+
     proxima_posicao = (scope.maximum(:position) || -1) + 1
     faltando.each_with_index do |type, i|
-      find_or_create_by(cod_funcionario: cod_funcionario, cod_empresa: cod_empresa, widget_type: type) do |w|
+      find_or_create_by(cod_funcionario: cod_funcionario, widget_type: type) do |w|
+        w.cod_empresa = empresa_ref
         w.position = proxima_posicao + i
         w.col_span = default_span_for(type)
         w.row_span = default_rows_for(type)

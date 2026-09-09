@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_02_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -403,8 +403,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_150000) do
     t.datetime "updated_at", null: false
     t.integer "col_span", default: 6, null: false
     t.integer "row_span", default: 3, null: false
-    t.index ["cod_funcionario", "cod_empresa", "widget_type"], name: "idx_dashboard_widgets_func_emp_type", unique: true
-    t.index ["cod_funcionario", "cod_empresa"], name: "idx_dashboard_widgets_func_emp"
+    t.index ["cod_funcionario", "widget_type"], name: "idx_dashboard_widgets_func_type", unique: true
+    t.index ["cod_funcionario"], name: "idx_dashboard_widgets_func"
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|

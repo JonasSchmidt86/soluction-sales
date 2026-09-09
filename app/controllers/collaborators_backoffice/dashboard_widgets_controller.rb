@@ -61,9 +61,8 @@ class CollaboratorsBackoffice::DashboardWidgetsController < CollaboratorsBackoff
   private
 
   def scoped_widgets
-    DashboardWidget
-      .for_funcionario(current_collaborator.cod_funcionario)
-      .for_empresa(current_collaborator.cod_empresa)
+    # Layout é único por usuário (independente da empresa)
+    DashboardWidget.for_funcionario(current_collaborator.cod_funcionario)
   end
 
   def current_layout
