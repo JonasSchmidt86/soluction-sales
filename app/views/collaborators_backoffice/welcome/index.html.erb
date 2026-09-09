@@ -1,321 +1,433 @@
-<div class="container mt-4">
-  <!-- Painel de Acesso Rápido -->
-  <div class="card mb-4 border-0 shadow-sm">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0"><i class="fa fa-th"></i> Acesso Rápido
-      </h5>
-    </div>
-    <div class="card-body">
-      <div class="row row-cols-1 row-cols-md-3 g-4">
-        <!-- Vendas -->
-        <div class="col">
-          <div class="card h-100 border-primary">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-shopping-cart"></i> Vendas</h5>
-              <% if @ultima_venda.present? %>
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">Total Vendas:</small>
-                    <small class="text-muted"><%= Venda.where("DATE(datavenda) = ? and cod_empresa = ? and tipo = 'V' and cancelada = false ", Date.current, current_collaborator.cod_empresa).count %> venda(s)</small>
-                    <span class="fw-bold">R$ <%= number_with_precision(@ultima_venda, precision: 2, delimiter: '.', separator: ',') %></span>
-                  </div>
-                </div>
-              <% else %>
-                <p class="card-text">Registre e gerencie vendas</p>
-              <% end %>
-              <div class="d-flex gap-2 mt-auto">
-                <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-primary" do %>
-                  <i class="fa fa-plus"></i> Nova Venda
-                <% end %>
-                <%= link_to collaborators_backoffice_report_sales_path(dataInicial: Date.current.strftime('%d/%m/%Y').to_s), class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Atendimento -->
-        <div class="col">
-          <div class="card h-100 border-success">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-headset"></i> Atendimentos</h5>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <small class="text-muted">Hoje:</small>
-                  <span class="fw-bold"><%= @atendimentos_hoje %> atendimento(s)</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <small class="text-muted">Retornos:</small>
-                  <span class="fw-bold <%= @atendimentos_retorno > 0 ? 'text-danger' : '' %>"><%= @atendimentos_retorno %></span>
-                </div>
-              </div>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
-                  <i class="fa fa-plus"></i> Novo Atendimento
-                </button>
-                <%= link_to collaborators_backoffice_report_atendimentos_path, class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Produto -->
-        <div class="col">
-          <div class="card h-100 border-success">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-box"></i> Produtos</h5>
-              <p class="card-text">Cadastre e gerencie produtos</p>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
-                  <i class="fa fa-plus"></i> Novo Produto
-                </button>
-                <% unless request.user_agent =~ /Mobile|Android|iPhone/ %>
-                  <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success", id: "btn-listar-produtos", style: "display: none;" do %>
-                    <i class="fa fa-list"></i> Listar
-                  <% end %>
-                <% end %>
-                <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-outline-primary" do %>
-                  <i class="fa fa-list"></i> Estoque
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Pessoas -->
-        <div class="col">
-          <div class="card h-100 border-secondary">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-users"></i> Pessoas</h5>
-              <p class="card-text">Cadastre e gerencie clientes e fornecedores</p>
-              <div class="d-flex gap-2">
-                <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-success" do %>
-                  <i class="fa fa-plus"></i> Nova Pessoa
-                <% end %>
-                <%= link_to collaborators_backoffice_pessoas_path, class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Lembretes -->
-        <div class="col">
-          <div class="card h-100 border-danger">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-bell"></i> Lembretes</h5>
-              <p class="card-text">Gerencie seus lembretes e tarefas</p>
-              <div class="d-flex gap-2">
-                <button type="button", class="btn btn-success", data-bs-toggle="modal",
-                                data-bs-target="#lembreteModal", data-bs-whatever="passa para o modal" >
-                  <i class="fa fa-plus"></i> Novo Lembrete
-                </button>
-                <%= link_to collaborators_backoffice_lembretes_path, class: "btn btn-outline-success" do %>
-                  <i class="fa fa-list"></i> Listar
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Imagens -->
-        <div class="col">
-          <div class="card h-100 border-info">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fa fa-images"></i> Imagens</h5>
-              <p class="card-text">Gerencie imagens dos produtos</p>
-              <div class="d-flex gap-2">
-                <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info" do %>
-                  <i class="fa fa-images"></i> Gerenciar Imagens
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-    function detectDevice() {
-      const userAgent = navigator.userAgent;
+<% content_for :navbar_actions do %>
+  <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#configDashboardModal">
+    <i class="fa fa-cog"></i> Configurar Widgets
+  </button>
+<% end %>
 
-      if (/iPad|Macintosh/.test(userAgent) && 'ontouchend' in document) {
-        return 'iPad';
-      } else if (/iPhone|Android.*Mobile/.test(userAgent)) {
-        return 'Celular';
-      } else {
-        return 'Computador';
-      }
-    }
-
-    const dispositivo = detectDevice();
-    console.log('Dispositivo detectado:', dispositivo);
-
-    // Mostrar botão Listar apenas em computador
-    if (dispositivo === 'Computador') {
-      const btnListar = document.getElementById('btn-listar-produtos');
-      if (btnListar) btnListar.style.display = 'inline-block';
-    }
-  </script>
-  <!-- Painel de Estatísticas -->
-  <div class="card mb-4 border-0 shadow-sm">
+<div class="container-fluid mt-3 px-0 mx-auto" style="max-width: 1400px;">
+  <div class="card border-0 shadow-sm">
     <div class="card-header bg-primary text-white">
       <h5 class="mb-0"><i class="fa fa-chart-line"></i> Dashboard</h5>
     </div>
     <div class="card-body">
-      <div class="row">
-        <!-- Coluna Esquerda - Produtos -->
-        <div class="col-md-6">
-          <!-- Estoque Mínimo Atingido -->
-          <% if @estoque_minimo.any? %>
-            <div class="card bg-light mb-3">
-              <div class="card-body p-2">
-                <h6 class="card-title text-muted text-center">
-                  <%= link_to 'Estoque Mínimo Atingido', collaborators_backoffice_report_stock_min_index_path, class: "text-muted text-decoration-none" %>
-                </h6>
-                <table class="table table-sm table-bordered table-hover mb-0" style="font-size: 0.78rem;">
-                  <thead class="table-secondary">
-                    <tr>
-                      <th>Código</th>
-                      <th>Produto</th>
-                      <th class="text-center">Est.</th>
-                      <th class="text-center">Mín.</th>
-                      <th class="text-center">Ped.</th>
-                      <th class="text-center">Ven.</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% @estoque_minimo.each do |item| %>
-                      <tr>
-                        <td class="text-nowrap"><%= item['codigo'] %></td>
-                        <td><%= truncate(item['nome'], length: 25) %></td>
-                        <td class="text-center"><%= item['estoque'].to_i %></td>
-                        <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
-                        <td class="text-center"><%= item['quantidade_pedida'].to_i > 0 ? item['quantidade_pedida'].to_i : '-' %></td>
-                        <td class="text-center"><%= item['vendido_3_meses'].to_i > 0 ? item['vendido_3_meses'].to_i : '-' %></td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
+      <div id="dashboard-widgets" class="row g-3">
+        <% @widgets.each do |widget| %>
+          <div class="col-12 col-md-<%= widget.span %> dashboard-widget widget-list"
+               data-widget-id="<%= widget.id %>"
+               data-col-span="<%= widget.span %>"
+               data-row-span="<%= widget.rows %>">
+            <div class="position-relative rounded overflow-hidden widget-box"
+                 style="height: <%= widget.height_px %>px;">
+              <div class="widget-controls d-flex align-items-center gap-1 rounded px-1"
+                   style="position:absolute; top:6px; right:8px; z-index:3; background:rgba(255,255,255,0.85);">
+                <span class="widget-drag-handle text-muted" title="Arraste para reordenar" style="cursor:move;">
+                  <i class="fa fa-grip-vertical"></i>
+                </span>
+                <button type="button" class="btn-close widget-close" title="Remover do dashboard"
+                        style="font-size:0.65rem;" aria-label="Remover"></button>
               </div>
-            </div>
-          <% end %>
-          <!-- Produtos Mais Vendidos -->
-          <div class="card bg-light  mb-3">
-            <div class="card-body">
-              <h6 class="card-title text-muted text-center">Top 6 Produtos (Mês)</h6>
-              <% if @produtos_mais_vendidos.present? %>
-                <div class="list-group list-group-flush">
-                  <% @produtos_mais_vendidos.each_with_index do |produto, index| %>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0">
-                      <span>
-                        <span class="badge bg-<%= ['primary', 'success', 'info', 'warning', 'danger'][index] || 'secondary' %> me-2"><%= index + 1 %></span>
-                        <%= truncate(produto.nome, length: 30) %>
-                      </span>
-                      <span class="badge bg-light text-dark"><%= produto.total_vendido.to_i %> un.</span>
-                    </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <div class="text-center mt-3">
-                  <p class="text-muted">Sem vendas no mês</p>
-                </div>
-              <% end %>
+              <%= render partial: "collaborators_backoffice/welcome/widgets/#{widget.widget_type}", locals: { cor: widget.color, span: widget.span } %>
+              <!-- Handles de redimensionamento -->
+              <span class="widget-resize-handle widget-resize-x d-none d-md-block" title="Arraste para ajustar a largura"></span>
+              <span class="widget-resize-handle-y" title="Arraste para ajustar a altura"></span>
+              <span class="widget-resize-handle-xy d-none d-md-block" title="Arraste para ajustar tamanho"></span>
             </div>
           </div>
-          <%#  %>
+        <% end %>
+      </div>
+
+      <% if @widgets.empty? %>
+        <div class="text-center text-muted py-5">
+          <p>Nenhum widget ativo. Clique em <strong>Configurar Widgets</strong> na barra superior para adicionar widgets ao seu dashboard.</p>
         </div>
-        <!-- Coluna Direita - Informações Financeiras -->
-        <div class="col-md-6">
-          <!-- Informações de Caixa -->
-          <div class="card bg-light mb-3">
-            <div class="card-body">
-              <h6 class="card-title text-muted text-center">Caixa</h6>
-              <div class="row g-2">
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Saldo Inicial</small>
-                    <span class="<%= @abertura_caixa >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(@abertura_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <small class="text-muted d-block">Saldo Atual</small>
-                    <span class="<%= @saldo_caixa >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(@saldo_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
-                      <small class="text-muted d-block">Entradas</small>
-                      <span class="text-success fw-bold">R$ <%= number_with_precision(@entradas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
-                    <% end %>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
-                      <small class="text-muted d-block">Saídas</small>
-                      <span class="text-danger fw-bold">R$ <%= number_with_precision(@saidas_caixa, precision: 2, delimiter: '.', separator: ',') %></span>
-                    <% end %>
-                  </div>
-                </div>
-                <% if @ultimo_fechamento.present? %>
-                  <div class="col-12">
-                    <div class="p-2 border rounded bg-white">
-                      <small class="text-muted d-block">Último Fechamento</small>
-                      <span class="text-primary fw-bold">R$ <%= number_with_precision(@ultimo_fechamento.valorfechamento, precision: 2, delimiter: '.', separator: ',') %></span>
-                      <small class="text-muted d-block"><%= l(@ultimo_fechamento.datafechamento, format: :short) if @ultimo_fechamento.datafechamento %></small>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-          <!-- Informações de Vendas e Contas -->
-          <div class="card bg-light">
-            <div class="card-body">
-              <h6 class="card-title text-muted text-center">Resumo Financeiro (Mês)</h6>
-              <div class="row g-2">
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <%= link_to collaborators_backoffice_report_sales_path(cod_funcionario: current_collaborator.cod_funcionario, per_page: 'Todas', dataInicial: Time.zone.today.beginning_of_month.strftime('%d/%m/%Y')), class: "text-decoration-none" do %>
-                      <small class="text-muted d-block">Minhas Vendas</small>
-                      <span class="text-success fw-bold">R$ <%= number_with_precision(@vendas_vendedor || 0, precision: 2, delimiter: '.', separator: ',') %></span>
-                    <% end %>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="p-2 border rounded bg-white">
-                    <%= link_to collaborators_backoffice_report_sales_path(per_page: 'Todas', dataInicial: Time.zone.today.beginning_of_month.strftime('%d/%m/%Y')), class: "text-decoration-none" do %>
-                      <small class="text-muted d-block">Total Vendas</small>
-                      <span class="text-success fw-bold">R$ <%= number_with_precision(@total_vendas_empresa || 0, precision: 2, delimiter: '.', separator: ',') %></span>
-                    <% end %>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path(tipo_conta: true, status_bill: 'Abertos'), class: "text-decoration-none" do %>
-                    <div class="p-2 border rounded bg-white">
-                      <small class="text-muted d-block">Total a Pagar</small>
-                      <span class="text-danger fw-bold">R$ <%= number_with_precision(@total_pagar || 0, precision: 2, delimiter: '.', separator: ',') %></span>
-                    </div>
-                  <% end %>
-                </div>
-                <div class="col-6">
-                  <%= link_to collaborators_backoffice_contas_pag_rec_index_path(tipo_conta: false, status_bill: 'Abertos'), class: "text-decoration-none" do %>
-                    <div class="p-2 border rounded bg-white">
-                      <small class="text-muted d-block">Total a Receber</small>
-                      <span class="text-success fw-bold">R$ <%= number_with_precision(@total_receber || 0, precision: 2, delimiter: '.', separator: ',') %></span>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Cada widget tem altura definida (widget-box). O card preenche a altura
+     total e o conteúdo se adapta: listas rolam, cards de número/gráfico
+     ajustam ao espaço. */
+  .widget-box {
+    display: flex;
+    flex-direction: column;
+    /* Torna o widget um "container" para permitir escalar o conteúdo conforme
+       o seu tamanho (container queries). */
+    container-type: size;
+    container-name: widget;
+  }
+  /* Fonte base do conteúdo proporcional ao tamanho do widget, com limites.
+     Como o texto interno usa em/%, tudo escala junto ao redimensionar.
+     Mínimo mais baixo para permitir compactar bastante (ex.: Caixa pequeno). */
+  .widget-box > .card {
+    font-size: clamp(0.55rem, calc(0.4rem + 1.2cqw + 1.2cqh), 1.1rem);
+  }
+  /* Números/destaques padrão (acompanham a fonte base) */
+  .widget-metric { font-size: 2.4em; line-height: 1.05; font-weight: 700; }
+  /* Métricas grandes (Vendas do Dia, Minhas Vendas, Total Vendas): crescem
+     bastante com o widget — pensado para "deixar grande e ver a meta". Escala
+     diretamente pelo tamanho do container, sem o teto baixo da fonte base. */
+  .widget-metric-big {
+    font-weight: 700;
+    line-height: 1.05;
+    font-size: clamp(1.2rem, calc(0.6rem + 5cqw + 5cqh), 5rem);
+  }
+  /* Espaçamentos internos das "caixinhas" acompanham a escala da fonte, para
+     que as grades (Caixa, Financeiro, Comissões) encolham junto com o widget. */
+  .widget-box .card-body .p-2 { padding: 0.4em !important; }
+  .widget-box .card-body small { font-size: 0.8em; }
+
+  /* Grades que preenchem a altura do widget SEM scroll: a área ocupa o espaço
+     restante e as linhas dividem a altura igualmente, encolhendo para caber. */
+  .widget-fill {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: stretch;
+  }
+  /* Cada caixinha ocupa a altura da sua linha e centraliza o conteúdo, com o
+     texto compactado (line-height menor) para não cortar. */
+  .widget-fill > [class*="col-"] { display: flex; min-height: 0; }
+  .widget-fill > [class*="col-"] > * {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    overflow: hidden;
+    line-height: 1.15;
+  }
+  .widget-fill small { line-height: 1.1; }
+
+  /* As grades de acesso rápido preenchem a altura do widget para os cards/
+     botões internos crescerem ao aumentar a altura. */
+  .acesso-rapido-grid, .acesso-rapido-botoes-grid { flex: 1 1 auto; align-content: stretch; }
+
+  /* Acesso Rápido: número de colunas depende da LARGURA DO WIDGET (não da tela).
+     Estreito = 1 coluna; médio = 2; largo = 3.
+     Usa min-width:0 e box-sizing para o gutter não estourar a última coluna. */
+  .acesso-rapido-grid > .col,
+  .acesso-rapido-botoes-grid > .col { min-width: 0; box-sizing: border-box; }
+  .acesso-rapido-grid > .col { flex: 0 0 100%; max-width: 100%; }
+  @container widget (min-width: 420px) {
+    .acesso-rapido-grid > .col { flex: 0 0 50%; max-width: 50%; }
+  }
+  @container widget (min-width: 720px) {
+    .acesso-rapido-grid > .col { flex: 0 0 33.333%; max-width: 33.333%; }
+  }
+
+  /* Acesso Rápido (só botões): 1 coluna se estreito, 2 se largo. */
+  .acesso-rapido-botoes-grid > .col { flex: 0 0 100%; max-width: 100%; }
+  @container widget (min-width: 420px) {
+    .acesso-rapido-botoes-grid > .col { flex: 0 0 50%; max-width: 50%; }
+  }
+  /* Botões da mesma linha com altura igual: a célula estica (align-items do row)
+     e o botão preenche toda a altura, alinhando o texto ao centro. */
+  .acesso-rapido-botoes-grid { align-items: stretch; }
+  .acesso-rapido-botoes-grid > .col { display: flex; }
+  .acesso-rapido-botoes-grid > .col > .btn {
+    width: 100%;
+    height: 100%;
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .widget-box > .card { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; }
+  .widget-box > .card > .card-header { flex: 0 0 auto; }
+  .widget-box > .card > .card-body { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; overflow: hidden; }
+  /* A área que rola dentro dos widgets de lista ocupa o espaço restante */
+  .widget-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .widget-scroll::-webkit-scrollbar { width: 6px; }
+  .widget-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+
+  /* Handles de redimensionamento */
+  .widget-resize-handle,
+  .widget-resize-x { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 2; }
+  .widget-resize-x:hover { background: linear-gradient(to right, transparent, rgba(13,110,253,0.25)); }
+  .widget-resize-handle-y { position: absolute; left: 0; bottom: 0; width: 100%; height: 10px; cursor: row-resize; z-index: 2; }
+  .widget-resize-handle-y:hover { background: linear-gradient(to top, rgba(13,110,253,0.25), transparent); }
+  .widget-resize-handle-xy { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; z-index: 3;
+    background: linear-gradient(135deg, transparent 50%, rgba(13,110,253,0.45) 50%); }
+  .dashboard-widget.resizing { opacity: 0.9; }
+  .dashboard-widget.resizing .widget-box { outline: 2px dashed rgba(13,110,253,0.5); }
+</style>
+
+<!-- Modal de configuração do dashboard -->
+<div class="modal fade" id="configDashboardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-cog"></i> Configurar Dashboard</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <p class="text-muted small">Ative ou desative widgets e ajuste a largura de cada um (1 a 12 colunas). Você também pode arrastar a borda direita do widget direto no dashboard.</p>
+        <div id="widget-config-list">
+          <div class="text-center text-muted py-3">
+            <i class="fa fa-spinner fa-spin"></i> Carregando...
           </div>
         </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-reset-dashboard">
+          <i class="fa fa-undo"></i> Restaurar padrão
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>
 </div>
+
 <%= render partial: 'collaborators_backoffice/produtos/shared/produto_modal', locals: { action_message: 'Welcome/index' } %>
 <%= render partial: 'collaborators_backoffice/lembretes/shared/lembrete_modal', locals: { action_message: 'Welcome/index' } %>
 <%= render partial: 'collaborators_backoffice/welcome/modal_atendimento' %>
+
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" %>
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" %>
+<script>
+  // Inicializa o gráfico Receita x Custo, se o widget estiver presente
+  (function () {
+    const dataEl = document.getElementById('chart-vendas-custo-data');
+    const canvas = document.getElementById('chart-vendas-custo');
+    if (!dataEl || !canvas || !window.Chart) return;
+
+    const parsed = JSON.parse(dataEl.textContent);
+    const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: parsed.labels,
+        datasets: [
+          { label: 'Receita', data: parsed.receitas, backgroundColor: 'rgba(25, 135, 84, 0.7)' },
+          { label: 'Custo',   data: parsed.custos,   backgroundColor: 'rgba(220, 53, 69, 0.7)' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) { return ctx.dataset.label + ': ' + brl.format(ctx.parsed.y); }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: function (value) { return brl.format(value); } }
+          }
+        }
+      }
+    });
+  })();
+
+  (function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const reorderUrl = "<%= reorder_collaborators_backoffice_dashboard_widgets_path %>";
+    const listUrl = "<%= collaborators_backoffice_dashboard_widgets_path %>";
+    const resetUrl = "<%= reset_collaborators_backoffice_dashboard_widgets_path %>";
+    const MIN_SPAN = 1, MAX_SPAN = 12;
+
+    const container = document.getElementById('dashboard-widgets');
+
+    function saveWidget(id, payload) {
+      return fetch(listUrl + '/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ dashboard_widget: payload })
+      });
+    }
+
+    // Troca a classe col-md-* de um widget para o novo span
+    function applySpan(card, span) {
+      span = Math.min(MAX_SPAN, Math.max(MIN_SPAN, span));
+      card.className = card.className.replace(/\bcol-md-\d+\b/, 'col-md-' + span);
+      card.dataset.colSpan = span;
+      return span;
+    }
+
+    // Drag-and-drop para reordenar widgets
+    if (container && window.Sortable) {
+      Sortable.create(container, {
+        handle: '.widget-drag-handle',
+        animation: 150,
+        onEnd: function () {
+          const order = Array.from(container.querySelectorAll('.dashboard-widget'))
+            .map(el => el.dataset.widgetId);
+          fetch(reorderUrl, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ order: order })
+          });
+        }
+      });
+    }
+
+    // Botão X: remove (oculta) o widget direto do dashboard
+    if (container) {
+      container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.widget-close');
+        if (!btn) return;
+        const card = btn.closest('.dashboard-widget');
+        if (!card) return;
+        const id = card.dataset.widgetId;
+        card.style.transition = 'opacity 0.2s';
+        card.style.opacity = '0';
+        saveWidget(id, { visible: false });
+        setTimeout(function () { card.remove(); }, 200);
+      });
+    }
+
+    // Redimensionamento por arrasto: largura (X), altura (Y) ou ambos (XY)
+    const MIN_ROWS = 1, MAX_ROWS = 8, ROW_UNIT_PX = 90;
+
+    // Aplica a altura (em unidades) ao box do widget
+    function applyRows(card, rows) {
+      rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, rows));
+      const box = card.querySelector('.widget-box');
+      if (box) box.style.height = (rows * ROW_UNIT_PX) + 'px';
+      card.dataset.rowSpan = rows;
+      return rows;
+    }
+
+    if (container) {
+      let resizing = null;
+
+      container.addEventListener('mousedown', function (e) {
+        const isX = e.target.closest('.widget-resize-x');
+        const isY = e.target.closest('.widget-resize-handle-y');
+        const isXY = e.target.closest('.widget-resize-handle-xy');
+        const handle = isX || isY || isXY;
+        if (!handle) return;
+        const card = handle.closest('.dashboard-widget');
+        if (!card) return;
+        e.preventDefault();
+
+        const box = card.querySelector('.widget-box');
+        resizing = {
+          card: card,
+          axisX: !!(isX || isXY),
+          axisY: !!(isY || isXY),
+          startX: e.clientX,
+          startY: e.clientY,
+          startSpan: parseInt(card.dataset.colSpan, 10) || 6,
+          startHeight: box ? box.getBoundingClientRect().height : (parseInt(card.dataset.rowSpan, 10) || 3) * ROW_UNIT_PX,
+          unitW: container.getBoundingClientRect().width / MAX_SPAN
+        };
+        card.classList.add('resizing');
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', function (e) {
+        if (!resizing) return;
+        if (resizing.axisX) {
+          const deltaCols = Math.round((e.clientX - resizing.startX) / resizing.unitW);
+          applySpan(resizing.card, resizing.startSpan + deltaCols);
+        }
+        if (resizing.axisY) {
+          const newHeightPx = resizing.startHeight + (e.clientY - resizing.startY);
+          const rows = Math.round(newHeightPx / ROW_UNIT_PX);
+          applyRows(resizing.card, rows);
+        }
+      });
+
+      document.addEventListener('mouseup', function () {
+        if (!resizing) return;
+        const card = resizing.card;
+        card.classList.remove('resizing');
+        document.body.style.userSelect = '';
+        const payload = {};
+        if (resizing.axisX) payload.col_span = parseInt(card.dataset.colSpan, 10);
+        if (resizing.axisY) payload.row_span = parseInt(card.dataset.rowSpan, 10);
+        if (Object.keys(payload).length) saveWidget(card.dataset.widgetId, payload);
+        resizing = null;
+      });
+    }
+
+    // ----- Modal de configuração -----
+    const modal = document.getElementById('configDashboardModal');
+    const listEl = document.getElementById('widget-config-list');
+
+    function renderConfig(widgets) {
+      if (!widgets.length) {
+        listEl.innerHTML = '<p class="text-muted text-center">Nenhum widget disponível.</p>';
+        return;
+      }
+      listEl.innerHTML = widgets.map(function (w) {
+        return '' +
+          '<div class="border-bottom py-2" data-id="' + w.id + '">' +
+            '<div class="d-flex align-items-center justify-content-between">' +
+              '<div class="form-check mb-0">' +
+                '<input class="form-check-input widget-visible" type="checkbox"' + (w.visible ? ' checked' : '') + ' id="wv-' + w.id + '">' +
+                '<label class="form-check-label" for="wv-' + w.id + '">' + w.label + '</label>' +
+              '</div>' +
+            '</div>' +
+            '<div class="d-flex align-items-center gap-2 mt-2">' +
+              '<span class="small text-muted" style="width:52px;">Largura</span>' +
+              '<input type="range" class="form-range widget-span" min="1" max="12" step="1" value="' + w.col_span + '">' +
+              '<span class="badge bg-light text-dark widget-span-label" style="width:44px;">' + w.col_span + '/12</span>' +
+            '</div>' +
+            '<div class="d-flex align-items-center gap-2 mt-1">' +
+              '<span class="small text-muted" style="width:52px;">Altura</span>' +
+              '<input type="range" class="form-range widget-rows" min="1" max="8" step="1" value="' + w.row_span + '">' +
+              '<span class="badge bg-light text-dark widget-rows-label" style="width:44px;">' + w.row_span + '/8</span>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    if (modal) {
+      modal.addEventListener('show.bs.modal', function () {
+        fetch(listUrl, { headers: { 'Accept': 'application/json' } })
+          .then(r => r.json())
+          .then(renderConfig)
+          .catch(() => { listEl.innerHTML = '<p class="text-danger text-center">Erro ao carregar.</p>'; });
+      });
+
+      // Atualiza o rótulo enquanto arrasta os sliders (sem salvar a cada pixel)
+      listEl.addEventListener('input', function (e) {
+        const row = e.target.closest('[data-id]');
+        if (!row) return;
+        if (e.target.classList.contains('widget-span')) {
+          row.querySelector('.widget-span-label').textContent = e.target.value + '/12';
+        } else if (e.target.classList.contains('widget-rows')) {
+          row.querySelector('.widget-rows-label').textContent = e.target.value + '/8';
+        }
+      });
+
+      // Salva ao soltar o slider ou trocar o checkbox
+      listEl.addEventListener('change', function (e) {
+        const row = e.target.closest('[data-id]');
+        if (!row) return;
+        const id = row.dataset.id;
+        if (e.target.classList.contains('widget-visible')) {
+          saveWidget(id, { visible: e.target.checked });
+        } else if (e.target.classList.contains('widget-span')) {
+          saveWidget(id, { col_span: parseInt(e.target.value, 10) });
+        } else if (e.target.classList.contains('widget-rows')) {
+          saveWidget(id, { row_span: parseInt(e.target.value, 10) });
+        }
+      });
+
+      const resetBtn = document.getElementById('btn-reset-dashboard');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          fetch(resetUrl, { method: 'POST', headers: { 'X-CSRF-Token': csrfToken } })
+            .then(() => window.location.reload());
+        });
+      }
+
+      // Recarrega a página ao fechar o modal para refletir mudanças
+      modal.addEventListener('hidden.bs.modal', function () {
+        window.location.reload();
+      });
+    }
+  })();
+</script>

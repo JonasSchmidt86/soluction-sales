@@ -35,6 +35,12 @@
           </i>
         </button>
       </div>
+      <!-- Ações específicas da página (ex.: Configurar dashboard) -->
+      <% if content_for?(:navbar_actions) %>
+        <div class="d-flex align-items-center me-2">
+          <%= yield :navbar_actions %>
+        </div>
+      <% end %>
       <!-- Navbar-->
       <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
         <li class="nav-item dropdown">
@@ -342,6 +348,11 @@
                   <% if access_control.can_view?('atendimentos') %>
                     <%= link_to collaborators_backoffice_report_atendimentos_path, class:"nav-link" do %>
                       Atendimentos
+                    <% end %>
+                  <% end %>
+                  <% if access_control.can_view?('report_aniversariantes') %>
+                    <%= link_to collaborators_backoffice_report_aniversariantes_path, class:"nav-link" do %>
+                      Aniversariantes
                     <% end %>
                   <% end %>
                   <% if access_control.can_view?('report_rep_dre') %>

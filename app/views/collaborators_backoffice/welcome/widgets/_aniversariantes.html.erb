@@ -1,0 +1,47 @@
+<%# Widget: Aniversariantes da Semana %>
+<% data = @dashboard_data.fetch('aniversariantes') %>
+<% cor = local_assigns.fetch(:cor, 'danger') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3">
+      <%= link_to collaborators_backoffice_report_aniversariantes_path, class: "text-#{cor} text-decoration-none", title: "Abrir relatório de aniversariantes" do %>
+        <i class="fa fa-cake-candles"></i> Aniversariantes da Semana
+      <% end %>
+    </h6>
+    <% if data[:lista].to_a.any? %>
+      <div class="list-group list-group-flush widget-scroll">
+        <% data[:lista].each do |row| %>
+          <%
+            celular = row['celular'].presence || row['telefone'].presence
+            fone_zap = celular.to_s.gsub(/\D/, '')
+            dt = row['dtnascimento'].is_a?(String) ? Date.parse(row['dtnascimento']) : row['dtnascimento']
+            hoje_aniv = dt && dt.month == Date.current.month && dt.day == Date.current.day
+          %>
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0 bg-transparent">
+            <span>
+              <span class="badge bg-<%= hoje_aniv ? 'danger' : 'light text-dark' %> me-2">
+                <%= dt ? dt.strftime('%d/%m') : '—' %>
+              </span>
+              <%= truncate(row['nome'], length: 22) %>
+              <% if hoje_aniv %><i class="fa fa-gift text-danger ms-1" title="É hoje!"></i><% end %>
+            </span>
+            <span class="text-nowrap small">
+              <% if celular.present? %>
+                <span class="text-muted"><%= celular %></span>
+                <% if fone_zap.length >= 10 %>
+                  <a href="https://wa.me/55<%= fone_zap %>" target="_blank" class="text-success ms-1" title="WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                  </a>
+                <% end %>
+              <% else %>
+                <span class="text-muted">—</span>
+              <% end %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-muted text-center mb-0 mt-2">Nenhum aniversariante nos próximos 7 dias</p>
+    <% end %>
+  </div>
+</div>

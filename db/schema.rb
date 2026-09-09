@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_120005) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_02_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -389,6 +389,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_120005) do
     t.json "params_schema"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "dashboard_widgets", force: :cascade do |t|
+    t.bigint "cod_funcionario", null: false
+    t.bigint "cod_empresa", null: false
+    t.string "widget_type", null: false
+    t.integer "position", default: 0, null: false
+    t.string "size", default: "md", null: false
+    t.boolean "visible", default: true, null: false
+    t.jsonb "config", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "col_span", default: 6, null: false
+    t.integer "row_span", default: 3, null: false
+    t.index ["cod_funcionario", "cod_empresa", "widget_type"], name: "idx_dashboard_widgets_func_emp_type", unique: true
+    t.index ["cod_funcionario", "cod_empresa"], name: "idx_dashboard_widgets_func_emp"
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|

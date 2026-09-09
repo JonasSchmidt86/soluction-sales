@@ -1,0 +1,43 @@
+<%# Widget: Estoque Mínimo Atingido %>
+<% data = @dashboard_data.fetch('estoque_minimo') %>
+<% cor = local_assigns.fetch(:cor, 'danger') %>
+<% itens = data[:itens].to_a %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body p-2">
+    <h6 class="card-title text-<%= cor %> text-center mb-3">
+      <%= link_to collaborators_backoffice_report_stock_min_index_path, class: "text-#{cor} text-decoration-none", title: "Ver relatório de estoque mínimo" do %>
+        <i class="fa fa-triangle-exclamation"></i> Estoque Mínimo Atingido
+      <% end %>
+    </h6>
+    <% if itens.any? %>
+      <div class="table-responsive widget-scroll">
+        <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;">
+          <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th class="text-center">Est.</th>
+              <th class="text-center">Mín.</th>
+              <th class="text-center">Ped.</th>
+              <th class="text-center">Ven.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% itens.each do |item| %>
+              <tr>
+                <td class="text-nowrap"><%= item['codigo'] %></td>
+                <td><%= truncate(item['nome'], length: 22) %></td>
+                <td class="text-center"><%= item['estoque'].to_i %></td>
+                <td class="text-center"><%= item['estoque_minimo'].to_i %></td>
+                <td class="text-center"><%= item['quantidade_pedida'].to_i > 0 ? item['quantidade_pedida'].to_i : '-' %></td>
+                <td class="text-center"><%= item['vendido_3_meses'].to_i > 0 ? item['vendido_3_meses'].to_i : '-' %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-muted text-center mb-0 mt-2">Nenhum produto no estoque mínimo</p>
+    <% end %>
+  </div>
+</div>

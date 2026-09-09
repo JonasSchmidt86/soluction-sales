@@ -3,11 +3,21 @@
     <h4> <%= "#{action_message} Valor de venda!" %></h4>
   <% end %>
   <div class="card-body">
-    <div class="d-flex gap-2 mb-3">
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
       <input type="text" id="filtro-cod-produto" class="form-control form-control-sm" placeholder="Código do Produto" style="max-width: 160px;">
       <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;">
       <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;">
       <button type="button" id="btn-buscar-estoque" class="btn btn-success btn-sm">Buscar</button>
+
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <div class="form-check mb-0" title="Arredonda o Vl Venda para cima ao próximo múltiplo de 5">
+          <input class="form-check-input" type="checkbox" id="chk-arredondar">
+          <label class="form-check-label small" for="chk-arredondar">Arredondar Vl Venda (↑ múltiplo de 5)</label>
+        </div>
+        <button type="button" id="btn-salvar-todos" class="btn btn-primary btn-sm">
+          <i class="fa fa-save"></i> Salvar todos
+        </button>
+      </div>
     </div>
     <div class="dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns">
       <div class="dataTable-container">
@@ -146,5 +156,102 @@
           }
         });
       });
+    });
+
+    // ---------- Utilidades de valor ----------
+    // Converte "1.234,56" (BR) para número
+    function parseBR(valor) {
+      if (valor == null) return 0;
+      const v = String(valor).trim().replace(/\./g, "").replace(",", ".");
+      const n = parseFloat(v);
+      return isNaN(n) ? 0 : n;
+    }
+    // Formata número para "1234,56" (sem separador de milhar, como no input)
+    function formatBR(n) {
+      return n.toFixed(2).replace(".", ",");
+    }
+    // Arredonda para cima ao próximo múltiplo de 5 (ex.: 564,33 -> 565 ; 567,77 -> 570)
+    function arredondarParaCima(n) {
+      return Math.ceil(n / 5) * 5;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // ---------- Arredondar Vl Venda ao marcar o checkbox ----------
+      const chkArredondar = document.getElementById("chk-arredondar");
+      if (chkArredondar) {
+        chkArredondar.addEventListener("change", function() {
+          if (!this.checked) return; // só age ao marcar
+          document.querySelectorAll(".editable-valor-venda").forEach(function(input) {
+            const atual = parseBR(input.value);
+            if (atual > 0) input.value = formatBR(arredondarParaCima(atual));
+          });
+          $.bootstrapGrowl("Valores arredondados. Confira e clique em Salvar todos.", {
+            ele: 'body', type: 'info', offset: { from: 'top', amount: 60 },
+            align: 'center', width: 320, delay: 3000
+          });
+        });
+      }
+
+      // ---------- TAB pula para o Vl Venda da linha de baixo ----------
+      const camposValor = Array.from(document.querySelectorAll(".editable-valor-venda"));
+      camposValor.forEach(function(input, idx) {
+        input.addEventListener("keydown", function(e) {
+          if (e.key === "Tab" && !e.shiftKey) {
+            const proximo = camposValor[idx + 1];
+            if (proximo) {
+              e.preventDefault();
+              proximo.focus();
+              proximo.select();
+            }
+          } else if (e.key === "Tab" && e.shiftKey) {
+            const anterior = camposValor[idx - 1];
+            if (anterior) {
+              e.preventDefault();
+              anterior.focus();
+              anterior.select();
+            }
+          }
+        });
+      });
+
+      // ---------- Salvar todos ----------
+      const btnSalvarTodos = document.getElementById("btn-salvar-todos");
+      if (btnSalvarTodos) {
+        btnSalvarTodos.addEventListener("click", function() {
+          const itens = [];
+          document.querySelectorAll(".editable-valor-venda").forEach(function(inputValor) {
+            const id = inputValor.dataset.id;
+            const inputQtd = document.querySelector(`.editable-qtd-minima[data-id="${id}"]`);
+            itens.push({
+              id: id,
+              valorvenda: inputValor.value.trim(),
+              quantidademinima: inputQtd ? inputQtd.value.trim() : "0"
+            });
+          });
+          if (!itens.length) return;
+
+          btnSalvarTodos.disabled = true;
+          fetch("/collaborators_backoffice/empresa_estoque/update_todos", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ itens: itens })
+          })
+          .then(r => r.ok ? r.json() : Promise.reject("Erro ao salvar"))
+          .then(data => {
+            $.bootstrapGrowl(data.message, {
+              ele: 'body', type: 'success', offset: { from: 'top', amount: 60 },
+              align: 'center', width: 320, delay: 3000
+            });
+          })
+          .catch(err => {
+            $.bootstrapGrowl("Erro ao salvar todos. Tente novamente.", { type: 'danger' });
+            console.error(err);
+          })
+          .finally(() => { btnSalvarTodos.disabled = false; });
+        });
+      }
     });
   </script>

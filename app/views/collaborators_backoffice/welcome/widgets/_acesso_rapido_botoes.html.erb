@@ -1,0 +1,45 @@
+<%# Widget: Acesso Rápido (compacto) - apenas os botões de ação, sem números. %>
+<% cor = local_assigns.fetch(:cor, 'primary') %>
+<div class="card h-100 border-<%= cor %> bg-light">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3"><i class="fa fa-bolt"></i> Acesso Rápido</h6>
+    <div class="row g-2 acesso-rapido-botoes-grid">
+      <div class="col d-grid">
+        <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-sm btn-primary text-start" do %>
+          <i class="fa fa-shopping-cart fa-fw"></i> Nova Venda
+        <% end %>
+      </div>
+      <div class="col d-grid">
+        <button type="button" class="btn btn-sm btn-success text-start" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
+          <i class="fa fa-headset fa-fw"></i> Novo Atendimento
+        </button>
+      </div>
+      <div class="col d-grid">
+        <button type="button" class="btn btn-sm btn-success text-start" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
+          <i class="fa fa-box fa-fw"></i> Novo Produto
+        </button>
+      </div>
+      <div class="col d-grid">
+        <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-sm btn-secondary text-start" do %>
+          <i class="fa fa-users fa-fw"></i> Nova Pessoa
+        <% end %>
+      </div>
+      <div class="col d-grid">
+        <button type="button" class="btn btn-sm btn-danger text-start" data-bs-toggle="modal"
+                data-bs-target="#lembreteModal" data-bs-whatever="passa para o modal">
+          <i class="fa fa-bell fa-fw"></i> Novo Lembrete
+        </button>
+      </div>
+      <div class="col d-grid">
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-sm btn-outline-primary text-start" do %>
+          <i class="fa fa-warehouse fa-fw"></i> Estoque
+        <% end %>
+      </div>
+      <div class="col d-grid">
+        <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-sm btn-info text-start" do %>
+          <i class="fa fa-images fa-fw"></i> Imagens
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -44,6 +44,7 @@ class AccessRolePermission < ApplicationRecord
     'report_rep_dre' => 'DRE',
     'report_custom_reports' => 'Outros Relatórios',
     'report_sugestao_compra' => 'Sugestão de Compra',
+    'report_aniversariantes' => 'Aniversariantes',
     'atendimentos' => 'Atendimentos',
     'notas_fiscais' => 'Notas Fiscais',
     'xml_files' => 'XML',

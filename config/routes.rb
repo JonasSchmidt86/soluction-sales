@@ -38,6 +38,15 @@ Rails.application.routes.draw do
     
     get 'welcome/index'
     post 'welcome/index'
+
+    # Widgets configuráveis do dashboard
+    resources :dashboard_widgets, only: [:index, :update] do
+      collection do
+        patch :reorder
+        post  :reset
+      end
+    end
+
     get 'search', to: 'produtos/search#produtos'
     get 'check_cpf_cnpj', to: 'check_cpf_cnpj'
     # cria varias rotas possiveis sem precisar criar uma a uma
@@ -74,6 +83,7 @@ Rails.application.routes.draw do
     resources :empresa_estoque, only: [:index, :edit, :destroy, :update] do
       collection do
         get 'by_color/:cor_id', to: 'empresa_estoque#by_color', as: :by_color
+        patch :update_todos
       end
     end
     
@@ -218,6 +228,7 @@ Rails.application.routes.draw do
     get 'report/mais_vendidos', to: 'report/rep_mais_vendidos#index', as: 'report_mais_vendidos'
     post 'report_stock_min/add_to_order', to: 'report/rep_stock_min#add_to_order', as: 'add_to_order_report_rep_stock_min'
     get 'report_atendimentos', to: 'report/rep_atendimentos#index', as: 'report_atendimentos'
+    get 'report_aniversariantes', to: 'report/rep_aniversariantes#index', as: 'report_aniversariantes'
     get 'report_sugestao_compra', to: 'report/rep_sugestao_compra#index', as: 'report_sugestao_compra'
     post 'report_sugestao_compra/add_to_order', to: 'report/rep_sugestao_compra#add_to_order', as: 'add_to_order_sugestao_compra'
   end

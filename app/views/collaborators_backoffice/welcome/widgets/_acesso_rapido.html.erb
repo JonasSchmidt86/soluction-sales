@@ -1,0 +1,146 @@
+<%# Widget: Acesso Rápido (completo) - botões + resumo numérico, como era originalmente. %>
+<% vd = @dashboard_data.fetch('vendas_dia') %>
+<% at = @dashboard_data.fetch('atendimentos') %>
+<% cor = local_assigns.fetch(:cor, 'primary') %>
+<div class="card h-100 border-<%= cor %> bg-light">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3"><i class="fa fa-th"></i> Acesso Rápido</h6>
+    <div class="row g-3 acesso-rapido-grid">
+      <!-- Vendas -->
+      <div class="col">
+        <div class="card h-100 border-primary">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-shopping-cart"></i> Vendas</h5>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Total Vendas:</small>
+                <small class="text-muted"><%= vd[:quantidade] %> venda(s)</small>
+                <span class="fw-bold">R$ <%= number_with_precision(vd[:total], precision: 2, delimiter: '.', separator: ',') %></span>
+              </div>
+            </div>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-primary flex-sm-fill w-100" do %>
+                <i class="fa fa-plus"></i> Nova Venda
+              <% end %>
+              <%= link_to collaborators_backoffice_report_sales_path(dataInicial: Date.current.strftime('%d/%m/%Y').to_s), class: "btn btn-outline-success flex-sm-fill w-100" do %>
+                <i class="fa fa-list"></i> Listar
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Atendimento -->
+      <div class="col">
+        <div class="card h-100 border-success">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-headset"></i> Atendimentos</h5>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Hoje:</small>
+                <span class="fw-bold"><%= at[:hoje] %> atendimento(s)</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Retornos:</small>
+                <span class="fw-bold <%= at[:retorno] > 0 ? 'text-danger' : '' %>"><%= at[:retorno] %></span>
+              </div>
+            </div>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <button type="button" class="btn btn-success flex-sm-fill w-100" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
+                <i class="fa fa-plus"></i> Novo Atendimento
+              </button>
+              <%= link_to collaborators_backoffice_report_atendimentos_path, class: "btn btn-outline-success flex-sm-fill w-100" do %>
+                <i class="fa fa-list"></i> Listar
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Produto -->
+      <div class="col">
+        <div class="card h-100 border-success">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-box"></i> Produtos</h5>
+            <p class="card-text">Cadastre e gerencie produtos</p>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <button type="button" class="btn btn-success flex-sm-fill w-100" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
+                <i class="fa fa-plus"></i> Novo Produto
+              </button>
+              <% unless request.user_agent =~ /Mobile|Android|iPhone/ %>
+                <%= link_to collaborators_backoffice_produtos_path, class: "btn btn-outline-success flex-sm-fill w-100 btn-listar-produtos", style: "display: none;" do %>
+                  <i class="fa fa-list"></i> Listar
+                <% end %>
+              <% end %>
+              <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-outline-primary flex-sm-fill w-100" do %>
+                <i class="fa fa-list"></i> Estoque
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pessoas -->
+      <div class="col">
+        <div class="card h-100 border-secondary">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-users"></i> Pessoas</h5>
+            <p class="card-text">Cadastre e gerencie clientes e fornecedores</p>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-success flex-sm-fill w-100" do %>
+                <i class="fa fa-plus"></i> Nova Pessoa
+              <% end %>
+              <%= link_to collaborators_backoffice_pessoas_path, class: "btn btn-outline-success flex-sm-fill w-100" do %>
+                <i class="fa fa-list"></i> Listar
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Lembretes -->
+      <div class="col">
+        <div class="card h-100 border-danger">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-bell"></i> Lembretes</h5>
+            <p class="card-text">Gerencie seus lembretes e tarefas</p>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <button type="button" class="btn btn-success flex-sm-fill w-100" data-bs-toggle="modal"
+                      data-bs-target="#lembreteModal" data-bs-whatever="passa para o modal">
+                <i class="fa fa-plus"></i> Novo Lembrete
+              </button>
+              <%= link_to collaborators_backoffice_lembretes_path, class: "btn btn-outline-success flex-sm-fill w-100" do %>
+                <i class="fa fa-list"></i> Listar
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Imagens -->
+      <div class="col">
+        <div class="card h-100 border-info">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title"><i class="fa fa-images"></i> Imagens</h5>
+            <p class="card-text">Gerencie imagens dos produtos</p>
+            <div class="d-grid d-sm-flex gap-2 mt-auto">
+              <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-info flex-sm-fill w-100" do %>
+                <i class="fa fa-images"></i> Gerenciar Imagens
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    function detectDevice() {
+      const userAgent = navigator.userAgent;
+      if (/iPad|Macintosh/.test(userAgent) && 'ontouchend' in document) return 'iPad';
+      if (/iPhone|Android.*Mobile/.test(userAgent)) return 'Celular';
+      return 'Computador';
+    }
+    if (detectDevice() === 'Computador') {
+      document.querySelectorAll('.btn-listar-produtos').forEach(function (btn) {
+        btn.style.display = 'inline-block';
+      });
+    }
+  })();
+</script>

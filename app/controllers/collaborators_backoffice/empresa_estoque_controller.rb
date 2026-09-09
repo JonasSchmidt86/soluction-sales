@@ -91,6 +91,30 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         render json: { message: "Erro ao atualizar valor.", errors: [e.message] }, status: :unprocessable_entity
     end
 
+    # Atualiza várias linhas de uma vez (botão "Salvar todos").
+    # Espera params[:itens] = [{ id:, valorvenda:, quantidademinima: }, ...]
+    def update_todos
+        itens = params[:itens] || []
+        atualizados = 0
+
+        ActiveRecord::Base.transaction do
+            itens.each do |item|
+                registro = Empresaproduto.find_by(id: item[:id])
+                next unless registro
+
+                valor = item[:valorvenda].to_s.gsub('.', '').gsub(',', '.').to_f
+                qtd_min = item[:quantidademinima].to_s.gsub(',', '.').to_f
+
+                registro.update_columns(valorvenda: valor, quantidademinima: qtd_min)
+                atualizados += 1
+            end
+        end
+
+        render json: { message: "#{atualizados} item(ns) atualizado(s) com sucesso!", total: atualizados }, status: :ok
+    rescue => e
+        render json: { message: "Erro ao salvar em lote.", errors: [e.message] }, status: :unprocessable_entity
+    end
+
     def edit 
         # @empresa_produto
         puts "------------------ #{params} ------------------"

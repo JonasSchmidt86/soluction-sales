@@ -1,0 +1,47 @@
+<%# Widget: Caixa %>
+<% data = @dashboard_data.fetch('caixa') %>
+<% cor = local_assigns.fetch(:cor, 'info') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-2"><i class="fa fa-cash-register"></i> Caixa</h6>
+    <div class="row g-2 widget-fill">
+      <div class="col-6">
+        <div class="p-2 border rounded bg-white">
+          <small class="text-muted d-block">Saldo Inicial</small>
+          <span class="<%= data[:abertura] >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(data[:abertura], precision: 2, delimiter: '.', separator: ',') %></span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="p-2 border rounded bg-white">
+          <small class="text-muted d-block">Saldo Atual</small>
+          <span class="<%= data[:saldo] >= 0 ? 'text-success' : 'text-danger' %> fw-bold">R$ <%= number_with_precision(data[:saldo], precision: 2, delimiter: '.', separator: ',') %></span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="p-2 border rounded bg-white">
+          <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
+            <small class="text-muted d-block">Entradas</small>
+            <span class="text-success fw-bold">R$ <%= number_with_precision(data[:entradas], precision: 2, delimiter: '.', separator: ',') %></span>
+          <% end %>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="p-2 border rounded bg-white">
+          <%= link_to collaborators_backoffice_report_put_box_index_path, class: "text-decoration-none" do %>
+            <small class="text-muted d-block">Saídas</small>
+            <span class="text-danger fw-bold">R$ <%= number_with_precision(data[:saidas], precision: 2, delimiter: '.', separator: ',') %></span>
+          <% end %>
+        </div>
+      </div>
+      <% if data[:ultimo_fechamento].present? %>
+        <div class="col-12">
+          <div class="p-2 border rounded bg-white">
+            <small class="text-muted d-block">Último Fechamento</small>
+            <span class="text-primary fw-bold">R$ <%= number_with_precision(data[:ultimo_fechamento].valorfechamento, precision: 2, delimiter: '.', separator: ',') %></span>
+            <small class="text-muted d-block"><%= l(data[:ultimo_fechamento].datafechamento, format: :short) if data[:ultimo_fechamento].datafechamento %></small>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

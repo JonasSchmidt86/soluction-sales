@@ -1,0 +1,13 @@
+<%# Widget: Minhas Vendas (Mês) %>
+<% data = @dashboard_data.fetch('minhas_vendas') %>
+<% cor = local_assigns.fetch(:cor, 'success') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body text-center justify-content-center">
+    <h6 class="card-title text-<%= cor %> mb-2"><i class="fa fa-user"></i> Minhas Vendas (Mês)</h6>
+    <%= link_to collaborators_backoffice_report_sales_path(cod_funcionario: data[:cod_funcionario], per_page: 'Todas', dataInicial: Time.zone.today.beginning_of_month.strftime('%d/%m/%Y')), class: "text-decoration-none" do %>
+      <div class="widget-metric-big text-success">
+        R$ <%= number_with_precision(data[:total], precision: 2, delimiter: '.', separator: ',') %>
+      </div>
+    <% end %>
+  </div>
+</div>

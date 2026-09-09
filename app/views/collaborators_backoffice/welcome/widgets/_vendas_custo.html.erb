@@ -1,0 +1,22 @@
+<%# Widget: Receita x Custo (últimos 6 meses) - gráfico de barras via Chart.js %>
+<% data = @dashboard_data.fetch('vendas_custo') %>
+<% cor = local_assigns.fetch(:cor, 'info') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3">
+      <%= link_to collaborators_backoffice_report_rep_dre_index_path, class: "text-#{cor} text-decoration-none" do %>
+        <i class="fa fa-chart-column"></i> Receita x Custo (6 meses)
+      <% end %>
+    </h6>
+    <% if data[:receitas].any? { |v| v != 0 } || data[:custos].any? { |v| v != 0 } %>
+      <div style="position: relative; flex: 1 1 auto; min-height: 120px;">
+        <canvas id="chart-vendas-custo"></canvas>
+      </div>
+      <script type="application/json" id="chart-vendas-custo-data">
+        <%= raw({ labels: data[:labels], receitas: data[:receitas], custos: data[:custos] }.to_json) %>
+      </script>
+    <% else %>
+      <p class="text-muted text-center mb-0 mt-2">Sem dados de vendas nos últimos 6 meses</p>
+    <% end %>
+  </div>
+</div>

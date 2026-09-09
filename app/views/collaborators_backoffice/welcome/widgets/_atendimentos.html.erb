@@ -1,0 +1,48 @@
+<%# Widget: Atendimentos %>
+<% data = @dashboard_data.fetch('atendimentos') %>
+<% cor = local_assigns.fetch(:cor, 'success') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3"><i class="fa fa-headset"></i> Atendimentos</h6>
+
+    <div class="row text-center g-2 mb-2">
+      <div class="col-6">
+        <%= link_to collaborators_backoffice_report_atendimentos_path, class: "text-decoration-none" do %>
+          <div class="widget-metric text-primary"><%= data[:hoje] %></div>
+          <small class="text-muted d-block">atendimento(s) hoje</small>
+        <% end %>
+      </div>
+      <div class="col-6">
+        <div class="widget-metric <%= data[:retorno] > 0 ? 'text-danger' : 'text-muted' %>"><%= data[:retorno] %></div>
+        <small class="text-muted d-block">retorno(s) pendente(s)</small>
+      </div>
+    </div>
+
+    <% pendentes = data[:pendentes].to_a %>
+    <% if pendentes.any? %>
+      <hr class="my-2">
+      <div class="small text-muted mb-1"><i class="fa fa-clock"></i> Retornos pendentes</div>
+      <div class="list-group list-group-flush widget-scroll">
+        <% pendentes.each do |at| %>
+          <%
+            nome = at.pessoa&.nome.presence || at.name.presence || 'Sem nome'
+            atrasado = at.return_at.present? && at.return_at.to_date < Date.current
+            hoje_ret = at.return_at.present? && at.return_at.to_date == Date.current
+            badge = atrasado ? 'bg-danger' : (hoje_ret ? 'bg-warning text-dark' : 'bg-light text-dark')
+          %>
+          <div class="list-group-item px-0 py-2 border-0 bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold text-truncate" style="max-width: 70%;"><%= nome %></span>
+              <span class="badge <%= badge %> text-nowrap">
+                <%= at.return_at.present? ? l(at.return_at.to_date, format: :short) : '—' %>
+              </span>
+            </div>
+            <% if at.notes.present? %>
+              <div class="text-muted small text-truncate"><%= truncate(at.notes, length: 60) %></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

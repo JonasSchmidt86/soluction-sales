@@ -1,0 +1,48 @@
+<%# Widget: Minhas Comissões (último período) %>
+<% data = @dashboard_data.fetch('comissoes') %>
+<%
+  status_badge = {
+    'open'      => ['bg-warning text-dark', 'Aberto'],
+    'finalized' => ['bg-info text-dark', 'Finalizado'],
+    'paid'      => ['bg-success', 'Pago']
+  }
+%>
+<% cor = local_assigns.fetch(:cor, 'warning') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body">
+    <h6 class="card-title text-<%= cor %> text-center mb-3"><i class="fa fa-hand-holding-usd"></i> Minhas Comissões</h6>
+    <% if data[:periodo].present? %>
+      <% badge = status_badge[data[:status]] || ['bg-secondary', data[:status]] %>
+      <div class="widget-fill d-flex flex-column">
+      <div class="text-center mb-2">
+        <small class="text-muted">
+          <%= l(data[:periodo].start_date, format: :short) %> a <%= l(data[:periodo].end_date, format: :short) %>
+        </small>
+        <span class="badge <%= badge[0] %> ms-1"><%= badge[1] %></span>
+      </div>
+      <div class="row g-2 widget-fill">
+        <div class="col-6">
+          <div class="p-2 border rounded bg-white text-center">
+            <small class="text-muted d-block">Vendas</small>
+            <span class="fw-bold">R$ <%= number_with_precision(data[:total_vendas], precision: 2, delimiter: '.', separator: ',') %></span>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-2 border rounded bg-white text-center">
+            <small class="text-muted d-block">Comissão</small>
+            <span class="fw-bold text-primary">R$ <%= number_with_precision(data[:comissao], precision: 2, delimiter: '.', separator: ',') %></span>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="p-2 border rounded bg-white text-center">
+            <small class="text-muted d-block">Líquido a receber</small>
+            <span class="fw-bold text-success" style="font-size: 1.1em;">R$ <%= number_with_precision(data[:liquido], precision: 2, delimiter: '.', separator: ',') %></span>
+          </div>
+        </div>
+      </div>
+      </div>
+    <% else %>
+      <p class="text-muted text-center mb-0 mt-2">Nenhum período de comissão encontrado</p>
+    <% end %>
+  </div>
+</div>

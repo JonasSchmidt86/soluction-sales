@@ -1,0 +1,14 @@
+<%# Widget: Vendas do Dia %>
+<% data = @dashboard_data.fetch('vendas_dia') %>
+<% cor = local_assigns.fetch(:cor, 'primary') %>
+<div class="card bg-light h-100 border-<%= cor %>">
+  <div class="card-body text-center justify-content-center">
+    <h6 class="card-title text-<%= cor %> mb-2"><i class="fa fa-shopping-cart"></i> Vendas do Dia</h6>
+    <%= link_to collaborators_backoffice_report_sales_path(dataInicial: Date.current.strftime('%d/%m/%Y').to_s), class: "text-decoration-none" do %>
+      <div class="widget-metric-big text-success">
+        R$ <%= number_with_precision(data[:total], precision: 2, delimiter: '.', separator: ',') %>
+      </div>
+      <small class="text-muted"><%= data[:quantidade] %> venda(s) hoje</small>
+    <% end %>
+  </div>
+</div>

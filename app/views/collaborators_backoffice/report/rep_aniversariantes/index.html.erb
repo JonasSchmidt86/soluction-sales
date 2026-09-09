@@ -1,0 +1,129 @@
+<div class="container-fluid mt-3">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fa fa-cake-candles"></i> Aniversariantes</h5>
+      <span class="badge bg-light text-dark"><%= @aniversariantes.count %> cliente(s)</span>
+    </div>
+    <div class="card-body">
+      <%= form_with url: collaborators_backoffice_report_aniversariantes_path, method: :get, local: true do %>
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-6 col-md-3">
+            <label class="form-label mb-1 small text-muted">Data inicial</label>
+            <input type="text" name="dataInicial" autocomplete="off"
+                   class="form-control datepicker fallback"
+                   value="<%= @data_inicial.strftime('%d/%m/%Y') %>">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label mb-1 small text-muted">Data final</label>
+            <input type="text" name="dataFinal" autocomplete="off"
+                   class="form-control datepicker fallback"
+                   value="<%= @data_final.strftime('%d/%m/%Y') %>">
+          </div>
+          <div class="col-12 col-md-3">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa fa-search"></i> Filtrar
+            </button>
+            <%= link_to collaborators_backoffice_report_aniversariantes_path, class: "btn btn-outline-secondary" do %>
+              <i class="fa fa-eraser"></i> Limpar
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <p class="text-muted small">
+        Clientes com compras nesta loja e aniversário entre
+        <strong><%= @data_inicial.strftime('%d/%m') %></strong> e
+        <strong><%= @data_final.strftime('%d/%m') %></strong>.
+      </p>
+
+      <% if @aniversariantes.count.zero? %>
+        <div class="text-center text-muted py-4">
+          <i class="fa fa-cake-candles fa-2x mb-2 d-block"></i>
+          Nenhum aniversariante encontrado no período.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle" id="tabela-aniversariantes">
+            <thead class="table-primary">
+              <tr>
+                <th>Cliente</th>
+                <th>Telefone / Celular</th>
+                <th class="text-center">Aniversário</th>
+                <th class="text-center">Compras</th>
+                <th class="text-center">Última compra</th>
+                <th class="text-center">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @aniversariantes.each do |row| %>
+                <%
+                  celular = row['celular'].presence || row['telefone'].presence
+                  fone_zap = celular.to_s.gsub(/\D/, '')
+                  dt = row['dtnascimento'].is_a?(String) ? Date.parse(row['dtnascimento']) : row['dtnascimento']
+                  total_aberto = row['total_aberto'].to_f
+                  ultima = row['ultima_compra'].present? ? (row['ultima_compra'].is_a?(String) ? Time.zone.parse(row['ultima_compra']) : row['ultima_compra']) : nil
+                %>
+                <tr>
+                  <td><%= row['nome'] %></td>
+                  <td>
+                    <% if celular.present? %>
+                      <%= celular %>
+                      <% if fone_zap.length >= 10 %>
+                        <a href="https://wa.me/55<%= fone_zap %>" target="_blank" class="text-success ms-1" title="WhatsApp">
+                          <i class="fab fa-whatsapp"></i>
+                        </a>
+                      <% end %>
+                    <% else %>
+                      <span class="text-muted">—</span>
+                    <% end %>
+                  </td>
+                  <td class="text-center text-nowrap">
+                    <%= dt ? dt.strftime('%d/%m') : '—' %>
+                  </td>
+                  <td class="text-center">
+                    <%= link_to collaborators_backoffice_report_sales_path(
+                          cod_pessoa: row['cod_pessoa'],
+                          per_page: 'Todas',
+                          dataInicial: '01/01/2000',
+                          dataFinal: Date.current.strftime('%d/%m/%Y')
+                        ),
+                        class: "badge bg-info text-dark text-decoration-none",
+                        title: "Ver todas as compras" do %>
+                      <%= row['total_compras'].to_i %> compra(s)
+                    <% end %>
+                  </td>
+                  <td class="text-center text-nowrap">
+                    <%= ultima ? l(ultima.to_date, format: :short) : '—' %>
+                  </td>
+                  <td class="text-center">
+                    <% if total_aberto > 0 %>
+                      <span class="badge bg-danger" title="Possui conta em aberto">
+                        Em aberto: R$ <%= number_with_precision(total_aberto, precision: 2, delimiter: '.', separator: ',') %>
+                      </span>
+                    <% else %>
+                      <span class="badge bg-success">Em dia</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    if (window.jQuery && jQuery.fn.dataTable) {
+      jQuery('#tabela-aniversariantes').DataTable({
+        paging: false,
+        info: false,
+        searching: true,
+        order: [],
+        language: { search: 'Buscar:', zeroRecords: 'Nenhum registro' }
+      });
+    }
+  })();
+</script>
