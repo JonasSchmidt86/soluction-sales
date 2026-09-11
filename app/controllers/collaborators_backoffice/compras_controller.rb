@@ -327,15 +327,6 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
           conta.valorparcela = frete.valor
 
           frete.contas << conta;
-
-          # tenho que salvar o frete primeiro para a trigger do postgres funcionar
-          if frete.save!
-            # Criar a compra
-            compra.cod_frete = frete.cod_frete
-            compra.valortotal += frete.valor
-            puts "Frete persistido!"
-          end
-          
         end
       end
 
@@ -369,16 +360,37 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         return render json: { error: error_message }, status: :not_found
       end
 
-      if compra.save!
+      # Persistência atômica: frete + compra (com itens/contas via autosave)
+      # gravados dentro de uma única transação. Se qualquer parte falhar, é feito
+      # ROLLBACK completo, evitando que uma "casca" de compra (sem itens/contas)
+      # fique gravada no banco.
+      begin
+        ActiveRecord::Base.transaction do
+          # o frete precisa ser salvo antes para a trigger do postgres funcionar
+          if compra.frete.present?
+            compra.frete.save!
+            compra.cod_frete = compra.frete.cod_frete
+            compra.valortotal += compra.frete.valor
+            puts "Frete persistido!"
+          end
+
+          compra.save!
+        end
+
         respond_to do |format|
           format.html { redirect_to edit_collaborators_backoffice_empresa_estoque_path(compra), notice: 'Compra criada com sucesso.' }
           format.json { render json: { message: 'Compra criada com sucesso', compra_url: edit_collaborators_backoffice_empresa_estoque_path(compra) }, status: :created }
         end
-      else
-        # Se houver erros na compra
-        puts "ERRO: #{compra.errors.full_messages.join(', ')}"
-        error_message = "ERRO: #{compra.errors.full_messages.join(', ')}"
-        render json: { error: error_message }, status: :unprocessable_entity
+      rescue ActiveRecord::RecordNotUnique => e
+        # Índice único (cod_empresa, cod_compraempresa) barrou uma tentativa
+        # duplicada (reenvio/retry). Transação sofreu ROLLBACK: nada foi gravado.
+        puts "COMPRA DUPLICADA IGNORADA: #{e.message}"
+        render json: { error: "Esta compra já foi lançada. Atualize a listagem antes de tentar novamente." }, status: :unprocessable_entity
+      rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+        # Transação já sofreu ROLLBACK automático: nada foi gravado.
+        mensagens = compra.errors.full_messages.presence || [e.message]
+        puts "ERRO: #{mensagens.join(', ')}"
+        render json: { error: "ERRO: #{mensagens.join(', ')}" }, status: :unprocessable_entity
       end
 
     end

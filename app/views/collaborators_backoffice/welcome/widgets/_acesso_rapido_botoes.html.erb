@@ -6,38 +6,43 @@
     <div class="row g-2 acesso-rapido-botoes-grid">
       <div class="col d-grid">
         <%= link_to new_collaborators_backoffice_venda_path, class: "btn btn-sm btn-primary text-start" do %>
-          <i class="fa fa-shopping-cart fa-fw"></i> Nova Venda
+          <i class="fa fa-shopping-cart fa-fw me-2"></i> Nova Venda
         <% end %>
       </div>
       <div class="col d-grid">
         <button type="button" class="btn btn-sm btn-success text-start" data-bs-toggle="modal" data-bs-target="#atendimentoModal">
-          <i class="fa fa-headset fa-fw"></i> Novo Atendimento
+          <i class="fa fa-headset fa-fw me-2"></i> Novo Atendimento
         </button>
       </div>
       <div class="col d-grid">
         <button type="button" class="btn btn-sm btn-success text-start" data-bs-toggle="modal" data-bs-target="#produtoModal" href="collaborators_backoffice/produtos/shared" data-bs-whatever="Welcome/index">
-          <i class="fa fa-box fa-fw"></i> Novo Produto
+          <i class="fa fa-box fa-fw me-2"></i> Novo Produto
         </button>
       </div>
       <div class="col d-grid">
         <%= link_to new_collaborators_backoffice_pessoa_path, class: "btn btn-sm btn-secondary text-start" do %>
-          <i class="fa fa-users fa-fw"></i> Nova Pessoa
+          <i class="fa fa-users fa-fw me-2"></i> Nova Pessoa
         <% end %>
       </div>
       <div class="col d-grid">
         <button type="button" class="btn btn-sm btn-danger text-start" data-bs-toggle="modal"
                 data-bs-target="#lembreteModal" data-bs-whatever="passa para o modal">
-          <i class="fa fa-bell fa-fw"></i> Novo Lembrete
+          <i class="fa fa-bell fa-fw me-2"></i> Novo Lembrete
         </button>
       </div>
       <div class="col d-grid">
         <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "btn btn-sm btn-outline-primary text-start" do %>
-          <i class="fa fa-warehouse fa-fw"></i> Estoque
+          <i class="fa fa-warehouse fa-fw me-2"></i> Estoque
         <% end %>
       </div>
       <div class="col d-grid">
         <%= link_to collaborators_backoffice_produto_imagens_path, class: "btn btn-sm btn-info text-start" do %>
-          <i class="fa fa-images fa-fw"></i> Imagens
+          <i class="fa fa-images fa-fw me-2"></i> Imagens
+        <% end %>
+      </div>
+      <div class="col d-grid">
+        <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "btn btn-sm btn-primary text-start" do %>
+          <i class="fa-solid fa-hand-holding-dollar fa-fw me-2"></i> Contas Pag/Rec
         <% end %>
       </div>
     </div>
