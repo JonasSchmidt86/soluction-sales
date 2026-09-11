@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_160000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_11_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -91,7 +91,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_160000) do
 
   create_table "atendimentos", force: :cascade do |t|
     t.integer "company_id", null: false
-    t.datetime "attended_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "attended_at", default: -> { "timezone('America/Sao_Paulo'::text, now())" }, null: false
     t.string "name"
     t.string "phone"
     t.bigint "origem_id"
@@ -472,7 +472,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_160000) do
     t.decimal "custofinal", precision: 15, scale: 2
     t.string "usuario", limit: 100
     t.string "observacao", limit: 255
-    t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", precision: nil, default: -> { "timezone('America/Sao_Paulo'::text, now())" }, null: false
     t.bigint "cod_funcionario"
     t.string "origem_sistema", limit: 15
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
