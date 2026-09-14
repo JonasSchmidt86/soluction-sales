@@ -182,7 +182,7 @@ class CollaboratorsBackoffice::AccessRolesController < CollaboratorsBackofficeCo
   end
 
   def funcionarios_da_empresa
-    Funcionario.joins(:funcionarioempresas)
+    Funcionario.where(ativo: true).joins(:funcionarioempresas)
                .where(funcionarioempresa: { cod_empresa: current_empresa_id, ativo: true })
                .includes(:pessoa)
                .order(:usuario)
