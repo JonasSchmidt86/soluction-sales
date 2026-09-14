@@ -591,15 +591,48 @@
           }, 1000/* 1s */);
           // --------------------------------
           // deixa Maiuscula o input com class text
+          // Só aplica se a empresa estiver com o parametro "maiusculo" ativo (parametrosempresa)
+          var CAMPOS_MAIUSCULO = <%= (current_collaborator.respond_to?(:empresa) && current_collaborator.empresa&.maiusculo?) ? 'true' : 'false' %>;
+
+          // Verifica se um campo deve ficar em maiusculo.
+          // Regra: por padrao os inputs de texto viram maiusculo, exceto campos com
+          // mascara/semantica propria (dinheiro, data, telefone, cnpj/cpf, email) ou
+          // marcados explicitamente com a classe "no-upper".
+          // Textarea NUNCA e forcado -> area de texto e sempre livre.
+          function deveMaiuscular(el) {
+            if (!el) { return false; }
+            var tag = (el.tagName || '').toLowerCase();
+            var tipo = (el.getAttribute('type') || 'text').toLowerCase();
+
+            // textarea sempre livre; só inputs de texto/busca entram
+            if (tag !== 'input') { return false; }
+            if (['text', 'search'].indexOf(tipo) === -1) { return false; }
+
+            // Classe de escape explicita
+            if (el.classList.contains('no-upper')) { return false; }
+
+            // Classes que indicam mascara / valor formatado -> nao maiuscular
+            var classesExcluidas = ['money', 'money2', 'datepicker', 'fallback',
+                                    'cnpj', 'cpf', 'phone_with_ddd', 'cep', 'email',
+                                    'datatable-input'];
+            for (var i = 0; i < classesExcluidas.length; i++) {
+              if (el.classList.contains(classesExcluidas[i])) { return false; }
+            }
+
+            return true;
+          }
+
           $(document).ready(function() {
-            $('.text').on('input', function() {
+            if (!CAMPOS_MAIUSCULO) { return; }
+            // Delegacao de evento: pega tambem campos inseridos dinamicamente (cocoon, autocomplete, etc.)
+            $(document).on('input', 'input', function() {
+              if (!deveMaiuscular(this)) { return; }
+
               const start = this.selectionStart;
               const end   = this.selectionEnd;
 
               this.value = this.value.toUpperCase();
-              this.setSelectionRange(start, end);
-
-              $(this).attr("autocomplete", "off");
+              try { this.setSelectionRange(start, end); } catch (e) { /* campos sem suporte a seleção */ }
             });
           });
           // tira a sugestão dos campos

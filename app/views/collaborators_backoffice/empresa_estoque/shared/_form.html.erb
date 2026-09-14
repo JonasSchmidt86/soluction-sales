@@ -4,9 +4,13 @@
   <% end %>
   <div class="card-body">
     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-      <input type="text" id="filtro-cod-produto" class="form-control form-control-sm" placeholder="Código do Produto" style="max-width: 160px;">
-      <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;">
-      <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;">
+      <div class="position-relative" style="max-width: 260px; flex: 1 1 260px;">
+        <input type="text" id="filtro-nome-produto" class="text form-control form-control-sm produto_search" placeholder="Nome ou código do Produto" autocomplete="off">
+        <input type="hidden" id="filtro-cod-produto">
+        <div id="produtos_list" class="list-group position-absolute" style="display: none; z-index: 1000; width: 100%;"></div>
+      </div>
+      <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*">
       <button type="button" id="btn-buscar-estoque" class="btn btn-success btn-sm">Buscar</button>
 
       <div class="ms-auto d-flex align-items-center gap-3">
@@ -84,10 +88,91 @@
 
       document.getElementById('btn-buscar-estoque').addEventListener('click', buscarEstoque);
 
-      ['filtro-cod-produto', 'filtro-cod-compra', 'filtro-cod-cor'].forEach(function(id) {
+      // ---------- Campos de cor e compra: apenas números ----------
+      ['filtro-cod-cor', 'filtro-cod-compra'].forEach(function(id) {
+        var campo = document.getElementById(id);
+        // Bloqueia qualquer caractere que não seja digito na digitacao
+        campo.addEventListener('keydown', function(e) {
+          var permitidas = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+                            'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+          if (permitidas.includes(e.key)) { return; }
+          if (e.ctrlKey || e.metaKey) { return; } // permite copiar/colar/selecionar
+          if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); }
+        });
+        // Remove qualquer nao-digito que entre por colar/arrastar
+        campo.addEventListener('input', function() {
+          this.value = this.value.replace(/\D/g, '');
+        });
+      });
+
+      ['filtro-cod-compra', 'filtro-cod-cor'].forEach(function(id) {
         document.getElementById(id).addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); buscarEstoque(); }
         });
+      });
+
+      // ---------- Autocomplete de produto por nome ----------
+      var inputNome = document.getElementById('filtro-nome-produto');
+      var hiddenCod = document.getElementById('filtro-cod-produto');
+      var $lista = $('#produtos_list');
+      var apiUrl = '/collaborators_backoffice/buscas/buscar_produtos';
+
+      function buscarProdutos() {
+        var query = inputNome.value.trim();
+        // Ao digitar, o codigo anterior deixa de valer ate nova selecao
+        hiddenCod.value = '';
+
+        if (query.length < 2) { $lista.empty().hide(); return; }
+
+        $.ajax({
+          url: apiUrl,
+          method: 'GET',
+          data: { entidade: 'Produto', query: query },
+          success: function(data) {
+            $lista.empty();
+            data.forEach(function(product) {
+              var item = $('<div>').text(product.produto)
+                                   .addClass('list-group-item list-group-item-action')
+                                   .css('cursor', 'pointer');
+              item.data('cod_produto', product.cod_produto);
+              item.data('produto', product.produto);
+              $lista.append(item);
+            });
+            $lista.toggle(data.length > 0);
+          },
+          error: function(err) { console.error('Erro na busca de produtos:', err); }
+        });
+      }
+
+      // Seleciona produto ao clicar
+      $lista.on('click', 'div.list-group-item', function() {
+        hiddenCod.value = $(this).data('cod_produto');
+        inputNome.value = $(this).data('produto');
+        $lista.empty().hide();
+      });
+
+      // Debounce simples na digitacao
+      var timer = null;
+      inputNome.addEventListener('input', function() {
+        clearTimeout(timer);
+        timer = setTimeout(buscarProdutos, 250);
+      });
+
+      inputNome.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // Se ja houver um codigo selecionado, busca o estoque; senao dispara a busca por nome
+          if (hiddenCod.value) { buscarEstoque(); } else { buscarProdutos(); }
+        } else if (e.key === 'Escape') {
+          $lista.empty().hide();
+        }
+      });
+
+      // Esconde a lista ao clicar fora
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('#produtos_list') && e.target !== inputNome) {
+          $lista.hide();
+        }
       });
     });
 

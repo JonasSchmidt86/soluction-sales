@@ -11,6 +11,14 @@ class Empresa < ApplicationRecord
     has_one :company_link_page, foreign_key: 'empresa_id', primary_key: 'cod_empresa', dependent: :destroy
     has_many :vendas, :class_name => 'Venda', :foreign_key => 'cod_venda', inverse_of: :empresa
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa'
+    belongs_to :parametrosempresa, :class_name => 'Parametrosempresa',
+               :foreign_key => 'cod_parametroempresa', :primary_key => 'cod_parametroempresa',
+               optional: true
+
+    # Indica se a empresa esta configurada para exibir os campos em maiusculo
+    def maiusculo?
+        parametrosempresa&.maiusculo == true
+    end
     has_many :lancamentos, :class_name => 'LancamentosCaixa', :foreign_key => 'cod_lancamentocaixa', inverse_of: :empresa
 
     has_many :fretes, :class_name => 'Frete', :foreign_key => 'cod_frete', inverse_of: :empresa

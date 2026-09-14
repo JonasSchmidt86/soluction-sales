@@ -46,6 +46,20 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
       end
     end
     
+    # Retorna as cores de um produto que estão com estoque negativo
+    # na empresa do colaborador logado (tabela empresaproduto).
+    # Usado para avisar, no form de importacao de XML, que o produto
+    # possui cor(es) "vendida(s)" (estoque negativo).
+    def cores_negativas
+      cores = Core.select(:cod_cor, :nmcor, "empresaproduto.quantidade AS quantidade")
+                  .joins(:empresaprodutos)
+                  .where("empresaproduto.cod_produto = ? AND empresaproduto.cod_empresa = ? AND empresaproduto.quantidade < 0",
+                         params[:cod_produto], current_collaborator.cod_empresa)
+                  .order(:nmcor, :cod_cor)
+
+      render json: cores.map { |c| { cod_cor: c.cod_cor, nmcor: c.nmcor, quantidade: c.quantidade } }
+    end
+
     def check_cpf_cnpj
       cpf_cnpj = params[:cpf_cnpj].gsub(/\D/, '')  # Remove todos os caracteres não numéricos
       pessoa = Pessoa.find_by(cpf_cnpj: cpf_cnpj)

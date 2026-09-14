@@ -85,7 +85,7 @@
               </div>
             </div>
             <hr class="my-2">
-            # <%# dados fornecedor %>
+            <%# dados fornecedor %>
             <h5 class="my-2">Dados do Fornecedor</h5>
             <%= form_buy.fields_for :pessoa do |form_pessoa| %>
               <div class="row g-2 my-2">
@@ -103,7 +103,7 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-floating">
-                    <%= form_pessoa.text_field :rg_ie, class: "form-control ", placeholder:"numero-Nf" %>
+                    <%= form_pessoa.text_field :rg_ie, class: "text form-control ", placeholder:"numero-Nf" %>
                     <%= form_pessoa.label :inscricao_estadual, class:"" %>
                   </div>
                 </div>
@@ -111,7 +111,7 @@
               <div class="row g-2 my-2">
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <%= form_pessoa.text_field :cidade, class: "form-control ", placeholder:"numero-Nf" %>
+                    <%= form_pessoa.text_field :cidade, class: "text form-control ", placeholder:"numero-Nf" %>
                     <%= form_pessoa.label :cidade, class:"" %>
                   </div>
                 </div>
@@ -146,7 +146,7 @@
               </div>
             <% end %>
           </div>
-          # <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
+          <%# tab itens tem que pegar o arquivo xml os itens e localizar os produtos  %>
           <div class="tab-pane" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="1">
             <table id="tblProducts" class="dataTable-table my-3" style="height: 100px;" >
               <thead>
@@ -236,63 +236,70 @@
                         </div>
                       </div>
                       <div class="row g-2 my-2">
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.number_field :quantidade, step: 1, class: "form-control quantidade", onchange: "setValorTotal(this)" %>
-                            <%= form_itens.label :quantidade, class:"" %>
+                        <div class="col-md-6">
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.number_field :quantidade, step: 1, class: "form-control quantidade", onchange: "setValorTotal(this)" %>
+                                <%= form_itens.label :quantidade, class:"" %>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorunitario", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                <%= form_itens.label :valorunitario, class:"" %>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="row g-2 mt-1">
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.text_field :ipi, disabled: false, value: (form_itens.object.ipi? ? number_to_currency(form_itens.object.ipi, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                <%= form_itens.label :valor_ipi, class:"" %>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
+                                <%= form_itens.label :Icms_ST_Outros, class:"" %>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="row g-2 mt-1">
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.text_field :valor_frete, disabled: false, value: number_to_currency(form_itens.object.valor_frete, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                <%= form_itens.label :valor_frete, class:"" %>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <%= form_itens.text_field :desconto, disabled: false, value: number_to_currency(form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                <%= form_itens.label :desconto, class:"" %>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="row g-2 mt-1">
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d ) %>
+                                <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                                <%= form_itens.text_field :custoFinal, disabled: true, value: number_to_currency((valorTotal/form_itens.object.quantidade), precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
+                                <%= form_itens.label :Custo_Un_Final, class:"" %>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="form-floating">
+                                <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
+                                <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
+                                <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
+                                <%= form_itens.label :valor_total, class:"" %>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.text_field :valorunitario, disabled: false, value: (form_itens.object.valorunitario? ? number_to_currency(form_itens.object.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorunitario", placeholder:"", onchange: "setValorTotal(this)"  %>
-                            <%= form_itens.label :valorunitario, class:"" %>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row g-2 my-2">
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.text_field :ipi, disabled: false, value: (form_itens.object.ipi? ? number_to_currency(form_itens.object.ipi, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control ", placeholder:"", onchange: "setValorTotal(this)"  %>
-                            <%= form_itens.label :valor_ipi, class:"" %>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.text_field :icms, disabled: false, value: (form_itens.object.icms? ? number_to_currency(form_itens.object.icms, precision: 2, separator: ",", delimiter: "", unit: "") : "0,00"), class: "money2 form-control valorST", placeholder:"", onchange: "setValorTotal(this)"  %>
-                            <%= form_itens.label :Icms_ST_Outros, class:"" %>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row g-2 my-2">
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.text_field :valor_frete, disabled: false, value: number_to_currency(form_itens.object.valor_frete, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                            <%= form_itens.label :valor_frete, class:"" %>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <%= form_itens.text_field :desconto, disabled: false, value: number_to_currency(form_itens.object.pro_xml_temp.desconto, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                            <%= form_itens.label :desconto, class:"" %>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row g-2 my-2">
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d ) %>
-                            <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
-                            <%= form_itens.text_field :custoFinal, disabled: true, value: number_to_currency((valorTotal/form_itens.object.quantidade), precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control ", placeholder:"" %>
-                            <%= form_itens.label :Custo_Un_Final, class:"" %>
-                          </div>
-                        </div>
-                        <div class="col-md-3">
-                          <div class="form-floating">
-                            <% tt_uni = (form_itens.object.ipi.to_f + form_itens.object.valor_frete.to_d) %>
-                            <% valorTotal = (form_itens.object.valorunitario * form_itens.object.quantidade) - form_itens.object.pro_xml_temp.desconto + tt_uni %>
-                            <%= form_itens.text_field :valorTotal, disabled: true, value: number_to_currency(valorTotal, precision: 2, separator: ",", delimiter: "", unit: ""), class: "money2 form-control valorTotal", placeholder:"" %>
-                            <%= form_itens.label :valor_total, class:"" %>
-                          </div>
+                        <div class="col-md-6">
+                          <div id="cor_negativa_aviso_<%= form_itens.index %>" class="alert alert-warning py-2 px-3 mb-0 h-100" style="display: none; font-size: 0.85rem;"></div>
                         </div>
                       </div>
                       <div class="row g-2 my-2">
@@ -682,6 +689,8 @@
                 field.value =  selectedProduct ;
                 selectedProductIdField.value = selectedProductId;
                 productsList.hide();
+                // Verifica se o produto associado possui cor(es) com estoque negativo
+                verificarCoresNegativas(index, selectedProductId);
             });
 
             function productOptions() {
@@ -711,6 +720,71 @@
                 });
             }
         };
+
+        // ------- Aviso de cor(es) com estoque negativo por produto -------
+        // Consulta a empresaproduto e, se o produto tiver alguma cor com
+        // quantidade < 0 na empresa atual, exibe um aviso na linha do item.
+        function verificarCoresNegativas(index, codProduto) {
+            var aviso = $(`#cor_negativa_aviso_${index}`);
+
+            if (!aviso.length) { return; }
+
+            if (!codProduto) {
+                aviso.hide().empty();
+                return;
+            }
+
+            $.ajax({
+                url: url + 'buscas/cores_negativas',
+                method: 'GET',
+                data: { cod_produto: codProduto },
+                success: function(data) {
+                    if (data && data.length > 0) {
+                        var itens = data.map(function(c) {
+                            var qtd = parseFloat(c.quantidade).toFixed(2).replace('.', ',');
+                            return `<li><a href="#" class="cor-negativa-link" data-cod-cor="${c.cod_cor}" title="Selecionar esta cor"><strong>${c.nmcor}</strong>: ${qtd}</a></li>`;
+                        }).join('');
+
+                        aviso.html(`<i class="fa fa-exclamation-triangle"></i> Atenção: este produto possui cor(es) com estoque negativo:<ul class="mb-0 mt-1">${itens}</ul>`);
+                        aviso.show();
+
+                        // Ao clicar numa cor, seleciona-a no select de cor deste item
+                        aviso.find('.cor-negativa-link').on('click', function(e) {
+                            e.preventDefault();
+                            var codCor = $(this).data('cod-cor');
+                            var select = $(`#compra_itenscompra_attributes_${index}_cod_cor`);
+                            if (select.length) {
+                                select.val(String(codCor)).trigger('change');
+                            }
+                        });
+                    } else {
+                        aviso.hide().empty();
+                    }
+                },
+                error: function(err) {
+                    console.error('Erro ao verificar cores negativas:', err);
+                    aviso.hide().empty();
+                }
+            });
+        }
+
+        // Ao carregar a tela, verifica os itens que já vêm com produto associado
+        $(document).ready(function() {
+            $('#tblProducts tbody tr').each(function() {
+                var row = $(this);
+                var codProdutoField = row.find('input[id*="_cod_produto"]');
+
+                if (codProdutoField.length && codProdutoField.val()) {
+                    // Extrai o índice do id do campo: compra_itenscompra_attributes_<index>_cod_produto
+                    var matches = codProdutoField.attr('id').match(/attributes_(\d+)_cod_produto/);
+                    var index = matches ? matches[1] : null;
+
+                    if (index !== null) {
+                        verificarCoresNegativas(index, codProdutoField.val());
+                    }
+                }
+            });
+        });
         //  ---------------- valor total dos itens quando alterado a quantidade ou o valor unitario  ----
         function setValorTotal(field) {
 
