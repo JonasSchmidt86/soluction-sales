@@ -39,12 +39,12 @@ class DashboardDataService
 
   def vendas_dia
     escopo = Venda.where(
-      "DATE(datavenda) = ? AND cod_empresa = ? AND cancelada = false",
-      Date.current, @cod_empresa
+      "DATE(datavenda) = ? AND cod_empresa = ? AND cod_funcionario = ? AND cancelada = false",
+      Date.current, @cod_empresa, @cod_funcionario
     )
     total_v = Venda.where(
-      "DATE(datavenda) = ? AND cod_empresa = ? AND tipo = 'V' AND cancelada = false",
-      Date.current, @cod_empresa
+      "DATE(datavenda) = ? AND cod_empresa = ? AND cod_funcionario = ? AND tipo = 'V' AND cancelada = false",
+      Date.current, @cod_empresa, @cod_funcionario
     )
     {
       quantidade: total_v.count,
