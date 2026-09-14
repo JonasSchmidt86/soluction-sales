@@ -46,10 +46,16 @@ class DashboardDataService
       "DATE(datavenda) = ? AND cod_empresa = ? AND cod_funcionario = ? AND tipo = 'V' AND cancelada = false",
       Date.current, @cod_empresa, @cod_funcionario
     )
+    total = Venda.where(
+      "DATE_PART('month', datavenda) = ? AND DATE_PART('year', datavenda) = ?
+       AND cod_empresa = ? AND tipo = 'V' AND cancelada = false AND cod_funcionario = ?",
+      Date.current.month, Date.current.year, @cod_empresa, @cod_funcionario
+    ).sum(:valortotal) || 0
     {
       quantidade: total_v.count,
       total: total_v.sum(:valortotal) || 0,
-      total_geral: escopo.sum(:valortotal) || 0
+      total_geral: escopo.sum(:valortotal) || 0,
+      total_vendas: total, cod_funcionario: @cod_funcionario
     }
   end
 
