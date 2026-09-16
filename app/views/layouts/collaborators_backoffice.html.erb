@@ -531,6 +531,148 @@
           });
           });
           });
+
+          // -------------------- CADASTRO DE PJ PELO CNPJ ---------------------------------------
+          // Fluxo ao completar 14 digitos do CNPJ (somente Pessoa Juridica):
+          //   1) busca no banco (check_cpf_cnpj); se ja existir, redireciona para edicao;
+          //   2) senao, busca na BrasilAPI; se retornar dados, preenche os campos;
+          //   3) salva automaticamente (create via AJAX) e transforma o form em edicao,
+          //      para que qualquer alteracao posterior seja um UPDATE.
+          function growl(mensagem, tipo) {
+            if (mensagem && typeof $ !== 'undefined' && $.bootstrapGrowl) {
+              $.bootstrapGrowl(mensagem, {
+                ele: 'body', type: (tipo || 'info'),
+                offset: { from: 'top', amount: 60 }, align: 'center',
+                width: 340, delay: 4500, allow_dismiss: true
+              });
+            }
+          }
+
+          function csrfToken() {
+            const el = document.querySelector('meta[name="csrf-token"]');
+            return el ? el.getAttribute('content') : '';
+          }
+
+          // Converte o formulario de "novo" para "edicao" apos o salvamento automatico,
+          // para que o proximo submit vire um UPDATE (PATCH) da mesma pessoa.
+          function transformarFormEmEdicao(codPessoa) {
+            const form = document.getElementById('form_pessoa');
+            if (!form || !codPessoa) return;
+            form.action = '<%= collaborators_backoffice_pessoas_path %>/' + codPessoa;
+            let methodInput = form.querySelector('input[name="_method"]');
+            if (!methodInput) {
+              methodInput = document.createElement('input');
+              methodInput.type = 'hidden';
+              methodInput.name = '_method';
+              form.appendChild(methodInput);
+            }
+            methodInput.value = 'patch';
+          }
+
+          function preencherCamposEmpresa(escopo, data) {
+            const setVal = function(name, value) {
+              const el = escopo.querySelector('[name*="' + name + '"]');
+              if (el && value) { el.value = value; }
+            };
+            setVal('[nome]', data.nome);
+            setVal('[apelido]', data.apelido);
+            setVal('[cep]', data.cep);
+            setVal('[endereco]', data.endereco);
+            setVal('[numero]', data.numero);
+            setVal('[complemento]', data.complemento);
+            setVal('[bairro]', data.bairro);
+            setVal('[telefone]', data.telefone);
+            setVal('[email]', data.email);
+            setVal('[dtnascimento]', data.data_abertura);
+            const citySelect = escopo.querySelector('[name*="cod_cidade"]');
+            if (citySelect && data.cod_cidade) {
+              citySelect.value = data.cod_cidade;
+            }
+          }
+
+          // Salva automaticamente a PJ recem preenchida (create via AJAX) e ja deixa o
+          // formulario em modo edicao para ajustes futuros.
+          function salvarAutomaticamentePJ(cnpjValue) {
+            const form = document.getElementById('form_pessoa');
+            if (!form) return;
+            // Ja foi salvo nesta sessao de preenchimento? evita duplicar o create.
+            if (form.dataset.autoSaved === '1') return;
+
+            const fd = new FormData(form);
+            fd.set('pessoa[tipo]', 'J');
+            fd.set('pessoa[cpf_cnpj]', cnpjValue);
+
+            fetch('<%= collaborators_backoffice_pessoas_path %>', {
+              method: 'POST',
+              headers: { 'X-CSRF-Token': csrfToken(), 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+              body: fd
+            })
+            .then(function(response) {
+              return response.json().catch(function() { return null; });
+            })
+            .then(function(pessoa) {
+              if (!pessoa) { growl('Não foi possível salvar automaticamente. Salve manualmente.', 'danger'); return; }
+              const codPessoa = pessoa.cod_pessoa;
+              if (!codPessoa) {
+                growl('Dados encontrados, mas houve um erro ao salvar. Revise e salve manualmente.', 'danger');
+                return;
+              }
+              form.dataset.autoSaved = '1';
+              transformarFormEmEdicao(codPessoa);
+              growl('Cadastro criado automaticamente a partir do CNPJ. Ajuste o que precisar e salve.', 'success');
+            })
+            .catch(function(error) {
+              console.error('Erro ao salvar automaticamente:', error);
+              growl('Não foi possível salvar automaticamente. Salve manualmente.', 'danger');
+            });
+          }
+
+          function processarCNPJ(cnpjInput) {
+            const cnpjValue = cnpjInput.value.replace(/\D/g, '');
+            // So dispara quando o CNPJ estiver completo (14 digitos).
+            if (cnpjValue.length !== 14) return;
+
+            const escopo = cnpjInput.closest('#pessoaJuridica') || document;
+
+            // 1) Primeiro verifica se ja existe no banco de dados.
+            fetch('<%= collaborators_backoffice_pessoas_check_cpf_cnpj_path %>?cpf_cnpj=' + cnpjValue, {
+              headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(response) { return response.json().catch(function() { return null; }); })
+            .then(function(dbData) {
+              if (dbData && dbData.redirect_url) {
+                // Ja cadastrado: vai direto para a edicao do registro existente.
+                window.location.href = dbData.redirect_url;
+                return;
+              }
+
+              // 2) Nao existe no banco: busca na BrasilAPI.
+              return fetch('<%= collaborators_backoffice_pessoas_buscar_cnpj_path %>?cnpj=' + cnpjValue, {
+                headers: { 'Accept': 'application/json' }
+              })
+              .then(function(response) { return response.json().catch(function() { return null; }); })
+              .then(function(apiData) {
+                if (!apiData) return;
+                if (apiData.status !== 'ok') {
+                  growl(apiData.message, 'warning');
+                  return;
+                }
+                // 3) Preenche os campos e salva automaticamente (somente o que veio da API).
+                preencherCamposEmpresa(escopo, apiData);
+                salvarAutomaticamentePJ(cnpjValue);
+              });
+            })
+            .catch(function(error) { console.error('Erro ao processar CNPJ:', error); });
+          }
+
+          document.addEventListener('DOMContentLoaded', function() {
+            const cnpjInputs = document.querySelectorAll('#pessoaJuridica input.cnpj');
+            cnpjInputs.forEach(function(cnpjInput) {
+              cnpjInput.addEventListener('blur', function() {
+                processarCNPJ(cnpjInput);
+              });
+            });
+          });
           // ----------------------------------------------------------------------------------
           $(document).ready(function () {
             $('.datepicker').datepicker({

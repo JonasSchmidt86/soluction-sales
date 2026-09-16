@@ -14,18 +14,23 @@
       <div class="card-body">
         <%= form_with(url: collaborators_backoffice_pessoas_path, local: true, method: :get, 
                                             class:"dataTable-search") do |form| %>
-          <div class="d-flex col-md-6 align-items-center">
-            <div class="col-md-1">
+          <div class="d-flex flex-nowrap w-100 align-items-center gap-2">
+            <div style="min-width: 90px;">
               <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-control" %>
             </div>
-            <div class="col-md-2 form-check form-check-inline d-flex">
-              <%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (params[:tipo].blank? ? 'F' : params[:tipo].to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %>
+            <div class="d-flex align-items-center flex-nowrap">
+              <% [['', 'Todos'], ['F', 'Fisica'], ['J', 'Juridica']].each do |value, label| %>
+                <label class="form-check form-check-inline me-3 mb-0 text-nowrap">
+                  <%= form.radio_button :tipo, value, checked: (params[:tipo].to_s == value), class: 'form-check-input' %>
+                  <span class="form-check-label"><%= label %></span>
+                </label>
+              <% end %>
             </div>
-            <div class="input-group col-md-2 form-check ">
-              <%= form.text_field :name, value: params[:name], class:"text dataTable-input", placeholder:"Nome Pessoa...", id:"text" %>
+            <div class="input-group flex-grow-1" style="min-width: 200px;">
+              <%= form.text_field :name, value: params[:name], class:"text dataTable-input form-control", placeholder:"Nome, CPF ou CNPJ...", id:"text" %>
               <button class="btn input-group-text btn-success" id="">Buscar</button>
             </div>
-            <%= link_to new_collaborators_backoffice_pessoa_path(), class:"btn btn-success btn-circle" do %>
+            <%= link_to new_collaborators_backoffice_pessoa_path(), class:"btn btn-success btn-circle flex-shrink-0" do %>
               <i class="fa fa-plus"></i>
             <% end %>
           </div>

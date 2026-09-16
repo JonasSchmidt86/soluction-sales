@@ -103,8 +103,14 @@
   .widget-fill small { line-height: 1.1; }
 
   /* As grades de acesso rápido preenchem a altura do widget para os cards/
-     botões internos crescerem ao aumentar a altura. */
-  .acesso-rapido-grid, .acesso-rapido-botoes-grid { flex: 1 1 auto; align-content: stretch; }
+     botões internos crescerem ao aumentar a altura. Se o conteúdo não couber
+     na altura do widget (comum no celular), a grade rola em vez de cortar. */
+  .acesso-rapido-grid, .acesso-rapido-botoes-grid {
+    flex: 1 1 auto;
+    align-content: flex-start;
+    min-height: 0;
+    overflow-y: auto;
+  }
 
   /* Acesso Rápido: número de colunas depende da LARGURA DO WIDGET (não da tela).
      Estreito = 1 coluna; médio = 2; largo = 3.
@@ -124,17 +130,33 @@
   @container widget (min-width: 420px) {
     .acesso-rapido-botoes-grid > .col { flex: 0 0 50%; max-width: 50%; }
   }
-  /* Botões da mesma linha com altura igual: a célula estica (align-items do row)
-     e o botão preenche toda a altura, alinhando o texto ao centro. */
-  .acesso-rapido-botoes-grid { align-items: stretch; }
+  /* Botões de acesso rápido com altura natural e uniforme. NÃO esticam para
+     preencher a altura do widget — assim poucos botões não "engolem" o espaço
+     e escondem os demais (o que acontecia no celular). */
+  .acesso-rapido-botoes-grid { align-items: flex-start; }
   .acesso-rapido-botoes-grid > .col { display: flex; }
   .acesso-rapido-botoes-grid > .col > .btn {
     width: 100%;
-    height: 100%;
     min-height: 2.6em;
     display: flex;
     align-items: center;
     justify-content: flex-start;
+  }
+
+  /* No celular a altura fixa do widget cortava os botões de acesso rápido.
+     Nesses widgets, deixamos a altura crescer conforme o conteúdo para que
+     TODOS os botões/cards apareçam empilhados, sem scroll interno nem corte. */
+  @media (max-width: 767.98px) {
+    .widget-box:has(.acesso-rapido-grid),
+    .widget-box:has(.acesso-rapido-botoes-grid) {
+      height: auto !important;
+      min-height: 0;
+    }
+    .acesso-rapido-grid,
+    .acesso-rapido-botoes-grid {
+      overflow: visible;
+      flex: 0 0 auto;
+    }
   }
   .widget-box > .card { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; }
   .widget-box > .card > .card-header { flex: 0 0 auto; }

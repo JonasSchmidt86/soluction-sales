@@ -22,8 +22,14 @@
             <%= form_with(model: [ :collaborators_backoffice, @pessoa ], id:"form_pessoa", local: true) do |form| %>
               <div class="col-md-12 ">
                 <div class="d-flex row align-items-center  g-2">
-                  <div class="col-md-2 form-check form-check-inline">
-                    <h5><%= form.collection_radio_buttons :tipo, [['F', 'Fisica'], ['J', 'Juridica']], :first, :last, checked: (@pessoa.tipo.blank? ? 'F' : @pessoa.tipo.to_s), item_wrapper_tag: false, class: 'mr-2 mb-2' %></h5>
+                  <div class="col-md-auto d-flex align-items-center flex-nowrap">
+                    <% tipo_selecionado = (@pessoa.tipo.blank? ? 'F' : @pessoa.tipo.to_s) %>
+                    <% [['F', 'Fisica'], ['J', 'Juridica']].each do |value, label| %>
+                      <label class="form-check form-check-inline me-3 mb-0 text-nowrap">
+                        <%= form.radio_button :tipo, value, checked: (tipo_selecionado == value), class: 'form-check-input' %>
+                        <span class="form-check-label fs-5"><%= label %></span>
+                      </label>
+                    <% end %>
                   </div>
                   <div class="col-md-2">
                     <div class="form-floating">
@@ -128,6 +134,12 @@
 
   $(document).ready(function() {
       $('.pessoa_cpf_cnpj').blur(function() {
+          // O campo da Pessoa Juridica tem um fluxo proprio (busca DB + BrasilAPI +
+          // salvamento automatico) tratado no layout. Aqui cuidamos apenas da Fisica
+          // para nao disparar duas buscas concorrentes no mesmo blur.
+          if ($(this).closest('#pessoaJuridica').length) {
+              return;
+          }
           var cpfCnpj = $(this).val();
           $.ajax({
               url: 'check_cpf_cnpj',

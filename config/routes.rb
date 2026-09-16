@@ -217,6 +217,7 @@ Rails.application.routes.draw do
     get 'buscas/consulta_estoque', to: 'buscas#consulta_estoque'
     get 'buscas/cores_negativas', to: 'buscas#cores_negativas'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'
+    get 'pessoas/buscar_cnpj', to: 'pessoas#buscar_cnpj'
     get 'vendas/check_cpf_cnpj_venda', to: 'vendas#check_cpf_cnpj_venda'
 
     get 'report_sales', to: 'report/rep_sales#index'
