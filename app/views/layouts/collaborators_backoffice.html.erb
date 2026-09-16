@@ -484,25 +484,27 @@
           fetch(`https://viacep.com.br/ws/${cepValue}/json/`)
           .then(response => response.json())
           .then(data => {
-          const enderecoInput = document.querySelector('[name*="endereco"]');
-          const bairroInput = document.querySelector('[name*="bairro"]');
-          const citySelect = document.querySelector('[name*="cod_cidade"]');
+          // Procura os campos dentro do mesmo bloco (fisica/juridica) do CEP digitado,
+          // evitando IDs duplicados quando os dois partials estao no DOM.
+          const escopo = cepInput.closest('#pessoaFisica, #pessoaJuridica') || document;
+          const enderecoInput = escopo.querySelector('[name*="endereco"]');
+          const bairroInput = escopo.querySelector('[name*="bairro"]');
+          const citySelect = escopo.querySelector('[name*="cod_cidade"]');
           if (!data.erro) {
             if (enderecoInput) {
-              enderecoInput.value = removerAcentos(data.logradouro.toUpperCase());
+              enderecoInput.value = removerAcentos((data.logradouro || "").toUpperCase());
             }
             if (bairroInput) {
-              bairroInput.value = removerAcentos(data.bairro.toUpperCase());
+              bairroInput.value = removerAcentos((data.bairro || "").toUpperCase());
             }
             if (citySelect) {
-              citySelect.value = removerAcentos(data.localidade.toUpperCase());
-            }
-            const desiredCity = removerAcentos(data.localidade.toUpperCase());
-            for (let i = 0; i < citySelect.options.length; i++) {
+              const desiredCity = removerAcentos((data.localidade || "").toUpperCase());
+              for (let i = 0; i < citySelect.options.length; i++) {
                 if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
                     citySelect.value = citySelect.options[i].value;
                     break;
                 }
+              }
             }
           } else {
             if (enderecoInput) {
@@ -520,15 +522,14 @@
         }
       }
           document.addEventListener('DOMContentLoaded', function() {
-          const cepInput = document.getElementById('pessoa_cep');
-          if (cepInput) {
+          // Usa a classe .cep (presente na fisica e na juridica) em vez do id,
+          // pois o id "pessoa_cep" fica duplicado com os dois partials no DOM.
+          const cepInputs = document.querySelectorAll('input.cep');
+          cepInputs.forEach(function(cepInput) {
           cepInput.addEventListener('blur', function() {
           buscarEnderecoPorCEP(cepInput);
           });
-          cepInput.addEventListener('input', function() {
-          buscarEnderecoPorCEP(cepInput);
           });
-          }
           });
           // ----------------------------------------------------------------------------------
           $(document).ready(function () {
