@@ -55,6 +55,9 @@ module SoluctionSales
         resource '*', headers: :any, methods: [:get, :post, :patch, :put, :delete, :options, :head], credentials: true
       end
     end
+
+    # Rack::Attack é registrado automaticamente como middleware pela gem.
+    # As regras de rate limit ficam em config/initializers/rack_attack.rb
   end
   
 
