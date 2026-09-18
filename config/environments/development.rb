@@ -20,16 +20,17 @@ Rails.application.configure do
   # Para desenvolvimento - usar test delivery
   #config.action_mailer.delivery_method = :test
   
-  # Configuração SMTP para produção (comentada)
+  # SMTP via Gmail. A senha (app password) vem das credentials criptografadas
+  # (chave: gmail_app_password), com fallback para ENV. Sem segredo em texto puro.
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address: 'smtp.gmail.com',
-    port: 587,
-    domain: 'localhost',
-    user_name: 'moveisrosa.toledo@gmail.com',
-    password: 'zaot gpfk atti igmu',
+    address:        'smtp.gmail.com',
+    port:           465,
+    domain:         'localhost',
+    user_name:      'moveisrosa.toledo@gmail.com',
+    password:       Rails.application.credentials.gmail_app_password || ENV['GMAIL_APP_PASSWORD'],
     authentication: 'plain',
-    enable_starttls_auto: true
+    ssl:            true
   }
 
   # Enable/disable caching. By default caching is disabled.
