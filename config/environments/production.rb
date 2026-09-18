@@ -79,24 +79,29 @@ Rails.application.configure do
   config.action_mailer.perform_deliveries = true
   config.action_mailer.delivery_method = :smtp
   
-  # Opção 1: Gmail SMTP (recomendado para pequenos volumes)
+  # E-mail transacional via SendGrid.
+  # A API key vem de variável de ambiente (NÃO versionar segredos no repositório).
+  # Defina no servidor: export SENDGRID_API_KEY="SG.xxxxx"
   config.action_mailer.smtp_settings = {
-    address: 'smtp.gmail.com',
-    port: 587,
-    domain: 'moveisrosa.shop',
-    user_name: 'moveisrosa.toledo@gmail.com',
-    password: 'zaot gpfk atti igmu',
-    authentication: 'plain',
-    enable_starttls_auto: true
+    address:              'smtp.sendgrid.net',
+    port:                 587,
+    domain:               'moveisrosa.shop',
+    user_name:            'apikey',            # literal "apikey" — exigência do SendGrid
+    password:             ENV['SENDGRID_API_KEY'],
+    authentication:       'plain',
+    enable_starttls_auto: true,
+    open_timeout:         10,
+    read_timeout:         10
   }
-  
-  # Opção 2: SendGrid (descomente para usar)
+
+  # Opção anterior (Gmail SMTP) — mantida como referência.
+  # Tinha limite diário de envio e apresentou falhas de SSL (unexpected eof).
   # config.action_mailer.smtp_settings = {
-  #   address: 'smtp.sendgrid.net',
+  #   address: 'smtp.gmail.com',
   #   port: 587,
   #   domain: 'moveisrosa.shop',
-  #   user_name: 'apikey',
-  #   password: ENV['SENDGRID_API_KEY'],
+  #   user_name: 'moveisrosa.toledo@gmail.com',
+  #   password: ENV['GMAIL_APP_PASSWORD'],
   #   authentication: 'plain',
   #   enable_starttls_auto: true
   # }

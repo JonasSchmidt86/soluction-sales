@@ -10,16 +10,24 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
 
   def reset_password
     @collaborator = Collaborator.find(params[:id])
-    
-    # Verifica se o funcionário está ativo antes de enviar email
-    if @collaborator.funcionario.ativo?
-      token = @collaborator.send(:set_reset_password_token)
+
+    unless @collaborator.funcionario.ativo?
+      return redirect_to collaborators_backoffice_collaborators_path,
+                         alert: "Não é possível enviar e-mail para colaborador inativo."
+    end
+
+    token = @collaborator.send(:set_reset_password_token)
+
+    begin
       CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
-      redirect_to collaborators_backoffice_collaborators_path, 
+      redirect_to collaborators_backoffice_collaborators_path,
                   notice: "E-mail de redefinição de senha enviado para #{@collaborator.email}."
-    else
-      redirect_to collaborators_backoffice_collaborators_path, 
-                  alert: "Não é possível enviar e-mail para colaborador inativo."
+    rescue => e
+      # O token foi gerado, mas o envio falhou (ex.: SMTP indisponível).
+      # Não deixamos a falha de e-mail derrubar a requisição com erro 500.
+      Rails.logger.error("[reset_password] Falha ao enviar e-mail para #{@collaborator.email}: #{e.class} - #{e.message}")
+      redirect_to collaborators_backoffice_collaborators_path,
+                  alert: "Não foi possível enviar o e-mail agora. Tente novamente em instantes."
     end
   end
 
@@ -40,18 +48,26 @@ class CollaboratorsBackoffice::CollaboratorsController < CollaboratorsBackoffice
     end
     
     @collaborator = Collaborator.new(params_collaborator)
-    if @collaborator.save
-      # Verifica se o funcionário está ativo antes de enviar email
-      if @collaborator.funcionario.ativo?
-        # Gera token e envia email customizado
-        token = @collaborator.send(:set_reset_password_token)
-        CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
-        redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
-      else
-        redirect_to collaborators_backoffice_collaborators_path, alert: "Não é possível enviar e-mail para colaborador inativo."
-      end
-    else 
-      redirect_to collaborators_backoffice_collaborators_path, alert: "Erro ao cadastrar Colaborador!"
+    unless @collaborator.save
+      return redirect_to collaborators_backoffice_collaborators_path, alert: "Erro ao cadastrar Colaborador!"
+    end
+
+    # Colaborador salvo. O envio de e-mail é secundário: se falhar, não
+    # desfazemos o cadastro nem retornamos erro 500.
+    unless @collaborator.funcionario.ativo?
+      return redirect_to collaborators_backoffice_collaborators_path,
+                         alert: "Colaborador cadastrado, mas está inativo — e-mail não enviado."
+    end
+
+    token = @collaborator.send(:set_reset_password_token)
+
+    begin
+      CollaboratorMailer.set_password_email(@collaborator, token).deliver_now
+      redirect_to collaborators_backoffice_collaborators_path, notice: "Colaborador cadastrado! E-mail enviado para #{@collaborator.email}"
+    rescue => e
+      Rails.logger.error("[create collaborator] Falha ao enviar e-mail para #{@collaborator.email}: #{e.class} - #{e.message}")
+      redirect_to collaborators_backoffice_collaborators_path,
+                  alert: "Colaborador cadastrado, mas não foi possível enviar o e-mail. Use 'Resetar Senha' para reenviar."
     end
   end
 
