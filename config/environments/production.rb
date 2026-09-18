@@ -79,33 +79,23 @@ Rails.application.configure do
   config.action_mailer.perform_deliveries = true
   config.action_mailer.delivery_method = :smtp
   
-  # E-mail transacional via SendGrid.
-  # A API key é lida das credentials criptografadas do Rails
-  # (config/credentials.yml.enc, chave: sendgrid_api_key), com fallback para
-  # a variável de ambiente SENDGRID_API_KEY. Nenhum segredo em texto puro.
+  # E-mail via Gmail SMTP (grátis; ~500 envios/dia, suficiente para e-mails
+  # transacionais como reset de senha). Usa porta 465 com SSL direto para
+  # evitar falhas de STARTTLS na 587 (erro "unexpected eof").
+  # A senha (app password do Gmail) é lida das credentials criptografadas
+  # (config/credentials.yml.enc, chave: gmail_app_password), com fallback
+  # para a variável de ambiente GMAIL_APP_PASSWORD. Sem segredo em texto puro.
   config.action_mailer.smtp_settings = {
-    address:              'smtp.sendgrid.net',
-    port:                 587,
-    domain:               'moveisrosa.shop',
-    user_name:            'apikey',            # literal "apikey" — exigência do SendGrid
-    password:             Rails.application.credentials.sendgrid_api_key || ENV['SENDGRID_API_KEY'],
-    authentication:       'plain',
-    enable_starttls_auto: true,
-    open_timeout:         10,
-    read_timeout:         10
+    address:        'smtp.gmail.com',
+    port:           465,
+    domain:         'moveisrosa.shop',
+    user_name:      'moveisrosa.toledo@gmail.com',
+    password:       Rails.application.credentials.gmail_app_password || ENV['GMAIL_APP_PASSWORD'],
+    authentication: 'plain',
+    ssl:            true,          # porta 465 = SSL/TLS direto (SMTPS)
+    open_timeout:   10,
+    read_timeout:   10
   }
-
-  # Opção anterior (Gmail SMTP) — mantida como referência.
-  # Tinha limite diário de envio e apresentou falhas de SSL (unexpected eof).
-  # config.action_mailer.smtp_settings = {
-  #   address: 'smtp.gmail.com',
-  #   port: 587,
-  #   domain: 'moveisrosa.shop',
-  #   user_name: 'moveisrosa.toledo@gmail.com',
-  #   password: ENV['GMAIL_APP_PASSWORD'],
-  #   authentication: 'plain',
-  #   enable_starttls_auto: true
-  # }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.

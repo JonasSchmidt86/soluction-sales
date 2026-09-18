@@ -1,8 +1,7 @@
 class CollaboratorMailer < ApplicationMailer
-    # O remetente deve pertencer a um domínio verificado no SendGrid
-    # (Sender Authentication / DKIM). Enviar "de" gmail.com via SendGrid
-    # é bloqueado/marcado como spam pela política DMARC do Gmail.
-    default from: 'nao-responda@moveisrosa.shop'
+    # Usando Gmail SMTP, o remetente deve ser a própria conta Gmail
+    # (o Gmail reescreve/rejeita "from" de outros domínios).
+    default from: 'moveisrosa.toledo@gmail.com'
   
     def set_password_email(collaborator, token)
       @collaborator = collaborator
