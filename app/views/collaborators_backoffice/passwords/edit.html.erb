@@ -1,0 +1,132 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm mt-4">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="fa fa-key me-2"></i> Alterar minha senha</h4>
+        </div>
+        <div class="card-body">
+          <%= form_with url: collaborators_backoffice_change_password_path, method: :patch, local: true, scope: :collaborator do |f| %>
+            <% if @collaborator.errors.any? %>
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  <% @collaborator.errors.full_messages.each do |msg| %>
+                    <li><%= msg %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= f.label :current_password, "Senha atual", class: "form-label" %>
+              <div class="input-group">
+                <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control", id: "current_password_field" %>
+                <button class="btn btn-outline-secondary pw-eye" type="button" data-toggle-password="current_password_field" tabindex="-1" title="Mostrar/ocultar senha">👁</button>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :password, "Nova senha", class: "form-label" %>
+              <div class="input-group">
+                <%= f.password_field :password, autocomplete: "new-password", class: "form-control", id: "password_field" %>
+                <button class="btn btn-outline-secondary pw-eye" type="button" data-toggle-password="password_field" tabindex="-1" title="Mostrar/ocultar senha">👁</button>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <%= f.label :password_confirmation, "Confirmar nova senha", class: "form-label" %>
+              <div class="input-group">
+                <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control", id: "password_confirmation_field" %>
+                <button class="btn btn-outline-secondary pw-eye" type="button" data-toggle-password="password_confirmation_field" tabindex="-1" title="Mostrar/ocultar senha">👁</button>
+              </div>
+            </div>
+
+            <ul class="list-unstyled small mb-3" id="password-checklist">
+              <li data-rule="length" class="text-muted"><span class="check-mark">○</span> No mínimo 8 caracteres</li>
+              <li data-rule="letter" class="text-muted"><span class="check-mark">○</span> Contém ao menos uma letra</li>
+              <li data-rule="number" class="text-muted"><span class="check-mark">○</span> Contém ao menos um número</li>
+              <li data-rule="sequence" class="text-muted"><span class="check-mark">○</span> Os números não são sequência (123, 1234) nem repetição (0000, 1111)</li>
+              <li data-rule="name" class="text-muted"><span class="check-mark">○</span> Não contém o seu nome nem parte do seu e-mail</li>
+              <li data-rule="match" class="text-muted"><span class="check-mark">○</span> As senhas conferem</li>
+            </ul>
+
+            <div class="d-flex justify-content-end">
+              <%= link_to "Cancelar", collaborators_backoffice_welcome_index_path, class: "btn btn-outline-secondary me-2" %>
+              <%= f.submit "Alterar senha", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pw-eye { cursor: pointer; }
+  #password-checklist .check-mark { display: inline-block; width: 1.2em; }
+</style>
+
+<script>
+  (function () {
+    document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = document.getElementById(btn.getAttribute('data-toggle-password'));
+        if (!input) return;
+        if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+        else { input.type = 'password'; btn.textContent = '👁'; }
+      });
+    });
+
+    var pwd = document.getElementById('password_field');
+    var conf = document.getElementById('password_confirmation_field');
+    var checklist = document.getElementById('password-checklist');
+    if (!pwd || !checklist) return;
+
+    var termosProibidos = <%= raw current_collaborator.palavras_proibidas_senha.to_json %>;
+    var MIN_SEQ = 3;
+
+    function temSequenciaConsecutiva(v) {
+      var digitos = (v.match(/\d/g) || []).map(Number);
+      if (digitos.length < MIN_SEQ) return false;
+      var todosMais = true, todosMenos = true, todosIguais = true;
+      for (var i = 1; i < digitos.length; i++) {
+        var passo = digitos[i] - digitos[i - 1];
+        if (passo !== 1) todosMais = false;
+        if (passo !== -1) todosMenos = false;
+        if (passo !== 0) todosIguais = false;
+      }
+      return todosMais || todosMenos || todosIguais;
+    }
+
+    function contemNomeOuEmail(v) {
+      if (!termosProibidos || !termosProibidos.length) return false;
+      var lower = v.toLowerCase();
+      return termosProibidos.some(function (t) { return t && lower.indexOf(t) !== -1; });
+    }
+
+    function evaluate() {
+      var v = pwd.value || '';
+      var results = {
+        length: v.length >= 8,
+        letter: /[A-Za-z]/.test(v),
+        number: /\d/.test(v),
+        sequence: v.length > 0 && !temSequenciaConsecutiva(v),
+        name: v.length > 0 && !contemNomeOuEmail(v),
+        match: v.length > 0 && conf && v === conf.value
+      };
+      Object.keys(results).forEach(function (rule) {
+        var li = checklist.querySelector('[data-rule="' + rule + '"]');
+        if (!li) return;
+        var mark = li.querySelector('.check-mark');
+        var ok = results[rule];
+        li.classList.toggle('text-success', ok);
+        li.classList.toggle('text-muted', !ok);
+        if (mark) { mark.textContent = ok ? '✓' : '○'; }
+      });
+    }
+
+    pwd.addEventListener('input', evaluate);
+    if (conf) conf.addEventListener('input', evaluate);
+    evaluate();
+  })();
+</script>

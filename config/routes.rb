@@ -15,7 +15,7 @@ Rails.application.routes.draw do
   post 'orcamentos/:id/:nome_cliente/duration', to: 'orcamentos_publicos#record_duration', as: :orcamento_publico_duration
   get 'orcamentos/:id/pdf', to: 'orcamentos_publicos#pdf', as: :orcamento_publico_pdf
 
-  devise_for :collaborators, skip: [:registrations]
+  devise_for :collaborators, skip: [:registrations], controllers: { passwords: 'collaborators/passwords' }
   devise_for :users, skip: [:registrations]
 
   namespace :users_backoffice do
@@ -38,6 +38,10 @@ Rails.application.routes.draw do
     
     get 'welcome/index'
     post 'welcome/index'
+
+    # Troca da própria senha pelo colaborador logado (pede a senha atual)
+    get  'change_password', to: 'passwords#edit',   as: :change_password
+    patch 'change_password', to: 'passwords#update'
 
     # Widgets configuráveis do dashboard
     resources :dashboard_widgets, only: [:index, :update] do

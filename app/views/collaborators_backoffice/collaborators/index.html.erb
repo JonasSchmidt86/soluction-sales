@@ -36,7 +36,12 @@
                                     class:"btn btn-danger btn-circle", data: {confirm: "Deseja excluit colaborador?"} do %>
                     <i class="fa fa-minus"></i>
                   <% end %>
-                  <%# button_to 'Resetar Senha', reset_password_collaborators_backoffice_collaborator_path(collaborator), method: :post, class: "btn btn-warning" %>
+                  <%= button_to reset_password_collaborators_backoffice_collaborator_path(collaborator), method: :post,
+                                    class: "btn btn-warning btn-circle", form: { style: "display:inline-block; margin:0;" },
+                                    data: { confirm: "Reenviar e-mail de redefinição de senha para #{collaborator.email}?" },
+                                    title: "Reenviar e-mail de redefinição de senha" do %>
+                    <i class="fa fa-key"></i>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

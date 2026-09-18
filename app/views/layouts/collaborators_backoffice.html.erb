@@ -10,6 +10,22 @@
     <%= favicon_link_tag 'mrosa.png' %>
     <%= stylesheet_link_tag 'application' %>
     <%= stylesheet_link_tag 'collaborators_backoffice' %>
+    <style>
+      /* A navbar não pode cortar o menu suspenso */
+      .sb-topnav { overflow: visible !important; }
+      .sb-topnav .nav-item.dropdown { position: relative; }
+      /* Garante que o menu do usuário abra ABAIXO do botão, alinhado à direita */
+      #navbarDropdown + .dropdown-menu {
+        position: absolute !important;
+        top: 100% !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: 0 !important;
+        transform: none !important;
+        margin-top: .25rem;
+        z-index: 1050;
+      }
+    </style>
   </head>
   <body class="sb-nav-fixed bg-light" autocomplete="off">
     <nav class="d-flex justify-content-between mb-1 sb-topnav navbar-expand-lg navbar-light border bg-primary hstack gap-3 ">
@@ -44,19 +60,23 @@
       <!-- Navbar-->
       <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle  text-truncate" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="nav-link dropdown-toggle  text-truncate" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <i class="fas fa-user fa-fw"></i>
             <%= current_collaborator.funcionario.pessoa.nome %>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="min-width: 220px; margin-right: 8px;">
+            <li>
+              <%= link_to collaborators_backoffice_change_password_path, class:"dropdown-item text-nowrap" do %>
+                <i class="fa fa-key fa-sm fa-fw me-2 text-gray-400"></i>
+                Redefinir Senha
+              <% end %>
+            </li>
             <li><hr class="dropdown-divider" /></li>
             <li>
-              <a class="dropdown-item" href="#">
-                <%= link_to destroy_collaborator_session_path, class:"dropdown-item", method: :delete do %>
-                  <i class="fa fa-power-off fa-sm fa-fw mr-2 text-gray-400"></i>
-                  Sair
-                <% end %>
-              </a>
+              <%= link_to destroy_collaborator_session_path, class:"dropdown-item text-nowrap", method: :delete do %>
+                <i class="fa fa-power-off fa-sm fa-fw me-2 text-gray-400"></i>
+                Sair
+              <% end %>
             </li>
           </ul>
         </li>
