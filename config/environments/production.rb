@@ -80,14 +80,15 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   
   # E-mail transacional via SendGrid.
-  # A API key vem de variável de ambiente (NÃO versionar segredos no repositório).
-  # Defina no servidor: export SENDGRID_API_KEY="SG.xxxxx"
+  # A API key é lida das credentials criptografadas do Rails
+  # (config/credentials.yml.enc, chave: sendgrid_api_key), com fallback para
+  # a variável de ambiente SENDGRID_API_KEY. Nenhum segredo em texto puro.
   config.action_mailer.smtp_settings = {
     address:              'smtp.sendgrid.net',
     port:                 587,
     domain:               'moveisrosa.shop',
     user_name:            'apikey',            # literal "apikey" — exigência do SendGrid
-    password:             ENV['SENDGRID_API_KEY'],
+    password:             Rails.application.credentials.sendgrid_api_key || ENV['SENDGRID_API_KEY'],
     authentication:       'plain',
     enable_starttls_auto: true,
     open_timeout:         10,
