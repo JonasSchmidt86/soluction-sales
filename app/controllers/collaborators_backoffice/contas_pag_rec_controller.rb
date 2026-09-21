@@ -153,6 +153,32 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
         render layout: 'impressao'
     end
 
+    def payment_receipt
+        @conta = Contaspagrec
+                .includes(:lancamentos, :pessoa, venda: [:pessoa, :empresa], compra: :pessoa)
+                .find(params[:id])
+
+        @empresa = @conta.venda&.empresa || current_collaborator.empresa
+        @pessoa = @conta.venda&.pessoa || @conta.compra&.pessoa || @conta.pessoa
+
+        # Pagamentos de entrada validos (nao cancelados) desta conta
+        pagamentos = @conta.lancamentos.reject(&:cancelada?).select { |l| l.tipo == 'E' }
+
+        # O recibo e sempre de UM pagamento especifico (nao da soma da conta),
+        # para nao gerar duplicidade quando houver varios pagamentos parciais.
+        @lancamento = if params[:cod_lancamento].present?
+            @conta.lancamentos.detect { |l| l.cod_lancamentocaixa.to_s == params[:cod_lancamento].to_s }
+        else
+            pagamentos.max_by(&:datapagto)
+        end
+
+        # Valor e data do pagamento especifico; se nao houver lancamento, cai para a parcela
+        @valor_recibo = @lancamento&.valor || @conta.valorparcela
+        @data_recibo  = @lancamento&.datapagto&.to_date || Date.today
+
+        render layout: 'impressao'
+    end
+
 private 
 
     def consulta_index

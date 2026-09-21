@@ -1,0 +1,115 @@
+<%
+  # Empresa emitente e formatacao do CNPJ (mesmo padrao da nota promissoria)
+  empresa_nome = @empresa&.pessoa&.nome || @empresa&.nome || "MÓVEIS ROSA"
+  cnpj_raw = @empresa&.pessoa&.cpf_cnpj.to_s.gsub(/\D/, '')
+  cnpj_formatado = if cnpj_raw.length == 14
+    cnpj_raw.gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5')
+  elsif cnpj_raw.length == 11
+    cnpj_raw.gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')
+  else
+    "_______________________________"
+  end
+
+  # Cliente/pagador
+  pagador_nome = @pessoa&.nome
+
+  # Valor deste pagamento especifico (nao a soma da conta), definido no controller
+  valor_pago = @valor_recibo
+  data_recibo = @data_recibo || Date.today
+
+  # Numero de referencia da venda/compra
+  referencia = if @conta.venda.present?
+    @conta.venda.cod_vendaempresa.to_s
+  elsif @conta.compra.present?
+    @conta.compra.numeronf.presence || @conta.cod_compra.to_s
+  else
+    @conta.cod_contaspagrec.to_s
+  end
+%>
+
+<style>
+  /* Estilos proprios do recibo de pagamento (independentes do layout de impressao) */
+  .payment-receipt {
+    box-sizing: border-box;
+    width: 190mm;
+    margin: 0 auto;
+    border: 2px solid #1b2a4a;
+    padding: 5mm;
+    font-family: Arial, Helvetica, sans-serif !important;
+    color: #1b2a4a;
+  }
+  .payment-receipt * { box-sizing: border-box; }
+  .pr-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #1b2a4a;
+  }
+  .pr-logo { width: 120px; height: auto; display: block; }
+  .pr-title { font-size: 18pt; font-weight: bold; letter-spacing: 1px; margin: 0; text-align: right; flex: 1; }
+  .pr-value-band { background: #e9edf3; padding: 10px 14px; margin: 14px 0; }
+  .pr-value-band .label { font-size: 15pt; font-weight: bold; }
+  .pr-line { border-bottom: 1px solid #1b2a4a; padding: 0 6px; font-weight: bold; }
+  .pr-body { font-size: 12pt; margin: 6px 0 14px 0; }
+  .pr-body p { margin: 10px 0; }
+  .pr-emit { font-size: 12pt; margin: 12px 0; }
+  .pr-sign { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 24px; font-size: 12pt; }
+  .pr-footer { text-align: center; margin-top: 16px; padding-top: 8px; border-top: 2px solid #1b2a4a; font-size: 10pt; font-style: italic; letter-spacing: 1px; }
+
+  @media print {
+    .payment-receipt { width: 100%; border: 2px solid #1b2a4a; }
+  }
+</style>
+
+<div class="payment-receipt">
+  <!-- CABEÇALHO -->
+  <div class="pr-header">
+    <%= image_tag 'logo_recibo.png', alt: 'Móveis Rosa Store', class: 'pr-logo', width: 159, height: 44 %>
+    <h1 class="pr-title">RECIBO DE PAGAMENTO</h1>
+    <div style="width: 159px;"></div>
+  </div>
+
+  <!-- FAIXA DE VALOR -->
+  <div class="pr-value-band">
+    <span class="label">Valor:&nbsp;&nbsp;R$
+      <span class="pr-line" style="display: inline-block; min-width: 300px;">
+        <%= number_to_currency(valor_pago, unit: "", separator: ",", delimiter: ".", precision: 2) %>
+      </span>
+    </span>
+  </div>
+
+  <!-- CORPO -->
+  <div class="pr-body">
+    <p>Recebemos de
+      <span class="pr-line"><%= pagador_nome || ("&nbsp;".html_safe * 60) %></span>
+      a quantia de
+    </p>
+    <p>
+      <span class="pr-line"><%= valor_por_extenso(valor_pago) %></span>
+      referente ao pagamento da compra nº
+      <span class="pr-line"><%= referencia %></span>.
+    </p>
+  </div>
+
+  <!-- EMITENTE -->
+  <div class="pr-emit">
+    Emitente: <strong><%= empresa_nome %></strong>&nbsp;&nbsp;|&nbsp;&nbsp;CNPJ:
+    <span class="pr-line" style="font-weight: normal;"><%= cnpj_formatado %></span>
+  </div>
+
+  <!-- DATA E ASSINATURA -->
+  <div class="pr-sign">
+    <span style="white-space: nowrap;">Data:
+      <%= data_recibo.strftime('%d') %>&nbsp;/&nbsp;<%= data_recibo.strftime('%m') %>&nbsp;/&nbsp;20<%= data_recibo.strftime('%y') %>
+    </span>
+    <span style="flex: 1; margin-left: 30px;">Assinatura:
+      <span style="display: inline-block; min-width: 340px; border-bottom: 1px solid #1b2a4a;">&nbsp;</span>
+    </span>
+  </div>
+
+  <!-- RODAPÉ -->
+  <div class="pr-footer">
+    Mais que móveis, realizamos sonhos.
+  </div>
+</div>

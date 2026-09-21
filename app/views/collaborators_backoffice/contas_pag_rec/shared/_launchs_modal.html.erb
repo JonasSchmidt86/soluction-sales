@@ -19,6 +19,7 @@
                 <th>Parcela</th>
                 <th>Data</th>
                 <th class="text-end">Valor</th>
+                <th class="text-center">Recibo</th>
               </tr>
             </thead>
             <tbody>
@@ -46,11 +47,19 @@
                     <td class="text-end fw-semibold">
                       <%= number_to_currency(launch.valor, separator: ",", delimiter: ".", unit: "R$ ") %>
                     </td>
+                    <td class="text-center">
+                      <% if launch.tipo == 'E' && !launch.cancelada? %>
+                        <%= link_to payment_receipt_collaborators_backoffice_contas_pag_rec_path(bill, cod_lancamento: launch.cod_lancamentocaixa),
+                                    target: '_blank', class: "btn btn-sm btn-outline-primary", title: "Imprimir recibo deste pagamento" do %>
+                          <i class="fa fa-receipt"></i>
+                        <% end %>
+                      <% end %>
+                    </td>
                   </tr>
                 <% end %>
                 <% if sorted_lancamentos.empty? %>
                   <tr>
-                    <td colspan="5" class="text-center text-muted py-3">
+                    <td colspan="6" class="text-center text-muted py-3">
                       Nenhum lançamento encontrado
                     </td>
                   </tr>

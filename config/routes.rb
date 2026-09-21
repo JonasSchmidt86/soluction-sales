@@ -98,6 +98,7 @@ Rails.application.routes.draw do
 
       member do
         patch :record_payment
+        get :payment_receipt
       end
 
       get :print_promissory_note, on: :collection

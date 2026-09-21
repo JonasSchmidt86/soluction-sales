@@ -151,6 +151,13 @@
                                   </button>
                                 <% end %>
                               </li>
+                              <li>
+                                <% if !bill.lancamentos.blank? %>
+                                  <%= link_to payment_receipt_collaborators_backoffice_contas_pag_rec_path(bill), target: '_blank', class: "dropdown-item btn btn-info btn-circle" do %>
+                                    <i class="fa fa-receipt", style="width: 35px;"></i> Imprimir Recibo Pagamento
+                                  <% end %>
+                                <% end %>
+                              </li>
                             </ul>
                           </div>
                         <% else %>
@@ -170,9 +177,14 @@
                                 <i class="fa fa-info"></i>
                               </button>
                             </div>
+                            <div class="d-flex justify-content-end ms-1">
+                              <%= link_to payment_receipt_collaborators_backoffice_contas_pag_rec_path(bill), target: '_blank', class: "btn btn-info btn-circle", style: "width: 35px; height: 35px;", title: "Imprimir Recibo Pagamento" do %>
+                                <i class="fa fa-receipt"></i>
+                              <% end %>
+                            </div>
                           <% end %>
                         <% end %>
-                        <% if current_collaborator.funcionario.permissao.nivel == 1  %>
+                        <% if current_collaborator.funcionario.permissao.nivel == 1 &&  !bill.quitada  %>
                           <div class="d-flex justify-content-end ms-1">
                             <button type="button"
                                   class="btn btn-info t btn-circle""
