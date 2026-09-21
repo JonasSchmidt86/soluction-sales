@@ -22,7 +22,7 @@
           <div style="margin-top: 6px;"></div>
           <p>
             No dia <strong><%= I18n.l(conta.dtvencimento, format: :long) %></strong> pagarei por essa via de nota promissória a
-            <strong style="font-weight: bold;"><%= empresa&.pessoa.nome || "__________" %></strong>, CNPJ: <%= empresa&.pessoa&.cpf_cnpj ? (empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').length == 14 ? empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %>
+            <strong style="font-weight: bold;"><%= empresa&.pessoa.apelido || "__________" %></strong>, CNPJ: <%= empresa&.pessoa&.cpf_cnpj ? (empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').length == 14 ? empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5') : empresa&.pessoa&.cpf_cnpj.gsub(/\D/, '').gsub(/(\d{3})(\d{3})(\d{3})(\d{2})/, '\1.\2.\3-\4')) : "__________" %>
             a sua ordem a quantia de <strong style="font-weight: bold;"><%= valor_por_extenso(conta.valorparcela) %></strong>.
           </p>
           <div style="margin-top: 2px;"></div>

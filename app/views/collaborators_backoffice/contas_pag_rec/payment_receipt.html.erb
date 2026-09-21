@@ -1,6 +1,6 @@
 <%
   # Empresa emitente e formatacao do CNPJ (mesmo padrao da nota promissoria)
-  empresa_nome = @empresa&.pessoa&.nome || @empresa&.nome || "MÓVEIS ROSA"
+  empresa_nome = @empresa&.pessoa&.apelido || @empresa&.nome || "MÓVEIS ROSA"
   cnpj_raw = @empresa&.pessoa&.cpf_cnpj.to_s.gsub(/\D/, '')
   cnpj_formatado = if cnpj_raw.length == 14
     cnpj_raw.gsub(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '\1.\2.\3/\4-\5')
