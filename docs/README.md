@@ -16,6 +16,7 @@ manter tudo num só lugar.
 | [ORCAMENTOS_EDITOR_VISUAL.md](ORCAMENTOS_EDITOR_VISUAL.md) | Editor visual de orçamentos. |
 | [EDITAR_ITENS_VENDA.md](EDITAR_ITENS_VENDA.md) | Edição de itens de venda. |
 | [PAGINAS_LINK_INSTAGRAM.md](PAGINAS_LINK_INSTAGRAM.md) | Páginas "link na bio" por empresa (Linktree) para Instagram. |
+| [MENSAGENS_WHATSAPP.md](MENSAGENS_WHATSAPP.md) | Mensagens de WhatsApp por empresa (placeholders, menu no widget/relatório de aniversariantes, encoding de emoji). |
 
 ## Convenção
 
