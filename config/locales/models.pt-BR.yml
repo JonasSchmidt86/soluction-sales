@@ -43,6 +43,7 @@
         email: Email
         password: Senha
         password_confirmation: Confirmação da senha
+        current_password: Senha atual
         create_at: Criado em
         update_at: Atualizado em
         remember_me: Esqueci a senha!
@@ -53,6 +54,7 @@
         first_name: Nome
         password: Senha
         password_confirmation: Confirmação da senha
+        current_password: Senha atual
         create_at: Criado em
         update_at: Atualizado em
       produto:

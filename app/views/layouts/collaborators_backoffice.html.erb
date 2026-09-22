@@ -25,6 +25,37 @@
         margin-top: .25rem;
         z-index: 1050;
       }
+
+      /* Menu do WhatsApp (aniversariantes): menu próprio anexado ao <body>
+         e posicionado com position: fixed via JS, para nunca ser cortado por
+         contêineres com overflow (widget-scroll / table-responsive) e sempre
+         caber na tela (abre para cima quando não há espaço embaixo). */
+      .wa-menu {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        min-width: 200px;
+        max-width: 280px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: .375rem;
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.175);
+        padding: .25rem 0;
+      }
+      .wa-menu.show { display: block; }
+      .wa-menu-item {
+        display: block;
+        padding: .35rem 1rem;
+        color: #212529;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wa-menu-item:hover, .wa-menu-item:focus { background: #f1f3f5; color: #212529; }
+      .wa-menu-divider { height: 0; margin: .25rem 0; border-top: 1px solid rgba(0,0,0,.1); }
     </style>
   </head>
   <body class="sb-nav-fixed bg-light" autocomplete="off">
@@ -919,6 +950,88 @@
           });
           });
           });
+    </script>
+
+    <script>
+      // Menu do WhatsApp dos aniversariantes.
+      // Anexa o menu ao <body> ao abrir e posiciona com position: fixed logo
+      // abaixo do ícone (ou acima, se não couber), evitando corte por overflow
+      // e o problema de abrir fora da tela no último item da lista.
+      (function () {
+        var menuAberto = null;   // .wa-menu atualmente aberto
+        var gatilhoAtivo = null; // .wa-menu-toggle correspondente
+
+        function fecharMenu() {
+          if (menuAberto) {
+            menuAberto.classList.remove('show');
+            // devolve o menu para o seu wrapper original
+            if (menuAberto._waWrap) {
+              menuAberto._waWrap.appendChild(menuAberto);
+            }
+          }
+          menuAberto = null;
+          gatilhoAtivo = null;
+        }
+
+        function posicionar(menu, gatilho) {
+          var r = gatilho.getBoundingClientRect();
+          // torna mensurável sem piscar
+          menu.style.visibility = 'hidden';
+          menu.classList.add('show');
+          var mh = menu.offsetHeight;
+          var mw = menu.offsetWidth;
+          var espacoAbaixo = window.innerHeight - r.bottom;
+          var top;
+          if (espacoAbaixo >= mh + 8 || espacoAbaixo >= r.top) {
+            top = r.bottom + 4;                       // abre para baixo
+          } else {
+            top = Math.max(8, r.top - mh - 4);        // abre para cima
+          }
+          var left = r.left;
+          // não deixa vazar pela direita
+          if (left + mw > window.innerWidth - 8) {
+            left = Math.max(8, window.innerWidth - mw - 8);
+          }
+          menu.style.top = top + 'px';
+          menu.style.left = left + 'px';
+          menu.style.visibility = '';
+        }
+
+        document.addEventListener('click', function (e) {
+          var toggle = e.target.closest('.wa-menu-toggle');
+          if (toggle) {
+            e.preventDefault();
+            var wrap = toggle.closest('.wa-menu-wrap');
+            var menu = wrap && wrap.querySelector('.wa-menu');
+            if (!menu) return;
+
+            // se clicou no mesmo gatilho aberto, fecha
+            if (menuAberto === menu) { fecharMenu(); return; }
+            fecharMenu();
+
+            if (!menu._waWrap) { menu._waWrap = menu.parentNode; }
+            document.body.appendChild(menu); // tira do contêiner com overflow
+            posicionar(menu, toggle);
+            menuAberto = menu;
+            gatilhoAtivo = toggle;
+            return;
+          }
+
+          // clique fora do menu fecha (cliques nos itens seguem o link e fecham)
+          if (menuAberto && !e.target.closest('.wa-menu')) {
+            fecharMenu();
+          } else if (menuAberto && e.target.closest('.wa-menu-item')) {
+            fecharMenu();
+          }
+        });
+
+        // fecha ao rolar/redimensionar (o position: fixed não acompanha o scroll do contêiner)
+        window.addEventListener('scroll', fecharMenu, true);
+        window.addEventListener('resize', fecharMenu);
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') fecharMenu();
+        });
+      })();
     </script>
   </body>
 </html>

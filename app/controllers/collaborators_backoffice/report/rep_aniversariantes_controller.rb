@@ -26,6 +26,9 @@ class CollaboratorsBackoffice::Report::RepAniversariantesController < Collaborat
         "(#{aniv_expr} >= #{ini} OR #{aniv_expr} <= #{fim})"
       end
 
+    # 🔎 filtro opcional por nome do cliente
+    filtro_nome_sql = params[:term].present? ? "AND UPPER(p.nome) LIKE :term" : ""
+
     sql = <<~SQL
       SELECT
         p.cod_pessoa,
@@ -50,13 +53,25 @@ class CollaboratorsBackoffice::Report::RepAniversariantesController < Collaborat
        AND cpr.cod_empresa = :cod_empresa
       WHERE p.dtnascimento IS NOT NULL
         AND #{intervalo_sql}
+        #{filtro_nome_sql}
       GROUP BY p.cod_pessoa, p.nome, p.celular, p.telefone, p.dtnascimento
       ORDER BY EXTRACT(MONTH FROM p.dtnascimento), EXTRACT(DAY FROM p.dtnascimento), p.nome
     SQL
 
-    @aniversariantes = ActiveRecord::Base.connection.exec_query(
-      ActiveRecord::Base.sanitize_sql_array([sql, { cod_empresa: cod_empresa }])
-    )
+    binds = { cod_empresa: cod_empresa }
+    binds[:term] = "%#{params[:term].to_s.upcase}%" if params[:term].present?
+
+    registros = ActiveRecord::Base.connection.exec_query(
+      ActiveRecord::Base.sanitize_sql_array([sql, binds])
+    ).to_a
+
+    # 🔥 paginação (padrão dos demais relatórios: 30 por página, ou "Todas")
+    if params[:per_page].to_s == "Todas"
+      @aniversariantes = Kaminari.paginate_array(registros).page(1).per(registros.size + 1)
+    else
+      per_page = params[:per_page].to_i.zero? ? 30 : params[:per_page].to_i
+      @aniversariantes = Kaminari.paginate_array(registros).page(params[:page]).per(per_page)
+    end
   end
 
   private

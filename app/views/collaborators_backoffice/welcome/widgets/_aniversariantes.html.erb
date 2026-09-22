@@ -22,16 +22,14 @@
               <span class="badge bg-<%= hoje_aniv ? 'danger' : 'light text-dark' %> me-2">
                 <%= dt ? dt.strftime('%d/%m') : '—' %>
               </span>
-              <%= truncate(row['nome'], length: 22) %>
+              <%= truncate(row['nome'].to_s.titleize, length: 22) %>
               <% if hoje_aniv %><i class="fa fa-gift text-danger ms-1" title="É hoje!"></i><% end %>
             </span>
             <span class="text-nowrap small">
               <% if celular.present? %>
                 <span class="text-muted"><%= celular %></span>
                 <% if fone_zap.length >= 10 %>
-                  <a href="https://wa.me/55<%= fone_zap %>" target="_blank" class="text-success ms-1" title="WhatsApp">
-                    <i class="fab fa-whatsapp"></i>
-                  </a>
+                  <%= whatsapp_client_button(fone_zap, row['nome']) %>
                 <% end %>
               <% else %>
                 <span class="text-muted">—</span>

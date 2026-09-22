@@ -159,6 +159,7 @@ Rails.application.routes.draw do
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :whatsapp_contacts #, only: [:index, :edit, :new, :create, :destroy, :update]
     resources :company_link_pages
+    resources :whatsapp_messages, only: [:index, :new, :create, :edit, :update, :destroy]
     resources :xml_files, only: [:index, :edit, :new, :create, :destroy] do
       post 'import/:id', on: :member, to: 'xml_files#import', as: :import
     end

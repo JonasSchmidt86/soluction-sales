@@ -2,18 +2,27 @@
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
       <h5 class="mb-0"><i class="fa fa-cake-candles"></i> Aniversariantes</h5>
-      <span class="badge bg-light text-dark"><%= @aniversariantes.count %> cliente(s)</span>
+      <span class="badge bg-light text-dark"><%= @aniversariantes.total_count %> cliente(s)</span>
     </div>
     <div class="card-body">
       <%= form_with url: collaborators_backoffice_report_aniversariantes_path, method: :get, local: true do %>
         <div class="row g-2 align-items-end mb-3">
-          <div class="col-6 col-md-3">
+          <div class="col-auto" style="max-width: 90px;">
+            <label class="form-label mb-1 small text-muted">Por página</label>
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]),
+                  onchange: 'this.form.submit()', class: "form-select" %>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label mb-1 small text-muted">Nome do cliente</label>
+            <%= text_field_tag :term, params[:term], class: "form-control", placeholder: "Buscar por nome..." %>
+          </div>
+          <div class="col-6 col-md-2">
             <label class="form-label mb-1 small text-muted">Data inicial</label>
             <input type="text" name="dataInicial" autocomplete="off"
                    class="form-control datepicker fallback"
                    value="<%= @data_inicial.strftime('%d/%m/%Y') %>">
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-md-2">
             <label class="form-label mb-1 small text-muted">Data final</label>
             <input type="text" name="dataFinal" autocomplete="off"
                    class="form-control datepicker fallback"
@@ -36,7 +45,7 @@
         <strong><%= @data_final.strftime('%d/%m') %></strong>.
       </p>
 
-      <% if @aniversariantes.count.zero? %>
+      <% if @aniversariantes.total_count.zero? %>
         <div class="text-center text-muted py-4">
           <i class="fa fa-cake-candles fa-2x mb-2 d-block"></i>
           Nenhum aniversariante encontrado no período.
@@ -69,9 +78,7 @@
                     <% if celular.present? %>
                       <%= celular %>
                       <% if fone_zap.length >= 10 %>
-                        <a href="https://wa.me/55<%= fone_zap %>" target="_blank" class="text-success ms-1" title="WhatsApp">
-                          <i class="fab fa-whatsapp"></i>
-                        </a>
+                        <%= whatsapp_client_button(fone_zap, row['nome']) %>
                       <% end %>
                     <% else %>
                       <span class="text-muted">—</span>
@@ -109,6 +116,17 @@
             </tbody>
           </table>
         </div>
+
+        <% if @aniversariantes.respond_to?(:total_pages) && @aniversariantes.total_pages > 1 %>
+          <div class="dataTable-bottom d-flex justify-content-between align-items-center flex-wrap">
+            <div class="dataTable-info"><%= page_entries_info @aniversariantes, entry_name: 'cliente' %></div>
+            <div class="d-flex justify-content-end ms-auto">
+              <%= paginate @aniversariantes %>
+            </div>
+          </div>
+        <% else %>
+          <div class="dataTable-info text-muted small">Exibindo <%= @aniversariantes.total_count %> cliente(s)</div>
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -120,9 +138,9 @@
       jQuery('#tabela-aniversariantes').DataTable({
         paging: false,
         info: false,
-        searching: true,
+        searching: false,
         order: [],
-        language: { search: 'Buscar:', zeroRecords: 'Nenhum registro' }
+        language: { zeroRecords: 'Nenhum registro' }
       });
     }
   })();

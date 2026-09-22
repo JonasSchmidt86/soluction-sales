@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_11_000005) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_22_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -951,6 +951,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_11_000005) do
     t.boolean "publicar_link", default: false, null: false
     t.integer "ordem", default: 0, null: false
     t.index ["empresa_id"], name: "index_whatsapp_contacts_on_empresa_id"
+  end
+
+  create_table "whatsapp_messages", force: :cascade do |t|
+    t.integer "empresa_id", null: false
+    t.string "titulo", null: false
+    t.text "mensagem", null: false
+    t.string "categoria", default: "geral", null: false
+    t.boolean "ativo", default: true, null: false
+    t.integer "ordem", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["empresa_id", "ativo", "ordem"], name: "idx_whatsapp_messages_empresa_ativo_ordem"
+    t.index ["empresa_id", "categoria"], name: "idx_whatsapp_messages_empresa_categoria"
   end
 
   create_table "xml_files", force: :cascade do |t|

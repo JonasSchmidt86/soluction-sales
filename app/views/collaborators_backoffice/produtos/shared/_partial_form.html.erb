@@ -23,7 +23,7 @@
     </div>
     <div class="form-floating mb-3">
       <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
-      <%= form.label :name, class:"" %>
+      <%= form.label :nome, "Nome", class:"" %>
     </div>
     <div class="row mb-3">
       <div class="col-md-6">
@@ -42,21 +42,21 @@
     <div class="form-floating mb-3">
       <%= form.collection_select(:marca, getBrands("%"), :cod_marca, :nome, 
                 {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"brands") %>
-      <%= form.label :brands, class:"" %>
+      <%= form.label :marca, "Marca", class:"" %>
     </div>
     <div class="row mb-0">
       <div class="col-md-6">
         <div class="form-floating mb-3 mb-md-0">
           <%= form.collection_select(:grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo, 
                         {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
-          <%= form.label :group, class:"" %>
+          <%= form.label :grupo, "Grupo", class:"" %>
         </div>
       </div>
       <div class="col-md-6">
         <div class="form-floating">
           <%= form.collection_select(:cod_margem, Parametro.all.order(:descricao), :cod_parametro, :descricao,
                         {:prompt => 'Selecione uma Margem'}, class: "form-control") %>
-          <%= form.label :margin, class:"" %>
+          <%= form.label :cod_margem, "Margem", class:"" %>
         </div>
       </div>
     </div>

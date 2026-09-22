@@ -1,0 +1,76 @@
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="card mb-4 shadow">
+      <div class="card-header bg-primary text-white">
+        <div class="d-flex align-items-center">
+          <h4 class="mb-0"><i class="fab fa-whatsapp"></i> Mensagens de WhatsApp</h4>
+          <%= link_to 'Nova Mensagem', new_collaborators_backoffice_whatsapp_message_path, class: 'btn btn-light ms-auto' %>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if flash[:notice] %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= flash[:notice] %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+
+        <p class="text-muted small mb-3">
+          Mensagens prontas para enviar pelo WhatsApp. Use os marcadores
+          <code>&#123;&#123;nome&#125;&#125;</code>, <code>&#123;&#123;nome_completo&#125;&#125;</code> e
+          <code>&#123;&#123;empresa&#125;&#125;</code> no texto — eles são trocados pelos dados do cliente na hora do envio.
+        </p>
+
+        <table class="table table-bordered table-hover table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;" class="text-center">Ordem</th>
+              <th>Título</th>
+              <th>Prévia</th>
+              <th class="text-center">Ativa</th>
+              <th class="text-center" style="width: 90px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @whatsapp_messages.each do |msg| %>
+              <tr>
+                <td class="text-center"><%= msg.ordem %></td>
+                <td><%= msg.titulo %></td>
+                <td class="text-muted small"><%= truncate(msg.mensagem.to_s.gsub(/\s+/, ' '), length: 80) %></td>
+                <td class="text-center">
+                  <% if msg.ativo? %>
+                    <span class="badge bg-success">Sim</span>
+                  <% else %>
+                    <span class="badge bg-secondary">Não</span>
+                  <% end %>
+                </td>
+                <td class="text-center">
+                  <div class="dropdown">
+                    <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" style="width: 35px;">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <%= link_to edit_collaborators_backoffice_whatsapp_message_path(msg), class: 'dropdown-item' do %>
+                          <i class="fa fa-edit me-1"></i> Editar
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to collaborators_backoffice_whatsapp_message_path(msg), method: :delete, data: { confirm: 'Deseja realmente excluir?' }, class: 'dropdown-item text-danger' do %>
+                          <i class="fa fa-trash-can me-1"></i> Excluir
+                        <% end %>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <% if @whatsapp_messages.empty? %>
+          <p class="text-muted">Nenhuma mensagem cadastrada ainda.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
