@@ -17,7 +17,8 @@ class DashboardWidget < ApplicationRecord
   CATALOG = {
     'acesso_rapido'         => { label: 'Acesso Rápido (completo)',  resource: nil,                  default_span: 12, default_rows: 5, default_visible: true },
     'acesso_rapido_botoes'  => { label: 'Acesso Rápido (só botões)', resource: nil,                  default_span: 12, default_rows: 2, default_visible: false },
-    'vendas_dia'      => { label: 'Vendas do Dia',            resource: 'vendas',            default_span: 4,  default_rows: 2, default_visible: false },
+    'vendas_dia'      => { label: 'Vendas do Dia (minhas)',   resource: 'vendas',            default_span: 4,  default_rows: 2, default_visible: false },
+    'vendas_dia_empresa' => { label: 'Vendas do Dia (empresa)', resource: 'report_rep_dre',  default_span: 4,  default_rows: 2, default_visible: false },
     'minhas_vendas'   => { label: 'Minhas Vendas (Mês)',      resource: 'vendas',            default_span: 4,  default_rows: 2, default_visible: false },
     'vendas_empresa'  => { label: 'Total Vendas Empresa (Mês)', resource: 'vendas',          default_span: 4,  default_rows: 2, default_visible: false },
     'caixa'           => { label: 'Caixa',                    resource: 'caixa',             default_span: 6,  default_rows: 3, default_visible: true },
@@ -45,6 +46,7 @@ class DashboardWidget < ApplicationRecord
     financeiro
     acesso_rapido_botoes
     vendas_dia
+    vendas_dia_empresa
     minhas_vendas
     vendas_empresa
     atendimentos
@@ -58,6 +60,7 @@ class DashboardWidget < ApplicationRecord
     'acesso_rapido'        => 'primary',
     'acesso_rapido_botoes' => 'primary',
     'vendas_dia'           => 'primary',
+    'vendas_dia_empresa'   => 'primary',
     'minhas_vendas'        => 'success',
     'vendas_empresa'       => 'success',
     'caixa'                => 'info',

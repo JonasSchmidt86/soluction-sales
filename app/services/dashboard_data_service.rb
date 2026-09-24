@@ -23,6 +23,7 @@ class DashboardDataService
   def compute(widget_type)
     case widget_type
     when 'vendas_dia'     then vendas_dia
+    when 'vendas_dia_empresa' then vendas_dia_empresa
     when 'minhas_vendas'  then minhas_vendas
     when 'vendas_empresa' then vendas_empresa
     when 'caixa'          then caixa
@@ -56,6 +57,18 @@ class DashboardDataService
       total: total_v.sum(:valortotal) || 0,
       total_geral: escopo.sum(:valortotal) || 0,
       total_vendas: total, cod_funcionario: @cod_funcionario
+    }
+  end
+
+  # Vendas do dia da EMPRESA inteira (todos os vendedores). Widget para admin.
+  def vendas_dia_empresa
+    escopo = Venda.where(
+      "DATE(datavenda) = ? AND cod_empresa = ? AND tipo = 'V' AND cancelada = false",
+      Date.current, @cod_empresa
+    )
+    {
+      quantidade: escopo.count,
+      total: escopo.sum(:valortotal) || 0
     }
   end
 
