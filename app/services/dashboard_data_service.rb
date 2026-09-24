@@ -200,26 +200,38 @@ class DashboardDataService
     { hoje: hoje, retorno: retorno, pendentes: pendentes }
   end
 
-  # Receita x custo dos últimos 6 meses (mesma lógica do relatório DRE).
+  # Receita x custo dos últimos 6 meses.
+  #
+  # Receita = venda.valortotal (já é o líquido real da venda: considera os
+  #           descontos/acréscimos do item E os descontos/acréscimos da venda).
+  # Custo   = soma do custo dos itens (itemvenda.valororiginal * quantidade).
+  #
+  # As duas somas são feitas em consultas SEPARADAS: se somássemos valortotal
+  # junto com o join de itensvenda, o total da venda seria multiplicado pela
+  # quantidade de itens.
   def vendas_custo
     inicio = 5.months.ago.beginning_of_month.to_date
     fim = Date.current.end_of_month
+    mes_expr = "DATE_TRUNC('month', venda.datavenda)"
 
-    linhas = Venda
+    receita_por_mes = Venda
+      .where(cod_empresa: @cod_empresa)
+      .where("tipo <> 'T'")
+      .where(cancelada: false)
+      .where("venda.datavenda BETWEEN ? AND ?", inicio, fim)
+      .group(Arel.sql(mes_expr))
+      .pluck(Arel.sql("#{mes_expr} AS mes"), Arel.sql("SUM(venda.valortotal) AS receita"))
+      .to_h { |mes, receita| [mes.to_date.beginning_of_month, receita.to_f] }
+
+    custo_por_mes = Venda
       .joins(:itensvenda)
       .where(cod_empresa: @cod_empresa)
       .where("tipo <> 'T'")
       .where(cancelada: false)
       .where("venda.datavenda BETWEEN ? AND ?", inicio, fim)
-      .group(Arel.sql("DATE_TRUNC('month', venda.datavenda)"))
-      .order(Arel.sql("DATE_TRUNC('month', venda.datavenda)"))
-      .pluck(
-        Arel.sql("DATE_TRUNC('month', venda.datavenda) AS mes"),
-        Arel.sql("SUM(itemvenda.valorunitario * itemvenda.quantidade + ((itemvenda.valor_acrescimo - itemvenda.valor_desconto) / itemvenda.quantidade)) AS receita_bruta"),
-        Arel.sql("SUM(itemvenda.valororiginal * itemvenda.quantidade + (itemvenda.valor_acrescimo - itemvenda.valor_desconto)) AS custo_total")
-      )
-
-    dados = linhas.index_by { |mes, _r, _c| mes.to_date.beginning_of_month }
+      .group(Arel.sql(mes_expr))
+      .pluck(Arel.sql("#{mes_expr} AS mes"), Arel.sql("SUM(itemvenda.valororiginal * itemvenda.quantidade) AS custo"))
+      .to_h { |mes, custo| [mes.to_date.beginning_of_month, custo.to_f] }
 
     # Garante os 6 meses mesmo sem vendas (preenche com zero)
     meses = (0..5).map { |i| (5 - i).months.ago.beginning_of_month.to_date }
@@ -227,10 +239,9 @@ class DashboardDataService
     receitas = []
     custos = []
     meses.each do |mes|
-      linha = dados[mes]
       labels << I18n.l(mes, format: '%b/%y').capitalize
-      receitas << (linha ? linha[1].to_f.round(2) : 0.0)
-      custos << (linha ? linha[2].to_f.round(2) : 0.0)
+      receitas << (receita_por_mes[mes] || 0.0).round(2)
+      custos << (custo_por_mes[mes] || 0.0).round(2)
     end
 
     { labels: labels, receitas: receitas, custos: custos }
