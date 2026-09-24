@@ -2,6 +2,30 @@ class CollaboratorsBackoffice::BuscasController < CollaboratorsBackofficeControl
     
     def buscar_pessoas
       query = params[:query].downcase
+
+      # Em transferencia (tipo 'T') a busca lista EMPRESAS cadastradas, nao
+      # pessoas: uma mesma pessoa pode ter mais de uma empresa, entao o que
+      # importa e escolher a empresa de destino. O front envia
+      # somente_empresas=true nesse caso.
+      if ActiveModel::Type::Boolean.new.cast(params[:somente_empresas])
+        result = Empresa
+                   .joins(:pessoa)
+                   .where.not(cod_pessoa: nil)
+                   .where('LOWER(empresa.nome) ILIKE :q OR LOWER(pessoa.nome) ILIKE :q OR pessoa.cpf_cnpj ILIKE :q',
+                          q: "#{query}%")
+                   .order('empresa.nome')
+                   .limit(10)
+                   .map do |e|
+                     {
+                       nome: e.nome,               # nome da empresa (exibido)
+                       cod_empresa: e.cod_empresa, # destino da transferencia
+                       cod_pessoa: e.cod_pessoa,
+                       cpf_cnpj: e.pessoa&.cpf_cnpj
+                     }
+                   end
+        return render json: result
+      end
+
       result = Pessoa.select(:nome, :cod_pessoa, :cpf_cnpj)
                     .where('LOWER(nome) ILIKE :query OR cpf_cnpj ILIKE :query', query: "#{query}%")
                     .order(:nome)

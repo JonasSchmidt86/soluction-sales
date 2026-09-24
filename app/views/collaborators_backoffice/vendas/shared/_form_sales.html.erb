@@ -26,6 +26,7 @@
               <%= sale.label :nome_pessoa, "Pessoa" %>
               <div id="results_list" class="list-group position-absolute" style="display: none; z-index: 100; width: 100%;"></div>
               <%= sale.hidden_field :cod_pessoa, id: 'selected_person_id' %>
+              <%= sale.hidden_field :cod_empresa_transferida, id: 'selected_empresa_transferida' %>
             </div>
           </div>
           <!-- Botão -->
@@ -186,10 +187,12 @@
           </div>
         </div>
       </div>
+      <%# Token de idempotencia: impede duplicar a venda em duplo clique/reenvio %>
+      <%= sale.hidden_field :submit_token, value: SecureRandom.uuid %>
       <div class="position-fixed bottom-0 end-0 m-4">
         <div class="d-block my-3 mx-3">
           <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
-            <i class="fa fa-check fa-2x"></i>
+            <i id="saveIcon" class="fa fa-check fa-2x"></i>
           </button>
         </div>
       </div>
@@ -208,6 +211,34 @@
               event.preventDefault();
           }
       });
+
+      // Evita duplicar a venda quando o usuario clica 2x rapido no salvar.
+      // No primeiro submit valido, desabilita o botao e marca a flag para
+      // bloquear qualquer envio subsequente do mesmo formulario.
+      (function () {
+          var saveBtn = document.getElementById('saveButton');
+          if (!saveBtn) { return; }
+          var form = saveBtn.closest('form');
+          if (!form) { return; }
+
+          form.addEventListener('submit', function (event) {
+              if (form.dataset.submitting === 'true') {
+                  // ja esta enviando: bloqueia o segundo clique
+                  event.preventDefault();
+                  event.stopImmediatePropagation();
+                  return;
+              }
+              form.dataset.submitting = 'true';
+              saveBtn.disabled = true;
+              saveBtn.classList.add('disabled');
+
+              // Troca o check por um spinner de carregando
+              var icon = document.getElementById('saveIcon');
+              if (icon) {
+                  icon.className = 'fa fa-spinner fa-spin fa-2x';
+              }
+          });
+      })();
 
   // -----------------------------------------------------------------
   // ------------ para baixo da tabela contas  -----------------------
@@ -461,6 +492,7 @@
           var categorySearch = $('#venda_nome_pessoa'); //document.getElementById('venda_pessoa'); //
           var resultsList = $('#results_list');    // cria a lista de pessoas abaixo do input
           var selectedPersonIdField = $('#selected_person_id'); // insere o codigo da pessoa no campo hiden
+          var selectedEmpresaField = $('#selected_empresa_transferida'); // empresa de destino (transferencia)
 
           var selectedPersonCpfCnpjField = $('#venda_pessoa_attributes_cpf_cnpj');
 
@@ -493,6 +525,15 @@
               selectedPersonIdField.val(selectedPersonId);
               selectedPersonCpfCnpjField.val($(this).data('cpf_cnpj'));
 
+              // Em transferencia guarda a empresa de destino escolhida (uma
+              // pessoa pode ter varias empresas, entao o cod_empresa e a
+              // fonte de verdade do destino).
+              if ($('#tipo').val() === 'T') {
+                  selectedEmpresaField.val($(this).data('cod_empresa'));
+              } else {
+                  selectedEmpresaField.val('');
+              }
+
               buscarPessoaPorCpfCnpj(selectedPersonCpfCnpjField)
 
               // Atualiza o campo de busca com o nome da pessoa selecionada
@@ -514,20 +555,31 @@
               var query = categorySearch.val().trim().toLowerCase();
               resultsList.empty();
 
+              // Em transferencia (tipo 'T') a busca traz apenas empresas cadastradas
+              var somenteEmpresas = ($('#tipo').val() === 'T');
+
               $.ajax({
                   url: apiUrl,
                   method: 'GET',
-                  data: { entidade: 'Pessoa', query: query },
+                  data: { entidade: 'Pessoa', query: query, somente_empresas: somenteEmpresas },
                   success: function(data) {
                       data.forEach(function(person) {
                           var listItem = $('<div>').text(person.nome);
                           listItem.addClass('list-group-item');
                           listItem.data('cod_pessoa', person.cod_pessoa); // Armazena o ID da pessoa nos dados do item
                           listItem.data('cpf_cnpj',   person.cpf_cnpj);
+                          // Em transferencia a lista traz empresas: guarda o cod_empresa (destino)
+                          listItem.data('cod_empresa', person.cod_empresa);
                           resultsList.append(listItem);
                           //console.log(person.email);
                           var data = person;
                       });
+
+                      if (data.length === 0 && somenteEmpresas) {
+                          var aviso = $('<div>').text('Nenhuma empresa cadastrada encontrada.');
+                          aviso.addClass('list-group-item text-muted');
+                          resultsList.append(aviso);
+                      }
 
                       // Exibe a lista de resultados
                       resultsList.show();
@@ -537,6 +589,17 @@
                   }
               });
           }
+
+          // Ao trocar de/para Transferencia, a selecao anterior deixa de ser
+          // valida (Venda usa pessoa; Transferencia usa empresa de destino).
+          // Limpa a selecao para forcar uma nova busca no modo correto.
+          $('#tipo').on('change', function() {
+              categorySearch.val('');
+              selectedPersonIdField.val('');
+              selectedPersonCpfCnpjField.val('');
+              selectedEmpresaField.val('');
+              resultsList.empty().hide();
+          });
       });
 
   // -----------------------------------------------------------------

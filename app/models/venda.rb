@@ -6,8 +6,17 @@ class Venda < ApplicationRecord
     after_commit :gerar_transferencia, if: -> { tipo == 'T' }
 
     def gerar_transferencia
-        return if contas.any? || Contaspagrec.exists?(cod_venda: cod_venda)
+        if contas.any? || Contaspagrec.exists?(cod_venda: cod_venda)
+            Rails.logger.info("[TransferenciaService] venda #{cod_venda}: pulou (já possui conta). contas=#{contas.size}")
+            return
+        end
+        Rails.logger.info("[TransferenciaService] venda #{cod_venda}: iniciando geração (origem=#{cod_empresa} destino=#{cod_empresa_transferida})")
         TransferenciaService.new(self).call
+        Rails.logger.info("[TransferenciaService] venda #{cod_venda}: concluído com sucesso")
+    rescue => e
+        # after_commit não faz rollback: logamos qualquer falha do service
+        # para não ficar silenciosa (ex: empresa sem cod_bancoconta).
+        Rails.logger.error("[TransferenciaService] falha ao gerar transferência da venda #{cod_venda}: #{e.class} - #{e.message}")
     end
 
     has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :destroy, autosave: true

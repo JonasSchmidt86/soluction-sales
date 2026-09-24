@@ -72,6 +72,17 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
   
     def create
       puts " -------- create ---------- #{params}"
+
+      # Idempotencia: cada carregamento do form gera um submit_token unico.
+      # Se o mesmo token chegar duas vezes (duplo clique / reenvio), ignora
+      # o segundo POST para nao duplicar a venda.
+      token = params[:venda][:submit_token]
+      session[:vendas_submit_tokens] ||= []
+      if token.present? && session[:vendas_submit_tokens].include?(token)
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda já registrada."
+        return
+      end
+
       @sale = Venda.new(params_venda)
 
       @sale.acrescimo = params[:venda][:acrescimo].gsub(',', '.').to_f;
@@ -109,7 +120,15 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         end
       end
 
-      if params[:venda][:contas_attributes].present?
+      # Em transferência (tipo 'T') as contas NÃO vêm do formulário:
+      # o TransferenciaService cria a conta (já quitada) e os lançamentos.
+      # Como Venda.new(params_venda) já instancia contas via
+      # accepts_nested_attributes_for, precisamos limpá-las aqui; caso
+      # contrário o after_commit :gerar_transferencia aborta em
+      # "return if contas.any?" e nada é gerado.
+      if params[:venda][:tipo] == 'T'
+        @sale.contas.clear
+      elsif params[:venda][:contas_attributes].present?
         contas = params[:venda][:contas_attributes]
         
         # Verifique se itens é uma instância de ActionController::Parameters
@@ -167,8 +186,14 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       if @sale.tipo.nil? || @sale.tipo.blank?
         @sale.tipo = 'V'
       elsif @sale.tipo == 'T'
-        @sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: @sale.pessoa&.cod_pessoa)&.cod_empresa 
-        if @sale.cod_empresa_transferida.nil?
+        # O form envia a empresa de destino escolhida (uma pessoa pode ter
+        # varias empresas). Usa ela; so cai no fallback por pessoa se nao veio.
+        if @sale.cod_empresa_transferida.blank?
+          @sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: @sale.pessoa&.cod_pessoa)&.cod_empresa
+        end
+        # Garante coerencia: o cod_pessoa da venda passa a ser o da empresa destino.
+        empresa_destino = Empresa.find_by(cod_empresa: @sale.cod_empresa_transferida)
+        if empresa_destino.nil?
           @sale.errors.add(:base, "Transferência sem Empresa de Destino!")
           render :new
           return
@@ -189,6 +214,10 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       puts "ANTES DE SALVAR"
 
       if @sale.save
+          # Marca o token como processado (mantem apenas os ultimos 20)
+          if token.present?
+            session[:vendas_submit_tokens] = (session[:vendas_submit_tokens] + [token]).last(20)
+          end
           # Se veio de um orçamento, atualiza o orçamento
           if session[:orcamento_id]
             orcamento = Orcamento.find_by(cod_orcamento: session[:orcamento_id])
