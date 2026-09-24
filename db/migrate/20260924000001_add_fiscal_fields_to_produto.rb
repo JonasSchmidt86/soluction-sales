@@ -1,5 +1,16 @@
 class AddFiscalFieldsToProduto < ActiveRecord::Migration[7.1]
+  # Roda fora da transacao DDL do Rails para que o lock_timeout tenha efeito
+  # real em cada ALTER (dentro da transacao, o SET nao protege como esperado).
+  disable_ddl_transaction!
+
   def change
+    # Evita travar a producao: se a tabela estiver com lock preso (ex: uma
+    # transacao "idle in transaction" segurando 'produto'), cada ALTER desiste
+    # em 5s em vez de bloquear todas as queries da tabela indefinidamente.
+    # A migration e idempotente (unless column_exists?), entao pode ser
+    # reexecutada ate concluir.
+    execute "SET lock_timeout = '5s'"
+
     # Campos fiscais do PRODUTO (usados na emissao de saida)
     # origem: origem da mercadoria (0=nacional, 1=importacao direta, etc) - 1 digito
     # gtin:   codigo de barras (EAN/GTIN) - ate 14 digitos
