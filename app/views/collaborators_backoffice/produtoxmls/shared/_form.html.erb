@@ -206,6 +206,9 @@
                                     data-ucom="<%= form_itens.object.pro_xml_temp[:ucom] %>"
                                     data-ncm="<%= form_itens.object.pro_xml_temp[:ncm] %>"
                                     data-cfop="<%= form_itens.object.pro_xml_temp[:cfop] %>"
+                                    data-cest="<%= form_itens.object.pro_xml_temp[:cest] %>"
+                                    data-origem="<%= form_itens.object.pro_xml_temp[:origem] %>"
+                                    data-gtin="<%= form_itens.object.pro_xml_temp[:gtin] %>"
                                     data-index="<%= form_itens.index %>"
                                     onclick="abrirModal(this)">
                           <i class="fa fa-plus"></i> Cadastrar Produto
@@ -486,6 +489,11 @@
       document.getElementById('modal_ucom').value = botao.dataset.ucom || '';
       document.getElementById('modal_ncm').value = botao.dataset.ncm || '';
       document.getElementById('modal_cfop').value = botao.dataset.cfop || '';
+      document.getElementById('modal_cest').value = botao.dataset.cest || '';
+      document.getElementById('modal_origem').value = botao.dataset.origem || '';
+      document.getElementById('modal_gtin').value = botao.dataset.gtin || '';
+      // CSOSN nao vem no XML (e definicao do contador); limpa para nao herdar de cadastro anterior
+      document.getElementById('modal_csosn').value = '';
 
       // (Re)abre o modal manualmente se necessário
       const modal = new bootstrap.Modal(document.getElementById('modalNovoProduto'));
@@ -502,6 +510,9 @@
           ncm: document.getElementById('modal_ncm').value,
           cfop: document.getElementById('modal_cfop').value,
           cest: document.getElementById('modal_cest').value,
+          origem: document.getElementById('modal_origem').value,
+          gtin: document.getElementById('modal_gtin').value,
+          csosn: document.getElementById('modal_csosn').value,
           brands: document.getElementById('modal_brands').value,
           cod_margem: document.getElementById('cod_margem').value,
           grupo: document.getElementById('grupo').value,

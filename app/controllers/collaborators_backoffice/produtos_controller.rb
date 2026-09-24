@@ -149,7 +149,7 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     private 
 
     def params_produto
-        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :grupo, :marca, imagens: [] )
+        params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :grupo, :marca, :origem, :gtin, :csosn, imagens: [] )
     end
 
     def set_produto

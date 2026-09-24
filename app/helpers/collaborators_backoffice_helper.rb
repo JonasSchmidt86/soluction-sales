@@ -9,6 +9,62 @@ module CollaboratorsBackofficeHelper
         @test = ["Entrada", 2], ["Saida", 3], ["Canceladas", 4]
     end
 
+    # Tabela oficial de Origem da Mercadoria (SEFAZ) usada na NF-e/NFC-e.
+    # Chave = codigo que vai no XML (string "0".."8"), valor = descricao.
+    ORIGENS_MERCADORIA = {
+        "0" => "Nacional (exceto 3, 4, 5 e 8)",
+        "1" => "Estrangeira - Importacao direta (exceto 6)",
+        "2" => "Estrangeira - Adquirida no mercado interno (exceto 7)",
+        "3" => "Nacional - importacao > 40% e <= 70%",
+        "4" => "Nacional - processos produtivos basicos",
+        "5" => "Nacional - importacao <= 40%",
+        "6" => "Estrangeira - Importacao direta, sem similar nacional (CAMEX)",
+        "7" => "Estrangeira - Mercado interno, sem similar nacional (CAMEX)",
+        "8" => "Nacional - importacao > 70%"
+    }.freeze
+
+    # Opcoes prontas para options_for_select: [["0 - Nacional...", "0"], ...]
+    def origens_para_select
+        ORIGENS_MERCADORIA.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    # Descricao "0 - Nacional..." a partir do codigo. Retorna vazio se nil.
+    def origem_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = ORIGENS_MERCADORIA[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
+    # Tabela de CSOSN (Codigo de Situacao da Operacao no Simples Nacional).
+    # Lista fixa oficial usada na NF-e/NFC-e enquanto durar a transicao da
+    # reforma tributaria (ICMS convive com IBS/CBS). Chave = codigo, valor = descricao.
+    CSOSN_SIMPLES = {
+        "101" => "Tributada com permissao de credito",
+        "102" => "Tributada sem permissao de credito",
+        "103" => "Isencao do ICMS para faixa de receita bruta",
+        "201" => "Tributada com permissao de credito e com ST",
+        "202" => "Tributada sem permissao de credito e com ST",
+        "203" => "Isencao do ICMS com ST",
+        "300" => "Imune",
+        "400" => "Nao tributada",
+        "500" => "ICMS cobrado anteriormente por ST",
+        "900" => "Outros"
+    }.freeze
+
+    # Opcoes prontas para options_for_select: [["102 - Tributada...", "102"], ...]
+    def csosn_para_select
+        CSOSN_SIMPLES.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    # Descricao "102 - Tributada..." a partir do codigo. Retorna vazio se nil.
+    def csosn_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = CSOSN_SIMPLES[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
     def get_cores(id_produto)
         unless id_produto.nil?
             cores = Core.select(:nmcor, :cod_cor).joins(:empresaprodutos).where("cod_produto = ? and cod_empresa = ?", id_produto, current_collaborator.cod_empresa );

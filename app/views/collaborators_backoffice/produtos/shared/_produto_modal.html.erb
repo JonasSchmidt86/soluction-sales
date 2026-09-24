@@ -1,5 +1,5 @@
 <div class="modal fade" id="produtoModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title" id="exampleModalLabel">Adicionando Produto</h5>
@@ -7,6 +7,12 @@
       </div>
       <div class="modal-body me-2 ms-2 mt-3">
         <div class="container-fluid">
+
+          <%# ===== Dados do Produto ===== %>
+          <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2">
+            <i class="fa fa-box me-1"></i> Dados do Produto
+          </h6>
+          
           <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto, action_message: action_message } %>
         </div>
       </div>

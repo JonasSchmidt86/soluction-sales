@@ -184,6 +184,44 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
   
   private
 
+  # O XML costuma trazer "SEM GTIN" quando o produto nao tem codigo de barras.
+  # Nesses casos gravamos nil em vez do texto literal.
+  def ean_valido(valor)
+    v = valor.to_s.strip
+    return nil if v.blank? || v.upcase.include?("SEM GTIN")
+    v[0, 14]
+  end
+
+  # Atualiza os campos fiscais do Produto com o que veio da nota (opcao 1:
+  # atualiza sempre com a nota mais recente e registra no log quando o valor muda).
+  # Nunca quebra a importacao: erros sao apenas logados.
+  def atualizar_fiscais_do_produto(produto, valores, numeronf: nil, pessoa_id: nil)
+    return if produto.blank?
+
+    empresa_id = @xml_file&.empresa_id
+    mudancas = {}
+
+    valores.each do |campo, novo_valor|
+      novo = novo_valor.to_s.strip
+      next if novo.blank?
+      atual = produto.public_send(campo).to_s.strip
+      next if novo == atual
+
+      # registra a divergencia antes de sobrescrever
+      ProdutoFiscalLog.registrar(
+        produto: produto, campo: campo, valor_novo: novo,
+        empresa_id: empresa_id, pessoa_id: pessoa_id, numeronf: numeronf
+      )
+      mudancas[campo] = novo
+    end
+
+    return if mudancas.empty?
+
+    produto.update_columns(mudancas)
+  rescue => e
+    Rails.logger.error "Falha ao atualizar campos fiscais do produto #{produto&.cod_produto}: #{e.message}"
+  end
+
   def det_itens(products)
     list_ItensCompra = []
 
@@ -218,9 +256,18 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
 
             itemcompra.cor = prXML.cor
 
-            if novo_ncm.present? && prXML.produto.present? && prXML.produto.ncm != novo_ncm
-              prXML.produto.update_column(:ncm, novo_ncm)
-            end
+            # Atributos fiscais do produto que chegam na nota do fornecedor.
+            # Sao reaproveitados na emissao de saida (NCM, origem, GTIN, CEST).
+            novo_gtin   = ean_valido(pr.at("cEAN")&.text)
+            nova_origem = pr.xpath('.//*[local-name()="orig"]').first&.text.to_s.strip.presence
+
+            atualizar_fiscais_do_produto(
+              prXML.produto,
+              { ncm: novo_ncm, origem: nova_origem, gtin: novo_gtin, cest: pr.at("CEST")&.text },
+              numeronf: @xml_file&.compra&.numeronf,
+              pessoa_id: @xml_file&.pessoa&.id
+            )
+
             prXML.ncm = novo_ncm if novo_ncm.present?
 
             #atualizar produtoXML e NCM Produto
@@ -257,6 +304,9 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       produtoXMl.ucom = pr.at("uCom")&.text || ''
       produtoXMl.cfop = pr.at("CFOP")&.text || ''
       produtoXMl.cest = pr.at("CEST")&.text || ''
+      # cEAN = codigo de barras (GTIN); orig = origem da mercadoria (dentro do grupo ICMS)
+      produtoXMl.gtin = ean_valido(pr.at("cEAN")&.text)
+      produtoXMl.origem = pr.xpath('.//*[local-name()="orig"]').first&.text.to_s.strip.presence
       produtoXMl.desconto = (pr.at("vDesc")&.text || '0').to_f
 
       itemcompra.cod_empresa = @xml_file.empresa_id

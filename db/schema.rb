@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_22_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -846,6 +846,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_22_000001) do
     t.string "cest", limit: 15
     t.text "descricao"
     t.string "titulo", limit: 100
+    t.string "origem", limit: 1
+    t.string "gtin", limit: 14
+    t.string "csosn", limit: 4
+  end
+
+  create_table "produto_fiscal_logs", force: :cascade do |t|
+    t.bigint "cod_produto", null: false
+    t.bigint "cod_empresa"
+    t.bigint "cod_pessoa", comment: "fornecedor (emitente da nota)"
+    t.string "numeronf", limit: 20, comment: "numero da NF que originou a mudanca"
+    t.string "campo", limit: 20, null: false, comment: "campo alterado: ncm, origem, gtin, cest"
+    t.string "valor_antigo", limit: 20
+    t.string "valor_novo", limit: 20
+    t.datetime "created_at", null: false
+    t.index ["campo"], name: "idx_produto_fiscal_logs_campo"
+    t.index ["cod_produto"], name: "idx_produto_fiscal_logs_produto"
+    t.index ["created_at"], name: "idx_produto_fiscal_logs_data"
   end
 
   create_table "produto_imagens", force: :cascade do |t|
@@ -874,6 +891,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_22_000001) do
     t.string "ucom", limit: 8
     t.bigint "cfop"
     t.string "cest", limit: 15
+    t.string "origem", limit: 1
+    t.string "gtin", limit: 14
   end
 
   create_table "social_links", force: :cascade do |t|

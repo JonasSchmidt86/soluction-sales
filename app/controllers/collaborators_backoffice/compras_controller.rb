@@ -19,6 +19,10 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       @produto.cfop = params[:query][:cfop].to_s.upcase
       @produto.ncm = params[:query][:ncm].to_s.upcase
       @produto.cest = params[:query][:cest].to_s.upcase
+      # Campos fiscais reaproveitados na emissao de saida (vem do XML da nota do fornecedor)
+      @produto.origem = params[:query][:origem].to_s.strip.presence
+      @produto.gtin = params[:query][:gtin].to_s.strip.presence
+      @produto.csosn = params[:query][:csosn].to_s.strip.presence
 
       begin
         @produto.marca = params[:query][:brands].to_i

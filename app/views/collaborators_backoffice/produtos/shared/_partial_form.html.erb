@@ -1,55 +1,20 @@
 <div class="card-body">
   <%= form_with(model: [ :collaborators_backoffice, (@produto.nil? ? Produto.new : @produto) ], local: true) do |form| %>
+
     <%= hidden_field_tag :action_message, local_assigns[:action_message] || '' %>
-    <div class="row mb-3">
-      <div class="col-md-6">
-        <div class="form-floating mb-3 mb-md-0">
+
+
+    <div class="row mb-2">
+      <div class="col-md-3">
+        <div class="form-floating mb-md-0">
           <%= form.text_field :cod_produto, disabled: true, class: "text form-control", placeholder:"Codigo", id:"text" %>
           <%= form.label :cod_produto, class:"" %>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="form-floating">
-          <%= form.text_field :cfop, class: "text form-control", placeholder:"Produto", id: "modal_cfop" %>
-          <%= form.label :cfop, class:"" %>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-floating">
-          <%= form.text_field :ucom, class: "text form-control", placeholder:"Produto", id: "modal_ucom" %>
-          <%= form.label :ucom, class:"" %>
-        </div>
-      </div>
-    </div>
-    <div class="form-floating mb-3">
-      <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
-      <%= form.label :nome, "Nome", class:"" %>
-    </div>
-    <div class="row mb-3">
-      <div class="col-md-6">
         <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
-          <%= form.label :ncm, class:"" %>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="form-floating">
-          <%= form.text_field :cest, class: "text form-control", placeholder:"CEST", id:"text" %>
-          <%= form.label :cest, class:"" %>
-        </div>
-      </div>
-    </div>
-    <div class="form-floating mb-3">
-      <%= form.collection_select(:marca, getBrands("%"), :cod_marca, :nome, 
-                {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"brands") %>
-      <%= form.label :marca, "Marca", class:"" %>
-    </div>
-    <div class="row mb-0">
-      <div class="col-md-6">
-        <div class="form-floating mb-3 mb-md-0">
-          <%= form.collection_select(:grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo, 
-                        {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
-          <%= form.label :grupo, "Grupo", class:"" %>
+          <%= form.text_field :ucom, class: "text form-control", placeholder:"Unidade", id: "modal_ucom" %>
+          <%= form.label :ucom, "Unidade", class:"" %>
         </div>
       </div>
       <div class="col-md-6">
@@ -60,12 +25,84 @@
         </div>
       </div>
     </div>
-    <div class="mt-3 mb-3">
-      <div class="d-grid text-center">
-        <div class="col-md-9 col-sm-9  offset-md-3">
-          <button type="submit" class="btn btn-success btn-block">Salvar</button>
+
+    <div class="form-floating mb-2">
+      <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
+      <%= form.label :nome, "Nome", class:"" %>
+    </div>
+
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <div class="form-floating mb-3 mb-md-0">
+          <%= form.collection_select(:marca, getBrands("%"), :cod_marca, :nome,
+                {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"modal_brands") %>
+          <%= form.label :marca, "Marca", class:"" %>
         </div>
       </div>
+      <div class="col-md-6">
+        <div class="form-floating">
+          <%= form.collection_select(:grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo,
+                        {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
+          <%= form.label :grupo, "Grupo", class:"" %>
+        </div>
+      </div>
+    </div>
+
+    <%# ===== Dados Fiscais ===== %>
+    <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
+      <i class="fa fa-file-invoice me-1"></i> Dados Fiscais
+    </h6>
+
+    <div class="row mb-2">
+      <div class="col-md-4">
+        <div class="form-floating mb-md-0">
+          <%= form.text_field :ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
+          <%= form.label :ncm, "NCM", class:"" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating mb-3 mb-md-0">
+          <%= form.text_field :cfop, class: "text form-control", placeholder:"CFOP", id: "modal_cfop" %>
+          <%= form.label :cfop, "CFOP", class:"" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating">
+          <%= form.text_field :cest, class: "text form-control", placeholder:"CEST", id:"modal_cest" %>
+          <%= form.label :cest, "CEST", class:"" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-2">
+      <div class="col-md-4">
+        <div class="form-floating mb-md-0">
+          <%= form.select :origem, options_for_select(origens_para_select, @produto&.origem),
+                { include_blank: "Selecione a origem" },
+                class: "form-control", id: "modal_origem" %>
+          <%= form.label :origem, "Origem da mercadoria", class:"" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating mb-3 mb-md-0">
+          <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
+          <%= form.label :gtin, "GTIN / Cód. barras", class:"" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating">
+          <%= form.select :csosn, options_for_select(csosn_para_select, @produto&.csosn),
+                { include_blank: "CSOSN" },
+                class: "form-control", id:"modal_csosn" %>
+          <%= form.label :csosn, "CSOSN", class:"" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 mb-3 text-end">
+      <button onclick="salvarProduto()" class="btn btn-success">
+        <i class="fa fa-save me-1"></i> Salvar Produto
+      </button>
     </div>
   <% end %>
 </div>
