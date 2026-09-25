@@ -17,6 +17,7 @@
                 <th>Nome</th>
                 <th>Descrição</th>
                 <th class="text-center">Regras</th>
+                <th class="text-center">Produtos</th>
                 <th class="text-center">Ativo</th>
                 <th class="text-end">Ações</th>
               </tr>
@@ -27,6 +28,8 @@
                   <td><%= perfil.nome %></td>
                   <td class="text-muted"><%= perfil.descricao %></td>
                   <td class="text-center"><span class="badge bg-secondary"><%= perfil.regras.size %></span></td>
+                  <% qtd_produtos = perfil.produtos.count %>
+                  <td class="text-center"><span class="badge bg-info"><%= qtd_produtos %></span></td>
                   <td class="text-center">
                     <% if perfil.ativo %>
                       <span class="badge bg-success">Sim</span>
@@ -40,6 +43,19 @@
                     <% end %>
                     <%= link_to edit_collaborators_backoffice_perfil_tributario_path(perfil), class: "btn btn-sm btn-light" do %>
                       <i class="fa fa-pencil"></i>
+                    <% end %>
+                    <% if qtd_produtos.zero? %>
+                      <%= link_to collaborators_backoffice_perfil_tributario_path(perfil),
+                            method: :delete,
+                            data: { confirm: "Excluir o perfil \"#{perfil.nome}\"?" },
+                            class: "btn btn-sm btn-outline-danger" do %>
+                        <i class="fa fa-trash"></i>
+                      <% end %>
+                    <% else %>
+                      <span class="btn btn-sm btn-light disabled text-muted"
+                            title="Não pode excluir: há <%= qtd_produtos %> produto(s) usando este perfil">
+                        <i class="fa fa-trash"></i>
+                      </span>
                     <% end %>
                   </td>
                 </tr>
