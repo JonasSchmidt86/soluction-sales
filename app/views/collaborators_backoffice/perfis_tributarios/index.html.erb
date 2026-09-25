@@ -3,7 +3,7 @@
     <div class="card-header bg-primary d-flex align-items-center">
       <h4 class="text-white mb-0"><i class="fa fa-file-invoice-dollar me-2"></i> Perfis Tributários</h4>
       <div class="ms-auto">
-        <%= link_to new_collaborators_backoffice_perfis_tributario_path, class: "btn btn-light" do %>
+        <%= link_to new_collaborators_backoffice_perfil_tributario_path, class: "btn btn-light" do %>
           <i class="fa fa-plus me-1"></i> Novo Perfil
         <% end %>
       </div>
@@ -35,10 +35,10 @@
                     <% end %>
                   </td>
                   <td class="text-end">
-                    <%= link_to collaborators_backoffice_perfis_tributario_path(perfil), class: "btn btn-sm btn-light" do %>
+                    <%= link_to collaborators_backoffice_perfil_tributario_path(perfil), class: "btn btn-sm btn-light" do %>
                       <i class="fa fa-eye"></i>
                     <% end %>
-                    <%= link_to edit_collaborators_backoffice_perfis_tributario_path(perfil), class: "btn btn-sm btn-light" do %>
+                    <%= link_to edit_collaborators_backoffice_perfil_tributario_path(perfil), class: "btn btn-sm btn-light" do %>
                       <i class="fa fa-pencil"></i>
                     <% end %>
                   </td>
@@ -51,7 +51,7 @@
         <div class="text-center py-5">
           <i class="fa fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
           <p class="text-muted">Nenhum perfil tributário cadastrado.</p>
-          <%= link_to new_collaborators_backoffice_perfis_tributario_path, class: "btn btn-primary" do %>
+          <%= link_to new_collaborators_backoffice_perfil_tributario_path, class: "btn btn-primary" do %>
             <i class="fa fa-plus me-1"></i> Criar primeiro perfil
           <% end %>
         </div>

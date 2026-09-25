@@ -14,3 +14,8 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym 'RESTful'
 # end
+
+# Modulo fiscal: singular de "perfis_tributarios" e "perfil_tributario"
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "perfil_tributario", "perfis_tributarios"
+end

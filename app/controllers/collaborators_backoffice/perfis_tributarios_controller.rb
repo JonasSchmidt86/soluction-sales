@@ -22,7 +22,7 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
   def create
     @perfil = PerfilTributario.new(perfil_params)
     if @perfil.save
-      redirect_to collaborators_backoffice_perfis_tributario_path(@perfil),
+      redirect_to collaborators_backoffice_perfil_tributario_path(@perfil),
                   notice: "Perfil tributário criado com sucesso."
     else
       render :new, status: :unprocessable_entity
@@ -34,7 +34,7 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
 
   def update
     if @perfil.update(perfil_params)
-      redirect_to collaborators_backoffice_perfis_tributario_path(@perfil),
+      redirect_to collaborators_backoffice_perfil_tributario_path(@perfil),
                   notice: "Perfil tributário atualizado."
     else
       render :edit, status: :unprocessable_entity
@@ -62,7 +62,7 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
     params.require(:perfil_tributario).permit(
       :nome, :descricao, :ativo,
       regras_attributes: [
-        :cod_regra_fiscal, :cod_operacao_fiscal, :cod_empresa,
+        :id, :cod_operacao_fiscal, :cod_empresa,
         :uf_destino, :tipo_cliente, :cfop_base, :csosn,
         :aliquota_icms, :cst_pis, :cst_cofins, :cclasstrib,
         :prioridade, :ativo, :_destroy
