@@ -5,14 +5,14 @@ inclusion: manual
 # Módulo Fiscal — Design e Decisões
 
 > Contexto salvo do estudo de arquitetura do módulo fiscal. Referencie com #modulo-fiscal quando voltar ao tema.
-> ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor: Focus NFe. Visão multiempresa + preparação reforma tributária (IBS/CBS).
+> ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor A DEFINIR (Focus NFe ou Brasil NFe) — decisão via teste em homologação; adapter isola a escolha. Visão multiempresa + preparação reforma tributária (IBS/CBS).
 
 ## Princípios
 
 1. Produto NÃO guarda tributação; aponta para um **Perfil Tributário** (`perfil_tributario_id`). Muitos produtos → mesmo perfil.
 2. Tributação real é resolvida por **contexto** (regime + UF destino + operação + tipo cliente), não campo fixo.
 3. Multiempresa desde o modelo: toda tabela fiscal com `cod_empresa`; certificado/série/CSC por estabelecimento.
-4. Provedor atrás de um **adapter** (`FiscalService`); Focus NFe é detalhe substituível.
+4. Provedor atrás de um **adapter** (`FiscalService`); provedor é detalhe substituível (Focus NFe OU Brasil NFe — não decidido).
 5. Documento fiscal é **máquina de estados** (rascunho→enviada→autorizada→cancelada/rejeitada) com XML/chave/protocolo persistidos + eventos.
 6. Espaço para **IBS/CBS** (cClassTrib) desde já, mesmo vazio.
 
@@ -106,7 +106,8 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 - Encaixe: filtro por grupo em Relatórios/Contador e Auditoria. Aditivo (1 tabela + FK opcional), sem refazer o fiscal. Transferência entre empresas do grupo = operação fiscal por par de empresas, não pelo grupo.
 
 ## Adapter do provedor
-`FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl: FocusAdapter.
+`FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl possíveis: FocusAdapter e/ou BrasilNfeAdapter.
+PROVEDOR NÃO DECIDIDO (Focus NFe x Brasil NFe). Estratégia: implementar a interface neutra primeiro; testar os dois em homologação (grátis) e decidir por resposta/preço/suporte. O segundo adapter reaproveita quase tudo do primeiro.
 
 ## Aproveitar do que já existe
 - produto.ncm/cest/origem/gtin ficam no produto; **produto.csosn vira LEGADO/fallback** (substituído por perfil_tributario_id na migração suave).
@@ -123,7 +124,7 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 
 ## Roadmap em fatias
 1. Perfil + Operação + Regra; vincular no produto/compra. (não emite)
-2. Fiscal Config + FocusAdapter em homologação; 1 NFC-e teste.
+2. Parte A (neutra): Fiscal Config + interface FiscalService. Parte B: adapter(s) em homologação (testar Focus e/ou Brasil NFe); 1 NFC-e teste em cada para decidir.
 3. Emissão real NFC-e (balcão) + status/eventos + XML.
 4. NF-e (55), devoluções, carta de correção, cancelamento.
 5. Acesso contador + relatórios para contabilidade + **auditoria** (consulta de trilha).
@@ -185,4 +186,4 @@ Decisões desta fase:
 - Usuário só usa SEM ST hoje: modelo enxuto, sem campos de ST agora (adicionar depois se precisar).
 - Ambiente local: postgresql@16 subido via pg_ctl (brew services estava com erro); pode não subir sozinho após reboot.
 
-Pendente Fatia 1 (opcional): sugestão automática de perfil na importação de XML (ler CST/CSOSN do fornecedor). Próximo grande marco: Fatia 2 (fiscal_config + FocusAdapter em homologação) — depende de conta Focus + certificado A1 válido.
+Pendente Fatia 1 (opcional): sugestão automática de perfil na importação de XML (ler CST/CSOSN do fornecedor). Próximo grande marco: Fatia 2 — Parte A (fiscal_config + interface FiscalService, NÃO depende de provedor) pode ser feita já; Parte B (adapter concreto) depende de escolher/testar provedor (Focus x Brasil NFe) + certificado A1 válido. Decisão do provedor será por teste em homologação.
