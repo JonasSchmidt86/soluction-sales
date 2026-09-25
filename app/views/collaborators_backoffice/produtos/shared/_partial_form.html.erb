@@ -57,19 +57,14 @@
         Visivel apenas quando o modulo fiscal esta liberado (super_admin). %>
     <% if access_control.can_view?("fiscal_perfis") %>
       <div class="row mb-3">
-        <div class="col-md-9">
+        <div class="col-md-12">
           <div class="form-floating">
             <%= form.select :cod_perfil_tributario,
                   options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome, @produto&.cod_perfil_tributario),
-                  { include_blank: "Sem perfil (usa campos abaixo)" },
+                  { include_blank: "Selecione o perfil tributário" },
                   class: "form-control", id: "modal_perfil_tributario" %>
             <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
           </div>
-        </div>
-        <div class="col-md-3 d-flex align-items-center">
-          <%= link_to collaborators_backoffice_perfis_tributarios_path, target: "_blank", class: "btn btn-outline-primary w-100" do %>
-            <i class="fa fa-plus me-1"></i> Perfis
-          <% end %>
         </div>
       </div>
     <% end %>
