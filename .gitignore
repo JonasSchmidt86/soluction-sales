@@ -79,3 +79,9 @@ yarn-debug.log*
 /XML/*
 /public/XML
 /public/storage
+
+# Certificados digitais (nunca versionar - contem chave privada)
+*.pfx
+*.p12
+*.pem
+*.key
