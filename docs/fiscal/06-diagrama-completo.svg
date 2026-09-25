@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="960" viewBox="0 0 980 960" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="980" height="960" fill="#f4f6f9"/>
+  <text x="490" y="34" text-anchor="middle" fill="#212529" font-size="20" font-weight="bold">Módulo Fiscal — Visão Completa</text>
+
+  <rect x="40" y="54" width="900" height="86" rx="8" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="56" y="76" fill="#3730a3" font-size="12" font-weight="bold">ERP MÓVEIS ROSA (já existe)</text>
+  <rect x="60" y="86" width="150" height="42" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="135" y="112" text-anchor="middle" fill="#312e81" font-size="12">Vendas</text>
+  <rect x="230" y="86" width="150" height="42" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="305" y="112" text-anchor="middle" fill="#312e81" font-size="12">Compras</text>
+  <rect x="400" y="86" width="170" height="42" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="485" y="106" text-anchor="middle" fill="#312e81" font-size="12">Estoque</text><text x="485" y="120" text-anchor="middle" fill="#6b7280" font-size="10">real + qtdfiscal</text>
+  <rect x="590" y="86" width="150" height="42" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="665" y="112" text-anchor="middle" fill="#312e81" font-size="12">Produtos</text>
+  <rect x="760" y="86" width="160" height="42" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="840" y="112" text-anchor="middle" fill="#312e81" font-size="12">Empresas</text>
+
+  <line x1="490" y1="140" x2="490" y2="166" stroke="#6b7280" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="40" y="170" width="900" height="620" rx="10" fill="#ffffff" stroke="#0d6efd" stroke-width="2"/>
+  <text x="56" y="192" fill="#0d6efd" font-size="13" font-weight="bold">MÓDULO FISCAL</text>
+
+  <rect x="60" y="204" width="280" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="72" y="224" fill="#334155" font-size="11" font-weight="bold">TRIBUTAÇÃO</text>
+  <rect x="72" y="232" width="120" height="34" rx="5" fill="#e7f1ff" stroke="#93c5fd"/><text x="132" y="253" text-anchor="middle" fill="#1e40af" font-size="11">Perfil Tributário</text>
+  <rect x="208" y="232" width="120" height="34" rx="5" fill="#e7f1ff" stroke="#93c5fd"/><text x="268" y="248" text-anchor="middle" fill="#1e40af" font-size="10">Operação Fiscal</text><text x="268" y="260" text-anchor="middle" fill="#6b7280" font-size="9">venda/devol/avulsa</text>
+  <rect x="72" y="284" width="256" height="56" rx="5" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="200" y="304" text-anchor="middle" fill="#1e3a8a" font-size="11" font-weight="bold">Regra Fiscal</text>
+  <text x="200" y="320" text-anchor="middle" fill="#1e3a8a" font-size="9">perfil+operação+regime+UF dest →</text>
+  <text x="200" y="332" text-anchor="middle" fill="#1e3a8a" font-size="9">CFOP base, CSOSN, alíq., cClassTrib</text>
+
+  <rect x="360" y="204" width="250" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="372" y="224" fill="#334155" font-size="11" font-weight="bold">CONFIGURAÇÃO</text>
+  <rect x="372" y="234" width="226" height="106" rx="5" fill="#fff" stroke="#cbd5e1"/>
+  <text x="485" y="262" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Fiscal Config</text>
+  <text x="485" y="282" text-anchor="middle" fill="#6b7280" font-size="10">por estabelecimento</text>
+  <text x="485" y="300" text-anchor="middle" fill="#6b7280" font-size="10">regime, ambiente, série</text>
+  <text x="485" y="318" text-anchor="middle" fill="#6b7280" font-size="10">CSC, certificado (ref)</text>
+
+  <rect x="630" y="204" width="290" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="642" y="224" fill="#334155" font-size="11" font-weight="bold">MOTOR DE RESOLUÇÃO</text>
+  <rect x="642" y="234" width="266" height="46" rx="5" fill="#fff" stroke="#cbd5e1"/>
+  <text x="775" y="262" text-anchor="middle" fill="#334155" font-size="11">Resolver tributação por item + contexto</text>
+  <rect x="642" y="290" width="266" height="50" rx="5" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="775" y="310" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="bold">cfop_por_uf</text>
+  <text x="775" y="326" text-anchor="middle" fill="#9a3412" font-size="10">5=dentro / 6=fora / 7=exterior</text>
+
+  <rect x="60" y="372" width="380" height="130" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="72" y="392" fill="#334155" font-size="11" font-weight="bold">DOCUMENTOS FISCAIS</text>
+  <rect x="72" y="402" width="356" height="46" rx="5" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <text x="250" y="420" text-anchor="middle" fill="#065f46" font-size="11" font-weight="bold">Documento Fiscal (máquina de estados)</text>
+  <text x="250" y="436" text-anchor="middle" fill="#065f46" font-size="9">rascunho → enviada → autorizada → cancelada/rejeitada</text>
+  <rect x="72" y="456" width="356" height="38" rx="5" fill="#fff" stroke="#cbd5e1"/>
+  <text x="250" y="479" text-anchor="middle" fill="#334155" font-size="10">Eventos: cancelamento / carta correção / inutilização</text>
+
+  <rect x="460" y="372" width="460" height="130" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="472" y="392" fill="#334155" font-size="11" font-weight="bold">ENTRADAS</text>
+  <rect x="472" y="402" width="106" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="525" y="428" text-anchor="middle" fill="#334155" font-size="10">XML fornecedores</text>
+  <rect x="586" y="402" width="106" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="639" y="428" text-anchor="middle" fill="#334155" font-size="10">Importação XML</text>
+  <rect x="700" y="402" width="106" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="753" y="428" text-anchor="middle" fill="#334155" font-size="10">Notas recebidas</text>
+  <rect x="814" y="402" width="94" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="861" y="422" text-anchor="middle" fill="#334155" font-size="10">Manifest./</text><text x="861" y="435" text-anchor="middle" fill="#334155" font-size="10">distribuição</text>
+  <rect x="472" y="452" width="140" height="40" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="542" y="477" text-anchor="middle" fill="#334155" font-size="10">Devolução de compra</text>
+
+  <rect x="60" y="520" width="420" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="72" y="540" fill="#334155" font-size="11" font-weight="bold">INTEGRAÇÃO (adapter)</text>
+  <rect x="72" y="550" width="396" height="46" rx="5" fill="#fff" stroke="#cbd5e1"/>
+  <text x="270" y="570" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">FiscalService</text>
+  <text x="270" y="586" text-anchor="middle" fill="#6b7280" font-size="9">emitir / cancelar / consultar / carta_correcao / inutilizar / devolver</text>
+  <rect x="72" y="604" width="190" height="46" rx="5" fill="#e7f1ff" stroke="#60a5fa"/>
+  <text x="167" y="632" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="bold">Adapter Focus NFe</text>
+  <rect x="300" y="604" width="168" height="46" rx="5" fill="#212529"/>
+  <text x="384" y="632" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">SEFAZ</text>
+  <line x1="262" y1="627" x2="298" y2="627" stroke="#6b7280" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="500" y="520" width="420" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="512" y="540" fill="#334155" font-size="11" font-weight="bold">RELATÓRIOS / CONTADOR</text>
+  <rect x="512" y="550" width="190" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="607" y="576" text-anchor="middle" fill="#334155" font-size="10">Relatórios contabilidade + XML</text>
+  <rect x="712" y="550" width="196" height="42" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="810" y="570" text-anchor="middle" fill="#334155" font-size="10">Pendências fiscais</text><text x="810" y="584" text-anchor="middle" fill="#6b7280" font-size="9">NCM zerado, sem perfil</text>
+  <rect x="512" y="600" width="396" height="42" rx="5" fill="#fff8e1" stroke="#ffe08a"/>
+  <text x="710" y="626" text-anchor="middle" fill="#8a6d00" font-size="10">Estimativa DAS (não oficial) + acesso Contador (read/export)</text>
+
+  <!-- Auditoria (transversal) -->
+  <rect x="60" y="688" width="860" height="84" rx="8" fill="#faf5ff" stroke="#d8b4fe"/>
+  <text x="72" y="708" fill="#6b21a8" font-size="11" font-weight="bold">🔍 AUDITORIA (transversal — registra ações dos demais blocos)</text>
+  <rect x="72" y="716" width="200" height="44" rx="5" fill="#fff" stroke="#e9d5ff"/><text x="172" y="742" text-anchor="middle" fill="#6b21a8" font-size="10">Alterações tributárias</text>
+  <rect x="284" y="716" width="190" height="44" rx="5" fill="#fff" stroke="#e9d5ff"/><text x="379" y="742" text-anchor="middle" fill="#6b21a8" font-size="10">Emissões / cancelamentos</text>
+  <rect x="486" y="716" width="200" height="44" rx="5" fill="#fff" stroke="#e9d5ff"/><text x="586" y="742" text-anchor="middle" fill="#6b21a8" font-size="10">Alterações de configuração</text>
+  <rect x="698" y="716" width="210" height="44" rx="5" fill="#fff" stroke="#e9d5ff"/><text x="803" y="736" text-anchor="middle" fill="#6b21a8" font-size="10">quem / quando / antes→depois</text><text x="803" y="750" text-anchor="middle" fill="#9333ea" font-size="9">(tabela genérica + consulta)</text>
+
+  <!-- setas de auditoria (pontilhadas, dos blocos observados) -->
+  <line x1="200" y1="354" x2="200" y2="686" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrp)"/>
+  <line x1="485" y1="354" x2="450" y2="686" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrp)"/>
+  <line x1="250" y1="502" x2="300" y2="686" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrp)"/>
+
+  <!-- rodapé fluxo -->
+  <text x="56" y="812" fill="#6b7280" font-size="11" font-weight="bold">Fluxo:</text>
+  <text x="56" y="832" fill="#6b7280" font-size="11">Produto → aponta Perfil  •  Venda/NF avulsa → Documento → Motor resolve Regra → FiscalService(Focus) → SEFAZ</text>
+  <text x="56" y="850" fill="#6b7280" font-size="11">Autorizada → grava chave/XML/protocolo, baixa qtdfiscal → alimenta Relatórios do Contador  •  Auditoria registra tudo</text>
+
+  <!-- setas internas principais -->
+  <line x1="200" y1="354" x2="200" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="775" y1="354" x2="775" y2="372" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="250" y1="502" x2="250" y2="518" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0 L9 4.5 L0 9 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrp" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+</svg>
