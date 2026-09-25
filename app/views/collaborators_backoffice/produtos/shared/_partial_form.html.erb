@@ -11,18 +11,17 @@
           <%= form.label :cod_produto, class:"" %>
         </div>
       </div>
-      <div class="col-md-2">
-        <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :ucom, value: (@produto&.ucom.presence || "UN"), class: "text form-control", placeholder:"Unidade", id: "modal_ucom" %>
-          <%= form.label :ucom, "Un.", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-7">
+      <div class="col-md-3">
         <div class="form-floating">
-          <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
-          <%= form.label :nome, "Nome", class:"" %>
+          <%= form.text_field :ucom, value: (@produto&.ucom.presence || "UN"), class: "text form-control", placeholder:"Unidade", id: "modal_ucom" %>
+          <%= form.label :ucom, "Unidade", class:"" %>
         </div>
       </div>
+    </div>
+
+    <div class="form-floating mb-2">
+      <%= form.text_field :nome, class: "text form-control", placeholder:"Produto", id: "modal_nome" %>
+      <%= form.label :nome, "Nome", class:"" %>
     </div>
 
     <div class="row mb-2">
