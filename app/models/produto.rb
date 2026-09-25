@@ -14,6 +14,11 @@ class Produto < ApplicationRecord
     has_many :produto_imagens, class_name: 'ProdutoImagem', foreign_key: 'cod_produto', dependent: :destroy, autosave: true, inverse_of: :produto
     # accepts_nested_attributes_for :produto_imagens, allow_destroy: true, reject_if: :all_blank
   
+    # Perfil tributario (modulo fiscal). csosn/cfop no produto viram legado/fallback.
+    belongs_to :perfil_tributario, class_name: 'PerfilTributario',
+               foreign_key: 'cod_perfil_tributario', primary_key: 'cod_perfil_tributario',
+               optional: true
+
     has_many :empresaprodutos, class_name: 'Empresaproduto', foreign_key: 'cod_produto', inverse_of: :produto
     has_many :itensvenda, class_name: 'Itemvenda', foreign_key: 'cod_produto', inverse_of: :produto
     has_many :itenscompra, class_name: 'Itemcompra', foreign_key: 'cod_produto', inverse_of: :produto

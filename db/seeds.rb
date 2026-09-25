@@ -5,3 +5,6 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+
+# Modulo fiscal — operacoes fiscais basicas (idempotente)
+load Rails.root.join("db", "seeds", "fiscal.rb")
