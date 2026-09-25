@@ -65,48 +65,46 @@
               <i class="fa fa-file-invoice me-1"></i> Dados Fiscais
             </h6>
 
-            <div class="row mb-2">
-              <div class="col-md-4">
+            <%# Perfil Tributario: define CFOP/CSOSN/tributos por operacao na emissao. %>
+            <% if access_control.can_view?("fiscal_perfis") %>
+              <div class="row mb-2">
+                <div class="col-md-12">
+                  <div class="form-floating">
+                    <%= form.select :cod_perfil_tributario,
+                          options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome),
+                          { include_blank: "Selecione o perfil tributário" },
+                          class: "form-control", id: "modal_perfil_tributario" %>
+                    <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="row mb-0">
+              <div class="col-md-3">
                 <div class="form-floating mb-3 mb-md-0">
                   <%= form.text_field :ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
                   <%= form.label :ncm, "NCM", class:"" %>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <div class="form-floating mb-3 mb-md-0">
-                  <%= form.text_field :cfop, class: "text form-control", placeholder:"CFOP", id: "modal_cfop" %>
-                  <%= form.label :cfop, "CFOP", class:"" %>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="form-floating">
                   <%= form.text_field :cest, class: "text form-control", placeholder:"CEST", id:"modal_cest" %>
                   <%= form.label :cest, "CEST", class:"" %>
                 </div>
               </div>
-            </div>
-
-            <div class="row mb-0">
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <div class="form-floating mb-3 mb-md-0">
                   <%= form.select :origem, options_for_select(origens_para_select),
-                        { include_blank: "Selecione a origem" },
+                        { include_blank: "Origem" },
                         class: "form-control", id: "modal_origem" %>
-                  <%= form.label :origem, "Origem da mercadoria", class:"" %>
+                  <%= form.label :origem, "Origem" %>
                 </div>
               </div>
-              <div class="col-md-4">
-                <div class="form-floating mb-3 mb-md-0">
-                  <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
-                  <%= form.label :gtin, "GTIN / Cód. barras", class:"" %>
-                </div>
-              </div>
-              <div class="col-md-4">
+              <div class="col-md-3">
                 <div class="form-floating">
-                  <%= form.select :csosn, options_for_select(csosn_para_select),
-                        { include_blank: "CSOSN" },
-                        class: "form-control", id:"modal_csosn" %>
-                  <%= form.label :csosn, "CSOSN", class:"" %>
+                  <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
+                  <%= form.label :gtin, "GTIN" %>
                 </div>
               </div>
             </div>
