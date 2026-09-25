@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_25_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -723,6 +723,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.index ["tipo"], name: "index_melhorias_on_tipo"
   end
 
+  create_table "operacao_fiscal", primary_key: "cod_operacao_fiscal", force: :cascade do |t|
+    t.string "nome", limit: 60, null: false, comment: "Venda, Devolucao venda, NF avulsa..."
+    t.string "tipo", limit: 10, null: false, comment: "saida / entrada"
+    t.integer "modelo", comment: "55 ou 65 (opcional)"
+    t.string "natureza_operacao", limit: 60, comment: "texto que vai na nota"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ativo"], name: "idx_operacao_fiscal_ativo"
+  end
+
   create_table "orcamentos", primary_key: "cod_orcamento", force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.bigint "cod_pessoa", null: false
@@ -793,6 +804,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.index ["cod_pessoa"], name: "index_pedidos_compras_on_cod_pessoa"
   end
 
+  create_table "perfil_tributario", primary_key: "cod_perfil_tributario", force: :cascade do |t|
+    t.string "nome", limit: 100, null: false
+    t.string "descricao", limit: 255
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ativo"], name: "idx_perfil_tributario_ativo"
+  end
+
   create_table "permissao", primary_key: "cod_permissao", id: :bigint, default: -> { "nextval('permissao_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.string "descricao", limit: 50
     t.integer "nivel"
@@ -849,6 +869,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.string "origem", limit: 1
     t.string "gtin", limit: 14
     t.string "csosn", limit: 4
+    t.bigint "cod_perfil_tributario"
+    t.index ["cod_perfil_tributario"], name: "idx_produto_perfil_tributario"
   end
 
   create_table "produto_fiscal_logs", force: :cascade do |t|
@@ -893,6 +915,27 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.string "cest", limit: 15
     t.string "origem", limit: 1
     t.string "gtin", limit: 14
+  end
+
+  create_table "regra_fiscal", primary_key: "cod_regra_fiscal", force: :cascade do |t|
+    t.bigint "cod_perfil_tributario", null: false
+    t.bigint "cod_operacao_fiscal", null: false
+    t.bigint "cod_empresa", null: false, comment: "regime/estabelecimento emitente"
+    t.string "uf_destino", limit: 2, default: "*", null: false, comment: "sigla UF ou * (todas)"
+    t.string "tipo_cliente", limit: 20, default: "*", null: false, comment: "consumidor_final / contribuinte / *"
+    t.string "cfop_base", limit: 4, null: false, comment: "3 digitos base, ex 102 (5/6/7 automatico)"
+    t.string "csosn", limit: 4, comment: "CSOSN no Simples"
+    t.decimal "aliquota_icms", precision: 6, scale: 2, comment: "opcional"
+    t.string "cst_pis", limit: 3
+    t.string "cst_cofins", limit: 3
+    t.string "cclasstrib", limit: 10, comment: "IBS/CBS reforma (vazio por ora)"
+    t.integer "prioridade", default: 0, null: false, comment: "maior vence: excecao > padrao"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "cod_perfil_tributario", "cod_operacao_fiscal", "uf_destino", "tipo_cliente"], name: "idx_regra_fiscal_resolucao"
+    t.index ["cod_operacao_fiscal"], name: "idx_regra_fiscal_operacao"
+    t.index ["cod_perfil_tributario"], name: "idx_regra_fiscal_perfil"
   end
 
   create_table "social_links", force: :cascade do |t|
