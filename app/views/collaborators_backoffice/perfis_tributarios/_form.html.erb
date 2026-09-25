@@ -1,0 +1,79 @@
+<%= form_with model: [:collaborators_backoffice, @perfil], local: true do |f| %>
+  <% if @perfil.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(@perfil.errors.count, "erro") %> impediram o salvamento:</strong>
+      <ul class="mb-0">
+        <% @perfil.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# ===== Dados do Perfil ===== %>
+  <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+    <i class="fa fa-tag me-1"></i> Dados do Perfil
+  </h6>
+
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <div class="form-floating">
+        <%= f.text_field :nome, class: "form-control", placeholder: "Nome", id: "perfil_nome" %>
+        <%= f.label :nome, "Nome do perfil" %>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center">
+      <div class="form-check form-switch fs-5">
+        <%= f.check_box :ativo, class: "form-check-input", id: "perfil_ativo" %>
+        <%= f.label :ativo, "Ativo", class: "form-check-label ms-1" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-floating mb-4">
+    <%= f.text_field :descricao, class: "form-control", placeholder: "Descrição", id: "perfil_descricao" %>
+    <%= f.label :descricao, "Descrição (opcional)" %>
+  </div>
+
+  <%# ===== Regras Fiscais ===== %>
+  <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
+    <i class="fa fa-list me-1"></i> Regras Fiscais deste Perfil
+  </h6>
+  <p class="text-muted small">
+    Uma regra padrão (UF destino = <code>*</code>) cobre a maioria. O CFOP é o "base" (3 dígitos);
+    o 5/6/7 é resolvido automaticamente pela UF na emissão. Adicione exceções por UF/operação se precisar.
+  </p>
+
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="min-width:160px">Operação</th>
+          <th style="width:90px">UF dest.</th>
+          <th style="min-width:150px">Cliente</th>
+          <th style="width:100px">CFOP base</th>
+          <th style="min-width:140px">CSOSN</th>
+          <th style="width:110px">Alíq. ICMS</th>
+          <th style="width:60px"></th>
+        </tr>
+      </thead>
+      <tbody id="regras-tbody">
+        <%= f.fields_for :regras do |regra| %>
+          <%= render "regra_fields", f: regra %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mb-4">
+    <%= link_to_add_association "＋ Adicionar regra", f, :regras,
+          data: { association_insertion_node: "#regras-tbody", association_insertion_method: "append" },
+          class: "btn btn-sm btn-outline-primary",
+          partial: "collaborators_backoffice/perfis_tributarios/regra_fields" %>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 border-top pt-3">
+    <%= link_to "Cancelar", collaborators_backoffice_perfis_tributarios_path, class: "btn btn-secondary" %>
+    <%= f.submit "Salvar", class: "btn btn-success" %>
+  </div>
+<% end %>

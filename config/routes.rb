@@ -197,6 +197,9 @@ Rails.application.routes.draw do
       end
     end
 
+    # Módulo Fiscal (em desenvolvimento — visível apenas via permissão fiscal_perfis)
+    resources :perfis_tributarios
+
     # Módulo de Controle de Acesso
     resources :access_roles do
       member do

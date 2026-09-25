@@ -1,0 +1,47 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-file-invoice-dollar me-2"></i> <%= @perfil.nome %></h4>
+      <div class="ms-auto d-flex gap-2">
+        <%= link_to edit_collaborators_backoffice_perfis_tributario_path(@perfil), class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-pencil me-1"></i> Editar
+        <% end %>
+        <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <p><strong>Descrição:</strong> <%= @perfil.descricao.presence || "—" %></p>
+      <p><strong>Ativo:</strong> <%= @perfil.ativo ? "Sim" : "Não" %></p>
+
+      <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">Regras</h6>
+      <% if @perfil.regras.any? %>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Operação</th><th>UF dest.</th><th>Cliente</th>
+                <th>CFOP base</th><th>CSOSN</th><th class="text-end">Alíq. ICMS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @perfil.regras.includes(:operacao).each do |r| %>
+                <tr>
+                  <td><%= r.operacao&.nome %></td>
+                  <td><%= r.uf_destino %></td>
+                  <td><%= r.tipo_cliente %></td>
+                  <td><%= r.cfop_base %></td>
+                  <td><%= r.csosn %></td>
+                  <td class="text-end"><%= r.aliquota_icms %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">Nenhuma regra cadastrada.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

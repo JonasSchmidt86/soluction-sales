@@ -47,6 +47,7 @@ class AccessRolePermission < ApplicationRecord
     'report_aniversariantes' => 'Aniversariantes',
     'atendimentos' => 'Atendimentos',
     'notas_fiscais' => 'Notas Fiscais',
+    'fiscal_perfis' => 'Fiscal - Perfis Tributários',
     'xml_files' => 'XML',
     'whatsapp_contacts' => 'WhatsApp',
     'access_roles' => 'Perfis de Acesso',

@@ -327,6 +327,23 @@
                 </nav>
               </div>
               <% end %>
+              <!-- Colapso: Fiscal (em desenvolvimento) -->
+              <% if access_control.can_view?('fiscal_perfis') %>
+              <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
+                <div class="sb-nav-link-icon">
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                Fiscal
+                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+              </a>
+              <div class="collapse" id="collapseFiscal" data-bs-parent="#sidenavAccordion">
+                <nav class="sb-sidenav-menu-nested nav">
+                  <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
+                    <i class="fa fa-tags me-1"></i> Perfis Tributários
+                  <% end %>
+                </nav>
+              </div>
+              <% end %>
               <% if access_control.can_view?('empresa_estoque') || access_control.can_view?('acertosestoque') %>
                 <!-- Colapso: Estoque -->
                 <a class="nav-link collapsed" href="#" data-target="#collapseEstoque" aria-expanded="false" aria-controls="collapseEstoque">
