@@ -28,10 +28,31 @@
     <%= f.number_field :aliquota_icms, step: "0.01", class: "form-control form-control-sm",
           placeholder: "0,00" %>
   </td>
-  <td class="text-center">
+  <td class="text-center" rowspan="2" style="vertical-align: middle;">
     <%= f.hidden_field :_destroy %>
     <%= link_to_remove_association f, class: "btn btn-sm btn-outline-danger" do %>
       <i class="fa fa-trash"></i>
     <% end %>
+  </td>
+</tr>
+<tr class="regra-fields-extra" style="border-bottom: 2px solid #eee;">
+  <td colspan="6">
+    <div class="d-flex flex-wrap gap-3 align-items-center small text-muted px-1 pb-2">
+      <div class="form-check">
+        <%= f.check_box :soma_total_nota, class: "form-check-input" %>
+        <%= f.label :soma_total_nota, "Soma no total da NF", class: "form-check-label" %>
+      </div>
+      <div class="form-check">
+        <%= f.check_box :soma_duplicatas, class: "form-check-input" %>
+        <%= f.label :soma_duplicatas, "Soma nas duplicatas", class: "form-check-label" %>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <span>Estoque:</span>
+        <%= f.select :controla_estoque,
+              options_for_select([["Controla próprio", "proprio"], ["Não controla", "nao_controla"]],
+                                 (f.object.controla_estoque || "proprio")),
+              {}, class: "form-select form-select-sm", style: "width:auto;" %>
+      </div>
+    </div>
   </td>
 </tr>

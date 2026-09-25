@@ -64,7 +64,8 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
       regras_attributes: [
         :id, :cod_operacao_fiscal, :cod_empresa,
         :uf_destino, :tipo_cliente, :cfop_base, :csosn,
-        :aliquota_icms, :cst_pis, :cst_cofins, :cclasstrib,
+        :aliquota_icms, :cst_pis, :cst_cofins, :cclasstrib, :cst_ibs_cbs,
+        :soma_total_nota, :soma_duplicatas, :controla_estoque,
         :prioridade, :ativo, :_destroy
       ]
     )
