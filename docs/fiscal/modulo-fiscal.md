@@ -62,6 +62,13 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 - Cenário real: produto ainda vai chegar; cliente pode querer a nota na hora ou depois. Se ainda não há estoque fiscal, o item aparece desmarcado com ⚠ "aguardando entrada"; quando a mercadoria entra, emite.
 - Lista/dashboard: filtro "vendas com NF pendente".
 
+## Devolução de compra (Fatia 4) — fluxo definido pelo usuário
+- Frequência: ~2/mês. Abordagem escolhida: **espelhar o XML da nota de compra original** (Opção 1).
+- Fluxo: acha a NF de compra importada → "Devolver" → carrega itens do XML → marca total OU desmarca/exclui itens (parcial) → ajusta quantidade → sistema recalcula impostos destacados proporcionalmente (ICMS/ST/IPI/valores) → gera ESPELHO para conferência → confirma → emite NF de devolução referenciando a chave da NF original.
+- Base já existe: itemcompra guarda icms, ipi, valorst, valorunitario, quantidade, valor_frete. XML importado disponível.
+- Atenção no recálculo parcial: arredondamento de centavos e rateio de desconto/frete.
+- Melhoria futura: guardar chave_acesso da NF de compra (hoje pode ler do XML na hora).
+
 ## NF avulsa (sem venda vinculada) — aprovada, com ressalva de estoque fiscal
 - Emissão de NF independente, não nasce de uma venda do sistema. Casos: cliente quer nota depois, complemento fiscal, situações fora do fluxo de venda.
 - **Afeta só o estoque fiscal (`qtdfiscal`), NÃO o estoque real** — o produto físico já saiu / não passa pelo estoque real.
@@ -154,3 +161,24 @@ Rascunhos de UI para discussão, não telas finais.
 - produto: origem, gtin, csosn; produtoxml: origem, gtin; tabela produto_fiscal_logs.
 - Captura origem/GTIN do XML de compra + log de mudança.
 - Cadastro de produto unificado (dashboard/new/edit + modal importação) com seções Produto/Fiscal, selects de Origem e CSOSN (helpers ORIGENS_MERCADORIA e CSOSN_SIMPLES em CollaboratorsBackofficeHelper).
+
+## FATIA 1 — CONCLUÍDA (branch modulo-fiscal, NÃO em produção)
+Tudo na branch `modulo-fiscal`, visível só para super_admin (cod_funcionario==1) via SUPER_ADMIN_ONLY_RESOURCES += "fiscal_perfis".
+
+Migrations (rodadas no banco LOCAL apenas):
+- 20260925000001_create_tabelas_fiscais: perfil_tributario, operacao_fiscal, regra_fiscal (PKs cod_xxx).
+- 20260925000002_add_perfil_tributario_to_produto: produto.cod_perfil_tributario (nullable, sem FK rígida, lock_timeout+disable_ddl_transaction).
+- 20260925000003_add_campos_regra_fiscal: regra ganhou soma_total_nota, soma_duplicatas, controla_estoque, cst_ibs_cbs.
+
+Models: PerfilTributario (has_many regras, nested attributes), OperacaoFiscal (tipos saida/entrada), RegraFiscal (belongs_to perfil/operacao/empresa; RegraFiscal.cfop_por_uf(base, uf_emp, uf_cli) => 5/6/7). Produto belongs_to :perfil_tributario optional. Seed db/seeds/fiscal.rb: 6 operacoes basicas.
+
+UI: menu lateral "Fiscal" > Perfis Tributários. CRUD completo (index com contagem de produtos, form perfil+regras com cocoon, show, excluir bloqueado se houver produtos). Select de Perfil no produto (form principal _partial_form + cadastro rápido _produtoNovo_modal). CFOP e CSOSN REMOVIDOS das telas de produto (colunas ficam no banco como legado/fallback); tributação vem do perfil. JS de cadastro rápido (salvarProduto/abrirModal) usa leitura segura e envia cod_perfil_tributario; ComprasController#cadastrar_produto grava cod_perfil_tributario.
+
+Rotas: resources :perfis_tributarios (inflexão irregular "perfil_tributario"/"perfis_tributarios" em config/initializers/inflections.rb).
+
+Decisões desta fase:
+- Modelo confirmado (vs MyRP): produto aponta 1 PERFIL; perfil resolve por operacao. NÃO usar de-para por operação no produto (mais simples que MyRP).
+- Usuário só usa SEM ST hoje: modelo enxuto, sem campos de ST agora (adicionar depois se precisar).
+- Ambiente local: postgresql@16 subido via pg_ctl (brew services estava com erro); pode não subir sozinho após reboot.
+
+Pendente Fatia 1 (opcional): sugestão automática de perfil na importação de XML (ler CST/CSOSN do fornecedor). Próximo grande marco: Fatia 2 (fiscal_config + FocusAdapter em homologação) — depende de conta Focus + certificado A1 válido.
