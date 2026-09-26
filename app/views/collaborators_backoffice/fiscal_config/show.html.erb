@@ -1,0 +1,48 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-gear me-2"></i> Configuração Fiscal</h4>
+      <div class="ms-auto">
+        <%= link_to edit_collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-pencil me-1"></i> Editar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if @config.persisted? %>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Ambiente:</strong>
+              <% if @config.producao? %>
+                <span class="badge bg-danger">Produção</span>
+              <% else %>
+                <span class="badge bg-warning text-dark">Homologação (teste)</span>
+              <% end %>
+            </p>
+            <p><strong>Regime:</strong> <%= @config.regime_tributario.titleize %> (CRT <%= @config.crt %>)</p>
+            <p><strong>Provedor:</strong> <%= @config.provedor.presence&.titleize || "A definir" %></p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>NF-e:</strong> série <%= @config.serie_nfe %>, próximo nº <%= @config.proximo_numero_nfe %></p>
+            <p><strong>NFC-e:</strong> série <%= @config.serie_nfce %>, próximo nº <%= @config.proximo_numero_nfce %></p>
+            <p><strong>CSC:</strong> <%= @config.csc_id.present? ? "configurado (ID #{@config.csc_id})" : "—" %></p>
+            <p><strong>Certificado:</strong>
+              <%= @config.certificado_nome.presence || "—" %>
+              <% if @config.certificado_validade %>
+                (válido até <%= l @config.certificado_validade, format: :default rescue @config.certificado_validade %>)
+              <% end %>
+            </p>
+          </div>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="fa fa-gear fa-3x text-muted mb-3"></i>
+          <p class="text-muted">Nenhuma configuração fiscal definida ainda.</p>
+          <%= link_to edit_collaborators_backoffice_fiscal_config_path, class: "btn btn-primary" do %>
+            <i class="fa fa-pencil me-1"></i> Configurar agora
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

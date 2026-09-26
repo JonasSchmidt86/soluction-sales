@@ -48,6 +48,7 @@ class AccessRolePermission < ApplicationRecord
     'atendimentos' => 'Atendimentos',
     'notas_fiscais' => 'Notas Fiscais',
     'fiscal_perfis' => 'Fiscal - Perfis Tributários',
+    'fiscal_config' => 'Fiscal - Configuração',
     'xml_files' => 'XML',
     'whatsapp_contacts' => 'WhatsApp',
     'access_roles' => 'Perfis de Acesso',

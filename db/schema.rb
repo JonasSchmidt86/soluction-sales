@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_25_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_25_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -478,6 +478,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_25_000003) do
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
     t.index ["created_at"], name: "idx_estoque_logs_data"
     t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"
+  end
+
+  create_table "fiscal_config", primary_key: "cod_fiscal_config", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.string "ambiente", limit: 12, default: "homologacao", null: false, comment: "homologacao / producao"
+    t.string "regime_tributario", limit: 20, default: "simples", null: false, comment: "simples / presumido / real"
+    t.integer "crt", default: 1, comment: "1=Simples Nacional (codigo CRT da NF-e)"
+    t.integer "serie_nfe", default: 1
+    t.integer "serie_nfce", default: 1
+    t.integer "proximo_numero_nfe", default: 1
+    t.integer "proximo_numero_nfce", default: 1
+    t.string "csc_id", limit: 10, comment: "identificador do CSC (idToken)"
+    t.string "csc_token", limit: 64, comment: "CSC — mover para credentials na Parte B"
+    t.string "certificado_nome", limit: 120
+    t.date "certificado_validade"
+    t.string "provedor", limit: 20, comment: "focus / brasilnfe (a definir)"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa"], name: "idx_fiscal_config_empresa", unique: true
   end
 
   create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: -> { "nextval('formaspagamento_codigo_seq'::regclass)" }, force: :cascade do |t|

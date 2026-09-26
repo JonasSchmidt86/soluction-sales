@@ -38,6 +38,7 @@ class AccessControlService
     commission_periods
     commission_adjustments
     fiscal_perfis
+    fiscal_config
   ].freeze
 
   def initialize(collaborator)

@@ -328,7 +328,7 @@
               </div>
               <% end %>
               <!-- Colapso: Fiscal (em desenvolvimento) -->
-              <% if access_control.can_view?('fiscal_perfis') %>
+              <% if access_control.can_view?('fiscal_perfis') || access_control.can_view?('fiscal_config') %>
               <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
                 <div class="sb-nav-link-icon">
                   <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -340,6 +340,11 @@
                 <nav class="sb-sidenav-menu-nested nav">
                   <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
                     <i class="fa fa-tags me-1"></i> Perfis Tributários
+                  <% end %>
+                  <% if access_control.can_view?('fiscal_config') %>
+                    <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
+                      <i class="fa fa-gear me-1"></i> Configuração
+                    <% end %>
                   <% end %>
                 </nav>
               </div>
