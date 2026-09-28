@@ -5,7 +5,7 @@ inclusion: manual
 # Módulo Fiscal — Design e Decisões
 
 > Contexto salvo do estudo de arquitetura do módulo fiscal. Referencie com #modulo-fiscal quando voltar ao tema.
-> ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor A DEFINIR (Focus NFe ou Brasil NFe) — decisão via teste em homologação; adapter isola a escolha. Visão multiempresa + preparação reforma tributária (IBS/CBS).
+> ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor: **Brasil NFe (plano Solo)** — escolhido por emissão ilimitada 55/65 + devoluções; adapter isola a escolha (reversível). Visão multiempresa + preparação reforma tributária (IBS/CBS).
 
 ## Princípios
 
@@ -107,7 +107,8 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 
 ## Adapter do provedor
 `FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl possíveis: FocusAdapter e/ou BrasilNfeAdapter.
-PROVEDOR NÃO DECIDIDO (Focus NFe x Brasil NFe). Estratégia: implementar a interface neutra primeiro; testar os dois em homologação (grátis) e decidir por resposta/preço/suporte. O segundo adapter reaproveita quase tudo do primeiro.
+PROVEDOR ESCOLHIDO: **Brasil NFe (plano Solo)**. Motivo: Solo tem emissão ILIMITADA de 55 e 65 + devoluções e demais operações no próprio plano. Focus (plano Retail/NFCe) tinha volume suficiente mas aparentemente sem devolução no plano — e devolução é usada. Decisão reversível: FiscalService/adapter isola; trocar de provedor = trocar adapter.
+Ressalvas a confirmar antes de pagar: (1) devolução no Solo = emissão com CFOP de devolução referenciando a nota original? (2) confirmar se Focus realmente não faz devolução ou só não tem botão dedicado (API pode emitir igual). Parte B: implementar BrasilNfeAdapter.
 
 ## Aproveitar do que já existe
 - produto.ncm/cest/origem/gtin ficam no produto; **produto.csosn vira LEGADO/fallback** (substituído por perfil_tributario_id na migração suave).
