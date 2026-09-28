@@ -79,22 +79,22 @@ Rails.application.configure do
   config.action_mailer.perform_deliveries = true
   config.action_mailer.delivery_method = :smtp
   
-  # E-mail via Gmail SMTP (grátis; ~500 envios/dia, suficiente para e-mails
-  # transacionais como reset de senha). Usa porta 465 com SSL direto para
-  # evitar falhas de STARTTLS na 587 (erro "unexpected eof").
-  # A senha (app password do Gmail) é lida das credentials criptografadas
-  # (config/credentials.yml.enc, chave: gmail_app_password), com fallback
-  # para a variável de ambiente GMAIL_APP_PASSWORD. Sem segredo em texto puro.
+  # E-mail transacional via Brevo SMTP (plano grátis ~300 envios/dia).
+  # Credenciais lidas das credentials criptografadas do Rails:
+  #   - brevo_smtp_login: o LOGIN SMTP (formato xxxx@smtp-brevo.com),
+  #     NÃO o e-mail da conta nem o host.
+  #   - brevo_smtp_key: a SMTP Key (não é a senha da conta nem a API key).
+  # Com fallback para variáveis de ambiente. Sem segredo em texto puro.
   config.action_mailer.smtp_settings = {
-    address:        'smtp.gmail.com',
-    port:           465,
-    domain:         'moveisrosa.shop',
-    user_name:      'moveisrosa.toledo@gmail.com',
-    password:       Rails.application.credentials.gmail_app_password || ENV['GMAIL_APP_PASSWORD'],
-    authentication: 'plain',
-    ssl:            true,          # porta 465 = SSL/TLS direto (SMTPS)
-    open_timeout:   10,
-    read_timeout:   10
+    address:              'smtp-relay.brevo.com',
+    port:                 587,
+    domain:               'moveisrosa.shop',
+    user_name:            Rails.application.credentials.brevo_smtp_login || ENV['BREVO_SMTP_LOGIN'],
+    password:             Rails.application.credentials.brevo_smtp_key   || ENV['BREVO_SMTP_KEY'],
+    authentication:       'login',
+    enable_starttls_auto: true,
+    open_timeout:         10,
+    read_timeout:         10
   }
 
   # Ignore bad email addresses and do not raise email delivery errors.

@@ -21,16 +21,17 @@ Rails.application.configure do
   #config.action_mailer.delivery_method = :test
   
   # SMTP via Gmail. A senha (app password) vem das credentials criptografadas
-  # (chave: gmail_app_password), com fallback para ENV. Sem segredo em texto puro.
+  # E-mail transacional via Brevo SMTP. Credenciais nas credentials criptografadas:
+  #   brevo_smtp_login (xxxx@smtp-brevo.com) e brevo_smtp_key (SMTP Key).
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address:        'smtp.gmail.com',
-    port:           465,
-    domain:         'localhost',
-    user_name:      'moveisrosa.toledo@gmail.com',
-    password:       Rails.application.credentials.gmail_app_password || ENV['GMAIL_APP_PASSWORD'],
-    authentication: 'plain',
-    ssl:            true
+    address:              'smtp-relay.brevo.com',
+    port:                 587,
+    domain:               'localhost',
+    user_name:            Rails.application.credentials.brevo_smtp_login || ENV['BREVO_SMTP_LOGIN'],
+    password:             Rails.application.credentials.brevo_smtp_key   || ENV['BREVO_SMTP_KEY'],
+    authentication:       'login',
+    enable_starttls_auto: true
   }
 
   # Enable/disable caching. By default caching is disabled.

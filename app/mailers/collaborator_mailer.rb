@@ -1,7 +1,7 @@
 class CollaboratorMailer < ApplicationMailer
-    # Usando Gmail SMTP, o remetente deve ser a própria conta Gmail
-    # (o Gmail reescreve/rejeita "from" de outros domínios).
-    default from: 'moveisrosa.toledo@gmail.com'
+    # Remetente do domínio autenticado no Brevo (DKIM/DMARC de mail.moveisrosa.shop).
+    # O nome "Móveis Rosa" aparece como remetente; o endereço técnico fica discreto.
+    default from: 'Móveis Rosa <nao-responda@mail.moveisrosa.shop>'
   
     def set_password_email(collaborator, token)
       @collaborator = collaborator
