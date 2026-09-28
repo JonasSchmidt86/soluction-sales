@@ -101,6 +101,11 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 - IMPORTANTE: grupo é camada de ORGANIZAÇÃO/GESTÃO (relatórios consolidados, permissões, filtros), NÃO de emissão. Emissão continua SEMPRE por estabelecimento (cod_empresa): cada empresa emite com seu CNPJ/IE/série. O fiscal não deve amarrar nada ao grupo.
 - Encaixe: filtro por grupo em Relatórios/Contador e Auditoria. Aditivo (1 tabela + FK opcional), sem refazer o fiscal. Transferência entre empresas do grupo = operação fiscal por par de empresas, não pelo grupo.
 
+## NÃO usar "transações" do painel do provedor (decisão)
+- O Brasil NFe (como o MyRP) permite cadastrar transações/tributação no painel deles. NÃO usar.
+- Motivo: (1) amarra ao provedor — trocar de provedor perderia a config; (2) duas fontes de verdade (painel vs Perfil do sistema) = divergência; (3) ERP ficaria sem saber a tributação (perde autonomia/relatórios).
+- Decisão: a fonte da tributação é o PERFIL TRIBUTÁRIO do nosso sistema; o adapter monta o Imposto (ICMS/CSOSN, CFOP...) no payload e manda pronto. Provedor só transmite. Terceiriza-se infra (certificado, comunicação SEFAZ), não a regra fiscal do negócio.
+
 ## Adapter do provedor
 `FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl possíveis: FocusAdapter e/ou BrasilNfeAdapter.
 PROVEDOR ESCOLHIDO: **Brasil NFe (plano Solo)**. Motivo: Solo tem emissão ILIMITADA de 55 e 65 + devoluções e demais operações no próprio plano. Focus (plano Retail/NFCe) tinha volume suficiente mas aparentemente sem devolução no plano — e devolução é usada. Decisão reversível: FiscalService/adapter isola; trocar de provedor = trocar adapter.

@@ -105,10 +105,16 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 - IMPORTANTE: grupo é camada de ORGANIZAÇÃO/GESTÃO (relatórios consolidados, permissões, filtros), NÃO de emissão. Emissão continua SEMPRE por estabelecimento (cod_empresa): cada empresa emite com seu CNPJ/IE/série. O fiscal não deve amarrar nada ao grupo.
 - Encaixe: filtro por grupo em Relatórios/Contador e Auditoria. Aditivo (1 tabela + FK opcional), sem refazer o fiscal. Transferência entre empresas do grupo = operação fiscal por par de empresas, não pelo grupo.
 
+## NÃO usar "transações" do painel do provedor (decisão)
+- O Brasil NFe (como o MyRP) permite cadastrar transações/tributação no painel deles. NÃO usar.
+- Motivo: (1) amarra ao provedor — trocar de provedor perderia a config; (2) duas fontes de verdade (painel vs Perfil do sistema) = divergência; (3) ERP ficaria sem saber a tributação (perde autonomia/relatórios).
+- Decisão: a fonte da tributação é o PERFIL TRIBUTÁRIO do nosso sistema; o adapter monta o Imposto (ICMS/CSOSN, CFOP...) no payload e manda pronto. Provedor só transmite. Terceiriza-se infra (certificado, comunicação SEFAZ), não a regra fiscal do negócio.
+
 ## Adapter do provedor
 `FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl possíveis: FocusAdapter e/ou BrasilNfeAdapter.
 PROVEDOR ESCOLHIDO: **Brasil NFe (plano Solo)**. Motivo: Solo tem emissão ILIMITADA de 55 e 65 + devoluções e demais operações no próprio plano. Focus (plano Retail/NFCe) tinha volume suficiente mas aparentemente sem devolução no plano — e devolução é usada. Decisão reversível: FiscalService/adapter isola; trocar de provedor = trocar adapter.
-Ressalvas a confirmar antes de pagar: (1) devolução no Solo = emissão com CFOP de devolução referenciando a nota original? (2) confirmar se Focus realmente não faz devolução ou só não tem botão dedicado (API pode emitir igual). Parte B: implementar BrasilNfeAdapter.
+Confirmado na página oficial (brasilnfe.com.br/products/nf-e): emissão 55 com cancelamento, inutilização, carta de correção e DANFE via JSON. Devolução = emissão de NF-e normal com CFOP de devolução (1202/2202) referenciando a chave da nota original — não precisa endpoint dedicado; coberto pela emissão 55.
+A confirmar antes de pagar: validar na doc técnica/homologação o payload de devolução (CFOP + ref da nota) e inutilização; ou perguntar ao suporte (anunciam 24/7) se está no plano Solo. Parte B: implementar BrasilNfeAdapter.
 
 ## Aproveitar do que já existe
 - produto.ncm/cest/origem/gtin ficam no produto; **produto.csosn vira LEGADO/fallback** (substituído por perfil_tributario_id na migração suave).
