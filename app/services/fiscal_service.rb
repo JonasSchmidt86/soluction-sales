@@ -20,9 +20,21 @@ class FiscalService
 
   def initialize(config = nil, adapter: nil)
     @config = config
-    # Na Parte B, aqui será escolhido o adapter conforme config.provedor:
-    #   @adapter = adapter || build_adapter(config)
-    @adapter = adapter
+    @adapter = adapter || build_adapter(config)
+  end
+
+  # Escolhe o adapter concreto pelo provedor configurado.
+  def build_adapter(config)
+    return nil if config.nil?
+
+    case config.provedor.to_s
+    when "brasilnfe"
+      Fiscal::BrasilNfeAdapter.new(config: config)
+    when "focus"
+      nil # FocusAdapter — implementar se um dia trocar de provedor
+    else
+      nil
+    end
   end
 
   # --- Contrato (o que qualquer adapter deve implementar) ---

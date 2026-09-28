@@ -1,0 +1,151 @@
+require "net/http"
+require "json"
+require "uri"
+
+# Adapter concreto para a API do Brasil NFe (API 2.0).
+# Implementa o contrato usado pelo FiscalService. Recebe um "documento neutro"
+# (Hash com chaves simbólicas) e traduz para o payload da API do Brasil NFe.
+#
+# Doc: https://www.brasilnfe.com.br/api/nf-e-e-nfc-e
+# Endpoint base: https://api.brasilnfe.com.br/services/fiscal
+# Auth: header "Token: <token da empresa>"
+# TipoAmbiente: "2" homologacao / "1" producao (string)
+#
+# O token NUNCA fica no codigo: vem de Rails.application.credentials.brasilnfe_token
+# (ou do fiscal_config, na Parte 3). Numeracao pode ser automatica (nao enviar Serie/Numero).
+module Fiscal
+  class BrasilNfeAdapter
+    BASE_URL = "https://api.brasilnfe.com.br/services/fiscal".freeze
+
+    class ConfiguracaoInvalida < StandardError; end
+
+    attr_reader :ambiente, :token
+
+    # config: FiscalConfig (opcional nesta fase). token: sobrescreve o das credentials.
+    def initialize(config: nil, token: nil)
+      @config = config
+      @ambiente = (config&.producao? ? "1" : "2") # default homologacao
+      @token = token || credentials_token
+    end
+
+    # ---- Contrato FiscalService ----
+
+    # documento: Hash neutro montado pela camada de emissão (Parte 3).
+    # Ex.: { modelo: 55, natureza: "Venda...", consumidor_final: true,
+    #        cliente: {...}, produtos: [ { ... , imposto: {...} } ],
+    #        pagamentos: [...], finalidade: 1, nf_referencia: [] }
+    def emitir(documento)
+      payload = montar_payload(documento)
+      resposta = post("/EnviarNotaFiscal", payload)
+      to_result(resposta)
+    end
+
+    # Devolução = emissão com Finalidade 4 + chaves das notas de origem.
+    def devolver(documento_origem, itens)
+      doc = documento_origem.merge(finalidade: 4)
+      doc[:produtos] = itens if itens.present?
+      emitir(doc)
+    end
+
+    # Os endpoints abaixo ficam na seção "Eventos" da doc (ainda não mapeada).
+    # Deixados como TODO explícito para não emitir chamada errada.
+    def cancelar(_referencia, _justificativa)
+      nao_implementado(:cancelar)
+    end
+
+    def carta_correcao(_referencia, _texto)
+      nao_implementado(:carta_correcao)
+    end
+
+    def inutilizar(**_kwargs)
+      nao_implementado(:inutilizar)
+    end
+
+    def consultar(_referencia)
+      nao_implementado(:consultar)
+    end
+
+    private
+
+    def credentials_token
+      Rails.application.credentials.brasilnfe_token
+    rescue
+      nil
+    end
+
+    # Monta o corpo do EnviarNotaFiscal a partir do documento neutro.
+    # Só inclui o essencial; Serie/Numero/Lote ficam automáticos (não enviados).
+    def montar_payload(doc)
+      {
+        "TipoAmbiente"      => ambiente,
+        "ModeloDocumento"   => doc[:modelo] || 55,
+        "Finalidade"        => doc[:finalidade] || 1,
+        "NaturezaOperacao"  => doc[:natureza],
+        "ConsumidorFinal"   => doc.fetch(:consumidor_final, false),
+        "IndicadorPresenca" => doc[:indicador_presenca] || 1,
+        "IdentificadorInterno" => doc[:identificador_interno],
+        "NFReferencia"      => Array(doc[:nf_referencia]).presence,
+        "Cliente"           => doc[:cliente],
+        "Produtos"          => doc[:produtos],
+        "Pagamentos"        => doc[:pagamentos],
+        "EnviarEmail"       => doc.fetch(:enviar_email, false)
+      }.compact
+    end
+
+    def post(path, body)
+      uri = URI("#{BASE_URL}#{path}")
+      raise ConfiguracaoInvalida, "Token do Brasil NFe ausente" if token.blank?
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.open_timeout = 15
+      http.read_timeout = 60
+
+      req = Net::HTTP::Post.new(uri)
+      req["Content-Type"] = "application/json"
+      req["Token"] = token
+      req.body = body.to_json
+
+      res = http.request(req)
+      parsed = JSON.parse(res.body) rescue { "Error" => "Resposta não-JSON (HTTP #{res.code})", "_raw" => res.body }
+      parsed.merge("_http_status" => res.code.to_i)
+    rescue Net::OpenTimeout, Net::ReadTimeout => e
+      { "Error" => "Timeout ao contatar Brasil NFe: #{e.message}", "_http_status" => 0 }
+    rescue => e
+      { "Error" => "Falha na requisição: #{e.message}", "_http_status" => 0 }
+    end
+
+    # Converte a resposta do Brasil NFe no FiscalResult neutro.
+    def to_result(resposta)
+      ret = resposta["ReturnNF"] || {}
+      erro = resposta["Error"].to_s
+      status_sefaz = ret["CodStatusRespostaSefaz"]
+
+      status =
+        if ret["Ok"] == true || [100, 150].include?(status_sefaz)
+          :autorizado
+        elsif erro.present? || resposta["_http_status"].to_i >= 400
+          :erro
+        else
+          :rejeitado
+        end
+
+      FiscalResult.new(
+        status:    status,
+        chave:     ret["ChaveNF"],
+        protocolo: ret["NumeroProtocolo"],
+        numero:    ret["Numero"],
+        serie:     ret["Serie"],
+        xml:       resposta["Base64Xml"],
+        danfe_url: nil, # DANFE vem em Base64File, não URL
+        mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
+        bruto:     resposta
+      )
+    end
+
+    def nao_implementado(op)
+      raise NotImplementedError,
+            "#{op} do BrasilNfeAdapter ainda não implementado (mapear seção Eventos da doc)."
+    end
+  end
+end
