@@ -25,6 +25,23 @@ class Pessoa < ApplicationRecord
         self.nome;
     end
 
+    # --- Helpers fiscais (UF e municipio via Cidade->Estado) ---
+
+    # Sigla da UF (ex: "PR"). nil se nao houver cidade/estado.
+    def uf
+        cidade&.estado&.sigla
+    end
+
+    # Codigo IBGE do municipio (7 digitos) exigido no XML da NF-e.
+    def cod_municipio_ibge
+        cidade&.cod_municipio
+    end
+
+    # true = pessoa juridica (tipo "J"); usado para decidir NF-e x NFC-e e IE.
+    def pessoa_juridica?
+        tipo.to_s.upcase == "J"
+    end
+
     def link_atendimentos
         numeros = [self.telefone, self.celular]
             .compact
