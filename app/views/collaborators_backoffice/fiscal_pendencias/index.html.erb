@@ -5,14 +5,24 @@
     </div>
     <div class="card-body">
 
-      <p class="text-muted">
-        Produtos que precisam de ajuste antes de emitir nota fiscal. Sem esses dados, a SEFAZ rejeita a emissão.
-      </p>
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <p class="text-muted mb-0">
+          Produtos que precisam de ajuste antes de emitir nota fiscal. Sem esses dados, a SEFAZ rejeita a emissão.
+        </p>
+        <div class="btn-group btn-group-sm" role="group">
+          <%= link_to "Com estoque",
+                collaborators_backoffice_fiscal_pendencias_path(filtro: @filtro, estoque: "com"),
+                class: "btn #{@estoque != 'todos' ? 'btn-primary' : 'btn-outline-primary'}" %>
+          <%= link_to "Todos",
+                collaborators_backoffice_fiscal_pendencias_path(filtro: @filtro, estoque: "todos"),
+                class: "btn #{@estoque == 'todos' ? 'btn-primary' : 'btn-outline-primary'}" %>
+        </div>
+      </div>
 
       <%# ===== Cards de resumo (clicáveis para filtrar) ===== %>
       <div class="row mb-4">
         <div class="col-md-3">
-          <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "text-decoration-none" do %>
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(estoque: @estoque), class: "text-decoration-none" do %>
             <div class="card <%= 'border-primary' if @filtro.blank? %> h-100">
               <div class="card-body text-center">
                 <div class="text-muted small">Total pendentes</div>
@@ -22,7 +32,7 @@
           <% end %>
         </div>
         <div class="col-md-3">
-          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "ncm"), class: "text-decoration-none" do %>
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "ncm", estoque: @estoque), class: "text-decoration-none" do %>
             <div class="card <%= 'border-danger' if @filtro == 'ncm' %> h-100">
               <div class="card-body text-center">
                 <div class="text-muted small">NCM ausente/zerado</div>
@@ -32,7 +42,7 @@
           <% end %>
         </div>
         <div class="col-md-3">
-          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "perfil"), class: "text-decoration-none" do %>
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "perfil", estoque: @estoque), class: "text-decoration-none" do %>
             <div class="card <%= 'border-warning' if @filtro == 'perfil' %> h-100">
               <div class="card-body text-center">
                 <div class="text-muted small">Sem perfil tributário</div>
@@ -42,7 +52,7 @@
           <% end %>
         </div>
         <div class="col-md-3">
-          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "origem"), class: "text-decoration-none" do %>
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "origem", estoque: @estoque), class: "text-decoration-none" do %>
             <div class="card <%= 'border-info' if @filtro == 'origem' %> h-100">
               <div class="card-body text-center">
                 <div class="text-muted small">Sem origem</div>
@@ -55,7 +65,7 @@
 
       <% if @filtro.present? %>
         <div class="mb-2">
-          <%= link_to "« Ver todas as pendências", collaborators_backoffice_fiscal_pendencias_path, class: "btn btn-sm btn-light" %>
+          <%= link_to "« Ver todas as pendências", collaborators_backoffice_fiscal_pendencias_path(estoque: @estoque), class: "btn btn-sm btn-light" %>
         </div>
       <% end %>
 

@@ -5,6 +5,18 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
     # Produtos ativos com alguma pendencia fiscal que impede emissao.
     base = Produto.where(ativo: true)
 
+    # Filtro de estoque (padrao: so com estoque na empresa logada).
+    # ?estoque=todos  -> traz todos; qualquer outro valor/ausente -> so com estoque.
+    @estoque = params[:estoque].presence || "com"
+    if @estoque != "todos"
+      com_estoque_ids = Empresaproduto
+        .where(cod_empresa: current_collaborator.cod_empresa)
+        .where("quantidade > 0")
+        .distinct
+        .pluck(:cod_produto)
+      base = base.where(cod_produto: com_estoque_ids)
+    end
+
     @sem_ncm    = base.where("ncm IS NULL OR ncm = '' OR ncm = '00000000'")
     @sem_perfil = base.where(cod_perfil_tributario: nil)
     @sem_origem = base.where("origem IS NULL OR origem = ''")
