@@ -200,6 +200,7 @@ Rails.application.routes.draw do
     # Módulo Fiscal (em desenvolvimento — visível apenas via permissão fiscal_*)
     resources :perfis_tributarios
     resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config
+    get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
     # Módulo de Controle de Acesso
     resources :access_roles do

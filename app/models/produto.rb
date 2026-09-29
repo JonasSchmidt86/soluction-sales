@@ -55,6 +55,19 @@ class Produto < ApplicationRecord
     def cod_nome
       "#{nome} - #{cod_produto}"
     end
+
+    # Motivos que impedem a emissão fiscal deste produto (vazio = ok).
+    def pendencias_fiscais
+      motivos = []
+      motivos << "NCM ausente/zerado" if ncm.blank? || ncm == "00000000"
+      motivos << "Sem perfil tributário" if cod_perfil_tributario.blank?
+      motivos << "Sem origem" if origem.blank?
+      motivos
+    end
+
+    def apto_fiscal?
+      pendencias_fiscais.empty?
+    end
   
     def to_s
       nome

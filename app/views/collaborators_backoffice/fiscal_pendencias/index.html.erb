@@ -1,0 +1,114 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-triangle-exclamation me-2"></i> Pendências Fiscais</h4>
+    </div>
+    <div class="card-body">
+
+      <p class="text-muted">
+        Produtos que precisam de ajuste antes de emitir nota fiscal. Sem esses dados, a SEFAZ rejeita a emissão.
+      </p>
+
+      <%# ===== Cards de resumo (clicáveis para filtrar) ===== %>
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "text-decoration-none" do %>
+            <div class="card <%= 'border-primary' if @filtro.blank? %> h-100">
+              <div class="card-body text-center">
+                <div class="text-muted small">Total pendentes</div>
+                <div class="fs-2 fw-bold text-primary"><%= @total_pendentes %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="col-md-3">
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "ncm"), class: "text-decoration-none" do %>
+            <div class="card <%= 'border-danger' if @filtro == 'ncm' %> h-100">
+              <div class="card-body text-center">
+                <div class="text-muted small">NCM ausente/zerado</div>
+                <div class="fs-2 fw-bold text-danger"><%= @qtd_sem_ncm %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="col-md-3">
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "perfil"), class: "text-decoration-none" do %>
+            <div class="card <%= 'border-warning' if @filtro == 'perfil' %> h-100">
+              <div class="card-body text-center">
+                <div class="text-muted small">Sem perfil tributário</div>
+                <div class="fs-2 fw-bold text-warning"><%= @qtd_sem_perfil %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="col-md-3">
+          <%= link_to collaborators_backoffice_fiscal_pendencias_path(filtro: "origem"), class: "text-decoration-none" do %>
+            <div class="card <%= 'border-info' if @filtro == 'origem' %> h-100">
+              <div class="card-body text-center">
+                <div class="text-muted small">Sem origem</div>
+                <div class="fs-2 fw-bold text-info"><%= @qtd_sem_origem %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @filtro.present? %>
+        <div class="mb-2">
+          <%= link_to "« Ver todas as pendências", collaborators_backoffice_fiscal_pendencias_path, class: "btn btn-sm btn-light" %>
+        </div>
+      <% end %>
+
+      <%# ===== Tabela ===== %>
+      <% if @produtos.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th style="width:90px">Código</th>
+                <th>Produto</th>
+                <th>NCM</th>
+                <th>Perfil</th>
+                <th>Pendências</th>
+                <th class="text-end">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @produtos.each do |produto| %>
+                <tr>
+                  <td><%= produto.cod_produto %></td>
+                  <td><%= produto.nome %></td>
+                  <td>
+                    <% if produto.ncm.blank? || produto.ncm == '00000000' %>
+                      <span class="badge bg-danger"><%= produto.ncm.presence || '—' %></span>
+                    <% else %>
+                      <%= produto.ncm %>
+                    <% end %>
+                  </td>
+                  <td><%= produto.perfil_tributario&.nome || content_tag(:span, "—", class: "text-danger") %></td>
+                  <td>
+                    <% produto.pendencias_fiscais.each do |m| %>
+                      <span class="badge bg-warning text-dark me-1"><%= m %></span>
+                    <% end %>
+                  </td>
+                  <td class="text-end">
+                    <%= link_to edit_collaborators_backoffice_produto_path(produto), class: "btn btn-sm btn-primary" do %>
+                      <i class="fa fa-pencil me-1"></i> Ajustar
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <%= paginate @produtos if respond_to?(:paginate) %>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="fa fa-circle-check fa-3x text-success mb-3"></i>
+          <p class="text-muted">Nenhuma pendência fiscal. Todos os produtos estão aptos para emissão.</p>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>
