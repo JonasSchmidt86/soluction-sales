@@ -79,9 +79,9 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
     current_collaborator.cod_empresa
   end
 
-  # Módulo em desenvolvimento: acessível apenas por quem tem a permissão fiscal_perfis.
+  # Acesso liberado apenas se a EMPRESA logada tem modulo fiscal (FiscalConfig ativo).
   def autorizar_fiscal!
-    unless access_control.can_view?("fiscal_perfis")
+    unless empresa_tem_modulo_fiscal?
       redirect_to collaborators_backoffice_welcome_index_path,
                   alert: "Acesso negado."
     end

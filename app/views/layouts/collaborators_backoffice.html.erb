@@ -327,8 +327,8 @@
                 </nav>
               </div>
               <% end %>
-              <!-- Colapso: Fiscal (em desenvolvimento) -->
-              <% if access_control.can_view?('fiscal_perfis') || access_control.can_view?('fiscal_config') || access_control.can_view?('fiscal_pendencias') %>
+              <!-- Colapso: Fiscal (aparece se a EMPRESA logada tem modulo fiscal) -->
+              <% if empresa_tem_modulo_fiscal? %>
               <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
                 <div class="sb-nav-link-icon">
                   <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -341,10 +341,8 @@
                   <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
                     <i class="fa fa-tags me-1"></i> Perfis Tributários
                   <% end %>
-                  <% if access_control.can_view?('fiscal_pendencias') %>
-                    <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
-                      <i class="fa fa-triangle-exclamation me-1"></i> Pendências
-                    <% end %>
+                  <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
+                    <i class="fa fa-triangle-exclamation me-1"></i> Pendências
                   <% end %>
                   <% if access_control.can_view?('fiscal_config') %>
                     <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>

@@ -110,6 +110,18 @@ Documento nasce em status "rascunho" (confere antes de transmitir).
 - Motivo: (1) amarra ao provedor — trocar de provedor perderia a config; (2) duas fontes de verdade (painel vs Perfil do sistema) = divergência; (3) ERP ficaria sem saber a tributação (perde autonomia/relatórios).
 - Decisão: a fonte da tributação é o PERFIL TRIBUTÁRIO do nosso sistema; o adapter monta o Imposto (ICMS/CSOSN, CFOP...) no payload e manda pronto. Provedor só transmite. Terceiriza-se infra (certificado, comunicação SEFAZ), não a regra fiscal do negócio.
 
+## PENDENTE — Ajustes no relatório de Pendências Fiscais (empresa piloto = 2)
+Investigado (context-gatherer). Modelo real:
+- Estoque é por **produto+cor+empresa** (empresaproduto: cod_empresa+cod_produto+cod_cor; varias linhas por produto, uma por cor). Estoque real via function_estoquereal / empresaproduto.quantidade.
+- Dados fiscais (ncm, origem, csosn, perfil) ficam NO PRODUTO (nao variam por cor) -> pendencia fiscal por produto esta CORRETA. (empresaproduto.cest existe mas parece legado/nao usado — confirmar).
+- Itemvenda referencia produto E cor (cod_cor) -> a linha da NF sai de um empresaproduto (produto+cor).
+- Padrao do sistema p/ "vendavel": produto.ativo + empresaproduto.ativo + cores.ativo, sempre por cod_empresa (ver vendas_controller/compras_controller).
+
+Ajustes a fazer no fiscal_pendencias_controller (hoje usa current_collaborator.cod_empresa e so quantidade>0):
+1. **Seletor de empresa** (padrao empresa 2 = piloto), nao fixar na empresa do usuario logado.
+2. Alinhar filtro de estoque ao padrao: exigir empresaproduto.ativo=true E cores.ativo=true E quantidade>0.
+3. Manter deteccao de pendencia por produto; opcional: mostrar impacto por produto+cor.
+
 ## Adapter do provedor
 `FiscalService`: emitir / consultar / cancelar / carta_correcao / inutilizar / devolver. Impl possíveis: FocusAdapter e/ou BrasilNfeAdapter.
 PROVEDOR ESCOLHIDO: **Brasil NFe (plano Solo)**. Motivo: Solo tem emissão ILIMITADA de 55 e 65 + devoluções e demais operações no próprio plano. Focus (plano Retail/NFCe) tinha volume suficiente mas aparentemente sem devolução no plano — e devolução é usada. Decisão reversível: FiscalService/adapter isola; trocar de provedor = trocar adapter.
