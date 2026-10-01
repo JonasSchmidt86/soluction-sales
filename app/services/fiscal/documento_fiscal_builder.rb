@@ -137,18 +137,36 @@ module Fiscal
       }]
     end
 
-    # Encontra a regra do perfil do produto que casa com a operacao atual.
-    # Prioriza a regra especifica (maior prioridade) e cai na padrao (uf "*").
+    # Encontra a regra do perfil que casa com a operacao + UF destino + tipo cliente.
+    # Cada criterio aceita curinga "*". Match exato pontua mais que curinga, e
+    # a prioridade da regra desempata. Assim "especifico vence generico".
+    #   Ex.: regra (uf=PR, cliente=consumidor_final) vence regra (uf=*, cliente=*)
+    #   para um consumidor final do PR; para um cliente de SC, cai na (uf=*).
     def regra_para(produto)
       perfil = produto&.perfil_tributario
       return nil if perfil.nil? || @operacao.nil?
 
+      tipo = tipo_cliente_atual
+
       candidatas = perfil.regras.select do |r|
-        r.cod_operacao_fiscal == @operacao.cod_operacao_fiscal && r.ativo
+        r.cod_operacao_fiscal == @operacao.cod_operacao_fiscal && r.ativo &&
+          [uf_destino, "*"].include?(r.uf_destino) &&
+          [tipo, "*"].include?(r.tipo_cliente)
       end
-      # match por UF destino exata; senao curinga "*"
-      candidatas.select { |r| [uf_destino, "*"].include?(r.uf_destino) }
-                .max_by { |r| [r.uf_destino == uf_destino ? 1 : 0, r.prioridade.to_i] }
+
+      candidatas.max_by do |r|
+        [
+          r.uf_destino == uf_destino ? 1 : 0,     # UF exata > curinga
+          r.tipo_cliente == tipo ? 1 : 0,         # cliente exato > curinga
+          r.prioridade.to_i                       # desempate manual
+        ]
+      end
+    end
+
+    # Tipo de cliente da operacao, para casar com tipo_cliente da regra.
+    def tipo_cliente_atual
+      return "consumidor_final" if @cliente.blank?       # balcao sem identificacao
+      @cliente.pessoa_juridica? ? "contribuinte" : "consumidor_final"
     end
 
     def digitos(valor)
