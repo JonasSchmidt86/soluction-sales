@@ -47,10 +47,25 @@ module Fiscal
       emitir(doc)
     end
 
-    # Os endpoints abaixo ficam na seção "Eventos" da doc (ainda não mapeada).
-    # Deixados como TODO explícito para não emitir chamada errada.
-    def cancelar(_referencia, _justificativa)
-      nao_implementado(:cancelar)
+    # Cancela uma NF-e/NFC-e autorizada (evento SEFAZ 110111), dentro do prazo.
+    # referencia: chave de acesso (44 digitos) da nota a cancelar.
+    # justificativa: texto >= 15 caracteres exigido pela SEFAZ.
+    #
+    # OBS: o nome do endpoint/campos segue a convencao do EnviarNotaFiscal
+    # (CancelarNotaFiscal). Confirmar contra a doc 2.0 do Brasil NFe antes de
+    # usar em PRODUCAO — em homologacao o retorno valida o formato.
+    def cancelar(referencia, justificativa)
+      just = justificativa.to_s.strip
+      raise ConfiguracaoInvalida, "Chave de acesso ausente para cancelamento" if referencia.blank?
+      raise ConfiguracaoInvalida, "Justificativa deve ter ao menos 15 caracteres" if just.length < 15
+
+      payload = {
+        "TipoAmbiente" => ambiente,
+        "ChaveNF"      => referencia,
+        "Justificativa" => just
+      }
+      resposta = post("/CancelarNotaFiscal", payload)
+      to_cancel_result(resposta)
     end
 
     def carta_correcao(_referencia, _texto)
@@ -142,6 +157,34 @@ module Fiscal
         serie:     ret["Serie"],
         xml:       resposta["Base64Xml"],
         danfe_url: nil, # DANFE vem em Base64File, não URL
+        mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
+        bruto:     resposta
+      )
+    end
+
+    # Converte a resposta de um cancelamento no FiscalResult neutro.
+    # SEFAZ: 101 = cancelamento homologado, 135 = evento registrado e vinculado,
+    # 155 = cancelamento homologado fora do prazo. Qualquer um = cancelado.
+    def to_cancel_result(resposta)
+      ret = resposta["ReturnNF"] || resposta["ReturnEvento"] || {}
+      erro = resposta["Error"].to_s
+      status_sefaz = ret["CodStatusRespostaSefaz"]
+      ok_cancel = [101, 135, 155].include?(status_sefaz) || ret["Ok"] == true
+
+      status =
+        if ok_cancel
+          :cancelado
+        elsif erro.present? || resposta["_http_status"].to_i >= 400
+          :erro
+        else
+          :rejeitado
+        end
+
+      FiscalResult.new(
+        status:    status,
+        chave:     ret["ChaveNF"],
+        protocolo: ret["NumeroProtocolo"],
+        xml:       resposta["Base64Xml"],
         mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
         bruto:     resposta
       )
