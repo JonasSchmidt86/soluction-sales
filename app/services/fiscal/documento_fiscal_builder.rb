@@ -23,6 +23,21 @@ module Fiscal
       @cliente  = venda.pessoa
     end
 
+    # Itens para controle de ESTOQUE FISCAL (qtdfiscal): cada item com a regra
+    # resolvida indica se controla estoque. Usado pelo EstoqueFiscalService após
+    # a autorização da NF. Reusa a mesma resolução de regra do montar.
+    def itens_estoque_fiscal
+      @venda.itensvenda.reject(&:cancelado?).map do |item|
+        regra = regra_para(item.produto)
+        {
+          cod_produto:      item.cod_produto,
+          cod_cor:          item.cod_cor,
+          quantidade:       item.quantidade.to_d,
+          controla_estoque: (regra&.controla_estoque || "proprio")
+        }
+      end
+    end
+
     def montar
       {
         modelo:               @modelo,

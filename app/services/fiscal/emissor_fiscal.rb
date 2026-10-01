@@ -33,7 +33,8 @@ module Fiscal
       raise SemOperacao, "Operação fiscal 'Venda' não encontrada" if @operacao.nil?
 
       documento = documento_para_emissao
-      doc_payload = DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo).montar
+      builder = DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo)
+      doc_payload = builder.montar
 
       # Trava: NAO envia para a SEFAZ se faltar dado fiscal essencial. Em
       # homologacao a SEFAZ costuma autorizar notas incompletas (sem CFOP/CST),
@@ -49,6 +50,11 @@ module Fiscal
 
       result = FiscalService.new(@config).emitir(doc_payload)
       documento.aplicar_resultado!(result)
+
+      # Autorizada: baixa o ESTOQUE FISCAL (qtdfiscal) dos itens cuja regra
+      # controla estoque (antes isso era da trigger de venda; agora é no Rails).
+      baixar_estoque_fiscal(documento, builder.itens_estoque_fiscal) if documento.autorizada?
+
       documento
     rescue JaAutorizada, DadosFiscaisIncompletos
       raise
@@ -62,6 +68,20 @@ module Fiscal
     end
 
     private
+
+    # Baixa o estoque fiscal (qtdfiscal) apos a NF ser autorizada. Falha aqui
+    # NAO desfaz a emissao (a NF ja esta autorizada na SEFAZ); loga o erro.
+    def baixar_estoque_fiscal(documento, itens)
+      Fiscal::EstoqueFiscalService.new(
+        cod_empresa:     @empresa.cod_empresa,
+        itens:           itens,
+        cod_referencia:  documento.cod_documento_fiscal,
+        cod_funcionario: @cod_funcionario,
+        observacao:      "Emissao NF modelo #{@modelo} (doc #{documento.cod_documento_fiscal})"
+      ).baixar!
+    rescue => e
+      Rails.logger.error("[EmissorFiscal] baixa estoque fiscal doc #{documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    end
 
     # Verifica o documento neutro montado. Retorna uma lista de pendencias
     # (vazia = ok). Checa, por item: NCM, CFOP e CSOSN (CST do ICMS). Sem esses

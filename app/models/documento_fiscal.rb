@@ -81,8 +81,37 @@ class DocumentoFiscal < ApplicationRecord
     )
 
     # Só muda o documento se a SEFAZ homologou o cancelamento.
-    aplicar_resultado!(result) if result.sucesso?
+    if result.sucesso?
+      aplicar_resultado!(result)
+      estornar_estoque_fiscal!(cod_funcionario)
+    end
     result
+  end
+
+  # Estorna o estoque fiscal (qtdfiscal) ao cancelar a NF — devolve o que a
+  # emissão havia baixado, respeitando controla_estoque de cada item.
+  # Só funciona para NF de venda (tem a venda para resolver as regras); NF
+  # avulsa resolverá seus itens quando esse fluxo existir.
+  def estornar_estoque_fiscal!(cod_funcionario = nil)
+    return if venda.nil?
+
+    operacao = OperacaoFiscal.find_by(nome: "Venda")
+    config   = empresa.fiscal_config
+    return if operacao.nil? || config.nil?
+
+    itens = Fiscal::DocumentoFiscalBuilder.new(
+      venda, operacao: operacao, config: config, modelo: modelo
+    ).itens_estoque_fiscal
+
+    Fiscal::EstoqueFiscalService.new(
+      cod_empresa:     cod_empresa,
+      itens:           itens,
+      cod_referencia:  cod_documento_fiscal,
+      cod_funcionario: cod_funcionario,
+      observacao:      "Cancelamento NF (doc #{cod_documento_fiscal})"
+    ).estornar!
+  rescue => e
+    Rails.logger.error("[DocumentoFiscal#estornar_estoque_fiscal] doc #{cod_documento_fiscal}: #{e.class} - #{e.message}")
   end
 
   # Aplica o resultado da emissao (FiscalResult) a este documento.
