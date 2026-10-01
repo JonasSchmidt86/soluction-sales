@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_25_000007) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -444,6 +444,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_25_000007) do
     t.datetime "registrado_em"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "cod_funcionario", comment: "quem registrou o evento"
     t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_evento_documento"
   end
 

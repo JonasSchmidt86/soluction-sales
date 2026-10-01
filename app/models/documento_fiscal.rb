@@ -51,6 +51,40 @@ class DocumentoFiscal < ApplicationRecord
     "erro"       => "erro"
   }.freeze
 
+  # Cancela esta NF autorizada via provedor e registra o evento (quem/quando/
+  # motivo) em documento_fiscal_evento. Retorna o FiscalResult.
+  #
+  # justificativa: texto (minimo 15 caracteres, exigido pela SEFAZ).
+  # cod_funcionario: quem esta cancelando (para o historico).
+  #
+  # Levanta ArgumentError se nao autorizada ou justificativa invalida.
+  def cancelar!(justificativa:, cod_funcionario:)
+    just = justificativa.to_s.strip
+    raise ArgumentError, "Só é possível cancelar uma NF autorizada." unless autorizada?
+    raise ArgumentError, "A justificativa precisa ter ao menos 15 caracteres." if just.length < 15
+
+    config = empresa.fiscal_config
+    raise ArgumentError, "Empresa sem configuração fiscal." if config.nil?
+
+    result = FiscalService.new(config).cancelar(chave_acesso, just)
+
+    # Registra o evento ANTES de mudar o status, guardando o desfecho da SEFAZ.
+    eventos.create!(
+      tipo:            "cancelamento",
+      status:          result.sucesso? ? "registrado" : "rejeitado",
+      justificativa:   just[0, 255],
+      cod_funcionario: cod_funcionario,
+      protocolo:       result.protocolo,
+      xml_base64:      result.xml,
+      mensagem_sefaz:  result.mensagem.to_s[0, 255],
+      registrado_em:   Time.current
+    )
+
+    # Só muda o documento se a SEFAZ homologou o cancelamento.
+    aplicar_resultado!(result) if result.sucesso?
+    result
+  end
+
   # Aplica o resultado da emissao (FiscalResult) a este documento.
   def aplicar_resultado!(result)
     self.status            = MAPA_STATUS[result.status.to_s] || "erro"

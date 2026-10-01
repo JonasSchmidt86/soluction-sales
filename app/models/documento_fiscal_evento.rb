@@ -8,5 +8,15 @@ class DocumentoFiscalEvento < ApplicationRecord
              foreign_key: "cod_documento_fiscal", primary_key: "cod_documento_fiscal",
              inverse_of: :eventos
 
+  belongs_to :funcionario, class_name: "Funcionario",
+             foreign_key: "cod_funcionario", primary_key: "cod_funcionario",
+             optional: true
+
   validates :tipo, presence: true, inclusion: { in: TIPOS }
+
+  scope :cancelamentos, -> { where(tipo: "cancelamento") }
+
+  def registrado_por
+    funcionario&.usuario
+  end
 end

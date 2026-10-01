@@ -49,36 +49,63 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   end
 
   # POST .../documentos_fiscais/:id/cancelar — cancela NF autorizada.
+  #
+  # Grava o evento de cancelamento (quem/quando/motivo) via DocumentoFiscal#cancelar!.
+  # Param `escopo`:
+  #   "nf"    (default) — cancela apenas a NF-e; a venda continua ativa.
+  #   "ambos"           — cancela a NF-e e, se homologada, cancela a VENDA
+  #                       (estorno de estoque e contas, via fluxo de destroy).
   def cancelar
-    unless @documento.autorizada?
-      redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                  alert: "Só é possível cancelar uma NF autorizada."
-      return
-    end
-
     justificativa = params[:justificativa].to_s.strip
-    if justificativa.length < 15
-      redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                  alert: "A justificativa de cancelamento precisa ter ao menos 15 caracteres."
+    escopo = params[:escopo].presence || "nf"
+    destino = collaborators_backoffice_report_sales_path
+
+    result = @documento.cancelar!(
+      justificativa:   justificativa,
+      cod_funcionario: current_collaborator.cod_funcionario
+    )
+
+    unless result.sucesso?
+      redirect_to destino, alert: "NF-e não cancelada: #{result.mensagem}"
       return
     end
 
-    result = FiscalService.new(@documento.empresa.fiscal_config)
-                          .cancelar(@documento.chave_acesso, justificativa)
-    @documento.aplicar_resultado!(result)
-
-    redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                notice: "NF-e cancelada."
+    if escopo == "ambos"
+      cancelar_venda_apos_nf!(@venda)
+      redirect_to destino, notice: "NF-e e venda canceladas. Estoque e contas estornados."
+    else
+      redirect_to destino, notice: "NF-e cancelada. Chave: #{@documento.chave_acesso}"
+    end
+  rescue ArgumentError => e
+    redirect_to destino, alert: e.message
   rescue NotImplementedError
-    redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                alert: "Cancelamento ainda não implementado para este provedor."
+    redirect_to destino, alert: "Cancelamento ainda não implementado para este provedor."
   rescue => e
     Rails.logger.error("[DocumentosFiscais#cancelar] doc #{@documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
-    redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                alert: "Falha ao cancelar NF-e: #{e.message}"
+    redirect_to destino, alert: "Falha ao cancelar NF-e: #{e.message}"
   end
 
   private
+
+  # Cancela a VENDA apos a NF ja ter sido cancelada na SEFAZ. Espelha o fluxo
+  # de VendasController#destroy (estorno de contas com lancamento + marcacao de
+  # cancelada, que dispara o trigger de devolucao de estoque). NAO exclui a
+  # venda (mantem para auditoria/historico fiscal).
+  def cancelar_venda_apos_nf!(venda)
+    return if venda.cancelada?
+
+    venda.contas.each do |conta|
+      if conta.lancamentos.present?
+        caixa = Caixa.where(cod_empresa: current_collaborator.empresa.cod_empresa, datafechamento: nil).first
+        raise "Caixa fechado: não é possível estornar as contas da venda." if caixa.nil?
+        EstornarContaService.new(conta, current_collaborator, caixa).call
+      end
+      conta.update!(ativo: false)
+    end
+
+    venda.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
+    venda.itensvenda.where(cancelado: [false, nil]).update_all(cancelado: true)
+  end
 
   def set_venda
     @venda = Venda.find(params[:venda_id])

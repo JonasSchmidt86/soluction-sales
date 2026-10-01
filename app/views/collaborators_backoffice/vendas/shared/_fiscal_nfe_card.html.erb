@@ -34,11 +34,20 @@
                           danfe_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
                           target: "_blank", class: "btn btn-sm btn-outline-primary" %>
             <% end %>
-            <%= button_to '<i class="fa fa-ban me-1"></i> Cancelar NF'.html_safe,
-                          cancelar_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
-                          method: :post, params: { justificativa: "" },
+            <%# Cancela SOMENTE a NF-e; a venda continua ativa. %>
+            <%= button_to cancelar_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
+                          method: :post, params: { justificativa: "", escopo: "nf" },
                           class: "btn btn-sm btn-outline-danger",
-                          onclick: "var j=prompt('Justificativa do cancelamento (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Confirma o cancelamento desta NF-e?');" %>
+                          onclick: "var j=prompt('Justificativa do cancelamento da NF (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Cancelar APENAS a NF-e? A venda continua ativa.');" do %>
+              <i class="fa fa-ban me-1"></i> Cancelar só a NF
+            <% end %>
+            <%# Cancela a NF-e E a venda (estorno de estoque e contas). %>
+            <%= button_to cancelar_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
+                          method: :post, params: { justificativa: "", escopo: "ambos" },
+                          class: "btn btn-sm btn-danger",
+                          onclick: "var j=prompt('Justificativa do cancelamento (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Cancelar a NF-e E a VENDA? Isso estorna estoque e contas. Exige caixa aberto.');" do %>
+              <i class="fa fa-ban me-1"></i> Cancelar NF + Venda
+            <% end %>
           </div>
 
         <% elsif doc_fiscal && %w[rejeitada erro].include?(doc_fiscal.status) %>
