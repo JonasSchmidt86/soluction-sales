@@ -71,168 +71,74 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
   
     def create
-      puts " -------- create ---------- #{params}"
-
       # Idempotencia: cada carregamento do form gera um submit_token unico.
       # Se o mesmo token chegar duas vezes (duplo clique / reenvio), ignora
       # o segundo POST para nao duplicar a venda.
-      token = params[:venda][:submit_token]
+      token = params.dig(:venda, :submit_token)
       session[:vendas_submit_tokens] ||= []
       if token.present? && session[:vendas_submit_tokens].include?(token)
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda já registrada."
         return
       end
 
+      # Nested attributes + MoedaBr cuidam de itens/contas/valores.
+      # (reject_if no model descarta linhas em branco; os setters convertem BR.)
       @sale = Venda.new(params_venda)
 
-      @sale.acrescimo = params[:venda][:acrescimo].gsub(',', '.').to_f;
-      @sale.desconto = params[:venda][:desconto].gsub(',', '.').to_f;
-      @sale.valortotal =  params[:venda][:valortotal].gsub(',', '.').to_f;
-      @sale.tipo =params[:venda][:tipo] if params[:venda][:tipo].present?;
+      # Transferencia (tipo 'T'): contas sao geradas pelo TransferenciaService
+      # no after_commit, entao limpamos as que vieram do form.
+      @sale.contas.clear if @sale.transferencia?
 
-      # varrer itens para validar valores quebrados
-       ## ver como vai pegar o params certo para cada item
-       if params[:venda][:itensvenda_attributes].present?
-        itens = params[:venda][:itensvenda_attributes]
-        
-        # Verifique se itens é uma instância de ActionController::Parameters
-        if itens.is_a?(ActionController::Parameters)
-          # Converta itens para uma matriz de hashes
-          itens = itens.values
-        end
+      aplicar_pessoa!(@sale)
+      aplicar_metadados_venda!(@sale, nova: true)
 
-        @sale.itensvenda.clear;
-        
-        itens.each do |pro_temp|
-          next if pro_temp[:cod_produto].blank?
-
-          item = Itemvenda.new
-
-          item.venda = @sale;
-          item.cod_produto = pro_temp[:cod_produto];
-          item.valorunitario = pro_temp[:valorunitario].gsub(',', '.').to_f;
-          item.valor_desconto = pro_temp[:valor_desconto].gsub(',', '.').to_f;
-          item.valor_acrescimo = pro_temp[:valor_acrescimo].gsub(',', '.').to_f;
-          item.cod_cor = pro_temp[:cod_cor];
-          item.quantidade = pro_temp[:quantidade];
-          item.cod_empresa = pro_temp[:cod_empresa];
-          @sale.itensvenda << item;
-        end
+      if transferencia_sem_destino?(@sale)
+        @sale.errors.add(:base, "Transferência sem Empresa de Destino!")
+        render :new, status: :unprocessable_entity
+        return
       end
-
-      # Em transferência (tipo 'T') as contas NÃO vêm do formulário:
-      # o TransferenciaService cria a conta (já quitada) e os lançamentos.
-      # Como Venda.new(params_venda) já instancia contas via
-      # accepts_nested_attributes_for, precisamos limpá-las aqui; caso
-      # contrário o after_commit :gerar_transferencia aborta em
-      # "return if contas.any?" e nada é gerado.
-      if params[:venda][:tipo] == 'T'
-        @sale.contas.clear
-      elsif params[:venda][:contas_attributes].present?
-        contas = params[:venda][:contas_attributes]
-        
-        # Verifique se itens é uma instância de ActionController::Parameters
-        if contas.is_a?(ActionController::Parameters)
-          # Converta itens para uma matriz de hashes
-          contas = contas.values
-        end
-
-        @sale.contas.clear;
-        
-        contas.each do |conta_venda|
-          
-          next if conta_venda[:numeroparcela].blank? || conta_venda[:valorparcela].blank? ||  conta_venda[:dtvencimento].blank? 
-
-          conta = Contaspagrec.new
-
-          conta.venda = @sale;
-          conta.numeroparcela = conta_venda[:numeroparcela];
-          conta.dtvencimento = conta_venda[:dtvencimento];
-          conta.valorparcela = conta_venda[:valorparcela].gsub(',', '.').to_f;
-          conta.cod_empresa = conta_venda[:cod_empresa];
-          conta.ativo = true;
-          conta.quitada = false;
-          conta.cod_tppagamento = 1;
-
-          @sale.contas << conta;
-        end
-      end
-
-      if !params[:venda][:cod_pessoa].blank?
-        @pessoa = Pessoa.find_by(cod_pessoa: params[:venda][:cod_pessoa])
-      end
-      if @pessoa.nil?
-        @pessoa = Pessoa.new
-        @pessoa.cpf_cnpj = params[:venda][:pessoa_attributes][:cpf_cnpj] if params[:venda][:pessoa_attributes][:cpf_cnpj].present?
-        @pessoa.rg_ie = params[:venda][:pessoa_attributes][:cpf_cnpj] if params[:venda][:pessoa_attributes][:rg_ie].present?
-      end
-
-      @pessoa.email = params[:venda][:pessoa_attributes][:nome] if params[:venda][:pessoa_attributes][:nome].present?
-      @pessoa.telefone = params[:venda][:pessoa_attributes][:telefone] if params[:venda][:pessoa_attributes][:telefone].present?
-      @pessoa.celular = params[:venda][:pessoa_attributes][:celular] if params[:venda][:pessoa_attributes][:celular].present?
-      @pessoa.cep = params[:venda][:pessoa_attributes][:cep] if params[:venda][:pessoa_attributes][:cep].present?
-      @pessoa.cod_cidade = params[:venda][:pessoa_attributes][:cod_cidade] if params[:venda][:pessoa_attributes][:cod_cidade].present?
-      @pessoa.complemento = params[:venda][:pessoa_attributes][:complemento] if params[:venda][:pessoa_attributes][:complemento].present?
-      @pessoa.endereco = params[:venda][:pessoa_attributes][:endereco] if params[:venda][:pessoa_attributes][:endereco].present?
-      @pessoa.bairro = params[:venda][:pessoa_attributes][:bairro] if params[:venda][:pessoa_attributes][:bairro].present?
-      @pessoa.numero = params[:venda][:pessoa_attributes][:numero] if params[:venda][:pessoa_attributes][:numero].present?
-      @pessoa.email = params[:venda][:pessoa_attributes][:email] if params[:venda][:pessoa_attributes][:email].present?
-      
-      @sale.pessoa = @pessoa
-
-      @sale.cod_vendaempresa = Venda.select(:cod_vendaempresa).where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) + 1
-      @sale.cod_empresa = current_collaborator.cod_empresa
-      @sale.cod_funcionario = current_collaborator.cod_funcionario
-      if @sale.tipo.nil? || @sale.tipo.blank?
-        @sale.tipo = 'V'
-      elsif @sale.tipo == 'T'
-        # O form envia a empresa de destino escolhida (uma pessoa pode ter
-        # varias empresas). Usa ela; so cai no fallback por pessoa se nao veio.
-        if @sale.cod_empresa_transferida.blank?
-          @sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: @sale.pessoa&.cod_pessoa)&.cod_empresa
-        end
-        # Garante coerencia: o cod_pessoa da venda passa a ser o da empresa destino.
-        empresa_destino = Empresa.find_by(cod_empresa: @sale.cod_empresa_transferida)
-        if empresa_destino.nil?
-          @sale.errors.add(:base, "Transferência sem Empresa de Destino!")
-          render :new
-          return
-        end
-      end
-      
-      @sale.cancelada = false
-      @sale.datanf = nil
-
-      # Crie uma nova coleção contendo apenas os itens desejados
-      itens_a_manter = @sale.itensvenda.reject { |item_venda| item_venda.cod_produto.nil? }
-      conta_a_manter = @sale.contas.reject { |conta| (conta.numeroparcela.blank? || conta.valorparcela.blank? ||  conta.dtvencimento.blank?) }
-
-      # Atribua a nova coleção à associação
-      @sale.itensvenda = itens_a_manter
-      @sale.contas = conta_a_manter
-
-      puts "ANTES DE SALVAR"
 
       if @sale.save
-          # Marca o token como processado (mantem apenas os ultimos 20)
-          if token.present?
-            session[:vendas_submit_tokens] = (session[:vendas_submit_tokens] + [token]).last(20)
-          end
-          # Se veio de um orçamento, atualiza o orçamento
-          if session[:orcamento_id]
-            orcamento = Orcamento.find_by(cod_orcamento: session[:orcamento_id])
-            orcamento.update(status: 'convertido', cod_venda: @sale.cod_venda) if orcamento
-            session.delete(:orcamento_id)
-          end
-          redirect_to collaborators_backoffice_report_sales_path, notice: "Venda Cadastrado com sucesso!"
-      else 
-        puts @sale
-        render :index
+        session[:vendas_submit_tokens] = (session[:vendas_submit_tokens] + [token]).last(20) if token.present?
+        if session[:orcamento_id]
+          orcamento = Orcamento.find_by(cod_orcamento: session[:orcamento_id])
+          orcamento&.update(status: 'convertido', cod_venda: @sale.cod_venda)
+          session.delete(:orcamento_id)
+        end
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cadastrada com sucesso!"
+      else
+        render :new, status: :unprocessable_entity
       end
     end
 
     def edit
-      @sale = Venda.find_by(cod_venda: params[:id])
+      @sale = Venda.find(params[:id])
+      unless @sale.editavel?
+        redirect_to collaborators_backoffice_report_sales_path, alert: motivo_bloqueio_edicao(@sale)
+      end
+    end
+
+    # Edicao plena da venda (itens/cores/quantidades/valores/contas) via nested
+    # attributes. UPDATE em item/conta existente (tem :id) => trigger ajusta o
+    # estoque pelo delta/troca; novo (sem :id) => INSERT; _destroy => DELETE.
+    def update
+      @sale = Venda.find(params[:id])
+
+      unless @sale.editavel?
+        redirect_to collaborators_backoffice_report_sales_path, alert: motivo_bloqueio_edicao(@sale)
+        return
+      end
+
+      # Garante autoria correta nos logs de estoque do trigger (le VENDA.cod_funcionario).
+      @sale.cod_funcionario = current_collaborator.cod_funcionario
+
+      aplicar_pessoa!(@sale)
+
+      if @sale.update(params_venda_update)
+        redirect_to collaborators_backoffice_report_sales_path, notice: "Venda atualizada com sucesso!"
+      else
+        render :edit, status: :unprocessable_entity
+      end
     end
 
     def destroy
@@ -396,14 +302,69 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       redirect_to collaborators_backoffice_report_sales_path, notice: "Venda atualizada com sucesso!"
     end
 
-    private 
-    
+    private
+
     def vendedor_params
       params.require(:venda).permit(:cod_funcionario)
     end
 
     def set_venda
       @sale = Venda.includes(:contas).find(params[:id])
+    end
+
+    # Resolve a pessoa da venda: usa a existente (cod_pessoa) ou cria uma nova
+    # com os pessoa_attributes do form. Mantem o comportamento do create antigo.
+    def aplicar_pessoa!(sale)
+      pa = params[:venda][:pessoa_attributes] || {}
+      pessoa = Pessoa.find_by(cod_pessoa: params[:venda][:cod_pessoa]) if params[:venda][:cod_pessoa].present?
+
+      if pessoa.nil?
+        pessoa = Pessoa.new
+        pessoa.cpf_cnpj = pa[:cpf_cnpj] if pa[:cpf_cnpj].present?
+        pessoa.rg_ie   = pa[:rg_ie]    if pa[:rg_ie].present?
+      end
+
+      pessoa.telefone   = pa[:telefone]   if pa[:telefone].present?
+      pessoa.celular    = pa[:celular]    if pa[:celular].present?
+      pessoa.cep        = pa[:cep]        if pa[:cep].present?
+      pessoa.cod_cidade = pa[:cod_cidade] if pa[:cod_cidade].present?
+      pessoa.complemento = pa[:complemento] if pa[:complemento].present?
+      pessoa.endereco   = pa[:endereco]   if pa[:endereco].present?
+      pessoa.bairro     = pa[:bairro]     if pa[:bairro].present?
+      pessoa.numero     = pa[:numero]     if pa[:numero].present?
+      pessoa.email      = pa[:email]      if pa[:email].present?
+
+      sale.pessoa = pessoa
+    end
+
+    # Metadados que o form nao envia (ou nao deve controlar): numero sequencial
+    # da venda na empresa, empresa/funcionario logados, tipo default e destino
+    # da transferencia. 'nova: true' gera o cod_vendaempresa.
+    def aplicar_metadados_venda!(sale, nova:)
+      if nova
+        sale.cod_vendaempresa = (Venda.where(cod_empresa: current_collaborator.cod_empresa).maximum(:cod_vendaempresa) || 0) + 1
+        sale.cancelada = false
+        sale.datanf = nil
+      end
+      sale.cod_empresa = current_collaborator.cod_empresa
+      sale.cod_funcionario = current_collaborator.cod_funcionario
+      sale.tipo = 'V' if sale.tipo.blank?
+
+      if sale.transferencia? && sale.cod_empresa_transferida.blank?
+        sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: sale.pessoa&.cod_pessoa)&.cod_empresa
+      end
+    end
+
+    def transferencia_sem_destino?(sale)
+      sale.transferencia? && Empresa.find_by(cod_empresa: sale.cod_empresa_transferida).nil?
+    end
+
+    def motivo_bloqueio_edicao(sale)
+      if sale.nfe_autorizada?
+        "Não é possível editar: a venda já tem NF-e autorizada. Cancele a NF-e antes."
+      else
+        "Não é possível editar uma venda cancelada."
+      end
     end
 
     def params_venda
@@ -416,6 +377,29 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         pessoa_attributes: [  :tipo, :nome, :telefone, :celular, :cep, 
                               :cod_cidade, :complemento, :endereco, :bairro, :numero, :email ]
       )
+    end
+
+    # Strong params da EDICAO. Difere do create:
+    #  - nao permite campos de identidade (cod_empresa/cod_funcionario/
+    #    cod_vendaempresa/cancelada/tipo) — sao controlados pelo servidor;
+    #  - remove de contas_attributes as parcelas que ja tem lancamentos no
+    #    caixa (nao podem ser alteradas/removidas por aqui).
+    def params_venda_update
+      permitido = params.require(:venda).permit(
+        :datavenda, :valortotal, :acrescimo, :desconto, :aceita, :cod_pessoa,
+        itensvenda_attributes: [:id, :cod_produto, :quantidade, :valorunitario, :valor_acrescimo, :valor_desconto, :cod_cor, :cod_empresa, :_destroy],
+        contas_attributes: [:id, :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, :_destroy, :cod_empresa, :ativo, :quitada, :cod_tppagamento],
+        pessoa_attributes: [:tipo, :nome, :telefone, :celular, :cep, :cod_cidade, :complemento, :endereco, :bairro, :numero, :email]
+      )
+
+      if permitido[:contas_attributes].present?
+        ids_travados = @sale.contas.select { |c| c.lancamentos.present? }.map { |c| c.cod_contaspagrec.to_s }
+        permitido[:contas_attributes] = permitido[:contas_attributes].reject do |c|
+          ids_travados.include?(c[:id].to_s)
+        end
+      end
+
+      permitido
     end
     
   end

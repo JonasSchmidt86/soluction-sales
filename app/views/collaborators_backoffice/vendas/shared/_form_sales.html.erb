@@ -48,7 +48,7 @@
         <div class="row my-2 mx-2 align-items-center">
           <div class="col-md-2">
             <div class="form-floating">
-              <%= sale.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+              <%= sale.text_field :datavenda, value: post_date(sale.object.datavenda || DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
               <%= sale.label :data_venda, class:"" %>
             </div>
           </div>

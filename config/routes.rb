@@ -136,7 +136,7 @@ Rails.application.routes.draw do
       end
     end
     
-    resources :vendas, only: [:index, :edit, :new, :create, :destroy] do
+    resources :vendas, only: [:index, :edit, :new, :create, :update, :destroy] do
       patch :atualizar_vendedor, on: :member
       get :editar_itens, on: :member
       patch :atualizar_itens, on: :member
