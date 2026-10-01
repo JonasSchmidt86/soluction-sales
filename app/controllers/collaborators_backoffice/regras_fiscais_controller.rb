@@ -59,6 +59,8 @@ class CollaboratorsBackoffice::RegrasFiscaisController < CollaboratorsBackoffice
       :csosn, :aliquota_icms, :aliquota_fcp,
       # PIS / COFINS
       :cst_pis, :aliquota_pis, :cst_cofins, :aliquota_cofins,
+      # IPI
+      :cst_ipi, :cod_enquadramento_ipi, :aliquota_ipi,
       # IBS / CBS
       :cst_ibs_cbs, :cclasstrib
     )

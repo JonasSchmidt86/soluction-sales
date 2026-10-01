@@ -92,6 +92,30 @@ module CollaboratorsBackofficeHelper
         desc ? "#{cod} - #{desc}" : cod
     end
 
+    # CST de IPI (tabela oficial). Saidas mais comuns: 50 (saida tributada),
+    # 51 (saida com aliquota zero), 53 (saida isenta), 99 (outras saidas).
+    CST_IPI = {
+        "49" => "Outras entradas",
+        "50" => "Saida tributada",
+        "51" => "Saida tributavel com aliquota zero",
+        "52" => "Saida isenta",
+        "53" => "Saida nao-tributada",
+        "54" => "Saida imune",
+        "55" => "Saida com suspensao",
+        "99" => "Outras saidas"
+    }.freeze
+
+    def cst_ipi_para_select
+        CST_IPI.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    def cst_ipi_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = CST_IPI[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
     def get_cores(id_produto)
         unless id_produto.nil?
             cores = Core.select(:nmcor, :cod_cor).joins(:empresaprodutos).where("cod_produto = ? and cod_empresa = ?", id_produto, current_collaborator.cod_empresa );

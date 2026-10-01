@@ -99,20 +99,33 @@ module Fiscal
     end
 
     # Imposto por item a partir da regra do perfil. Caso Simples sem ST:
-    # ICMS com CSOSN, PIS/COFINS conforme CST da regra.
+    # ICMS com CSOSN, PIS/COFINS conforme CST da regra. IPI so se houver CST.
     def montar_imposto(regra)
-      {
+      imposto = {
         "ICMS" => {
           "CodSituacaoTributaria" => regra&.csosn,
           "AliquotaICMS"          => regra&.aliquota_icms&.to_f
         }.compact,
         "PIS" => {
-          "CodSituacaoTributaria" => regra&.cst_pis
+          "CodSituacaoTributaria" => regra&.cst_pis,
+          "Aliquota"              => regra&.aliquota_pis&.to_f
         }.compact,
         "COFINS" => {
-          "CodSituacaoTributaria" => regra&.cst_cofins
+          "CodSituacaoTributaria" => regra&.cst_cofins,
+          "Aliquota"              => regra&.aliquota_cofins&.to_f
         }.compact
-      }.reject { |_, v| v.blank? }
+      }
+
+      # IPI: so inclui se a regra tiver CST de IPI (revenda Simples geralmente nao tem).
+      if regra&.cst_ipi.present?
+        imposto["IPI"] = {
+          "CodSituacaoTributaria" => regra.cst_ipi,
+          "CodEnquadramento"      => regra.cod_enquadramento_ipi.presence || "999",
+          "Aliquota"              => regra.aliquota_ipi&.to_f
+        }.compact
+      end
+
+      imposto.reject { |_, v| v.blank? }
     end
 
     # Pagamento simples (a vista). Detalhe de parcelas/formas fica para depois.
