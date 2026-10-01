@@ -107,6 +107,10 @@ module Fiscal
     # Se ja esta autorizado, nao deixa reemitir (precisa cancelar). Se nao existe,
     # cria um rascunho novo.
     def documento_para_emissao
+      # Avulsa (sem venda) sempre cria um documento novo — nao ha venda para
+      # reaproveitar/atrelar o reaproveitamento por cod_venda.
+      return criar_documento_rascunho if @venda.cod_venda.blank?
+
       existente = DocumentoFiscal
                   .where(cod_venda: @venda.cod_venda, modelo: @modelo)
                   .order(cod_documento_fiscal: :desc)

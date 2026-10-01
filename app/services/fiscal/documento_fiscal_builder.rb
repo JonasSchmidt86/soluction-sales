@@ -43,9 +43,9 @@ module Fiscal
         modelo:               @modelo,
         finalidade:           1, # normal
         natureza:             @operacao&.natureza_operacao.presence || "Venda de mercadoria",
-        consumidor_final:     true,
+        consumidor_final:     consumidor_final?,
         indicador_presenca:   1, # operacao presencial (balcao)
-        identificador_interno: "VENDA-#{@venda.cod_venda}",
+        identificador_interno: identificador_interno,
         cliente:              montar_cliente,
         produtos:             montar_produtos,
         pagamentos:           montar_pagamentos,
@@ -54,6 +54,19 @@ module Fiscal
     end
 
     private
+
+    # NFC-e (65) e sempre consumidor final. NF-e (55) e consumidor final quando
+    # NAO ha destinatario PJ identificado (pessoa fisica / sem cliente).
+    def consumidor_final?
+      return true if @modelo.to_i == 65
+      !(@cliente&.pessoa_juridica?)
+    end
+
+    # Identificador interno: referencia a venda quando existe; senao, avulso.
+    def identificador_interno
+      cod = @venda.cod_venda
+      cod.present? ? "VENDA-#{cod}" : "AVULSO-#{Time.current.to_i}"
+    end
 
     # UF de origem = empresa emitente. UF de destino = cliente (ou origem se sem cliente).
     def uf_origem
