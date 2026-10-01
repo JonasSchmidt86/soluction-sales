@@ -1,10 +1,16 @@
 <div class="container-fluid mt-3">
   <div class="card">
-    <div class="card-header bg-primary">
+    <div class="card-header bg-primary d-flex align-items-center">
       <h4 class="text-white mb-0"><i class="fa fa-pencil me-2"></i> Editar Perfil Tributário</h4>
+      <%= link_to collaborators_backoffice_perfil_tributario_path(@perfil), class: "btn btn-light btn-sm ms-auto" do %>
+        <i class="fa fa-eye me-1"></i> Ver detalhes
+      <% end %>
     </div>
     <div class="card-body">
       <%= render "form" %>
+
+      <%# Regras do perfil, editaveis aqui mesmo %>
+      <%= render "regras_lista" %>
     </div>
   </div>
 </div>

@@ -16,8 +16,8 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
   def create
     @perfil = PerfilTributario.new(perfil_params)
     if @perfil.save
-      redirect_to collaborators_backoffice_perfil_tributario_path(@perfil),
-                  notice: "Perfil tributário criado com sucesso."
+      redirect_to edit_collaborators_backoffice_perfil_tributario_path(@perfil),
+                  notice: "Perfil criado. Agora adicione as regras fiscais."
     else
       render :new, status: :unprocessable_entity
     end

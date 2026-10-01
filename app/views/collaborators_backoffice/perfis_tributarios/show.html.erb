@@ -23,57 +23,7 @@
       <p><strong>Descrição:</strong> <%= @perfil.descricao.presence || "—" %></p>
       <p><strong>Ativo:</strong> <%= @perfil.ativo ? "Sim" : "Não" %></p>
 
-      <div class="d-flex align-items-center border-bottom pb-2 mb-3 mt-4">
-        <h6 class="text-uppercase text-muted fw-bold mb-0">Regras Fiscais</h6>
-        <%= link_to new_collaborators_backoffice_perfil_tributario_regra_fiscal_path(@perfil),
-              class: "btn btn-sm btn-primary ms-auto" do %>
-          <i class="fa fa-plus me-1"></i> Adicionar regra
-        <% end %>
-      </div>
-
-      <% if @perfil.regras.any? %>
-        <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Operação</th><th>UF dest.</th><th>Cliente</th>
-                <th>CFOP base</th><th>CSOSN</th>
-                <th>PIS</th><th>COFINS</th>
-                <th class="text-center">Ativa</th>
-                <th class="text-end">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @perfil.regras.includes(:operacao).order(:cod_operacao_fiscal, :uf_destino).each do |r| %>
-                <tr>
-                  <td><%= r.operacao&.nome %></td>
-                  <td><%= r.uf_destino %></td>
-                  <td><%= r.tipo_cliente %></td>
-                  <td><%= r.cfop_base %></td>
-                  <td><%= r.csosn %></td>
-                  <td><%= r.cst_pis.presence || content_tag(:span, "—", class: "text-danger") %></td>
-                  <td><%= r.cst_cofins.presence || content_tag(:span, "—", class: "text-danger") %></td>
-                  <td class="text-center">
-                    <% if r.ativo %><span class="badge bg-success">Sim</span><% else %><span class="badge bg-secondary">Não</span><% end %>
-                  </td>
-                  <td class="text-end">
-                    <%= link_to edit_collaborators_backoffice_perfil_tributario_regra_fiscal_path(@perfil, r), class: "btn btn-sm btn-light" do %>
-                      <i class="fa fa-pencil"></i>
-                    <% end %>
-                    <%= link_to collaborators_backoffice_perfil_tributario_regra_fiscal_path(@perfil, r),
-                          method: :delete, data: { confirm: "Excluir esta regra?" },
-                          class: "btn btn-sm btn-outline-danger" do %>
-                      <i class="fa fa-trash"></i>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% else %>
-        <p class="text-muted">Nenhuma regra cadastrada. Clique em "Adicionar regra".</p>
-      <% end %>
+      <%= render "regras_lista" %>
     </div>
   </div>
 </div>
