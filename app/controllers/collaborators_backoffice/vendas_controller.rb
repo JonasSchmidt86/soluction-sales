@@ -105,6 +105,9 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
           orcamento&.update(status: 'convertido', cod_venda: @sale.cod_venda)
           session.delete(:orcamento_id)
         end
+
+        return if emitir_nfe_apos_salvar?(@sale)
+
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda cadastrada com sucesso!"
       else
         render :new, status: :unprocessable_entity
@@ -135,6 +138,8 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       aplicar_pessoa!(@sale)
 
       if @sale.update(params_venda_update)
+        return if emitir_nfe_apos_salvar?(@sale)
+
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda atualizada com sucesso!"
       else
         render :edit, status: :unprocessable_entity
@@ -278,6 +283,38 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       else
         "Não é possível editar uma venda cancelada."
       end
+    end
+
+    # Se o form pediu "salvar e emitir" (param emitir_nfe), emite/reemite a NF-e
+    # 55 da venda recem-salva e redireciona com o resultado. Retorna true quando
+    # tratou (ja fez redirect), para o caller nao redirecionar de novo.
+    #
+    # So emite para super_admin logado em empresa com modulo fiscal (mesmo gate
+    # do botao). Caso contrario, ignora o param silenciosamente (retorna false).
+    def emitir_nfe_apos_salvar?(sale)
+      return false unless params[:emitir_nfe].present?
+      return false unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+
+      documento = Fiscal::EmissorFiscal.new(
+        sale, modelo: 55, cod_funcionario: current_collaborator.cod_funcionario
+      ).emitir
+
+      if documento.autorizada?
+        redirect_to collaborators_backoffice_report_sales_path,
+                    notice: "Venda salva e NF-e autorizada. Chave: #{documento.chave_acesso}"
+      else
+        redirect_to edit_collaborators_backoffice_venda_path(sale),
+                    alert: "Venda salva, mas a NF-e #{documento.status}: #{documento.mensagem_sefaz}"
+      end
+      true
+    rescue Fiscal::EmissorFiscal::JaAutorizada => e
+      redirect_to collaborators_backoffice_report_sales_path, alert: e.message
+      true
+    rescue => e
+      Rails.logger.error("[Vendas#emitir_nfe_apos_salvar] venda #{sale.cod_venda}: #{e.class} - #{e.message}")
+      redirect_to edit_collaborators_backoffice_venda_path(sale),
+                  alert: "Venda salva, mas falhou ao emitir NF-e: #{e.message}"
+      true
     end
 
     def params_venda

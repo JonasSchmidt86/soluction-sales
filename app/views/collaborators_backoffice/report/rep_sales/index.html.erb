@@ -169,6 +169,10 @@
                           <% end %>
                         </li>
                       <% end %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_acoes",
+                                   locals: { sale: sale } %>
+                      <% end %>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                         <span class="visually-hidden">Toggle Dropdown</span>
                         <li>

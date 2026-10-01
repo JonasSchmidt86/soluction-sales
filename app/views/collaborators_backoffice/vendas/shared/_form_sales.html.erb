@@ -189,17 +189,47 @@
       </div>
       <%# Token de idempotencia: impede duplicar a venda em duplo clique/reenvio %>
       <%= sale.hidden_field :submit_token, value: SecureRandom.uuid %>
+      <%# Flag "salvar e emitir": o botao azul marca 1 antes de submeter. %>
+      <%= hidden_field_tag :emitir_nfe, "", id: "emitirNfeFlag" %>
+
       <div class="position-fixed bottom-0 end-0 m-4">
-        <div class="d-block my-3 mx-3">
-          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+        <div class="d-flex flex-column align-items-end gap-2 my-3 mx-3">
+          <%# Botao fiscal (so super_admin + empresa com modulo): salvar e emitir/reemitir. %>
+          <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+            <% ultima_nfe = @sale.persisted? ? DocumentoFiscal.where(cod_venda: @sale.cod_venda, modelo: 55).order(cod_documento_fiscal: :desc).first : nil %>
+            <% pode_reemitir = ultima_nfe && %w[rejeitada erro rascunho enviada].include?(ultima_nfe.status) %>
+            <% ja_autorizada = ultima_nfe&.autorizada? %>
+            <% rotulo_fiscal = pode_reemitir ? "Salvar e reemitir NF-e" : "Salvar e emitir NF-e" %>
+
+            <% unless ja_autorizada %>
+              <button type="submit" id="emitButton"
+                      class="btn btn-primary rounded-circle p-3"
+                      title="<%= rotulo_fiscal %>"
+                      onclick="document.getElementById('emitirNfeFlag').value = '1';">
+                <i class="fa fa-file-invoice fa-2x"></i>
+              </button>
+            <% end %>
+          <% end %>
+
+          <%# Botao verde: salvar (sem emitir). %>
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3"
+                  title="Salvar venda"
+                  onclick="document.getElementById('emitirNfeFlag').value = '';">
             <i id="saveIcon" class="fa fa-check fa-2x"></i>
           </button>
         </div>
       </div>
     <% end %>
 
-    <%= render partial: 'collaborators_backoffice/vendas/shared/fiscal_nfe_card',
-               locals: { sale: @sale } %>
+    <%# Previa fiscal: so faz sentido com a venda ja salva (usa os dados gravados). %>
+    <% if @sale.persisted? && empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+      <div class="position-fixed bottom-0 start-0 m-4">
+        <%= link_to preview_collaborators_backoffice_venda_documentos_fiscais_path(@sale),
+                    class: "btn btn-outline-primary", title: "Pré-visualizar dados fiscais da NF-e" do %>
+          <i class="fa fa-magnifying-glass me-1"></i> Prévia fiscal
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>

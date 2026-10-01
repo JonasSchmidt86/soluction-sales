@@ -9,6 +9,11 @@ module CollaboratorsBackofficeHelper
         @test = ["Entrada", 2], ["Saida", 3], ["Canceladas", 4]
     end
 
+    # Marca visualmente um dado fiscal ausente na previa da NF-e.
+    def destaque_ausente
+        content_tag(:span, "ausente", class: "badge bg-danger")
+    end
+
     # Tabela oficial de Origem da Mercadoria (SEFAZ) usada na NF-e/NFC-e.
     # Chave = codigo que vai no XML (string "0".."8"), valor = descricao.
     ORIGENS_MERCADORIA = {

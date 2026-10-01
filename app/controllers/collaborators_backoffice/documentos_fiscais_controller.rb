@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :show, :cancelar, :danfe]
+  before_action :set_venda, only: [:emitir, :preview, :show, :cancelar, :danfe]
   before_action :set_documento, only: [:show, :cancelar, :danfe]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
@@ -28,6 +28,29 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
     Rails.logger.error("[DocumentosFiscais#emitir] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
     redirect_to edit_collaborators_backoffice_venda_path(@venda),
                 alert: "Falha ao emitir NF-e: #{e.message}"
+  end
+
+  # GET .../documentos_fiscais/preview — CONFERE os dados fiscais que irao na
+  # NF-e (itens, CFOP/CST/impostos do perfil, destinatario, totais) SEM emitir.
+  # Serve para o usuario validar que a tributacao esta no lugar antes de enviar.
+  def preview
+    operacao = OperacaoFiscal.find_by(nome: "Venda")
+    config   = FiscalConfig.find_by(cod_empresa: @venda.cod_empresa)
+
+    if operacao.nil? || config.nil?
+      redirect_to edit_collaborators_backoffice_venda_path(@venda),
+                  alert: "Configuração fiscal ausente (operação 'Venda' ou FiscalConfig)."
+      return
+    end
+
+    @documento_neutro = Fiscal::DocumentoFiscalBuilder.new(
+      @venda, operacao: operacao, config: config, modelo: 55
+    ).montar
+
+    @pendencias = pendencias_fiscais(@venda)
+  rescue Fiscal::DocumentoFiscalBuilder::DadoFiscalAusente => e
+    redirect_to edit_collaborators_backoffice_venda_path(@venda),
+                alert: "Não foi possível montar a prévia: #{e.message}"
   end
 
   # GET .../documentos_fiscais/:id  — detalhes do documento (status, mensagem).
@@ -105,6 +128,26 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
 
     venda.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
     venda.itensvenda.where(cancelado: [false, nil]).update_all(cancelado: true)
+  end
+
+  # Lista de problemas que impediriam/arriscariam a emissao, para destacar
+  # na previa (NCM/origem/perfil do produto, destinatario sem UF, etc.).
+  def pendencias_fiscais(venda)
+    problemas = []
+
+    venda.itensvenda.reject(&:cancelado?).each do |item|
+      prod = item.produto
+      nome = prod&.nome || "produto #{item.cod_produto}"
+      problemas << "#{nome}: sem NCM" if prod&.ncm.blank?
+      problemas << "#{nome}: sem perfil tributário" if prod&.perfil_tributario.nil?
+      problemas << "#{nome}: sem origem" if prod&.origem.blank?
+    end
+
+    cliente = venda.pessoa
+    problemas << "Destinatário sem UF/endereço" if cliente&.uf.blank?
+    problemas << "Destinatário sem CPF/CNPJ" if cliente&.cpf_cnpj.blank?
+
+    problemas
   end
 
   def set_venda
