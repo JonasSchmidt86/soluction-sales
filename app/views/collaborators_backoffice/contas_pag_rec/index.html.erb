@@ -105,8 +105,8 @@
                     </td>
                     <td class= "align-middle" id = "acoes">
                       <% if bill.ativo %>
-                        <% somaRecebido += bill.valorPago; %>
-                        <% somaReceber += (bill.valorparcela) %>
+                        <% somaRecebido += (bill.valorPago || 0) %>
+                        <% somaReceber += (bill.valorparcela || 0) %>
                       <% end %>
                       <div class="d-flex justify-content-start">
                         <% if !bill.quitada || bill.lancamentos.size == 0 %>
