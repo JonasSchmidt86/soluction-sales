@@ -90,8 +90,6 @@ class CollaboratorsBackofficeController < ApplicationController
       'edit' => :edit,
       'update' => :edit,
       'destroy' => :delete,
-      'editar_itens' => :edit,
-      'atualizar_itens' => :edit,
       'atualizar_vendedor' => :edit,
       'calculate' => :edit,
       'finalize' => :edit,

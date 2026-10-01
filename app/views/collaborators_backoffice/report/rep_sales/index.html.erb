@@ -164,8 +164,8 @@
                       </li>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
                         <li>
-                          <%= link_to editar_itens_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
-                            <i class="fa fa-edit", style="width: 35px;"></i> Editar Itens
+                          <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
+                            <i class="fa fa-edit", style="width: 35px;"></i> Editar Venda
                           <% end %>
                         </li>
                       <% end %>
