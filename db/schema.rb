@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_25_000006) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_25_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -405,6 +405,46 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_25_000006) do
     t.integer "row_span", default: 3, null: false
     t.index ["cod_funcionario", "widget_type"], name: "idx_dashboard_widgets_func_type", unique: true
     t.index ["cod_funcionario"], name: "idx_dashboard_widgets_func"
+  end
+
+  create_table "documento_fiscal", primary_key: "cod_documento_fiscal", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.bigint "cod_venda", comment: "venda de origem (nil se NF avulsa)"
+    t.integer "modelo", null: false, comment: "55 (NF-e) ou 65 (NFC-e)"
+    t.integer "serie"
+    t.integer "numero"
+    t.string "natureza_operacao", limit: 60
+    t.integer "finalidade", default: 1, comment: "1 normal, 4 devolucao..."
+    t.string "ambiente", limit: 12, default: "homologacao", null: false
+    t.string "status", limit: 15, default: "rascunho", null: false, comment: "rascunho/enviada/autorizada/rejeitada/denegada/cancelada/erro"
+    t.string "chave_acesso", limit: 44
+    t.string "protocolo", limit: 30
+    t.integer "cod_status_sefaz"
+    t.string "mensagem_sefaz", limit: 255
+    t.text "xml_base64"
+    t.text "danfe_base64"
+    t.bigint "cod_funcionario", comment: "quem emitiu"
+    t.string "provedor", limit: 20
+    t.datetime "emitido_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
+    t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"
+    t.index ["cod_venda"], name: "idx_documento_fiscal_venda"
+  end
+
+  create_table "documento_fiscal_evento", primary_key: "cod_documento_fiscal_evento", force: :cascade do |t|
+    t.bigint "cod_documento_fiscal", null: false
+    t.string "tipo", limit: 30, null: false, comment: "cancelamento/carta_correcao/inutilizacao"
+    t.string "status", limit: 15, default: "pendente", null: false
+    t.string "protocolo", limit: 30
+    t.string "justificativa", limit: 255
+    t.text "xml_base64"
+    t.string "mensagem_sefaz", limit: 255
+    t.datetime "registrado_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_evento_documento"
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|

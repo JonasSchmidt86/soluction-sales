@@ -1,0 +1,68 @@
+class DocumentoFiscal < ApplicationRecord
+  self.table_name = "documento_fiscal"
+  self.primary_key = "cod_documento_fiscal"
+
+  STATUSES = %w[rascunho enviada autorizada rejeitada denegada cancelada erro].freeze
+
+  belongs_to :empresa, class_name: "Empresa",
+             foreign_key: "cod_empresa", primary_key: "cod_empresa"
+  belongs_to :venda, class_name: "Venda",
+             foreign_key: "cod_venda", primary_key: "cod_venda", optional: true
+
+  has_many :eventos, class_name: "DocumentoFiscalEvento",
+           foreign_key: "cod_documento_fiscal", primary_key: "cod_documento_fiscal",
+           dependent: :destroy, inverse_of: :documento_fiscal
+
+  validates :modelo, presence: true
+  validates :status, inclusion: { in: STATUSES }
+
+  scope :autorizadas, -> { where(status: "autorizada") }
+  scope :pendentes,   -> { where(status: %w[rascunho enviada]) }
+  scope :da_empresa,  ->(cod) { where(cod_empresa: cod) }
+
+  def autorizada?
+    status == "autorizada"
+  end
+
+  def cancelada?
+    status == "cancelada"
+  end
+
+  def nfce?
+    modelo.to_i == 65
+  end
+
+  def nfe?
+    modelo.to_i == 55
+  end
+
+  def modelo_nome
+    nfce? ? "NFC-e" : "NF-e"
+  end
+
+  # Mapeia o status do FiscalResult (masculino: autorizado/rejeitado/...)
+  # para o status do documento (feminino: autorizada/rejeitada/...).
+  MAPA_STATUS = {
+    "autorizado" => "autorizada",
+    "rejeitado"  => "rejeitada",
+    "cancelado"  => "cancelada",
+    "denegado"   => "denegada",
+    "processando" => "enviada",
+    "erro"       => "erro"
+  }.freeze
+
+  # Aplica o resultado da emissao (FiscalResult) a este documento.
+  def aplicar_resultado!(result)
+    self.status            = MAPA_STATUS[result.status.to_s] || "erro"
+    self.chave_acesso      = result.chave if result.chave.present?
+    self.protocolo         = result.protocolo if result.protocolo.present?
+    self.numero            = result.numero if result.numero.present?
+    self.serie             = result.serie if result.serie.present?
+    self.xml_base64        = result.xml if result.xml.present?
+    self.danfe_base64      = result.bruto&.dig("Base64File") if result.bruto.is_a?(Hash)
+    self.cod_status_sefaz  = result.bruto&.dig("ReturnNF", "CodStatusRespostaSefaz") if result.bruto.is_a?(Hash)
+    self.mensagem_sefaz    = result.mensagem.to_s[0, 255]
+    self.emitido_em        = Time.current if result.sucesso?
+    save!
+  end
+end
