@@ -118,7 +118,21 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
 4. `qtdfiscal` na emissão: `sincronizar_venda!` grava numeronf na VENDA, não nos ITENS; o trigger
    só mexe em qtdfiscal quando itemvenda.numeronf>0. Ajuste de estoque fiscal na emissão fica pra
    depois (liga com as telas de emissão avulsa).
-5. Cancelamento no BrasilNfeAdapter: confirmar endpoint/campos reais na doc 2.0 antes de produção.
+## EVENTOS NF-e/NFC-e no BrasilNfeAdapter (doc 2.0 confirmada) ✅
+Endpoints base https://api.brasilnfe.com.br/services/fiscal, header Token, TipoAmbiente 1/2.
+- **Cancelamento** POST /CancelarNotaFiscal: ChaveNF + Justificativa(15-1000) + NumeroProtocolo
+  (so obrigatorio se nota emitida por OUTRO sistema). Prazo NF-e 24h / NFC-e 30min.
+- **Carta de Correcao** POST /EnviarCartaCorrecao: TipoAmbiente + ChaveNF + Correcao(15-1000).
+  So erros formais (nao valores/partes/datas/numero/serie). Implementado: carta_correcao(ref, texto).
+- **Inutilizacao** POST /InutilizarNumeracao: TipoAmbiente + ModeloDocumento + Serie +
+  NumeracaoInicial/Final + Justificativa. Implementado: inutilizar(serie:,numero_inicial:,numero_final:,justificativa:,modelo:).
+- IMPORTANTE: resposta de EVENTO vem na RAIZ (DsMotivo/NuProtocolo/CodStatusRespostaSefaz/Status/
+  Base64Xml/Base64File/Error), NAO em ReturnNF. Sucesso = Status==1 && cStat in [100,101,135,150,155].
+  Mapeado por to_evento_result. (Bug anterior: lia de ReturnNF — corrigido.)
+- Outros eventos da doc NAO implementados (ainda): Manifestacao do Destinatario
+  (/ManifestarNotaFiscal), ECONF (/EnviarEconf), Eventos Reforma Tributaria (/EnviarEvento).
+- Falta: UI p/ carta de correcao e inutilizacao (metodos no adapter prontos, sem tela ainda).
+  consultar() ainda NotImplementedError.
 
 ## MARCO: EMISSÃO REAL FUNCIONANDO ✅
 - O credenciamento do Brasil NFe como responsável técnico na SEFAZ-PR FOI FEITO

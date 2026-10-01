@@ -47,33 +47,63 @@ module Fiscal
       emitir(doc)
     end
 
-    # Cancela uma NF-e/NFC-e autorizada (evento SEFAZ 110111), dentro do prazo.
-    # referencia: chave de acesso (44 digitos) da nota a cancelar.
-    # justificativa: texto >= 15 caracteres exigido pela SEFAZ.
+    # Cancela uma NF-e/NFC-e autorizada. Doc 2.0: POST /CancelarNotaFiscal
+    # com ChaveNF + Justificativa (15-1000). NumeroProtocolo so e obrigatorio
+    # quando a nota foi emitida por OUTRO sistema (nao e o nosso caso), mas
+    # enviamos quando disponivel. Prazo: NF-e 24h, NFC-e 30min apos autorizacao.
     #
-    # OBS: o nome do endpoint/campos segue a convencao do EnviarNotaFiscal
-    # (CancelarNotaFiscal). Confirmar contra a doc 2.0 do Brasil NFe antes de
-    # usar em PRODUCAO — em homologacao o retorno valida o formato.
+    # referencia: chave de acesso (44 digitos) OU hash { chave:, protocolo: }.
     def cancelar(referencia, justificativa)
+      chave, protocolo = extrair_chave_protocolo(referencia)
       just = justificativa.to_s.strip
-      raise ConfiguracaoInvalida, "Chave de acesso ausente para cancelamento" if referencia.blank?
+      raise ConfiguracaoInvalida, "Chave de acesso ausente para cancelamento" if chave.blank?
       raise ConfiguracaoInvalida, "Justificativa deve ter ao menos 15 caracteres" if just.length < 15
 
       payload = {
-        "TipoAmbiente" => ambiente,
-        "ChaveNF"      => referencia,
-        "Justificativa" => just
-      }
+        "TipoAmbiente"    => ambiente.to_i,
+        "ChaveNF"         => chave,
+        "Justificativa"   => just,
+        "NumeroProtocolo" => protocolo
+      }.compact
       resposta = post("/CancelarNotaFiscal", payload)
-      to_cancel_result(resposta)
+      to_evento_result(resposta, status_sucesso: :cancelado)
     end
 
-    def carta_correcao(_referencia, _texto)
-      nao_implementado(:carta_correcao)
+    # Carta de Correcao Eletronica (CC-e). Doc 2.0: POST /EnviarCartaCorrecao
+    # com TipoAmbiente + ChaveNF + Correcao (15-1000). Corrige erros formais
+    # (NAO valores fiscais, partes, datas, numero/serie).
+    def carta_correcao(referencia, texto)
+      chave, = extrair_chave_protocolo(referencia)
+      corr = texto.to_s.strip
+      raise ConfiguracaoInvalida, "Chave de acesso ausente para carta de correcao" if chave.blank?
+      raise ConfiguracaoInvalida, "Correcao deve ter ao menos 15 caracteres" if corr.length < 15
+
+      payload = {
+        "TipoAmbiente" => ambiente.to_i,
+        "ChaveNF"      => chave,
+        "Correcao"     => corr
+      }
+      resposta = post("/EnviarCartaCorrecao", payload)
+      to_evento_result(resposta, status_sucesso: :autorizado)
     end
 
-    def inutilizar(**_kwargs)
-      nao_implementado(:inutilizar)
+    # Inutiliza uma faixa de numeracao nunca usada. Doc 2.0: POST
+    # /InutilizarNumeracao com TipoAmbiente + ModeloDocumento + Serie +
+    # NumeracaoInicial/Final + Justificativa (15-1000).
+    def inutilizar(serie:, numero_inicial:, numero_final:, justificativa:, modelo: 55)
+      just = justificativa.to_s.strip
+      raise ConfiguracaoInvalida, "Justificativa deve ter ao menos 15 caracteres" if just.length < 15
+
+      payload = {
+        "TipoAmbiente"     => ambiente.to_i,
+        "ModeloDocumento"  => modelo.to_i,
+        "Serie"            => serie,
+        "NumeracaoInicial" => numero_inicial.to_i,
+        "NumeracaoFinal"   => numero_final.to_i,
+        "Justificativa"    => just
+      }
+      resposta = post("/InutilizarNumeracao", payload)
+      to_evento_result(resposta, status_sucesso: :autorizado)
     end
 
     def consultar(_referencia)
@@ -162,19 +192,27 @@ module Fiscal
       )
     end
 
-    # Converte a resposta de um cancelamento no FiscalResult neutro.
-    # SEFAZ: 101 = cancelamento homologado, 135 = evento registrado e vinculado,
-    # 155 = cancelamento homologado fora do prazo. Qualquer um = cancelado.
-    def to_cancel_result(resposta)
-      ret = resposta["ReturnNF"] || resposta["ReturnEvento"] || {}
+    # Converte a resposta de um EVENTO (cancelamento/CC-e/inutilizacao) no
+    # FiscalResult neutro. IMPORTANTE: diferente da emissao, a resposta de
+    # evento vem direto na RAIZ (DsMotivo, NuProtocolo, CodStatusRespostaSefaz,
+    # Status, Base64Xml/File, Error) — NAO dentro de ReturnNF.
+    #
+    # Sucesso: Status == 1 (evento processado) E CodStatusRespostaSefaz de
+    # homologacao do evento. SEFAZ: 100/150 (autorizado), 135 (evento registrado
+    # e vinculado), 101/155 (cancelamento homologado / fora do prazo).
+    # status_sucesso: :cancelado para cancelamento, :autorizado para CC-e/inut.
+    def to_evento_result(resposta, status_sucesso:)
       erro = resposta["Error"].to_s
-      status_sefaz = ret["CodStatusRespostaSefaz"]
-      ok_cancel = [101, 135, 155].include?(status_sefaz) || ret["Ok"] == true
+      status_sefaz = resposta["CodStatusRespostaSefaz"]
+      proc_status  = resposta["Status"] # 1 processado / 2 aguardando / 3 erro
+      ok = proc_status.to_i == 1 && [100, 101, 135, 150, 155].include?(status_sefaz)
 
       status =
-        if ok_cancel
-          :cancelado
-        elsif erro.present? || resposta["_http_status"].to_i >= 400
+        if ok
+          status_sucesso
+        elsif proc_status.to_i == 2
+          :processando
+        elsif erro.present? || resposta["_http_status"].to_i >= 400 || proc_status.to_i == 3
           :erro
         else
           :rejeitado
@@ -182,12 +220,20 @@ module Fiscal
 
       FiscalResult.new(
         status:    status,
-        chave:     ret["ChaveNF"],
-        protocolo: ret["NumeroProtocolo"],
+        protocolo: resposta["NuProtocolo"],
         xml:       resposta["Base64Xml"],
-        mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
+        mensagem:  resposta["DsMotivo"].presence || erro.presence,
         bruto:     resposta
       )
+    end
+
+    # Aceita a chave (String) ou um Hash { chave:, protocolo: }.
+    def extrair_chave_protocolo(ref)
+      if ref.is_a?(Hash)
+        [ref[:chave] || ref["chave"], ref[:protocolo] || ref["protocolo"]]
+      else
+        [ref, nil]
+      end
     end
 
     def nao_implementado(op)

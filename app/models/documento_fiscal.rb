@@ -66,7 +66,7 @@ class DocumentoFiscal < ApplicationRecord
     config = empresa.fiscal_config
     raise ArgumentError, "Empresa sem configuração fiscal." if config.nil?
 
-    result = FiscalService.new(config).cancelar(chave_acesso, just)
+    result = FiscalService.new(config).cancelar({ chave: chave_acesso, protocolo: protocolo }, just)
 
     # Registra o evento ANTES de mudar o status, guardando o desfecho da SEFAZ.
     eventos.create!(
