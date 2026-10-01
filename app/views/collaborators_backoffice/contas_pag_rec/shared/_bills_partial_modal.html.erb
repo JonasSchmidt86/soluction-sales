@@ -19,7 +19,7 @@
               </div>
               <div class="col">
                 <div class="form-floating mb-3 ">
-                  <input type="text" class="form-control" id="vl_devido_<%= bill.cod_contaspagrec %>" value="<%= number_to_currency((bill.valorparcela - bill.valorPago), separator: ",", delimiter: "", unit:"") %>" readonly>
+                  <input type="text" class="form-control" id="vl_devido_<%= bill.cod_contaspagrec %>" value="<%= number_to_currency((bill.valorparcela.to_d - bill.valorPago.to_d), separator: ",", delimiter: "", unit:"") %>" readonly>
                   <label for="recipient-name" class="col-form-label">Valor Devido:</label>
                 </div>
               </div>
