@@ -1,0 +1,79 @@
+<%# =================================================================== %>
+<%# CARD DE EMISSAO FISCAL — NF-e modelo 55.                            %>
+<%# Compartilhado entre a tela de nova venda (_form_sales) e a de       %>
+<%# editar itens (editar_itens). Visivel so para super_admin logado     %>
+<%# numa empresa com modulo fiscal ativo. Cada botao tem seu proprio    %>
+<%# form (button_to), fora do form da venda.                            %>
+<%#                                                                      %>
+<%# Requer local :sale (a Venda). Se a venda ainda nao foi salva         %>
+<%# (tela new), mostra o card desabilitado com aviso.                    %>
+<%# =================================================================== %>
+<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+  <div class="card shadow-sm border-primary mt-3">
+    <div class="card-header bg-primary text-white py-2 d-flex align-items-center">
+      <i class="fa fa-file-invoice me-2"></i>
+      <span class="fw-bold">NF-e (modelo 55)</span>
+    </div>
+    <div class="card-body py-3">
+      <% unless sale.persisted? %>
+        <p class="small text-muted mb-2">Salve a venda primeiro para poder emitir a NF-e.</p>
+        <button type="button" class="btn btn-primary" disabled>
+          <i class="fa fa-check-double me-1"></i> Emitir NF-e
+        </button>
+      <% else %>
+        <% doc_fiscal = DocumentoFiscal.where(cod_venda: sale.cod_venda, modelo: 55)
+                                       .order(cod_documento_fiscal: :desc).first %>
+        <% if doc_fiscal&.autorizada? %>
+          <div class="alert alert-success py-2 mb-2">
+            <strong>Autorizada</strong><br>
+            <small class="text-break">Chave: <%= doc_fiscal.chave_acesso %></small>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <% if doc_fiscal.danfe_base64.present? %>
+              <%= link_to '<i class="fa fa-file-pdf me-1"></i> Ver DANFE'.html_safe,
+                          danfe_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
+                          target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+            <% end %>
+            <%= button_to '<i class="fa fa-ban me-1"></i> Cancelar NF'.html_safe,
+                          cancelar_collaborators_backoffice_venda_documentos_fiscal_path(sale, doc_fiscal),
+                          method: :post, params: { justificativa: "" },
+                          class: "btn btn-sm btn-outline-danger",
+                          onclick: "var j=prompt('Justificativa do cancelamento (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Confirma o cancelamento desta NF-e?');" %>
+          </div>
+
+        <% elsif doc_fiscal && %w[rejeitada erro].include?(doc_fiscal.status) %>
+          <div class="alert alert-danger py-2 mb-2">
+            <strong>NF <%= doc_fiscal.status == "erro" ? "com erro" : "rejeitada" %></strong><br>
+            <small><%= doc_fiscal.mensagem_sefaz.presence || "Sem detalhe da SEFAZ." %></small>
+          </div>
+          <p class="small text-muted mb-2">
+            Corrija o cadastro/produto e reemita — a mesma NF é reaproveitada.
+          </p>
+          <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                        method: :post, class: "btn btn-warning",
+                        data: { confirm: "Reemitir a NF-e desta venda?" } do %>
+            <i class="fa fa-check-double me-1"></i> Reemitir NF-e
+          <% end %>
+
+        <% elsif doc_fiscal && %w[rascunho enviada].include?(doc_fiscal.status) %>
+          <div class="alert alert-info py-2 mb-2">
+            <strong>Em processamento</strong><br>
+            <small>Status: <%= doc_fiscal.status %>. Tente emitir novamente se não concluir.</small>
+          </div>
+          <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                        method: :post, class: "btn btn-primary" do %>
+            <i class="fa fa-check-double me-1"></i> Emitir NF-e novamente
+          <% end %>
+
+        <% else %>
+          <p class="small text-muted mb-2">Emitir NF-e modelo 55 desta venda.</p>
+          <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                        method: :post, class: "btn btn-primary",
+                        data: { confirm: "Emitir a NF-e modelo 55 desta venda?" } do %>
+            <i class="fa fa-check-double me-1"></i> Emitir NF-e
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

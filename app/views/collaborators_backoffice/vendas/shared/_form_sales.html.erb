@@ -197,6 +197,9 @@
         </div>
       </div>
     <% end %>
+
+    <%= render partial: 'collaborators_backoffice/vendas/shared/fiscal_nfe_card',
+               locals: { sale: @sale } %>
   </div>
 </div>
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>
