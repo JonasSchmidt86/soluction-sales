@@ -102,9 +102,16 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
   - **NFC-e 65 avulsa**: só produtos + valores; CPF OPCIONAL ("consumidor não identificado").
 - Builder/Emissor precisam ser generalizados para aceitar itens+destinatário "soltos" (sem venda).
 
+## EMISSÃO AVULSA — FEITA ✅
+- Telas em `notas_avulsas` (NotasAvulsasController): index (lista docs cod_venda nil),
+  new (seletor 55/65), create, show, danfe, cancelar, cores_produto. Menu "Notas Avulsas".
+- 55 exige destinatário (cod_pessoa); 65 destinatário opcional (consumidor não identificado).
+- Fonte neutra: Fiscal::DocumentoAvulso (duck-typed como Venda, cod_venda=nil). Reusa builder+emissor.
+- qtdfiscal baixado pelo EstoqueFiscalService na emissão (respeita controla_estoque); estorna no cancelar.
+- NÃO há espelho pós-emissão (doc avulso não persiste itens; usar DANFE/XML).
+
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
-2. Telas de emissão AVULSA de NF-e e NFC-e (substitui a ideia do checkbox por item). EM ANDAMENTO.
 3. Fix do trigger `tgrf_estoquevenda` (coluna ambígua `quantidade` no ramo de alteração de
    quantidade) foi aplicado MANUALMENTE pelo usuário em prod+local, mas NÃO está versionado numa
    migration — ambiente novo via schema:load traria o bug de volta. Versionar.
