@@ -43,7 +43,7 @@ class CollaboratorsBackoffice::RegrasFiscaisController < CollaboratorsBackoffice
   private
 
   def set_perfil
-    @perfil = PerfilTributario.find(params[:perfis_tributario_id])
+    @perfil = PerfilTributario.find(params[:perfil_tributario_id])
   end
 
   def set_regra
