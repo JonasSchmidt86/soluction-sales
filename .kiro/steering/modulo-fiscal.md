@@ -80,9 +80,31 @@ justificativa ≥15) e só muda status se SEFAZ homologar. `aplicar_resultado!` 
 - **Checkbox "NF por item"** (do design, seção abaixo): NÃO será feito na venda. Decisão do usuário:
   criar 2 telas separadas de **emissão avulsa** de NF-e e NFC-e (sem venda). Pendente/futuro.
 
+## DECISÃO: qtdfiscal (estoque fiscal) controlado pelo RAILS na emissão
+Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
+- **ENTRADA** continua pela trigger de COMPRA (`tgrf_estoquecompra` em itemcompra). O outro
+  sistema legado ainda faz compras no mesmo banco e depende dessa trigger — NÃO TOCAR nela.
+- **SAÍDA** sai da trigger de VENDA (`tgrf_estoquevenda`) e passa a ser controlada pelo RAILS
+  no momento da EMISSÃO da NF (venda e avulsa), respeitando `regra_fiscal.controla_estoque`
+  ("proprio" baixa qtdfiscal / "nao_controla" não baixa). Cancelamento estorna.
+- Por que é seguro: hoje a trigger de venda só baixava qtdfiscal se itemvenda.numeronf>0, mas a
+  venda nasce sem numeronf — então na prática quase nunca baixava. Mover pro Rails corrige isso.
+- `controla_estoque` é por REGRA (não por produto): o mesmo produto pode controlar ou não,
+  conforme a operação/regra que casar.
+- Estoque FÍSICO (`quantidade`) continua 100% na trigger de venda — só o qtdfiscal sai de lá.
+- Futuro: importar qtdfiscal atualizado do sistema de notas do usuário (Rails vira dono do número).
+- Futuro (compra): adicionar campo "número do pedido" na compra.
+
+## NF AVULSA = 100% FISCAL (decisão)
+- Não gera venda, não cria itemvenda, NÃO mexe no estoque físico. Só documento_fiscal + qtdfiscal.
+- Duas telas separadas (campos obrigatórios diferentes):
+  - **NF-e 55 avulsa**: destinatário OBRIGATÓRIO (CPF/CNPJ + nome + endereço).
+  - **NFC-e 65 avulsa**: só produtos + valores; CPF OPCIONAL ("consumidor não identificado").
+- Builder/Emissor precisam ser generalizados para aceitar itens+destinatário "soltos" (sem venda).
+
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
-2. Telas de emissão AVULSA de NF-e e NFC-e (substitui a ideia do checkbox por item).
+2. Telas de emissão AVULSA de NF-e e NFC-e (substitui a ideia do checkbox por item). EM ANDAMENTO.
 3. Fix do trigger `tgrf_estoquevenda` (coluna ambígua `quantidade` no ramo de alteração de
    quantidade) foi aplicado MANUALMENTE pelo usuário em prod+local, mas NÃO está versionado numa
    migration — ambiente novo via schema:load traria o bug de volta. Versionar.

@@ -77,13 +77,6 @@ AS $function$
                      AND E.COD_COR = OLD.COD_COR
                      AND E.COD_EMPRESA = OLD.COD_EMPRESA;
 
-                  IF COALESCE(OLD.numeronf,0) > 0 THEN
-                      UPDATE EMPRESAPRODUTO AS E
-                         SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) + OLD.QUANTIDADE
-                       WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                         AND E.COD_COR = OLD.COD_COR
-                         AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                  END IF;
 
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
@@ -143,13 +136,6 @@ AS $function$
                      AND E.COD_COR = OLD.COD_COR
                      AND E.COD_EMPRESA = OLD.COD_EMPRESA;
 
-                  IF COALESCE(OLD.numeronf,0) > 0 THEN
-                      UPDATE EMPRESAPRODUTO AS E
-                         SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - OLD.QUANTIDADE
-                       WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                         AND E.COD_COR = OLD.COD_COR
-                         AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                  END IF;
 
                   INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                       quantidade_antes, quantidade_movida, quantidade_depois,
@@ -217,13 +203,6 @@ AS $function$
                          AND E.COD_COR = NEW.COD_COR
                          AND E.COD_EMPRESA = NEW.COD_EMPRESA;
 
-                      IF COALESCE(NEW.numeronf,0) > 0 THEN
-                          UPDATE EMPRESAPRODUTO AS E
-                             SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - NEW.QUANTIDADE
-                           WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
-                             AND E.COD_COR = NEW.COD_COR
-                             AND E.COD_EMPRESA = NEW.COD_EMPRESA;
-                      END IF;
 
                       INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                           quantidade_antes, quantidade_movida, quantidade_depois,
@@ -301,13 +280,6 @@ AS $function$
                          AND E.COD_COR = NEW.COD_COR
                          AND E.COD_EMPRESA = NEW.COD_EMPRESA;
 
-                      IF COALESCE(NEW.numeronf,0) > 0 THEN
-                          UPDATE EMPRESAPRODUTO AS E
-                             SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) + NEW.QUANTIDADE
-                           WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
-                             AND E.COD_COR = NEW.COD_COR
-                             AND E.COD_EMPRESA = NEW.COD_EMPRESA;
-                      END IF;
 
                       INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                           quantidade_antes, quantidade_movida, quantidade_depois,
@@ -344,13 +316,6 @@ AS $function$
                              AND E.COD_COR = OLD.COD_COR
                              AND E.COD_EMPRESA = OLD.COD_EMPRESA;
 
-                          IF COALESCE(OLD.numeronf,0) > 0 THEN
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) + OLD.QUANTIDADE
-                               WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                                 AND E.COD_COR = OLD.COD_COR
-                                 AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                          END IF;
 
                           INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                               quantidade_antes, quantidade_movida, quantidade_depois,
@@ -410,13 +375,6 @@ AS $function$
                              AND E.COD_COR = OLD.COD_COR
                              AND E.COD_EMPRESA = OLD.COD_EMPRESA;
 
-                          IF COALESCE(OLD.numeronf,0) > 0 THEN
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - OLD.QUANTIDADE
-                               WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                                 AND E.COD_COR = OLD.COD_COR
-                                 AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                          END IF;
 
                           INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                               quantidade_antes, quantidade_movida, quantidade_depois,
@@ -469,18 +427,6 @@ AS $function$
                              AND E.COD_COR = NEW.COD_COR
                              AND E.COD_EMPRESA = NEW.COD_EMPRESA;
 
-                          IF COALESCE(NEW.numeronf,0) > 0 THEN
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) + OLD.QUANTIDADE
-                               WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                                 AND E.COD_COR = OLD.COD_COR
-                                 AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - NEW.QUANTIDADE
-                               WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
-                                 AND E.COD_COR = NEW.COD_COR
-                                 AND E.COD_EMPRESA = NEW.COD_EMPRESA;
-                          END IF;
 
                           INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                               quantidade_antes, quantidade_movida, quantidade_depois,
@@ -549,18 +495,6 @@ AS $function$
                              AND E.COD_COR = NEW.COD_COR
                              AND E.COD_EMPRESA = NEW.COD_EMPRESA;
 
-                          IF COALESCE(NEW.numeronf,0) > 0 THEN
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) + OLD.QUANTIDADE
-                               WHERE E.COD_PRODUTO = OLD.COD_PRODUTO
-                                 AND E.COD_COR = OLD.COD_COR
-                                 AND E.COD_EMPRESA = OLD.COD_EMPRESA;
-                              UPDATE EMPRESAPRODUTO AS E
-                                 SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - NEW.QUANTIDADE
-                               WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
-                                 AND E.COD_COR = NEW.COD_COR
-                                 AND E.COD_EMPRESA = NEW.COD_EMPRESA;
-                          END IF;
 
                           INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
                               quantidade_antes, quantidade_movida, quantidade_depois,
@@ -590,13 +524,6 @@ AS $function$
 						   AND E.COD_COR = NEW.COD_COR
 						   AND E.COD_EMPRESA = NEW.COD_EMPRESA;
 
-						IF COALESCE(NEW.numeronf,0) > 0 THEN
-							UPDATE EMPRESAPRODUTO AS E
-							   SET QTDFISCAL = COALESCE(E.QTDFISCAL,0) - (NEW.QUANTIDADE - OLD.QUANTIDADE)
-							 WHERE E.COD_PRODUTO = NEW.COD_PRODUTO
-							   AND E.COD_COR = NEW.COD_COR
-							   AND E.COD_EMPRESA = NEW.COD_EMPRESA;
-						END IF;
 
 						INSERT INTO estoque_logs (cod_empresa, cod_produto, cod_cor, operacao, origem,
 							quantidade_antes, quantidade_movida, quantidade_depois,
