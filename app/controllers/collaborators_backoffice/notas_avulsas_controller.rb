@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_documento, only: [:show, :danfe, :espelho, :cancelar]
+  before_action :set_documento, only: [:show, :danfe, :cancelar]
 
   MODELOS = [55, 65].freeze
 
@@ -69,12 +69,6 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     send_data Base64.decode64(@documento.danfe_base64),
               filename: "danfe-avulsa-#{@documento.cod_documento_fiscal}.pdf",
               type: "application/pdf", disposition: "inline"
-  end
-
-  # Espelho (reaproveita o template de PDF da venda, dados vindos do documento).
-  def espelho
-    redirect_to collaborators_backoffice_notas_avulsa_path(@documento),
-                alert: "Espelho disponível apenas antes de emitir (use a prévia no formulário)."
   end
 
   # Cancela a NF avulsa autorizada.

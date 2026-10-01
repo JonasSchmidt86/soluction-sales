@@ -215,7 +215,6 @@ Rails.application.routes.draw do
     resources :notas_avulsas, only: [:index, :new, :create, :show] do
       member do
         get  :danfe
-        get  :espelho
         post :cancelar
       end
       collection do
