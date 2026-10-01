@@ -11,12 +11,6 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
 
   def new
     @perfil = PerfilTributario.new(ativo: true)
-    # ja inicia com uma regra de Venda em branco para facilitar
-    @perfil.regras.build(
-      cod_operacao_fiscal: operacao_venda&.cod_operacao_fiscal,
-      cod_empresa: current_empresa_id,
-      uf_destino: "*", tipo_cliente: "*"
-    )
   end
 
   def create
@@ -59,20 +53,7 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
   end
 
   def perfil_params
-    params.require(:perfil_tributario).permit(
-      :nome, :descricao, :ativo,
-      regras_attributes: [
-        :id, :cod_operacao_fiscal, :cod_empresa,
-        :uf_destino, :tipo_cliente, :cfop_base, :csosn,
-        :aliquota_icms, :cst_pis, :cst_cofins, :cclasstrib, :cst_ibs_cbs,
-        :soma_total_nota, :soma_duplicatas, :controla_estoque,
-        :prioridade, :ativo, :_destroy
-      ]
-    )
-  end
-
-  def operacao_venda
-    OperacaoFiscal.find_by(nome: "Venda")
+    params.require(:perfil_tributario).permit(:nome, :descricao, :ativo)
   end
 
   def current_empresa_id

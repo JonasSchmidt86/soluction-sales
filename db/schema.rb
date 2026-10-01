@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_25_000004) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_25_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -957,6 +957,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_25_000004) do
     t.boolean "soma_duplicatas", default: true, null: false
     t.string "controla_estoque", limit: 20, default: "proprio"
     t.string "cst_ibs_cbs", limit: 10
+    t.decimal "aliquota_pis", precision: 6, scale: 2
+    t.decimal "aliquota_cofins", precision: 6, scale: 2
+    t.decimal "aliquota_fcp", precision: 6, scale: 2
     t.index ["cod_empresa", "cod_perfil_tributario", "cod_operacao_fiscal", "uf_destino", "tipo_cliente"], name: "idx_regra_fiscal_resolucao"
     t.index ["cod_operacao_fiscal"], name: "idx_regra_fiscal_operacao"
     t.index ["cod_perfil_tributario"], name: "idx_regra_fiscal_perfil"

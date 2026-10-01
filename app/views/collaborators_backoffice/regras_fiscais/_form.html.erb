@@ -1,0 +1,148 @@
+<%= form_with model: [:collaborators_backoffice, @perfil, @regra], local: true do |f| %>
+  <% if @regra.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% @regra.errors.full_messages.each do |m| %><li><%= m %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :cod_empresa, value: (@regra.cod_empresa || current_collaborator.cod_empresa) %>
+
+  <%# ===== Identificacao (fora das abas de imposto) ===== %>
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Operação</label>
+      <%= f.collection_select :cod_operacao_fiscal, OperacaoFiscal.ativos.order(:nome),
+            :cod_operacao_fiscal, :nome, { prompt: "Selecione" }, class: "form-select" %>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">UF destino</label>
+      <%= f.text_field :uf_destino, value: (@regra.uf_destino || "*"), maxlength: 2,
+            class: "form-control text-uppercase", placeholder: "* ou UF" %>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Cliente</label>
+      <%= f.select :tipo_cliente,
+            options_for_select([["Todos", "*"], ["Consumidor final", "consumidor_final"], ["Contribuinte", "contribuinte"]], (@regra.tipo_cliente || "*")),
+            {}, class: "form-select" %>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">CFOP base</label>
+      <%= f.text_field :cfop_base, maxlength: 4, class: "form-control", placeholder: "ex 102" %>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Prioridade</label>
+      <%= f.number_field :prioridade, class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 d-flex align-items-center">
+      <div class="form-check form-switch">
+        <%= f.check_box :ativo, class: "form-check-input" %>
+        <%= f.label :ativo, "Ativa", class: "form-check-label ms-1" %>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-center">
+      <div class="form-check">
+        <%= f.check_box :soma_total_nota, class: "form-check-input" %>
+        <%= f.label :soma_total_nota, "Soma no total da NF", class: "form-check-label ms-1" %>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-center">
+      <div class="form-check">
+        <%= f.check_box :soma_duplicatas, class: "form-check-input" %>
+        <%= f.label :soma_duplicatas, "Soma nas duplicatas", class: "form-check-label ms-1" %>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Estoque</label>
+      <%= f.select :controla_estoque,
+            options_for_select([["Controla próprio", "proprio"], ["Não controla", "nao_controla"]], (@regra.controla_estoque || "proprio")),
+            {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <%# ===== Abas por imposto ===== %>
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#aba-icms" type="button">ICMS</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#aba-pis" type="button">PIS</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#aba-cofins" type="button">COFINS</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#aba-ibscbs" type="button">IBS / CBS</button></li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-3 mb-3">
+    <%# --- ICMS --- %>
+    <div class="tab-pane fade show active" id="aba-icms">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">CSOSN</label>
+          <%= f.select :csosn, options_for_select(csosn_para_select, @regra.csosn),
+                { include_blank: "Selecione o CSOSN" }, class: "form-select" %>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Alíquota ICMS (%)</label>
+          <%= f.number_field :aliquota_icms, step: "0.01", class: "form-control", placeholder: "0,00" %>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Alíquota FCP (%)</label>
+          <%= f.number_field :aliquota_fcp, step: "0.01", class: "form-control", placeholder: "0,00" %>
+        </div>
+      </div>
+      <p class="text-muted small mt-2 mb-0">No Simples (sem ST), normalmente CSOSN 102 e alíquotas zeradas.</p>
+    </div>
+
+    <%# --- PIS --- %>
+    <div class="tab-pane fade" id="aba-pis">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">CST PIS</label>
+          <%= f.select :cst_pis, options_for_select(cst_pis_cofins_para_select, @regra.cst_pis),
+                { include_blank: "Selecione o CST" }, class: "form-select" %>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Alíquota PIS (%)</label>
+          <%= f.number_field :aliquota_pis, step: "0.01", class: "form-control", placeholder: "0,00" %>
+        </div>
+      </div>
+      <p class="text-muted small mt-2 mb-0">No Simples, geralmente CST "49" ou "99" com alíquota zero. Confirme com o contador.</p>
+    </div>
+
+    <%# --- COFINS --- %>
+    <div class="tab-pane fade" id="aba-cofins">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">CST COFINS</label>
+          <%= f.select :cst_cofins, options_for_select(cst_pis_cofins_para_select, @regra.cst_cofins),
+                { include_blank: "Selecione o CST" }, class: "form-select" %>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Alíquota COFINS (%)</label>
+          <%= f.number_field :aliquota_cofins, step: "0.01", class: "form-control", placeholder: "0,00" %>
+        </div>
+      </div>
+      <p class="text-muted small mt-2 mb-0">No Simples, mesmo CST do PIS, alíquota zero. Confirme com o contador.</p>
+    </div>
+
+    <%# --- IBS / CBS (reforma) --- %>
+    <div class="tab-pane fade" id="aba-ibscbs">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">CST IBS/CBS</label>
+          <%= f.text_field :cst_ibs_cbs, maxlength: 10, class: "form-control", placeholder: "ex 000" %>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">cClassTrib</label>
+          <%= f.text_field :cclasstrib, maxlength: 10, class: "form-control", placeholder: "classificação" %>
+        </div>
+      </div>
+      <p class="text-muted small mt-2 mb-0">Reforma tributária (transição). Preencher conforme o provedor/contador exigir.</p>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 border-top pt-3">
+    <%= link_to "Cancelar", collaborators_backoffice_perfil_tributario_path(@perfil), class: "btn btn-secondary" %>
+    <%= f.submit "Salvar regra", class: "btn btn-success" %>
+  </div>
+<% end %>

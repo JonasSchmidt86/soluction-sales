@@ -65,6 +65,33 @@ module CollaboratorsBackofficeHelper
         desc ? "#{cod} - #{desc}" : cod
     end
 
+    # CST de PIS e COFINS (mesma tabela oficial para os dois).
+    # Os mais usados; no Simples normalmente "49" ou "99" (sem tributacao).
+    CST_PIS_COFINS = {
+        "01" => "Operacao tributavel - aliquota basica",
+        "02" => "Operacao tributavel - aliquota diferenciada",
+        "03" => "Operacao tributavel - por unidade de medida",
+        "04" => "Operacao tributavel - monofasica (aliquota zero)",
+        "05" => "Operacao tributavel - ST",
+        "06" => "Operacao tributavel - aliquota zero",
+        "07" => "Operacao isenta da contribuicao",
+        "08" => "Operacao sem incidencia da contribuicao",
+        "09" => "Operacao com suspensao da contribuicao",
+        "49" => "Outras operacoes de saida",
+        "99" => "Outras operacoes"
+    }.freeze
+
+    def cst_pis_cofins_para_select
+        CST_PIS_COFINS.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    def cst_pis_cofins_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = CST_PIS_COFINS[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
     def get_cores(id_produto)
         unless id_produto.nil?
             cores = Core.select(:nmcor, :cod_cor).joins(:empresaprodutos).where("cod_produto = ? and cod_empresa = ?", id_produto, current_collaborator.cod_empresa );

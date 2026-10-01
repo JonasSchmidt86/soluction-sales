@@ -85,6 +85,10 @@ module Fiscal
         "IndicadorPresenca" => doc[:indicador_presenca] || 1,
         "IdentificadorInterno" => doc[:identificador_interno],
         "NFReferencia"      => Array(doc[:nf_referencia]).presence,
+        # Serie/Numero: só enviados se o builder fornecer; senão o Brasil NFe
+        # controla automaticamente (recomendado em producao).
+        "Serie"             => doc[:serie],
+        "Numero"            => doc[:numero],
         "Cliente"           => doc[:cliente],
         "Produtos"          => doc[:produtos],
         "Pagamentos"        => doc[:pagamentos],

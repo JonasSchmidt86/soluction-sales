@@ -35,42 +35,9 @@
     <%= f.label :descricao, "Descrição (opcional)" %>
   </div>
 
-  <%# ===== Regras Fiscais ===== %>
-  <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
-    <i class="fa fa-list me-1"></i> Regras Fiscais deste Perfil
-  </h6>
   <p class="text-muted small">
-    Uma regra padrão (UF destino = <code>*</code>) cobre a maioria. O CFOP é o "base" (3 dígitos);
-    o 5/6/7 é resolvido automaticamente pela UF na emissão. Adicione exceções por UF/operação se precisar.
+    As regras fiscais (impostos por operação) são adicionadas depois de salvar o perfil, na tela de detalhes.
   </p>
-
-  <div class="table-responsive">
-    <table class="table table-sm align-middle">
-      <thead class="table-light">
-        <tr>
-          <th style="min-width:160px">Operação</th>
-          <th style="width:90px">UF dest.</th>
-          <th style="min-width:150px">Cliente</th>
-          <th style="width:100px">CFOP base</th>
-          <th style="min-width:140px">CSOSN</th>
-          <th style="width:110px">Alíq. ICMS</th>
-          <th style="width:60px"></th>
-        </tr>
-      </thead>
-      <tbody id="regras-tbody">
-        <%= f.fields_for :regras do |regra| %>
-          <%= render "regra_fields", f: regra %>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="mb-4">
-    <%= link_to_add_association "＋ Adicionar regra", f, :regras,
-          data: { association_insertion_node: "#regras-tbody", association_insertion_method: "append" },
-          class: "btn btn-sm btn-outline-primary",
-          partial: "collaborators_backoffice/perfis_tributarios/regra_fields" %>
-  </div>
 
   <div class="d-flex justify-content-end gap-2 border-top pt-3">
     <%= link_to "Cancelar", collaborators_backoffice_perfis_tributarios_path, class: "btn btn-secondary" %>

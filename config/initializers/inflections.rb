@@ -15,7 +15,8 @@
 #   inflect.acronym 'RESTful'
 # end
 
-# Modulo fiscal: singular de "perfis_tributarios" e "perfil_tributario"
+# Modulo fiscal: singulares/plurais irregulares em portugues
 ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "perfil_tributario", "perfis_tributarios"
+  inflect.irregular "regra_fiscal", "regras_fiscais"
 end
