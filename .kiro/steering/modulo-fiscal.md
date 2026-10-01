@@ -7,6 +7,101 @@ inclusion: manual
 > Contexto salvo do estudo de arquitetura do módulo fiscal. Referencie com #modulo-fiscal quando voltar ao tema.
 > ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor: **Brasil NFe (plano Solo)** — escolhido por emissão ilimitada 55/65 + devoluções; adapter isola a escolha (reversível). Visão multiempresa + preparação reforma tributária (IBS/CBS).
 
+---
+
+# ESTADO ATUAL (atualizado — leia isto primeiro)
+
+> As seções mais abaixo são o DESIGN histórico (Fatia 1). Esta seção reflete o que
+> está REALMENTE implementado na branch `modulo-fiscal` (nunca em produção/master).
+
+## Como está hoje (implementado e commitado em `modulo-fiscal`)
+
+**Classificação fiscal (Fatia 1):** perfil_tributario + operacao_fiscal + regra_fiscal.
+Produto aponta `cod_perfil_tributario`. Regra resolve por operacao + UF destino + tipo_cliente
+(curinga `*`; específico vence genérico via `regra_para`). CFOP guardado como BASE (3 díg),
+dígito 5/6/7 resolvido por `RegraFiscal.cfop_por_uf`. CRUD de perfis/regras com abas por imposto
+(ICMS→IPI→PIS→COFINS→IBS/CBS). Relatório de pendências fiscais (produtos sem NCM/perfil/origem).
+
+**Config + provedor:** `FiscalConfig` por empresa (ativo? define o módulo). `FiscalService`
+(interface neutra) + `Fiscal::BrasilNfeAdapter` (emitir/devolver implementados; **cancelar
+implementado** via POST /CancelarNotaFiscal — mas endpoint/campos ainda a confirmar na doc 2.0;
+carta_correcao/inutilizar/consultar = NotImplementedError). Token em credentials
+(`brasilnfe_token`, `brasilnfe_ambiente: homologacao`).
+
+**Builder + emissão:** `Fiscal::DocumentoFiscalBuilder` monta documento neutro (cliente,
+produtos com Imposto do perfil, CFOP por UF). `Fiscal::EmissorFiscal` orquestra: cria/reaproveita
+documento, **valida dados fiscais ANTES de enviar** (trava: bloqueia se faltar NCM/CFOP/CSOSN —
+em homologação a SEFAZ autoriza nota incompleta e mascara o erro), chama o provedor, persiste
+resultado. Reemissão REAPROVEITA o mesmo documento (rejeitada/erro/rascunho/enviada); se já
+autorizada, não reemite (JaAutorizada).
+
+**Persistência:** `documento_fiscal` (máquina de estados rascunho→enviada→autorizada/rejeitada/
+cancelada/erro; chave/protocolo/xml/danfe base64). `documento_fiscal_evento` (tem cod_funcionario
+agora) grava eventos. `DocumentoFiscal#cancelar!` chama provedor + grava evento (quem/quando/motivo,
+justificativa ≥15) e só muda status se SEFAZ homologar. `aplicar_resultado!` → quando autorizada,
+`sincronizar_venda!` grava `numeronf` + `datanf` NA VENDA (não nos itens — ver pendências).
+
+## VENDA REESTRUTURADA (grande mudança desde o design)
+- `new` e `edit` usam o MESMO `_form_sales` (editável). Aposentados `editar_itens`/`atualizar_itens`
+  e `_list_sales` (deletados). Rota `:update` adicionada.
+- Persistência via **nested attributes** (não mais clear+rebuild): item/conta com `id` → UPDATE;
+  sem id → INSERT; `_destroy` → DELETE. O trigger de estoque do banco cuida de tudo
+  (delta de quantidade, troca de cor, troca de produto). `reject_if` nunca descarta registro com id.
+- Normalização monetária BR centralizada: concern `MoedaBr` (setters aceitam "1.234,56" → BigDecimal)
+  em Itemvenda/Contaspagrec/Venda.
+- Travas de edição: venda CANCELADA ou com NF-e AUTORIZADA não edita (`Venda#editavel?`,
+  `nfe_autorizada?`). Contas com lançamento no caixa ficam read-only (removidas do params_venda_update).
+
+## EMISSÃO NA TELA DE VENDA (UX atual)
+- Rodapé do form: botão VERDE (salvar) + botão AZUL redondo (salvar e emitir/reemitir, tooltip
+  dinâmico conforme status da última NF; some se já autorizada). Azul marca `emitir_nfe=1` e o
+  controller emite após salvar (`emitir_nfe_apos_salvar?`).
+- Indicador de perfil fiscal por item (abaixo do produto): texto pequeno azul (nome do perfil) /
+  vermelho ("Sem perfil fiscal"); só aparece com produto selecionado. Clica → modal escolhe o
+  Perfil Tributário e grava direto no produto via AJAX (`ProdutoPerfilFiscalController`).
+- Relatório de vendas (`rep_sales`): botão "i" abre detalhe inline da venda em ABAS (Produtos/Contas,
+  accordion — abrir uma fecha as outras). Item "Espelho NF (PDF)" gera um PDF espelho via WickedPdf
+  (`espelho_pdf.html.erb`) — sem valor fiscal, só conferência. Ações fiscais (DANFE/cancelar NF/
+  cancelar NF+venda/reemitir) no menu, conforme status. DataTables REMOVIDO dessa tabela (conflitava
+  com as linhas de detalhe colspan).
+- Cancelamento tem escopo: "nf" (só a NF) ou "ambos" (NF + venda, estorna estoque+contas via caixa).
+
+## GATE (importante)
+- Tudo fiscal está atrás de `empresa_tem_modulo_fiscal? && access_control.super_admin?` (gate
+  TEMPORÁRIO — só o Jonas vê, enquanto testa). Decisão combinada: depois trocar por SÓ
+  `empresa_tem_modulo_fiscal?` (libera pra qualquer usuário da empresa com o módulo). AINDA NÃO feito.
+- Empresa piloto: cod_empresa 2 (MR MARIPA), UF PR, FiscalConfig ativo (homologacao, brasilnfe).
+
+## DECISÕES QUE MUDARAM / CONFIRMADAS depois do design
+- Foco virou **NF-e 55 na tela de venda** (tela com cliente), NÃO NFC-e 65 no balcão. NFC-e 65 fica
+  pra futuro (tela de balcão). Produção NFC-e está "Desativado" (plano não contratado); homologação ok.
+- **Origem NÃO é obrigatória**: o builder usa `origem || "0"` (Nacional) como padrão. A trava de
+  emissão exige só NCM/CFOP/CSOSN (origem só vira aviso). Igual ao sistema atual do usuário.
+- **Checkbox "NF por item"** (do design, seção abaixo): NÃO será feito na venda. Decisão do usuário:
+  criar 2 telas separadas de **emissão avulsa** de NF-e e NFC-e (sem venda). Pendente/futuro.
+
+## PENDÊNCIAS (não feito ainda)
+1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
+2. Telas de emissão AVULSA de NF-e e NFC-e (substitui a ideia do checkbox por item).
+3. Fix do trigger `tgrf_estoquevenda` (coluna ambígua `quantidade` no ramo de alteração de
+   quantidade) foi aplicado MANUALMENTE pelo usuário em prod+local, mas NÃO está versionado numa
+   migration — ambiente novo via schema:load traria o bug de volta. Versionar.
+4. `qtdfiscal` na emissão: `sincronizar_venda!` grava numeronf na VENDA, não nos ITENS; o trigger
+   só mexe em qtdfiscal quando itemvenda.numeronf>0. Ajuste de estoque fiscal na emissão fica pra
+   depois (liga com as telas de emissão avulsa).
+5. Cancelamento no BrasilNfeAdapter: confirmar endpoint/campos reais na doc 2.0 antes de produção.
+6. Rejeição SEFAZ-PR 974 (CNPJ resp. técnico) — usuário vai credenciar o Brasil NFe na SEFAZ-PR
+   (externo). Até lá, emissão real não autoriza (homologação OK).
+
+## Arquivos-chave (orientação rápida)
+- services/fiscal/: emissor_fiscal.rb, documento_fiscal_builder.rb, brasil_nfe_adapter.rb; services/fiscal_service.rb, fiscal_result.rb
+- models/: documento_fiscal.rb, documento_fiscal_evento.rb, perfil_tributario.rb, regra_fiscal.rb, operacao_fiscal.rb, fiscal_config.rb; concerns/moeda_br.rb; venda.rb (editavel?/nfe_autorizada?)
+- controllers/collaborators_backoffice/: documentos_fiscais_controller.rb (emitir/espelho/cancelar/danfe/show), produto_perfil_fiscal_controller.rb, vendas_controller.rb (create/edit/update + emitir_nfe_apos_salvar?), perfis_tributarios/regras_fiscais/fiscal_config/fiscal_pendencias
+- views: vendas/shared/_form_sales.html.erb, vendas/_itensvenda_fields.html.erb, documentos_fiscais/espelho_pdf.html.erb, report/rep_sales/index.html.erb + _venda_detalhe.html.erb + _fiscal_acoes.html.erb
+- inflexão: documento_fiscal/perfil_tributario/regra_fiscal em config/initializers/inflections.rb (membros usam singular, ex: ..._documento_fiscal_path)
+
+---
+
 ## Princípios
 
 1. Produto NÃO guarda tributação; aponta para um **Perfil Tributário** (`perfil_tributario_id`). Muitos produtos → mesmo perfil.

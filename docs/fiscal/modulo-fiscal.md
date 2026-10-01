@@ -1,6 +1,13 @@
 # Módulo Fiscal — Design e Decisões
 
 > Cópia de documentação do design do módulo fiscal (o original de steering fica em `.kiro/steering/modulo-fiscal.md`, referenciável no chat com #modulo-fiscal).
+>
+> ⚠️ **Este documento é o DESIGN HISTÓRICO (Fatia 1).** O que está REALMENTE
+> implementado hoje (venda reestruturada, emissão na venda, espelho PDF, perfil
+> na venda, trava de emissão, cancelamento com evento, etc.) está na seção
+> **"ESTADO ATUAL"** no topo do steering `.kiro/steering/modulo-fiscal.md`.
+> Alguns pontos abaixo mudaram (ex.: foco virou NF-e 55 na venda, não NFC-e 65 no
+> balcão; o checkbox "NF por item" foi substituído por telas de emissão avulsa).
 > ERP Rails (Móveis Rosa). Simples Nacional. Emite NF-e (55) e NFC-e (65). Provedor: **Brasil NFe (plano Solo)** — escolhido por emissão ilimitada 55/65 + devoluções; adapter isola a escolha (reversível). Visão multiempresa + preparação reforma tributária (IBS/CBS).
 
 ## Princípios
