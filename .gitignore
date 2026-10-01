@@ -85,3 +85,6 @@ yarn-debug.log*
 *.p12
 *.pem
 *.key
+
+# macOS
+.DS_Store
