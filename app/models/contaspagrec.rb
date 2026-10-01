@@ -140,7 +140,7 @@ class Contaspagrec < ApplicationRecord
         if self.venda.present? && self.venda.tipo == 'T'
             for conta in self.lancamentos do
                 if conta.tipo == 'E' && self.venda.cod_empresa != self.venda.cod_empresa_transferida
-                    valor += conta.valor
+                    valor += conta.valor.to_d
                     puts "Valor pago: #{valor}"
                 else
                    # valor -= conta.valor
@@ -154,11 +154,11 @@ class Contaspagrec < ApplicationRecord
                     for conta in self.lancamentos do
                         if conta.historico != 14 # 14 credito cliente
                             if conta.tipo == 'E'
-                                valor += conta.valor
+                                valor += conta.valor.to_d
                             end
                         end
                         if conta.tipo == 'S'
-                            valor -= conta.valor
+                            valor -= conta.valor.to_d
                         end
                     end
                 else
@@ -166,10 +166,10 @@ class Contaspagrec < ApplicationRecord
                     if !self.compra.nil? || !self.frete.nil? || self.natureza_calculada == 1
                         for conta in self.lancamentos do
                             if conta.tipo == 'S'
-                                valor += conta.valor
+                                valor += conta.valor.to_d
                             else
                                 if !conta.cancelada?
-                                    valor -= conta.valor
+                                    valor -= conta.valor.to_d
                                 end
                             end
                         end
