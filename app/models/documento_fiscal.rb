@@ -98,5 +98,20 @@ class DocumentoFiscal < ApplicationRecord
     self.mensagem_sefaz    = result.mensagem.to_s[0, 255]
     self.emitido_em        = Time.current if result.sucesso?
     save!
+
+    sincronizar_venda! if status == "autorizada"
+  end
+
+  # Quando a NF-e e autorizada, grava o numero da nota na venda de origem
+  # (numeronf + datanf), para aparecer no relatorio (venda_nfe) e no DANFE.
+  #
+  # OBS: NAO altera o numeronf dos ITENS aqui. O ajuste de qtdfiscal na emissao
+  # (que depende de itemvenda.numeronf > 0) sera tratado numa etapa separada,
+  # junto da selecao de itens por NF.
+  def sincronizar_venda!
+    return if venda.nil? || numero.blank?
+    venda.update_columns(numeronf: numero, datanf: emitido_em || Time.current)
+  rescue => e
+    Rails.logger.error("[DocumentoFiscal#sincronizar_venda!] doc #{cod_documento_fiscal}: #{e.class} - #{e.message}")
   end
 end

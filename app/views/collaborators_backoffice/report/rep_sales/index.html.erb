@@ -170,6 +170,12 @@
                         </li>
                       <% end %>
                       <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <li>
+                          <button type="button" class="dropdown-item btn btn-info btn-circle"
+                                  onclick="MudarEstado('nfeDiv<%= sale.cod_venda %>')">
+                            <i class="fa fa-file-invoice" style="width: 35px;"></i> Espelho NF
+                          </button>
+                        </li>
                         <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_acoes",
                                    locals: { sale: sale } %>
                       <% end %>
@@ -191,6 +197,15 @@
                   </div>
                 </td>
               </tr>
+              <%# Linha oculta: espelho fiscal da NF (abre pelo "Espelho NF"). %>
+              <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                <tr id="nfeDiv<%= sale.cod_venda %>" style="display: none;">
+                  <td colspan="7">
+                    <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_espelho",
+                               locals: { sale: sale } %>
+                  </td>
+                </tr>
+              <% end %>
             <% end %>
           </tbody>
         </table>
@@ -214,6 +229,12 @@
     </div>
   </div>
   <script>
+    // Mostra/esconde a linha de detalhe (espelho fiscal) abaixo da venda.
+    function MudarEstado(el) {
+      var row = document.getElementById(el);
+      if (!row) { return; }
+      row.style.display = (row.style.display === "none" || row.style.display === "") ? "table-row" : "none";
+    }
     function formatarReal(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }

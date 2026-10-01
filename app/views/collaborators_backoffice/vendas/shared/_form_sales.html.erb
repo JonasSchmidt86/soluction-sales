@@ -221,15 +221,6 @@
       </div>
     <% end %>
 
-    <%# Previa fiscal: so faz sentido com a venda ja salva (usa os dados gravados). %>
-    <% if @sale.persisted? && empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-      <div class="position-fixed bottom-0 start-0 m-4">
-        <%= link_to preview_collaborators_backoffice_venda_documentos_fiscais_path(@sale),
-                    class: "btn btn-outline-primary", title: "Pré-visualizar dados fiscais da NF-e" do %>
-          <i class="fa fa-magnifying-glass me-1"></i> Prévia fiscal
-        <% end %>
-      </div>
-    <% end %>
   </div>
 </div>
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>

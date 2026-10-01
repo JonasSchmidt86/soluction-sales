@@ -142,7 +142,6 @@ Rails.application.routes.draw do
       # mesmo documento numa reemissao (ver Fiscal::EmissorFiscal).
       resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do
         post :emitir, on: :collection
-        get :preview, on: :collection
         post :cancelar, on: :member
         get :danfe, on: :member
       end
