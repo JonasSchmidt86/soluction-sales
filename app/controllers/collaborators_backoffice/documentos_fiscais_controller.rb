@@ -21,12 +21,14 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
                   alert: "NF-e #{documento.status}: #{documento.mensagem_sefaz}"
     end
   rescue Fiscal::EmissorFiscal::JaAutorizada => e
-    redirect_to edit_collaborators_backoffice_venda_path(@venda), alert: e.message
-  rescue Fiscal::EmissorFiscal::SemConfig, Fiscal::EmissorFiscal::SemOperacao => e
-    redirect_to edit_collaborators_backoffice_venda_path(@venda), alert: e.message
+    redirect_to collaborators_backoffice_report_sales_path, alert: e.message
+  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+         Fiscal::EmissorFiscal::SemConfig,
+         Fiscal::EmissorFiscal::SemOperacao => e
+    redirect_to collaborators_backoffice_report_sales_path, alert: e.message
   rescue => e
     Rails.logger.error("[DocumentosFiscais#emitir] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
-    redirect_to edit_collaborators_backoffice_venda_path(@venda),
+    redirect_to collaborators_backoffice_report_sales_path,
                 alert: "Falha ao emitir NF-e: #{e.message}"
   end
 

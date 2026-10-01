@@ -310,6 +310,10 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     rescue Fiscal::EmissorFiscal::JaAutorizada => e
       redirect_to collaborators_backoffice_report_sales_path, alert: e.message
       true
+    rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos => e
+      redirect_to edit_collaborators_backoffice_venda_path(sale),
+                  alert: "Venda salva. NF-e NÃO emitida — #{e.message}"
+      true
     rescue => e
       Rails.logger.error("[Vendas#emitir_nfe_apos_salvar] venda #{sale.cod_venda}: #{e.class} - #{e.message}")
       redirect_to edit_collaborators_backoffice_venda_path(sale),
