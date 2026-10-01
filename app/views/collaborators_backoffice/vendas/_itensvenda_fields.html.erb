@@ -5,6 +5,24 @@
             class: "text form-control border-top-0 border-start-0 border-end-0 border-dark produto_search", 
             placeholder: "Pressione Enter para buscar!" %>
     <div class="products_list list-group position-absolute bg-light" style="display: none; z-index: 100; width: 35%;"></div>
+    <%# Status do perfil fiscal do produto (so super_admin + modulo fiscal). %>
+    <%# So aparece quando a linha tem produto selecionado. Atualizado por JS. %>
+    <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+      <%
+        prod_fiscal   = f.object.produto
+        tem_produto   = f.object.cod_produto.present?
+        tem_perfil    = prod_fiscal&.cod_perfil_tributario.present?
+        badge_classe  = tem_perfil ? "text-bg-success" : "text-bg-danger"
+        badge_texto   = tem_perfil ? prod_fiscal.perfil_tributario&.nome : "Sem perfil fiscal"
+        badge_icone   = tem_perfil ? "fa-receipt" : "fa-triangle-exclamation"
+      %>
+      <a href="#" class="perfil-fiscal-status d-block small mt-1 <%= tem_perfil ? 'text-primary' : 'text-danger' %>"
+         data-cod-produto="<%= f.object.cod_produto %>"
+         style="text-decoration: none; cursor: pointer; <%= 'display:none;' unless tem_produto %>"
+         title="Clique para definir o perfil tributário">
+        <i class="fa <%= badge_icone %> perfil-fiscal-icone me-1"></i><span class="perfil-fiscal-label"><%= badge_texto %></span>
+      </a>
+    <% end %>
   </td>
   <td class="col-auto">
     <%= f.collection_select(:cod_cor, Core.where(ativo: :true).order(:nmcor, :cod_cor), :cod_cor, :nmcor_cod,
@@ -49,7 +67,7 @@
         onchange: "setValorTotal(this)" %>
   </td>
   <%= f.hidden_field :cod_empresa, value: current_collaborator.empresa.id %>
-  <td class="align-middle fw-semibold">
+  <td class="align-top fw-semibold">
     <%= link_to_remove_association f, class: 'btn btn-primary btn-xs btn-remove-item', title: 'Remover' do %>
       <i class="fa fa-trash-can"></i>
     <% end %>

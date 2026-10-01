@@ -142,6 +142,7 @@ Rails.application.routes.draw do
       # mesmo documento numa reemissao (ver Fiscal::EmissorFiscal).
       resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do
         post :emitir, on: :collection
+        get :espelho, on: :collection
         post :cancelar, on: :member
         get :danfe, on: :member
       end
@@ -208,6 +209,13 @@ Rails.application.routes.draw do
     end
     resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
+
+    # Perfil tributario do produto a partir da venda (modal "Sem perfil fiscal").
+    # index -> lista de perfis (JSON); show -> status fiscal do produto (JSON);
+    # update -> grava cod_perfil_tributario no produto.
+    get   'produto_perfil_fiscal',               to: 'produto_perfil_fiscal#index',  as: :produto_perfil_fiscal
+    get   'produto_perfil_fiscal/:cod_produto',  to: 'produto_perfil_fiscal#show',   as: :produto_perfil_fiscal_show
+    patch 'produto_perfil_fiscal/:cod_produto',  to: 'produto_perfil_fiscal#update', as: :produto_perfil_fiscal_update
 
     # Módulo de Controle de Acesso
     resources :access_roles do

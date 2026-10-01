@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :show, :cancelar, :danfe]
+  before_action :set_venda, only: [:emitir, :espelho, :show, :cancelar, :danfe]
   before_action :set_documento, only: [:show, :cancelar, :danfe]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
@@ -30,6 +30,36 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
     Rails.logger.error("[DocumentosFiscais#emitir] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_report_sales_path,
                 alert: "Falha ao emitir NF-e: #{e.message}"
+  end
+
+  # GET .../documentos_fiscais/espelho — gera um PDF "espelho" da NF-e com todos
+  # os dados (emitente, destinatario, itens com tributacao, totais), SEM valor
+  # fiscal e sem precisar de autorizacao da SEFAZ. Serve para conferencia/impressao.
+  def espelho
+    operacao = OperacaoFiscal.find_by(nome: "Venda")
+    config   = FiscalConfig.find_by(cod_empresa: @venda.cod_empresa)
+
+    if operacao.nil? || config.nil?
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "Configuração fiscal ausente (operação 'Venda' ou FiscalConfig)."
+      return
+    end
+
+    doc = Fiscal::DocumentoFiscalBuilder.new(@venda, operacao: operacao, config: config, modelo: 55).montar
+
+    html = ApplicationController.render(
+      template: "collaborators_backoffice/documentos_fiscais/espelho_pdf",
+      layout: false,
+      assigns: { venda: @venda, empresa: @venda.empresa, documento_neutro: doc }
+    )
+    pdf = WickedPdf.new.pdf_from_string(html, orientation: "Portrait", page_size: "A4",
+                                        margin: { top: 8, bottom: 8, left: 8, right: 8 })
+    send_data pdf, filename: "espelho-nfe-venda-#{@venda.cod_venda}.pdf",
+              type: "application/pdf", disposition: "inline"
+  rescue => e
+    Rails.logger.error("[DocumentosFiscais#espelho] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_report_sales_path,
+                alert: "Não foi possível gerar o espelho: #{e.message}"
   end
 
   # GET .../documentos_fiscais/:id  — detalhes do documento (status, mensagem).
