@@ -1,0 +1,57 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-file-invoice me-2"></i>
+        <h4 class="mb-0">Notas avulsas</h4>
+        <div class="ms-auto btn-group">
+          <%= link_to new_collaborators_backoffice_notas_avulsa_path(modelo: 55), class: "btn btn-sm btn-light" do %>
+            <i class="fa fa-plus me-1"></i> Nova NF-e 55
+          <% end %>
+          <%= link_to new_collaborators_backoffice_notas_avulsa_path(modelo: 65), class: "btn btn-sm btn-light" do %>
+            <i class="fa fa-plus me-1"></i> Nova NFC-e 65
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <% if @documentos.empty? %>
+          <p class="text-muted mb-0">Nenhuma nota avulsa emitida ainda.</p>
+        <% else %>
+          <table class="table table-sm table-striped align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Modelo</th>
+                <th>Status</th>
+                <th>Chave</th>
+                <th>Emitida em</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @documentos.each do |d| %>
+                <tr>
+                  <td><%= d.cod_documento_fiscal %></td>
+                  <td><%= d.modelo_nome %></td>
+                  <td>
+                    <% cor = d.autorizada? ? "success" : (d.cancelada? ? "secondary" : "danger") %>
+                    <span class="badge text-bg-<%= cor %>"><%= d.status %></span>
+                  </td>
+                  <td class="text-break small"><%= d.chave_acesso %></td>
+                  <td><%= d.emitido_em&.strftime("%d/%m/%Y %H:%M") %></td>
+                  <td class="text-end">
+                    <%= link_to "Ver", collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-primary" %>
+                    <% if d.autorizada? && d.danfe_base64.present? %>
+                      <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

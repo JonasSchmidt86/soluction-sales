@@ -210,6 +210,19 @@ Rails.application.routes.draw do
     resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
+    # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);
+    # create=emite; show=detalhe; danfe/espelho/cancelar.
+    resources :notas_avulsas, only: [:index, :new, :create, :show] do
+      member do
+        get  :danfe
+        get  :espelho
+        post :cancelar
+      end
+      collection do
+        get :cores_produto # cores de um produto (p/ o select de cor)
+      end
+    end
+
     # Perfil tributario do produto a partir da venda (modal "Sem perfil fiscal").
     # index -> lista de perfis (JSON); show -> status fiscal do produto (JSON);
     # update -> grava cod_perfil_tributario no produto.

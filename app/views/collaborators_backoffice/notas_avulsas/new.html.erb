@@ -1,0 +1,229 @@
+<% modelo_nome = @modelo == 65 ? "NFC-e (modelo 65)" : "NF-e (modelo 55)" %>
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-file-invoice me-2"></i>
+        <h4 class="mb-0">Emissão avulsa — <%= modelo_nome %></h4>
+        <div class="ms-auto btn-group">
+          <%= link_to "NF-e 55", new_collaborators_backoffice_notas_avulsa_path(modelo: 55),
+                      class: "btn btn-sm #{@modelo == 55 ? 'btn-light' : 'btn-outline-light'}" %>
+          <%= link_to "NFC-e 65", new_collaborators_backoffice_notas_avulsa_path(modelo: 65),
+                      class: "btn btn-sm #{@modelo == 65 ? 'btn-light' : 'btn-outline-light'}" %>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :post, local: true, id: "formAvulsa" do %>
+          <%= hidden_field_tag :modelo, @modelo %>
+
+          <%# ---- Destinatario ---- %>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Destinatário
+              <% if @modelo == 55 %><span class="text-danger">*</span><% else %><span class="text-muted">(opcional)</span><% end %>
+            </label>
+            <div class="position-relative">
+              <input type="text" id="clienteBusca" class="form-control"
+                     placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off">
+              <%= hidden_field_tag :cod_pessoa, "", id: "codPessoa" %>
+              <div id="clienteLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
+            </div>
+            <small id="clienteSelecionado" class="text-success"></small>
+          </div>
+
+          <%# ---- Itens ---- %>
+          <h5 class="mt-4">Produtos</h5>
+          <table class="table table-sm align-top">
+            <thead class="table-light">
+              <tr>
+                <th style="width:38%;">Produto</th>
+                <th>Cor</th>
+                <th style="width:10%;">Qtd</th>
+                <th style="width:14%;">Vl Unitário</th>
+                <th style="width:14%;">Total</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="itensBody"></tbody>
+          </table>
+          <button type="button" class="btn btn-primary btn-sm" id="addItem">
+            <i class="fa fa-plus me-1"></i> Adicionar produto
+          </button>
+
+          <div class="text-end mt-3">
+            <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
+            <button type="submit" class="btn btn-success" id="emitirBtn"
+                    data-confirm="Emitir a <%= modelo_nome %> agora?">
+              <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>
+
+<%# Linha-modelo (template) para novos itens %>
+<template id="itemTemplate">
+  <tr class="item-row">
+    <td class="position-relative">
+      <input type="text" class="form-control produto-busca" placeholder="Produto — digite para buscar" autocomplete="off">
+      <input type="hidden" class="cod-produto field-cod-produto">
+      <div class="list-group position-absolute w-100 produto-lista" style="display:none; z-index:1000;"></div>
+    </td>
+    <td>
+      <select class="form-select cod-cor field-cod-cor">
+        <option value="">—</option>
+      </select>
+    </td>
+    <td><input type="number" min="0" step="1" value="1" class="form-control qtd field-quantidade"></td>
+    <td><input type="text" class="form-control vlunit field-valorunitario" value="0,00"></td>
+    <td class="total-item align-middle">R$ 0,00</td>
+    <td class="align-middle">
+      <button type="button" class="btn btn-outline-danger btn-sm rm-item"><i class="fa fa-trash-can"></i></button>
+    </td>
+  </tr>
+</template>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+(function () {
+  var base = window.location.origin + '/collaborators_backoffice/';
+  var csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  // ---------- Destinatario (autocomplete) ----------
+  var cliInput = document.getElementById('clienteBusca');
+  var cliLista = document.getElementById('clienteLista');
+  var cliHidden = document.getElementById('codPessoa');
+  var cliSel = document.getElementById('clienteSelecionado');
+
+  cliInput.addEventListener('input', function () {
+    var q = this.value.trim();
+    cliHidden.value = ''; cliSel.textContent = '';
+    if (q.length < 2) { cliLista.style.display = 'none'; return; }
+    fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (ps) {
+        cliLista.innerHTML = '';
+        ps.forEach(function (p) {
+          var it = document.createElement('button');
+          it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+          it.textContent = p.nome + (p.cpf_cnpj ? ' — ' + p.cpf_cnpj : '');
+          it.addEventListener('click', function () {
+            cliHidden.value = p.cod_pessoa;
+            cliInput.value = p.nome;
+            cliSel.textContent = 'Selecionado: ' + p.nome;
+            cliLista.style.display = 'none';
+          });
+          cliLista.appendChild(it);
+        });
+        cliLista.style.display = ps.length ? 'block' : 'none';
+      });
+  });
+
+  // ---------- Moeda BR ----------
+  function parseBR(v) { return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0; }
+  function fmtBR(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  function recalc() {
+    var total = 0;
+    document.querySelectorAll('.item-row').forEach(function (row) {
+      var q = parseBR(row.querySelector('.qtd').value);
+      var v = parseBR(row.querySelector('.vlunit').value);
+      var t = q * v;
+      row.querySelector('.total-item').textContent = 'R$ ' + fmtBR(t);
+      total += t;
+    });
+    document.getElementById('totalNota').textContent = fmtBR(total);
+  }
+
+  // ---------- Itens ----------
+  var body = document.getElementById('itensBody');
+  var tpl = document.getElementById('itemTemplate');
+
+  function carregarCores(codProduto, selectEl) {
+    fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
+      .then(function (r) { return r.json(); })
+      .then(function (cores) {
+        selectEl.innerHTML = '<option value="">—</option>';
+        cores.forEach(function (c) {
+          var o = document.createElement('option');
+          o.value = c.cod_cor; o.textContent = c.nmcor;
+          o.dataset.valorvenda = c.valorvenda;
+          selectEl.appendChild(o);
+        });
+      });
+  }
+
+  function addItem() {
+    var frag = tpl.content.cloneNode(true);
+    body.appendChild(frag);
+    var row = body.lastElementChild;
+
+    var pInput = row.querySelector('.produto-busca');
+    var pHidden = row.querySelector('.cod-produto');
+    var pLista = row.querySelector('.produto-lista');
+    var corSel = row.querySelector('.cod-cor');
+
+    pInput.addEventListener('input', function () {
+      var q = this.value.trim();
+      pHidden.value = '';
+      if (q.length < 1) { pLista.style.display = 'none'; return; }
+      fetch(base + 'buscas/buscar_produtos?entidade=Produto&query=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (prods) {
+          pLista.innerHTML = '';
+          prods.forEach(function (p) {
+            var it = document.createElement('button');
+            it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+            it.textContent = p.produto;
+            it.addEventListener('click', function () {
+              pHidden.value = p.cod_produto;
+              pInput.value = p.produto;
+              pLista.style.display = 'none';
+              carregarCores(p.cod_produto, corSel);
+            });
+            pLista.appendChild(it);
+          });
+          pLista.style.display = prods.length ? 'block' : 'none';
+        });
+    });
+
+    corSel.addEventListener('change', function () {
+      var opt = this.selectedOptions[0];
+      if (opt && opt.dataset.valorvenda) {
+        var vl = row.querySelector('.vlunit');
+        if (parseBR(vl.value) === 0) { vl.value = fmtBR(parseFloat(opt.dataset.valorvenda) || 0); recalc(); }
+      }
+    });
+
+    row.querySelector('.qtd').addEventListener('input', recalc);
+    row.querySelector('.vlunit').addEventListener('input', recalc);
+    row.querySelector('.rm-item').addEventListener('click', function () { row.remove(); reindex(); recalc(); });
+  }
+
+  // Atribui names indexados itens[i][campo] para o Rails montar array de hashes.
+  function reindex() {
+    document.querySelectorAll('#itensBody .item-row').forEach(function (row, i) {
+      row.querySelector('.field-cod-produto').name   = 'itens[' + i + '][cod_produto]';
+      row.querySelector('.field-cod-cor').name        = 'itens[' + i + '][cod_cor]';
+      row.querySelector('.field-quantidade').name     = 'itens[' + i + '][quantidade]';
+      row.querySelector('.field-valorunitario').name  = 'itens[' + i + '][valorunitario]';
+    });
+  }
+
+  document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); });
+  addItem(); reindex(); // comeca com uma linha
+
+  // confirm no submit
+  document.getElementById('formAvulsa').addEventListener('submit', function (e) {
+    var btn = document.getElementById('emitirBtn');
+    if (btn.dataset.confirm && !confirm(btn.dataset.confirm)) { e.preventDefault(); }
+  });
+})();
+</script>

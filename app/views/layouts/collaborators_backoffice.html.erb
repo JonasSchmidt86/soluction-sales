@@ -344,6 +344,11 @@
                   <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
                     <i class="fa fa-triangle-exclamation me-1"></i> Pendências
                   <% end %>
+                  <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                    <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
+                      <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
+                    <% end %>
+                  <% end %>
                   <% if access_control.can_view?('fiscal_config') %>
                     <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
                       <i class="fa fa-gear me-1"></i> Configuração
