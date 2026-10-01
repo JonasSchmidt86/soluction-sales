@@ -1,7 +1,11 @@
 class Venda < ApplicationRecord
+    include MoedaBr
 
     self.table_name = "venda"
     self.primary_key = "cod_venda"
+
+    # Aceita valores em formato BR ("1.234,56") vindos do form/nested attributes.
+    moeda_br :valortotal, :acrescimo, :desconto
 
     after_commit :gerar_transferencia, if: -> { tipo == 'T' }
 

@@ -1,7 +1,11 @@
 class Itemvenda < ApplicationRecord
+    include MoedaBr
 
     self.table_name = "itemvenda"
     self.primary_key = "cod_item"
+
+    # Aceita valores em formato BR ("1.234,56") vindos do form/nested attributes.
+    moeda_br :valorunitario, :valor_acrescimo, :valor_desconto
 
     belongs_to :cor, :class_name => 'Core', :foreign_key => 'cod_cor' #, inverse_of: :cores
     
