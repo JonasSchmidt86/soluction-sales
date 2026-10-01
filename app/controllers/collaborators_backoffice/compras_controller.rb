@@ -82,6 +82,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       if params[:compra].present?
         compra.numeronf = params[:compra][:numeronf];
         compra.serienf = params[:compra][:serienf];
+        compra.nr_pedido = params[:compra][:nr_pedido];
         compra.desconto = params[:compra][:desconto]&.gsub(',', '.').to_f || 0.0;
         compra.valorfrete = params[:compra][:valorfrete]&.gsub(',', '.').to_f || 0.0;
 
@@ -526,6 +527,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         :dataemissao,
         :numeronf,
         :serienf,
+        :nr_pedido,
         :valorfrete,
         :valortotal,
         :cod_funcionario,

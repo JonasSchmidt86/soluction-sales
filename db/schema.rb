@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -352,6 +352,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000003) do
     t.string "arquivoxml", limit: 100
     t.decimal "desconto", precision: 18, scale: 3, default: "0.0"
     t.decimal "outrasdespesas", precision: 18, scale: 3, default: "0.0"
+    t.string "nr_pedido", limit: 30, comment: "numero do pedido de compra"
     t.index ["cod_pessoa"], name: "fki_pessoa"
   end
 
