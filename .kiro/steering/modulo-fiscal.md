@@ -90,8 +90,11 @@ justificativa ≥15) e só muda status se SEFAZ homologar. `aplicar_resultado!` 
    só mexe em qtdfiscal quando itemvenda.numeronf>0. Ajuste de estoque fiscal na emissão fica pra
    depois (liga com as telas de emissão avulsa).
 5. Cancelamento no BrasilNfeAdapter: confirmar endpoint/campos reais na doc 2.0 antes de produção.
-6. Rejeição SEFAZ-PR 974 (CNPJ resp. técnico) — usuário vai credenciar o Brasil NFe na SEFAZ-PR
-   (externo). Até lá, emissão real não autoriza (homologação OK).
+
+## MARCO: EMISSÃO REAL FUNCIONANDO ✅
+- O credenciamento do Brasil NFe como responsável técnico na SEFAZ-PR FOI FEITO
+  (resolveu a antiga rejeição 974). **NF-e já foram emitidas e autorizadas de verdade.**
+- Ou seja, o motor de emissão está validado ponta a ponta na SEFAZ real, não só homologação.
 
 ## Arquivos-chave (orientação rápida)
 - services/fiscal/: emissor_fiscal.rb, documento_fiscal_builder.rb, brasil_nfe_adapter.rb; services/fiscal_service.rb, fiscal_result.rb
