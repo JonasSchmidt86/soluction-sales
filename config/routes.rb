@@ -159,7 +159,11 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
+    resources :compras, only: [:index, :edit, :new, :create, :destroy, :show] do
+      # Devolucao de compra (NF-e finalidade 4). new = tela de revisao/edicao;
+      # create = emite. So super_admin + empresa com modulo fiscal.
+      resource :devolucao, only: [:new, :create], controller: "devolucoes_compra"
+    end
     resources :pedidos_compras
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]

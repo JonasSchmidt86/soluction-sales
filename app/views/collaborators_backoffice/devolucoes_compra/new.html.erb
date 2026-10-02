@@ -1,0 +1,108 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-rotate-left me-2"></i>
+        <h4 class="mb-0">Devolução de compra — NF #<%= @compra.numeronf %> (<%= @compra.pessoa&.nome %>)</h4>
+      </div>
+
+      <div class="card-body">
+        <% unless @tem_xml %>
+          <div class="alert alert-warning py-2">
+            <i class="fa fa-triangle-exclamation me-1"></i>
+            Sem XML da nota de compra disponível — os impostos não puderam ser espelhados automaticamente.
+            Revise os valores antes de emitir.
+          </div>
+        <% end %>
+
+        <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="form-floating">
+                <%= select_tag :cod_operacao_fiscal,
+                      options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                      class: "form-select" %>
+                <label>Operação</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <%= text_field_tag :natureza_operacao, @operacao_padrao&.natureza_operacao || "Devolucao de compra", class: "form-control" %>
+                <label>Natureza da operação</label>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-floating">
+                <%= text_field_tag :cfop, nil, class: "form-control", placeholder: "ex: 5202" %>
+                <label>CFOP (todos os itens)</label>
+              </div>
+              <small class="text-muted">Vazio = converte o CFOP de entrada p/ saída.</small>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Documento referenciado (chave NF-e)</label>
+            <%= text_field_tag :chave_referencia, @chave_referencia, class: "form-control", placeholder: "Chave de 44 dígitos (se houver)" %>
+          </div>
+
+          <table class="table table-sm table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="width:40px;">Dev?</th>
+                <th>Produto</th>
+                <th>NCM</th>
+                <th>CFOP orig.</th>
+                <th class="text-end">Qtd</th>
+                <th class="text-end">Vl Unit.</th>
+                <th>Impostos (espelho)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @itens.each_with_index do |it, i| %>
+                <tr>
+                  <td class="text-center">
+                    <%= check_box_tag "itens[#{i}][devolver]", "1", true %>
+                  </td>
+                  <td>
+                    <%= it[:descricao] %>
+                    <div class="small text-muted"><%= it[:cod_produto] %></div>
+                  </td>
+                  <td><%= it[:ncm] %></td>
+                  <td><%= it[:cfop_original] %></td>
+                  <td class="text-end" style="width:90px;">
+                    <%= text_field_tag "itens[#{i}][quantidade]",
+                          number_with_precision(it[:quantidade], precision: 2, separator: ",", delimiter: ""),
+                          class: "form-control form-control-sm text-end" %>
+                  </td>
+                  <td class="text-end" style="width:110px;">
+                    <%= text_field_tag "itens[#{i}][valor_unitario]",
+                          number_with_precision(it[:valor_unitario], precision: 2, separator: ",", delimiter: ""),
+                          class: "form-control form-control-sm text-end" %>
+                  </td>
+                  <td class="small">
+                    <% imp = it[:imposto] || {} %>
+                    <% if imp.present? %>
+                      <% imp.each do |tipo, v| %>
+                        <span class="badge text-bg-light border me-1"><%= tipo.to_s.upcase %>: <%= v[:valor] ? "R$ #{number_with_precision(v[:valor], precision: 2, separator: ',', delimiter: '.')}" : (v[:cst] || "—") %></span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-muted">sem impostos destacados</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+
+          <div class="d-flex justify-content-between mt-3">
+            <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
+            <button type="submit" class="btn btn-success"
+                    onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
+              <i class="fa fa-check-double me-1"></i> Emitir devolução
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

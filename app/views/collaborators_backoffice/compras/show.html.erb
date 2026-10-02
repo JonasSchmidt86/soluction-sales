@@ -171,6 +171,16 @@
                       </div>
                     </div>
                   <% end %>
+
+                  <%# Devolucao de compra (NF-e finalidade 4) — so super_admin + modulo fiscal. %>
+                  <% if empresa_tem_modulo_fiscal? && access_control.super_admin? && !@compra.cancelada %>
+                    <div class="d-flex justify-content-end mt-2">
+                      <%= link_to new_collaborators_backoffice_compra_devolucao_path(@compra),
+                                  class: "btn btn-warning" do %>
+                        <i class="fa fa-rotate-left me-1"></i> Emitir Devolução (NF-e)
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
               </div>
             </div>
