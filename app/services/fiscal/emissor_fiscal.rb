@@ -19,21 +19,24 @@ module Fiscal
     # Rascunho/enviada = ficou pela metade (ex: queda de rede antes do retorno).
     STATUS_REAPROVEITAVEIS = %w[rascunho enviada rejeitada erro].freeze
 
-    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil)
+    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil)
       @venda   = venda
       @modelo  = modelo
       @empresa = venda.empresa
       @config  = FiscalConfig.find_by(cod_empresa: @empresa.cod_empresa)
       @operacao = operacao || OperacaoFiscal.find_by(nome: "Venda")
       @cod_funcionario = cod_funcionario
+      @builder_injetado = builder    # devolucao passa um builder proprio
+      @cod_compra = cod_compra       # NF de devolucao de compra
     end
 
     def emitir
       raise SemConfig,   "Empresa sem configuração fiscal ativa" unless @config&.ativo?
-      raise SemOperacao, "Operação fiscal 'Venda' não encontrada" if @operacao.nil?
+      raise SemOperacao, "Operação fiscal não encontrada" if @operacao.nil?
 
       documento = documento_para_emissao
-      builder = DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo)
+      builder = @builder_injetado ||
+                DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo)
       doc_payload = builder.montar
 
       # Trava: NAO envia para a SEFAZ se faltar dado fiscal essencial. Em
@@ -90,12 +93,19 @@ module Fiscal
       pendencias = []
       produtos = Array(payload[:produtos])
 
-      pendencias << "Venda sem itens" if produtos.empty?
+      pendencias << "Sem itens" if produtos.empty?
+
+      # Na DEVOLUCAO (finalidade 4) a tributacao e espelhada da nota de compra
+      # (CST/valores vem do XML), nao do perfil do Simples. Entao exigimos so o
+      # essencial estrutural (CFOP); NCM/CST sao herdados da nota original.
+      devolucao = payload[:finalidade].to_i == 4
 
       produtos.each do |p|
         nome = p["NmProduto"].presence || "produto #{p["CodProdutoServico"]}"
+        pendencias << "#{nome}: sem CFOP" if p["CFOP"].blank?
+        next if devolucao
+
         pendencias << "#{nome}: sem NCM" if p["NCM"].blank? || p["NCM"].to_s == "00000000"
-        pendencias << "#{nome}: sem CFOP (verifique perfil/regra fiscal)" if p["CFOP"].blank?
         csosn = p.dig("Imposto", "ICMS", "CodSituacaoTributaria")
         pendencias << "#{nome}: sem CSOSN/CST de ICMS (verifique a regra fiscal)" if csosn.blank?
       end
@@ -140,9 +150,10 @@ module Fiscal
       DocumentoFiscal.create!(
         cod_empresa:        @empresa.cod_empresa,
         cod_venda:          @venda.try(:cod_venda),
+        cod_compra:         @cod_compra,
         modelo:             @modelo,
         natureza_operacao:  @operacao.natureza_operacao,
-        finalidade:         1,
+        finalidade:         @cod_compra.present? ? 4 : 1, # devolucao de compra = 4
         ambiente:           @config.ambiente,
         status:             "rascunho",
         cod_funcionario:    @cod_funcionario,
