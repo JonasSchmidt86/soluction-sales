@@ -90,9 +90,56 @@
                   <td class="small">
                     <% imp = it[:imposto] || {} %>
                     <% if imp.present? %>
-                      <% imp.each do |tipo, v| %>
-                        <span class="badge text-bg-light border me-1"><%= tipo.to_s.upcase %>: <%= v[:valor] ? "R$ #{number_with_precision(v[:valor], precision: 2, separator: ',', delimiter: '.')}" : (v[:cst] || "—") %></span>
+                      <%# Fator de rateio pela quantidade atual (igual ao do builder). %>
+                      <% q_orig = it[:quantidade_original].to_d
+                         q_dev  = it[:quantidade].to_d
+                         fator  = (q_orig.nonzero? && q_dev.nonzero?) ? (q_dev / q_orig) : 1.to_d
+                         icms   = imp[:icms] || {}
+                         ipi    = imp[:ipi] || {}
+                         pis    = imp[:pis] || {}
+                         cof    = imp[:cofins] || {}
+                         rateia = ->(v) { v.to_d.nonzero? ? (v.to_d * fator).round(2) : nil } %>
+
+                      <% if icms.present? %>
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                          <span class="text-muted" style="width:46px;">ICMS</span>
+                          <% icms_base_auto = rateia.(icms[:base_calculo]) ? number_with_precision(rateia.(icms[:base_calculo]), precision: 2, separator: ",", delimiter: "") : "" %>
+                          <% icms_valor_auto = rateia.(icms[:valor]) ? number_with_precision(rateia.(icms[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
+                          <span class="input-group input-group-sm" style="max-width:150px;">
+                            <span class="input-group-text">Base</span>
+                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control text-end", placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto %>
+                          </span>
+                          <span class="input-group input-group-sm" style="max-width:150px;">
+                            <span class="input-group-text">R$</span>
+                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control text-end", placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto %>
+                          </span>
+                          <span class="text-muted">CST <%= icms[:cst] || "—" %> · <%= icms[:aliquota] %>%</span>
+                        </div>
                       <% end %>
+
+                      <% if ipi.present? %>
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                          <span class="text-muted" style="width:46px;">IPI</span>
+                          <% ipi_valor_auto = rateia.(ipi[:valor]) ? number_with_precision(rateia.(ipi[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
+                          <span class="input-group input-group-sm" style="max-width:150px;">
+                            <span class="input-group-text">R$</span>
+                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control text-end", placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto %>
+                          </span>
+                          <span class="text-muted">CST <%= ipi[:cst] || "—" %> · <%= ipi[:aliquota] %>%</span>
+                        </div>
+                      <% end %>
+
+                      <%# PIS/COFINS: apenas informativo (rateado automaticamente). %>
+                      <% if pis.present? %>
+                        <span class="badge text-bg-light border me-1">PIS base <%= number_with_precision(rateia.(pis[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %> · <%= pis[:aliquota] %>%</span>
+                      <% end %>
+                      <% if cof.present? %>
+                        <span class="badge text-bg-light border me-1">COFINS base <%= number_with_precision(rateia.(cof[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %> · <%= cof[:aliquota] %>%</span>
+                      <% end %>
+                      <div class="text-muted" style="font-size:11px;">Valores já rateados pela quantidade. Edite se precisar ajustar.</div>
                     <% else %>
                       <span class="text-muted">sem impostos destacados</span>
                     <% end %>

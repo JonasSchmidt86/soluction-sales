@@ -112,7 +112,7 @@ module Fiscal
           # Referencia item a item a NF de compra original (se houver chave).
           "ChaveAcessoReferenciada" => @chave_ref.presence,
           "NItemReferenciado"       => (idx + 1),
-          "Imposto"          => montar_imposto(it[:imposto], fator_proporcional(it))
+          "Imposto"          => montar_imposto(it[:imposto], fator_proporcional(it), it[:imposto_override])
         }.compact
       end
     end
@@ -149,9 +149,10 @@ module Fiscal
     # Espelha o imposto da entrada aplicando o fator de rateio (devolucao parcial).
     # Valores monetarios (BaseCalculo, ValorIcms, ValorIpiDevolvido) sao
     # multiplicados pelo fator; percentuais (aliquota) permanecem.
-    def montar_imposto(imp, fator = 1.to_d)
+    def montar_imposto(imp, fator = 1.to_d, override = {})
       return {} if imp.blank?
       imp = imp.symbolize_keys
+      ov  = (override || {}).symbolize_keys
       out = {}
 
       if imp[:icms].present?
@@ -159,8 +160,9 @@ module Fiscal
         out["ICMS"] = {
           "CodSituacaoTributaria" => i[:cst],
           "AliquotaICMS"          => to_f_or_nil(i[:aliquota]),
-          "BaseCalculo"           => ratear(i[:base_calculo], fator),
-          "ValorIcms"             => ratear(i[:valor], fator)
+          # Override manual (digitado na tela) tem prioridade; senao, rateia.
+          "BaseCalculo"           => valor_final(ov[:icms_base], i[:base_calculo], fator),
+          "ValorIcms"             => valor_final(ov[:icms_valor], i[:valor], fator)
         }.compact
       end
 
@@ -169,7 +171,7 @@ module Fiscal
         out["IPI"] = {
           "CodSituacaoTributaria"        => i[:cst],
           "Aliquota"                     => to_f_or_nil(i[:aliquota]),
-          "ValorIpiDevolvido"            => ratear(i[:valor], fator),
+          "ValorIpiDevolvido"            => valor_final(ov[:ipi_valor], i[:valor], fator),
           "PercentualMercadoriaDevolvida"=> 100
         }.compact
       end
@@ -201,6 +203,13 @@ module Fiscal
       return nil if valor.nil?
       v = (valor.to_d * fator).round(2)
       v.zero? ? nil : v.to_f
+    end
+
+    # Valor final de um campo de imposto: usa o override manual (digitado na
+    # tela) quando informado; caso contrario, rateia o valor do XML pelo fator.
+    def valor_final(override, bruto, fator)
+      return override.to_d.round(2).to_f if override.present?
+      ratear(bruto, fator)
     end
 
     def montar_pagamentos

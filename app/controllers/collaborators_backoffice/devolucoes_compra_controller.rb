@@ -156,13 +156,36 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
       ed = ed.to_unsafe_h if ed.respond_to?(:to_unsafe_h)
       next unless ActiveModel::Type::Boolean.new.cast(ed["devolver"]) # so marcados
 
+      # Overrides manuais de imposto (base/valor ICMS e valor IPI). So contam
+      # como override quando o usuario ALTEROU o valor em relacao ao rateio
+      # automatico (comparado ao campo *_auto escondido). Assim, mudar so a
+      # quantidade NAO congela o imposto no valor pre-preenchido.
+      override = {
+        icms_base:  imposto_override(ed["icms_base"],  ed["icms_base_auto"]),
+        icms_valor: imposto_override(ed["icms_valor"], ed["icms_valor_auto"]),
+        ipi_valor:  imposto_override(ed["ipi_valor"],  ed["ipi_valor_auto"])
+      }.compact
+
       it.merge(
-        quantidade:     MoedaBr.parse(ed["quantidade"]).presence || it[:quantidade],
-        valor_unitario: MoedaBr.parse(ed["valor_unitario"]).presence || it[:valor_unitario],
-        valor_total:    (MoedaBr.parse(ed["quantidade"]).to_d.nonzero? && MoedaBr.parse(ed["valor_unitario"]).to_d.nonzero?) ?
-                          (MoedaBr.parse(ed["quantidade"]).to_d * MoedaBr.parse(ed["valor_unitario"]).to_d) : it[:valor_total]
+        quantidade:       MoedaBr.parse(ed["quantidade"]).presence || it[:quantidade],
+        valor_unitario:   MoedaBr.parse(ed["valor_unitario"]).presence || it[:valor_unitario],
+        valor_total:      (MoedaBr.parse(ed["quantidade"]).to_d.nonzero? && MoedaBr.parse(ed["valor_unitario"]).to_d.nonzero?) ?
+                            (MoedaBr.parse(ed["quantidade"]).to_d * MoedaBr.parse(ed["valor_unitario"]).to_d) : it[:valor_total],
+        imposto_override: override.presence
       )
     end
+  end
+
+  # Retorna o valor do imposto como override SOMENTE se o usuario mudou o campo
+  # em relacao ao valor automatico (rateado) pre-preenchido. Senao, nil (deixa
+  # o builder ratear pela quantidade). Compara em centavos para evitar ruido de
+  # formatacao.
+  def imposto_override(valor, valor_auto)
+    v = MoedaBr.parse(valor)
+    return nil if v.nil?
+    auto = MoedaBr.parse(valor_auto)
+    return v if auto.nil?
+    (v.to_d.round(2) == auto.to_d.round(2)) ? nil : v
   end
 
   def autorizar_fiscal!
