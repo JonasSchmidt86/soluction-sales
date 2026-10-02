@@ -45,7 +45,7 @@
     <div class="row">
       <div class="col"><span class="label">Modelo</span><br><span class="valor">55 (NF-e)</span></div>
       <div class="col"><span class="label">Natureza da Operação</span><br><span class="valor"><%= doc[:natureza] %></span></div>
-      <div class="col"><span class="label">Finalidade</span><br><span class="valor"><%= doc[:finalidade] == 1 ? "Normal" : doc[:finalidade] %></span></div>
+      <div class="col"><span class="label">Finalidade</span><br><span class="valor"><%= DocumentoFiscal.finalidade_label(doc[:finalidade]) %></span></div>
       <div class="col"><span class="label">Venda</span><br><span class="valor">#<%= @venda.cod_vendaempresa %></span></div>
     </div>
   </div>

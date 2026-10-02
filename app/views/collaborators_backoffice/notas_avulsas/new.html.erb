@@ -17,6 +17,26 @@
         <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :post, local: true, id: "formAvulsa" do %>
           <%= hidden_field_tag :modelo, @modelo %>
 
+          <%# ---- Operacao (natureza) e Finalidade ---- %>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <%= select_tag :cod_operacao_fiscal,
+                      options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                      class: "form-select" %>
+                <label>Operação (natureza)</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-floating">
+                <%= select_tag :finalidade,
+                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 1),
+                      class: "form-select" %>
+                <label>Finalidade</label>
+              </div>
+            </div>
+          </div>
+
           <%# ---- Destinatario ---- %>
           <div class="mb-3">
             <label class="form-label fw-semibold">

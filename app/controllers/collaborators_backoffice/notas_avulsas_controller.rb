@@ -15,6 +15,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   # Formulario de emissao avulsa. modelo = 55 (NF-e, default) ou 65 (NFC-e).
   def new
     @modelo = modelo_param
+    @operacoes = OperacaoFiscal.ativos.order(:nome)
+    @operacao_padrao = OperacaoFiscal.find_by(nome: "NF avulsa") || OperacaoFiscal.find_by(nome: "Venda")
+    @finalidades = DocumentoFiscal::FINALIDADES
   end
 
   # Emite a NF avulsa a partir dos itens (e destinatario, se 55).
@@ -36,8 +39,14 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       return
     end
 
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
+               OperacaoFiscal.find_by(nome: "NF avulsa") ||
+               OperacaoFiscal.find_by(nome: "Venda")
+
     avulso = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
     documento = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo,
+                                          operacao: operacao,
+                                          finalidade: params[:finalidade],
                                           cod_funcionario: current_collaborator.cod_funcionario).emitir
 
     if documento.autorizada?

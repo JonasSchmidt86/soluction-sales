@@ -14,11 +14,12 @@ module Fiscal
   class DocumentoFiscalBuilder
     class DadoFiscalAusente < StandardError; end
 
-    def initialize(venda, operacao:, config: nil, modelo: nil)
+    def initialize(venda, operacao:, config: nil, modelo: nil, finalidade: 1)
       @venda    = venda
       @operacao = operacao          # OperacaoFiscal (ex: "Venda")
       @config   = config
       @modelo   = modelo || 65      # 65 = NFC-e (balcao) por padrao
+      @finalidade = (finalidade.presence && finalidade.to_i) || 1
       @empresa  = venda.empresa
       @cliente  = venda.pessoa
     end
@@ -41,7 +42,7 @@ module Fiscal
     def montar
       {
         modelo:               @modelo,
-        finalidade:           1, # normal
+        finalidade:           @finalidade,
         natureza:             @operacao&.natureza_operacao.presence || "Venda de mercadoria",
         consumidor_final:     consumidor_final?,
         indicador_presenca:   1, # operacao presencial (balcao)

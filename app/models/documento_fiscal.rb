@@ -4,6 +4,23 @@ class DocumentoFiscal < ApplicationRecord
 
   STATUSES = %w[rascunho enviada autorizada rejeitada denegada cancelada erro].freeze
 
+  # Finalidade da NF-e (campo finNFe do layout SEFAZ). Lista fechada.
+  FINALIDADES = {
+    1 => "Normal",
+    2 => "Complementar",
+    3 => "Ajuste",
+    4 => "Devolução"
+  }.freeze
+
+  # Rotulo legivel da finalidade de um codigo (ou do proprio documento).
+  def self.finalidade_label(cod)
+    FINALIDADES[cod.to_i] || cod.to_s
+  end
+
+  def finalidade_label
+    self.class.finalidade_label(finalidade)
+  end
+
   belongs_to :empresa, class_name: "Empresa",
              foreign_key: "cod_empresa", primary_key: "cod_empresa"
   belongs_to :venda, class_name: "Venda",

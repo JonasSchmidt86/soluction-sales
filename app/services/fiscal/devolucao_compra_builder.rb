@@ -26,7 +26,8 @@ module Fiscal
   #   itens: lista do extractor (ja com impostos espelhados); pode vir editada.
   class DevolucaoCompraBuilder
     def initialize(compra, config:, itens:, chave_referencia: nil,
-                   natureza_operacao: "Devolucao de compra", cfop: nil, modelo: 55)
+                   natureza_operacao: "Devolucao de compra", cfop: nil, modelo: 55,
+                   finalidade: 4)
       @compra    = compra
       @config    = config
       @itens     = Array(itens)
@@ -34,6 +35,7 @@ module Fiscal
       @natureza  = natureza_operacao
       @cfop      = cfop
       @modelo    = modelo
+      @finalidade = (finalidade.presence && finalidade.to_i) || 4
       @empresa   = compra.empresa
       @fornecedor = compra.pessoa
     end
@@ -41,7 +43,7 @@ module Fiscal
     def montar
       {
         modelo:               @modelo,
-        finalidade:           4, # Devolucao
+        finalidade:           @finalidade,
         natureza:             @natureza.presence || "Devolucao de compra",
         consumidor_final:     false,
         indicador_presenca:   0, # nao se aplica (operacao entre empresas)
@@ -110,9 +112,21 @@ module Fiscal
           # Referencia item a item a NF de compra original (se houver chave).
           "ChaveAcessoReferenciada" => @chave_ref.presence,
           "NItemReferenciado"       => (idx + 1),
-          "Imposto"          => montar_imposto(it[:imposto])
+          "Imposto"          => montar_imposto(it[:imposto], fator_proporcional(it))
         }.compact
       end
+    end
+
+    # Fator de rateio dos impostos quando a devolucao e parcial.
+    # Ex: comprou 3, devolve 1 -> fator 1/3. Base/valor dos impostos sao
+    # multiplicados por esse fator. Aliquota (percentual) nao muda.
+    # Sem quantidade_original (fallback), ou quantidades invalidas -> 1 (cheio).
+    def fator_proporcional(it)
+      qtd_dev  = it[:quantidade].to_d
+      qtd_orig = it[:quantidade_original].to_d
+      return 1.to_d if qtd_orig.zero? || qtd_dev.zero?
+      return 1.to_d if qtd_dev == qtd_orig
+      qtd_dev / qtd_orig
     end
 
     # CFOP: o escolhido na tela (mesmo para todos) tem prioridade; senao, o CFOP
@@ -132,7 +146,10 @@ module Fiscal
 
     # Espelha o imposto destacado na entrada para o payload do EnviarNotaFiscal.
     # Usa os VALORES (BaseCalculo/Valor) quando presentes.
-    def montar_imposto(imp)
+    # Espelha o imposto da entrada aplicando o fator de rateio (devolucao parcial).
+    # Valores monetarios (BaseCalculo, ValorIcms, ValorIpiDevolvido) sao
+    # multiplicados pelo fator; percentuais (aliquota) permanecem.
+    def montar_imposto(imp, fator = 1.to_d)
       return {} if imp.blank?
       imp = imp.symbolize_keys
       out = {}
@@ -142,8 +159,8 @@ module Fiscal
         out["ICMS"] = {
           "CodSituacaoTributaria" => i[:cst],
           "AliquotaICMS"          => to_f_or_nil(i[:aliquota]),
-          "BaseCalculo"           => to_f_or_nil(i[:base_calculo]),
-          "ValorIcms"             => to_f_or_nil(i[:valor])
+          "BaseCalculo"           => ratear(i[:base_calculo], fator),
+          "ValorIcms"             => ratear(i[:valor], fator)
         }.compact
       end
 
@@ -152,7 +169,7 @@ module Fiscal
         out["IPI"] = {
           "CodSituacaoTributaria"        => i[:cst],
           "Aliquota"                     => to_f_or_nil(i[:aliquota]),
-          "ValorIpiDevolvido"            => to_f_or_nil(i[:valor]),
+          "ValorIpiDevolvido"            => ratear(i[:valor], fator),
           "PercentualMercadoriaDevolvida"=> 100
         }.compact
       end
@@ -162,7 +179,7 @@ module Fiscal
         out["PIS"] = {
           "CodSituacaoTributaria" => i[:cst],
           "Aliquota"              => to_f_or_nil(i[:aliquota]),
-          "BaseCalculo"           => to_f_or_nil(i[:base_calculo])
+          "BaseCalculo"           => ratear(i[:base_calculo], fator)
         }.compact
       end
 
@@ -171,11 +188,19 @@ module Fiscal
         out["COFINS"] = {
           "CodSituacaoTributaria" => i[:cst],
           "Aliquota"              => to_f_or_nil(i[:aliquota]),
-          "BaseCalculo"           => to_f_or_nil(i[:base_calculo])
+          "BaseCalculo"           => ratear(i[:base_calculo], fator)
         }.compact
       end
 
       out
+    end
+
+    # Aplica o fator de rateio a um valor monetario, arredondando a 2 casas.
+    # Retorna nil quando zera (compact remove do payload).
+    def ratear(valor, fator)
+      return nil if valor.nil?
+      v = (valor.to_d * fator).round(2)
+      v.zero? ? nil : v.to_f
     end
 
     def montar_pagamentos

@@ -11,6 +11,7 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
     @tem_xml = extractor.tem_xml?
     @operacoes = OperacaoFiscal.where(tipo: "saida").order(:nome)
     @operacao_padrao = OperacaoFiscal.find_by(nome: "Devolucao de compra")
+    @finalidades = DocumentoFiscal::FINALIDADES
 
     if @itens.empty?
       redirect_to collaborators_backoffice_compra_path(@compra),
@@ -38,17 +39,19 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
       return
     end
 
+    finalidade = params[:finalidade].presence || 4
+
     builder = Fiscal::DevolucaoCompraBuilder.new(
       @compra, config: config, itens: itens, chave_referencia: chave,
       natureza_operacao: params[:natureza_operacao].presence || operacao&.natureza_operacao,
-      cfop: params[:cfop].presence, modelo: 55
+      cfop: params[:cfop].presence, modelo: 55, finalidade: finalidade
     )
 
     origem = Fiscal::OrigemDevolucao.new(@compra.empresa)
     documento = Fiscal::EmissorFiscal.new(
       origem, modelo: 55, operacao: operacao,
       cod_funcionario: current_collaborator.cod_funcionario,
-      builder: builder, cod_compra: @compra.cod_compra
+      builder: builder, cod_compra: @compra.cod_compra, finalidade: finalidade
     ).emitir
 
     if documento.autorizada?

@@ -19,7 +19,7 @@ module Fiscal
     # Rascunho/enviada = ficou pela metade (ex: queda de rede antes do retorno).
     STATUS_REAPROVEITAVEIS = %w[rascunho enviada rejeitada erro].freeze
 
-    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil)
+    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil, finalidade: nil)
       @venda   = venda
       @modelo  = modelo
       @empresa = venda.empresa
@@ -28,6 +28,9 @@ module Fiscal
       @cod_funcionario = cod_funcionario
       @builder_injetado = builder    # devolucao passa um builder proprio
       @cod_compra = cod_compra       # NF de devolucao de compra
+      # Finalidade (finNFe): se nao informada, infere pelo contexto (devolucao
+      # de compra = 4, demais = 1). Quando informada, respeita a escolha.
+      @finalidade = (finalidade.presence && finalidade.to_i) || (@cod_compra.present? ? 4 : 1)
     end
 
     def emitir
@@ -36,7 +39,7 @@ module Fiscal
 
       documento = documento_para_emissao
       builder = @builder_injetado ||
-                DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo)
+                DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo, finalidade: @finalidade)
       doc_payload = builder.montar
 
       # Trava: NAO envia para a SEFAZ se faltar dado fiscal essencial. Em
@@ -134,6 +137,7 @@ module Fiscal
         existente.update!(
           status:            "rascunho",
           natureza_operacao: @operacao.natureza_operacao,
+          finalidade:        @finalidade,
           ambiente:          @config.ambiente,
           provedor:          @config.provedor,
           cod_funcionario:   @cod_funcionario || existente.cod_funcionario,
@@ -153,7 +157,7 @@ module Fiscal
         cod_compra:         @cod_compra,
         modelo:             @modelo,
         natureza_operacao:  @operacao.natureza_operacao,
-        finalidade:         @cod_compra.present? ? 4 : 1, # devolucao de compra = 4
+        finalidade:         @finalidade,
         ambiente:           @config.ambiente,
         status:             "rascunho",
         cod_funcionario:    @cod_funcionario,

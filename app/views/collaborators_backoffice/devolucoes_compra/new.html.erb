@@ -17,7 +17,7 @@
 
         <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
           <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-floating">
                 <%= select_tag :cod_operacao_fiscal,
                       options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
@@ -25,13 +25,21 @@
                 <label>Operação</label>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-floating">
                 <%= text_field_tag :natureza_operacao, @operacao_padrao&.natureza_operacao || "Devolucao de compra", class: "form-control" %>
                 <label>Natureza da operação</label>
               </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
+              <div class="form-floating">
+                <%= select_tag :finalidade,
+                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 4),
+                      class: "form-select" %>
+                <label>Finalidade</label>
+              </div>
+            </div>
+            <div class="col-md-3">
               <div class="form-floating">
                 <%= text_field_tag :cfop, nil, class: "form-control", placeholder: "ex: 5202" %>
                 <label>CFOP (todos os itens)</label>
