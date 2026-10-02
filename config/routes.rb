@@ -147,6 +147,7 @@ Rails.application.routes.draw do
         post :cancelar, on: :member
         get :danfe, on: :member
         get :xml, on: :member # baixa o XML (do banco ou do provedor pela chave)
+        post :reconciliar, on: :member # consulta a SEFAZ e atualiza o status
       end
     end
 

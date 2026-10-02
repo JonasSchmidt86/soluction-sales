@@ -46,6 +46,15 @@
   <% if doc.mensagem_sefaz.present? %>
     <li><span class="dropdown-item-text small text-muted" style="max-width: 280px; white-space: normal;"><%= doc.mensagem_sefaz %></span></li>
   <% end %>
+  <%# Reconciliar: a nota pode ter autorizado mesmo com status local de erro. %>
+  <li>
+    <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, class: "dropdown-item btn btn-secondary btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Consultar a SEFAZ e atualizar o status desta NF?" } do %>
+      <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
+    <% end %>
+  </li>
   <li>
     <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
                   method: :post, class: "dropdown-item btn btn-warning btn-circle",
@@ -57,6 +66,15 @@
 
 <% elsif doc && %w[rascunho enviada].include?(doc.status) %>
   <li><h6 class="dropdown-header">NF-e em processamento</h6></li>
+  <%# Reconciliar: confirma se a SEFAZ ja autorizou (resposta pode ter se perdido). %>
+  <li>
+    <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, class: "dropdown-item btn btn-secondary btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Consultar a SEFAZ e atualizar o status desta NF?" } do %>
+      <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
+    <% end %>
+  </li>
   <li>
     <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
                   method: :post, class: "dropdown-item btn btn-primary btn-circle",

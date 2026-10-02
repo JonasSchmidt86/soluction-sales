@@ -130,8 +130,31 @@ module Fiscal
       to_evento_result(resposta, status_sucesso: :autorizado)
     end
 
-    def consultar(_referencia)
-      nao_implementado(:consultar)
+    # Consulta a situacao de emissao de um documento ja enviado. Doc 2.0:
+    # POST /ConsultarNotaFiscal. Localiza por Chave, IdentificadorInterno ou
+    # Numero (+ModeloDocumento). Com retornar_arquivos: true devolve XML/PDF da
+    # nota autorizada. Retorna FiscalConsulta (encontrada?/situacao/arquivos).
+    #
+    # referencia: chave (String) ou Hash { chave:, identificador:, numero:,
+    #             modelo:, serie: }.
+    def consultar(referencia)
+      filtros =
+        if referencia.is_a?(Hash)
+          referencia
+        else
+          { chave: referencia }
+        end
+      body = {
+        "Chave"                => filtros[:chave].to_s.gsub(/\D/, "").presence,
+        "IdentificadorInterno" => filtros[:identificador].presence,
+        "ModeloDocumento"      => (filtros[:modelo] || 0).to_i,
+        "Numero"               => filtros[:numero].presence&.to_i,
+        "Serie"                => filtros[:serie].presence,
+        "TipoAmbiente"         => 0, # qualquer
+        "RetornarArquivos"     => filtros.fetch(:retornar_arquivos, false) ? true : false
+      }.compact
+      resposta = post("/ConsultarNotaFiscal", body)
+      to_consulta(resposta)
     end
 
     # Obtem o arquivo (XML ou PDF) de um documento fiscal ja existente na base,
@@ -253,6 +276,58 @@ module Fiscal
         mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
         bruto:     resposta
       )
+    end
+
+    # Converte a resposta do ConsultarNotaFiscal em FiscalConsulta neutro.
+    # Nota.Status: 1 autorizada, 2 cancelada, 3 rejeitada, 4 denegada,
+    # 5 em processamento (seguindo DsStatus). Mapeamos para o vocabulario do
+    # resto do sistema (autorizada/cancelada/rejeitada/denegada/enviada).
+    def to_consulta(resposta)
+      encontrada = resposta["Encontrada"] == true
+      nota = resposta["Nota"] || {}
+      erro = resposta["Error"].presence ||
+             Array(resposta["erros"]).map { |e| e["descricao"] }.compact.join("; ").presence
+
+      situacao = mapear_situacao_consulta(nota)
+
+      FiscalConsulta.new(
+        encontrada:    encontrada,
+        situacao:      situacao,
+        chave:         nota["Chave"],
+        numero:        nota["Numero"],
+        serie:         nota["Serie"],
+        protocolo:     nota["NumeroProtocolo"],
+        cod_sefaz:     nota["CodStatusResposta"],
+        mensagem:      nota["DsStatusResposta"].presence || nota["DsStatus"].presence || erro,
+        xml_base64:    nota["Base64Xml"],
+        pdf_base64:    nota["Base64File"],
+        erro:          encontrada ? nil : erro,
+        bruto:         resposta
+      )
+    end
+
+    # Deriva a situacao neutra a partir da Nota retornada. Prioriza o codigo da
+    # SEFAZ (CodStatusResposta) quando presente; cai para o enum Status/DsStatus.
+    def mapear_situacao_consulta(nota)
+      cod = nota["CodStatusResposta"].to_i
+      return :autorizada if [100, 150].include?(cod)
+      return :cancelada  if [101, 151, 135, 155].include?(cod)
+      return :denegada   if [110, 301, 302, 303].include?(cod)
+
+      case nota["Status"].to_i
+      when 1 then :autorizada
+      when 2 then :cancelada
+      when 3 then :rejeitada
+      when 4 then :denegada
+      when 5 then :enviada
+      else
+        ds = nota["DsStatus"].to_s.downcase
+        return :autorizada if ds.include?("autoriz")
+        return :cancelada  if ds.include?("cancel")
+        return :denegada   if ds.include?("deneg")
+        return :rejeitada  if ds.include?("rejeit")
+        :desconhecida
+      end
     end
 
     # Converte a resposta crua do ObterArquivoNotaFiscal em FiscalArquivo.

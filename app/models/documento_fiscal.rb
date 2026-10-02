@@ -138,6 +138,58 @@ class DocumentoFiscal < ApplicationRecord
     Rails.logger.error("[DocumentoFiscal#estornar_estoque_fiscal] doc #{cod_documento_fiscal}: #{e.class} - #{e.message}")
   end
 
+  # Reconcilia o status deste documento com a SEFAZ via ConsultarNotaFiscal.
+  # Util quando a emissao ficou "enviada"/"erro" por queda de rede mas a nota
+  # pode ter sido autorizada. Atualiza status, chave, protocolo e XML/DANFE
+  # (pede arquivos). Retorna a FiscalConsulta.
+  #
+  # Localiza por chave (se houver) ou pelo IdentificadorInterno derivado da
+  # venda (VENDA-<cod>); sem nenhum dos dois, nao consulta.
+  def reconciliar_status!
+    config = empresa.fiscal_config
+    return nil if config.nil? || !config.ativo?
+
+    filtros = { modelo: modelo.to_i, retornar_arquivos: true }
+    if chave_acesso.present?
+      filtros[:chave] = chave_acesso
+    elsif cod_venda.present?
+      filtros[:identificador] = "VENDA-#{cod_venda}"
+    else
+      return nil
+    end
+
+    consulta = FiscalService.new(config).consultar(filtros)
+    return consulta unless consulta&.encontrada?
+
+    novo_status = MAPA_STATUS_CONSULTA[consulta.situacao]
+    attrs = {}
+    attrs[:status]         = novo_status if novo_status.present?
+    attrs[:chave_acesso]   = consulta.chave     if consulta.chave.present?
+    attrs[:protocolo]      = consulta.protocolo if consulta.protocolo.present?
+    attrs[:numero]         = consulta.numero    if consulta.numero.present?
+    attrs[:serie]          = consulta.serie     if consulta.serie.present?
+    attrs[:xml_base64]     = consulta.xml_base64 if consulta.xml_base64.present?
+    attrs[:danfe_base64]   = consulta.pdf_base64 if consulta.pdf_base64.present?
+    attrs[:mensagem_sefaz] = consulta.mensagem.to_s[0, 255] if consulta.mensagem.present?
+    attrs[:emitido_em]     = Time.current if novo_status == "autorizada" && emitido_em.blank?
+
+    update(attrs) if attrs.any?
+    sincronizar_venda! if status == "autorizada"
+    consulta
+  rescue => e
+    Rails.logger.error("[DocumentoFiscal#reconciliar_status] doc #{cod_documento_fiscal}: #{e.class} - #{e.message}")
+    nil
+  end
+
+  # Situacao da CONSULTA (FiscalConsulta) -> status do documento.
+  MAPA_STATUS_CONSULTA = {
+    autorizada: "autorizada",
+    cancelada:  "cancelada",
+    rejeitada:  "rejeitada",
+    denegada:   "denegada",
+    enviada:    "enviada"
+  }.freeze
+
   # Aplica o resultado da emissao (FiscalResult) a este documento.
   def aplicar_resultado!(result)
     self.status            = MAPA_STATUS[result.status.to_s] || "erro"

@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe, :xml]
-  before_action :set_documento, only: [:show, :cancelar, :danfe, :xml]
+  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe, :xml, :reconciliar]
+  before_action :set_documento, only: [:show, :cancelar, :danfe, :xml, :reconciliar]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
   # Emite (ou reemite) a NF-e modelo 55 da venda. O EmissorFiscal reaproveita
@@ -87,6 +87,26 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
     Rails.logger.error("[DocumentosFiscais#previsualizar] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_report_sales_path,
                 alert: "Falha ao pré-visualizar: #{e.message}"
+  end
+
+  # POST .../documentos_fiscais/:id/reconciliar — consulta a SEFAZ
+  # (ConsultarNotaFiscal) e atualiza o status/arquivos deste documento.
+  # Util quando ficou "enviada"/"erro" por queda de rede mas pode ter autorizado.
+  def reconciliar
+    consulta = @documento.reconciliar_status!
+    destino = collaborators_backoffice_report_sales_path
+
+    if consulta.nil?
+      redirect_to destino, alert: "Não foi possível consultar (sem chave/identificador ou config fiscal)."
+    elsif !consulta.encontrada?
+      redirect_to destino, alert: "Documento não localizado na SEFAZ: #{consulta.erro || consulta.mensagem}"
+    else
+      redirect_to destino,
+                  notice: "Status atualizado: #{@documento.status}#{" — #{consulta.mensagem}" if consulta.mensagem.present?}"
+    end
+  rescue => e
+    Rails.logger.error("[DocumentosFiscais#reconciliar] doc #{@documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_report_sales_path, alert: "Falha ao consultar: #{e.message}"
   end
 
   # GET .../documentos_fiscais/:id  — detalhes do documento (status, mensagem).
