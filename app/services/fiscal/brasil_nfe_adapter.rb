@@ -435,16 +435,8 @@ module Fiscal
     def to_cadastro(resposta)
       ok   = resposta["status"].to_i == 1 && resposta["Error"].blank? && resposta["_http_status"].to_i < 400
       sit  = resposta["situacao"].to_i
-      end_api = resposta["Endereco"]
-      con_api = resposta["Contato"]
-
-      endereco = end_api.is_a?(Hash) ? end_api.transform_keys(&:to_s).slice(
-        "logradouro", "numero", "complemento", "bairro", "municipio", "cep", "uf"
-      ).reject { |_, v| v.blank? }.presence : nil
-
-      contato = con_api.is_a?(Hash) ? con_api.transform_keys(&:to_s).slice(
-        "telefone", "email", "fax"
-      ).reject { |_, v| v.blank? }.presence : nil
+      endereco = extrair_endereco_cadastro(resposta["Endereco"])
+      contato  = extrair_contato_cadastro(resposta["Contato"])
 
       FiscalCadastro.new(
         sucesso:         ok,
@@ -469,6 +461,33 @@ module Fiscal
         contato:         contato,
         bruto:           resposta
       )
+    end
+
+    # Normaliza o endereco do cadastro (a API usa chaves CamelCase: Cep,
+    # Logradouro, Numero, Bairro, Municipio, Uf...). Tolera tbm minusculas.
+    def extrair_endereco_cadastro(end_api)
+      return nil unless end_api.is_a?(Hash)
+      h = end_api.transform_keys { |k| k.to_s.downcase }
+      {
+        "logradouro"  => h["logradouro"],
+        "numero"      => h["numero"],
+        "complemento" => h["complemento"],
+        "bairro"      => h["bairro"],
+        "municipio"   => h["municipio"],
+        "cep"         => h["cep"],
+        "uf"          => h["uf"]
+      }.reject { |_, v| v.blank? }.presence
+    end
+
+    # Normaliza o contato do cadastro (chaves Telefone/Email/Fax).
+    def extrair_contato_cadastro(con_api)
+      return nil unless con_api.is_a?(Hash)
+      h = con_api.transform_keys { |k| k.to_s.downcase }
+      {
+        "telefone" => h["telefone"],
+        "email"    => h["email"],
+        "fax"      => h["fax"]
+      }.reject { |_, v| v.blank? }.presence
     end
 
     # Converte a resposta do ConsultarStatusSefaz no FiscalStatus neutro.
