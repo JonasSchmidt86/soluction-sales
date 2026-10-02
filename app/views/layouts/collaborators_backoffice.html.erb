@@ -619,6 +619,23 @@
           buscarEnderecoPorCEP(cepInput);
           });
           });
+
+          // Auto-busca: quando o cadastro abre JA preenchido com um CEP valido
+          // (ex.: vindo da consulta SEFAZ), dispara o ViaCEP para completar/
+          // corrigir o endereco. Escolhe o bloco pelo TIPO selecionado (PF/PJ)
+          // para nao depender da ordem de inicializacao do toggle de divs e
+          // evitar o partial oculto (ids/campos duplicados).
+          (function autoBuscaCepPreenchido() {
+            var tipoEl = document.querySelector('input[name="pessoa[tipo]"]:checked');
+            var tipo = tipoEl ? tipoEl.value : 'F';
+            var blocoId = tipo === 'J' ? '#pessoaJuridica' : '#pessoaFisica';
+            var bloco = document.querySelector(blocoId);
+            if (!bloco) return;
+            var cepInput = bloco.querySelector('input.cep');
+            if (cepInput && cepInput.value.replace(/\D/g, '').length === 8) {
+              buscarEnderecoPorCEP(cepInput);
+            }
+          })();
           });
 
           // -------------------- CADASTRO DE PJ PELO CNPJ ---------------------------------------
@@ -716,30 +733,86 @@
             });
           }
 
-          // Consulta a SEFAZ (CCC) para preencher a Inscricao Estadual e avisar a
-          // situacao cadastral. So complementa; se nao houver modulo fiscal, ignora.
-          function complementarComSefaz(escopo, cnpjValue, uf) {
-            var url = '<%= collaborators_backoffice_pessoas_consultar_cadastro_sefaz_path %>' +
-                      '?cnpj=' + encodeURIComponent(cnpjValue) +
-                      (uf ? '&uf=' + encodeURIComponent(uf) : '');
-            fetch(url, { headers: { 'Accept': 'application/json' } })
+          // Preenche a IE (campo rg_ie) quando veio da SEFAZ e esta vazio.
+          function preencherIe(escopo, ie) {
+            if (!ie) return;
+            var ieEl = escopo.querySelector('[name*="[rg_ie]"]');
+            if (ieEl && !ieEl.value) { ieEl.value = ie; }
+          }
+
+          // Fonte SEFAZ (CCC): traz razao/IE/endereco. Se nao vier endereco
+          // (depende da UF), complementa com a BrasilAPI. Depois salva.
+          function buscarPorSefaz(escopo, cnpjValue) {
+            var url = '<%= collaborators_backoffice_pessoas_consultar_cadastro_sefaz_path %>?cnpj=' + cnpjValue;
+            return fetch(url, { headers: { 'Accept': 'application/json' } })
               .then(function(r) { return r.json().catch(function() { return null; }); })
               .then(function(d) {
-                if (!d || d.status === 'sem_modulo' || d.status === 'sem_config') return;
+                // Sem modulo/config: cai para a BrasilAPI.
+                if (!d || d.status === 'sem_modulo' || d.status === 'sem_config') {
+                  return buscarPorBrasilApi(escopo, cnpjValue);
+                }
                 if (d.status !== 'ok') {
                   if (d.mensagem) growl('SEFAZ: ' + d.mensagem, 'warning');
-                  return;
+                  // Mesmo sem sucesso na SEFAZ, tenta a BrasilAPI como fallback.
+                  return buscarPorBrasilApi(escopo, cnpjValue);
                 }
-                // Preenche a IE se veio e o campo estiver vazio.
-                if (d.ie) {
-                  var ieEl = escopo.querySelector('[name*="[rg_ie]"]');
-                  if (ieEl && !ieEl.value) { ieEl.value = d.ie; }
-                }
+
+                preencherCamposEmpresa(escopo, d);
+                preencherIe(escopo, d.ie);
                 var msg = 'SEFAZ: ' + (d.situacao || (d.habilitado ? 'Habilitado' : 'verificar'));
                 if (d.ie) msg += ' — IE ' + d.ie;
                 growl(msg, d.habilitado ? 'success' : 'warning');
+
+                // Sem endereco (UF nao retornou): completa com a BrasilAPI, sem
+                // sobrescrever o que a SEFAZ ja preencheu.
+                if (!d.tem_endereco) {
+                  return complementarEnderecoBrasilApi(escopo, cnpjValue)
+                           .finally(function () { salvarAutomaticamentePJ(cnpjValue); });
+                }
+                salvarAutomaticamentePJ(cnpjValue);
               })
-              .catch(function(e) { console.error('Erro SEFAZ:', e); });
+              .catch(function (e) {
+                console.error('Erro SEFAZ:', e);
+                return buscarPorBrasilApi(escopo, cnpjValue);
+              });
+          }
+
+          // Fonte BrasilAPI: preenche tudo e salva.
+          function buscarPorBrasilApi(escopo, cnpjValue) {
+            return fetch('<%= collaborators_backoffice_pessoas_buscar_cnpj_path %>?cnpj=' + cnpjValue, {
+              headers: { 'Accept': 'application/json' }
+            })
+            .then(function(response) { return response.json().catch(function() { return null; }); })
+            .then(function(apiData) {
+              if (!apiData) return;
+              if (apiData.status !== 'ok') { growl(apiData.message, 'warning'); return; }
+              preencherCamposEmpresa(escopo, apiData);
+              salvarAutomaticamentePJ(cnpjValue);
+            });
+          }
+
+          // Completa SO os campos de endereco vazios com a BrasilAPI (quando a
+          // SEFAZ nao trouxe endereco). Nao salva aqui (quem chama decide).
+          function complementarEnderecoBrasilApi(escopo, cnpjValue) {
+            return fetch('<%= collaborators_backoffice_pessoas_buscar_cnpj_path %>?cnpj=' + cnpjValue, {
+              headers: { 'Accept': 'application/json' }
+            })
+            .then(function(response) { return response.json().catch(function() { return null; }); })
+            .then(function(apiData) {
+              if (!apiData || apiData.status !== 'ok') return;
+              var setVazio = function(name, value) {
+                if (!value) return;
+                var el = escopo.querySelector('[name*="' + name + '"]');
+                if (el && !el.value) { el.value = value; }
+              };
+              setVazio('[cep]', apiData.cep);
+              setVazio('[endereco]', apiData.endereco);
+              setVazio('[numero]', apiData.numero);
+              setVazio('[complemento]', apiData.complemento);
+              setVazio('[bairro]', apiData.bairro);
+              var citySelect = escopo.querySelector('[name*="cod_cidade"]');
+              if (citySelect && !citySelect.value && apiData.cod_cidade) { citySelect.value = apiData.cod_cidade; }
+            });
           }
 
           function processarCNPJ(cnpjInput) {
@@ -761,23 +834,16 @@
                 return;
               }
 
-              // 2) Nao existe no banco: busca na BrasilAPI.
-              return fetch('<%= collaborators_backoffice_pessoas_buscar_cnpj_path %>?cnpj=' + cnpjValue, {
-                headers: { 'Accept': 'application/json' }
-              })
-              .then(function(response) { return response.json().catch(function() { return null; }); })
-              .then(function(apiData) {
-                if (!apiData) return;
-                if (apiData.status !== 'ok') {
-                  growl(apiData.message, 'warning');
-                  return;
-                }
-                // 3) Preenche os campos e salva automaticamente (somente o que veio da API).
-                preencherCamposEmpresa(escopo, apiData);
-                // 3b) Complementa com IE/situacao da SEFAZ (so se modulo fiscal ativo).
-                complementarComSefaz(escopo, cnpjValue, apiData.uf);
-                salvarAutomaticamentePJ(cnpjValue);
-              });
+              // 2) Nao existe no banco. Fonte dos dados:
+              //    - Com modulo fiscal: SEFAZ primeiro (traz razao/IE/endereco e
+              //      nao sofre o rate limit da BrasilAPI publica). Se faltar
+              //      endereco, complementa com a BrasilAPI.
+              //    - Sem modulo fiscal: BrasilAPI direto (como antes).
+              var temModuloFiscal = <%= empresa_tem_modulo_fiscal? ? 'true' : 'false' %>;
+              if (temModuloFiscal) {
+                return buscarPorSefaz(escopo, cnpjValue);
+              }
+              return buscarPorBrasilApi(escopo, cnpjValue);
             })
             .catch(function(error) { console.error('Erro ao processar CNPJ:', error); });
           }

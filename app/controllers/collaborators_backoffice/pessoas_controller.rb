@@ -39,7 +39,12 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
     end
   
     def new
-      @pessoa = Pessoa.new
+      # Permite abrir o cadastro ja preenchido (ex.: vindo da consulta SEFAZ).
+      # So aceita atributos conhecidos e seguros via query string.
+      prefill = params.permit(:tipo, :cpf_cnpj, :nome, :apelido, :rg_ie,
+                              :cep, :endereco, :numero, :bairro, :complemento,
+                              :telefone, :email, :cod_cidade).to_h
+      @pessoa = Pessoa.new(prefill)
     end
   
     def create
@@ -157,13 +162,25 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
       end
 
       cad = FiscalService.new(config).consultar_cadastro(uf: uf, documento: doc)
+      e = cad.endereco || {}
       render json: {
         status:      cad.sucesso? ? "ok" : "falha",
         habilitado:  cad.habilitado?,
         situacao:    cad.situacao,
         ie:          cad.ie,
         razao_social: cad.razao_social,
-        mensagem:    cad.mensagem
+        mensagem:    cad.mensagem,
+        # Campos para preencher o formulario (mesma forma do buscar_cnpj).
+        nome:        cad.razao_social,
+        apelido:     cad.nome_fantasia,
+        cep:         e["cep"],
+        endereco:    e["logradouro"],
+        numero:      e["numero"],
+        bairro:      e["bairro"],
+        complemento: e["complemento"],
+        telefone:    (cad.contato && cad.contato["telefone"]),
+        email:       (cad.contato && cad.contato["email"]),
+        tem_endereco: e["logradouro"].present?
       }
     rescue => e
       Rails.logger.error("[Pessoas#consultar_cadastro_sefaz] #{e.class} - #{e.message}")

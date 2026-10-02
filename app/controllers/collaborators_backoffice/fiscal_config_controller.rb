@@ -59,6 +59,12 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
     end
 
     cad = FiscalService.new(@config).consultar_cadastro(uf: uf, documento: doc)
+
+    # Verifica se ja existe pessoa com esse documento, para oferecer "abrir" ou
+    # "cadastrar". Monta tambem os params de pre-preenchimento do novo cadastro.
+    pessoa = Pessoa.select(:cod_pessoa).find_by(cpf_cnpj: doc)
+    e = cad.endereco || {}
+
     render json: {
       sucesso:         cad.sucesso?,
       habilitado:      cad.habilitado?,
@@ -77,7 +83,24 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
       data_alteracao:  cad.data_alteracao,
       endereco:        cad.endereco_linha,
       contato:         cad.contato,
-      mensagem:        cad.mensagem
+      mensagem:        cad.mensagem,
+      # Suporte ao atalho de cadastro de pessoa:
+      pessoa_existe:   pessoa.present?,
+      cod_pessoa:      pessoa&.cod_pessoa,
+      prefill: {
+        tipo:        "J",
+        cpf_cnpj:    doc,
+        nome:        cad.razao_social,
+        apelido:     cad.nome_fantasia,
+        rg_ie:       cad.ie,
+        cep:         e["cep"],
+        endereco:    e["logradouro"],
+        numero:      e["numero"],
+        bairro:      e["bairro"],
+        complemento: e["complemento"],
+        telefone:    cad.contato && cad.contato["telefone"],
+        email:       cad.contato && cad.contato["email"]
+      }.compact
     }
   rescue FiscalService::NaoConfigurado => e
     render json: { sucesso: false, mensagem: e.message }

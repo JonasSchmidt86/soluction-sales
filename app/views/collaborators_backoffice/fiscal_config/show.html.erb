@@ -98,6 +98,8 @@
         <div id="cadastroResultado" class="mt-3 text-muted">
           Informe UF e documento para verificar a situação cadastral do contribuinte.
         </div>
+        <%# Faixa de acao: cadastrar/abrir pessoa (preenchida via JS apos a consulta). %>
+        <div id="cadastroAcao" class="mt-3" style="display:none;"></div>
       </div>
     </div>
 
@@ -132,11 +134,48 @@
         });
 
         // ---- Consulta de cadastro ----
-        var cadBtn = document.getElementById('btnCadastro');
-        var cadUf  = document.getElementById('cadUf');
-        var cadDoc = document.getElementById('cadDoc');
-        var cadOut = document.getElementById('cadastroResultado');
-        var cadUrl = "<%= consultar_cadastro_collaborators_backoffice_fiscal_config_path %>";
+        var cadBtn  = document.getElementById('btnCadastro');
+        var cadUf   = document.getElementById('cadUf');
+        var cadDoc  = document.getElementById('cadDoc');
+        var cadOut  = document.getElementById('cadastroResultado');
+        var cadAcao = document.getElementById('cadastroAcao');
+        var cadUrl  = "<%= consultar_cadastro_collaborators_backoffice_fiscal_config_path %>";
+        var novoPessoaUrl = "<%= new_collaborators_backoffice_pessoa_path %>";
+        var editPessoaBase = "<%= collaborators_backoffice_pessoas_path %>"; // + /:id/edit
+
+        // Monta a faixa de acao conforme a pessoa ja existe ou nao.
+        function montarAcaoCadastro(d) {
+          if (!d || !d.sucesso) { cadAcao.style.display = 'none'; return; }
+
+          if (d.pessoa_existe && d.cod_pessoa) {
+            cadAcao.style.display = 'block';
+            cadAcao.innerHTML =
+              '<div class="alert alert-light border d-flex justify-content-between align-items-center mb-0">' +
+                '<span><i class="fa fa-user-check me-1 text-success"></i> Já existe uma pessoa com este documento.</span>' +
+                '<a class="btn btn-sm btn-outline-primary" href="' + editPessoaBase + '/' + d.cod_pessoa + '/edit">' +
+                  '<i class="fa fa-arrow-up-right-from-square me-1"></i> Abrir cadastro</a>' +
+              '</div>';
+            return;
+          }
+
+          // Nao existe: link para abrir o cadastro de PJ ja preenchido.
+          var qs = Object.keys(d.prefill || {})
+            .filter(function (k) { return d.prefill[k] != null && d.prefill[k] !== ''; })
+            .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(d.prefill[k]); })
+            .join('&');
+          var href = novoPessoaUrl + (qs ? ('?' + qs) : '');
+
+          cadAcao.style.display = 'block';
+          cadAcao.innerHTML =
+            '<div class="alert alert-primary border d-flex justify-content-between align-items-center mb-0">' +
+              '<span>' +
+                '<i class="fa fa-circle-info me-1"></i> Este CNPJ ainda não está cadastrado como pessoa.' +
+                '<small class="d-block text-muted">Abre o cadastro de PJ já preenchido; o CEP completa o endereço.</small>' +
+              '</span>' +
+              '<a class="btn btn-sm btn-success" target="_blank" href="' + href + '">' +
+                '<i class="fa fa-plus me-1"></i> Cadastrar pessoa</a>' +
+            '</div>';
+        }
 
         cadBtn.addEventListener('click', function () {
           cadBtn.disabled = true;
@@ -176,10 +215,14 @@
               ].filter(Boolean);
               cadOut.className = 'mt-3';
               cadOut.innerHTML = linhas.join('<br>');
+
+              // Faixa de acao: abrir cadastro existente ou cadastrar novo.
+              montarAcaoCadastro(d);
             })
             .catch(function () {
               cadOut.className = 'mt-3 text-danger';
               cadOut.textContent = 'Falha ao consultar o cadastro.';
+              cadAcao.style.display = 'none';
             })
             .finally(function () { cadBtn.disabled = false; });
         });
