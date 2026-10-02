@@ -143,6 +143,7 @@ Rails.application.routes.draw do
       resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do
         post :emitir, on: :collection
         get :espelho, on: :collection
+        get :previsualizar, on: :collection # DANFE de pre-visualizacao (provedor)
         post :cancelar, on: :member
         get :danfe, on: :member
       end
@@ -162,7 +163,10 @@ Rails.application.routes.draw do
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show] do
       # Devolucao de compra (NF-e finalidade 4). new = tela de revisao/edicao;
       # create = emite. So super_admin + empresa com modulo fiscal.
-      resource :devolucao, only: [:new, :create], controller: "devolucoes_compra"
+      resource :devolucao, only: [:new, :create], controller: "devolucoes_compra" do
+        # Pre-visualizacao do DANFE da devolucao (sem transmitir a SEFAZ).
+        post :previsualizar
+      end
     end
     resources :pedidos_compras
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
@@ -223,6 +227,7 @@ Rails.application.routes.draw do
       end
       collection do
         get :cores_produto # cores de um produto (p/ o select de cor)
+        post :previsualizar # DANFE/DANFCE de pre-visualizacao (sem SEFAZ)
       end
     end
 

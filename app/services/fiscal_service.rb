@@ -70,6 +70,12 @@ class FiscalService
     delegar(:devolver, documento_origem, itens)
   end
 
+  # Pré-visualiza o documento (PDF/XML) sem transmitir à SEFAZ. Retorna
+  # FiscalPreview. tipo_arquivo: 1 = PDF (default), 0 = XML.
+  def pre_visualizar(documento, tipo_arquivo: 1, tarja: true)
+    delegar(:pre_visualizar, documento, tipo_arquivo: tipo_arquivo, tarja: tarja)
+  end
+
   private
 
   def delegar(metodo, *args, **kwargs)

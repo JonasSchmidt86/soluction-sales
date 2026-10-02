@@ -177,6 +177,12 @@
                             <i class="fa fa-file-invoice" style="width: 35px;"></i> Espelho NF (PDF)
                           <% end %>
                         </li>
+                        <li>
+                          <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                                      target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+                            <i class="fa fa-file-pdf" style="width: 35px;"></i> Pré-visualizar DANFE
+                          <% end %>
+                        </li>
                         <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_acoes",
                                    locals: { sale: sale } %>
                       <% end %>

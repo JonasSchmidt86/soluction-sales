@@ -69,6 +69,48 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def show
   end
 
+  # POST /collaborators_backoffice/notas_avulsas/previsualizar
+  # Gera o DANFE/DANFCE de PRE-VISUALIZACAO (sem transmitir a SEFAZ) a partir
+  # dos itens/destinatario do formulario, usando a operacao/finalidade escolhidas.
+  def previsualizar
+    @modelo = modelo_param
+    empresa = current_collaborator.empresa
+    cliente = resolver_cliente
+    itens   = itens_param
+
+    if itens.empty?
+      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
+                  alert: "Informe ao menos um produto para pré-visualizar."
+      return
+    end
+
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
+               OperacaoFiscal.find_by(nome: "NF avulsa") ||
+               OperacaoFiscal.find_by(nome: "Venda")
+
+    avulso  = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
+    preview = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo, operacao: operacao,
+                                        finalidade: params[:finalidade],
+                                        cod_funcionario: current_collaborator.cod_funcionario)
+                                   .pre_visualizar(tipo_arquivo: 1)
+
+    if preview.sucesso?
+      send_data preview.conteudo, filename: "previsualizacao-avulsa-#{@modelo}.pdf",
+                type: "application/pdf", disposition: "inline"
+    else
+      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
+                  alert: "Não foi possível pré-visualizar: #{preview.erro}"
+    end
+  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+         Fiscal::EmissorFiscal::SemConfig,
+         Fiscal::EmissorFiscal::SemOperacao => e
+    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo), alert: e.message
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#previsualizar] #{e.class} - #{e.message}")
+    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
+                alert: "Falha ao pré-visualizar: #{e.message}"
+  end
+
   # PDF do DANFE (quando autorizada).
   def danfe
     if @documento.danfe_base64.blank?

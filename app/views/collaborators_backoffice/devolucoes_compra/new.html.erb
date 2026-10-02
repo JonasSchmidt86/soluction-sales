@@ -104,10 +104,18 @@
 
           <div class="d-flex justify-content-between mt-3">
             <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
-            <button type="submit" class="btn btn-success"
-                    onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
-              <i class="fa fa-check-double me-1"></i> Emitir devolução
-            </button>
+            <div class="d-flex gap-2">
+              <%# Pre-visualizar: submete o mesmo form para a acao de preview, em nova aba. %>
+              <button type="submit" class="btn btn-outline-info"
+                      formaction="<%= previsualizar_collaborators_backoffice_compra_devolucao_path(@compra) %>"
+                      formtarget="_blank" formnovalidate>
+                <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
+              </button>
+              <button type="submit" class="btn btn-success"
+                      onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
+                <i class="fa fa-check-double me-1"></i> Emitir devolução
+              </button>
+            </div>
           </div>
         <% end %>
       </div>

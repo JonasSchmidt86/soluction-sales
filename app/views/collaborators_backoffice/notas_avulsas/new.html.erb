@@ -77,10 +77,18 @@
 
           <div class="d-flex justify-content-between mt-4">
             <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
-            <button type="submit" class="btn btn-success" id="emitirBtn"
-                    data-confirm="Emitir a <%= modelo_nome %> agora?">
-              <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
-            </button>
+            <div class="d-flex gap-2">
+              <%# Pre-visualizar: mesmo form, mas submete para a acao de preview em nova aba (sem emitir). %>
+              <button type="submit" class="btn btn-outline-info"
+                      formaction="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>"
+                      formtarget="_blank" formnovalidate>
+                <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
+              </button>
+              <button type="submit" class="btn btn-success" id="emitirBtn"
+                      data-confirm="Emitir a <%= modelo_nome %> agora?">
+                <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
+              </button>
+            </div>
           </div>
         <% end %>
       </div>
@@ -240,10 +248,11 @@
   document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); });
   addItem(); reindex(); // comeca com uma linha
 
-  // confirm no submit
+  // confirm no submit — so quando o submitter for o botao de EMITIR.
+  // O botao de Pre-visualizar (formaction/_blank) nao pede confirmacao.
   document.getElementById('formAvulsa').addEventListener('submit', function (e) {
-    var btn = document.getElementById('emitirBtn');
-    if (btn.dataset.confirm && !confirm(btn.dataset.confirm)) { e.preventDefault(); }
+    var btn = e.submitter || document.getElementById('emitirBtn');
+    if (btn && btn.dataset && btn.dataset.confirm && !confirm(btn.dataset.confirm)) { e.preventDefault(); }
   });
 })();
 </script>

@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :espelho, :show, :cancelar, :danfe]
+  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe]
   before_action :set_documento, only: [:show, :cancelar, :danfe]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
@@ -60,6 +60,33 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
     Rails.logger.error("[DocumentosFiscais#espelho] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_report_sales_path,
                 alert: "Não foi possível gerar o espelho: #{e.message}"
+  end
+
+  # GET .../documentos_fiscais/previsualizar — DANFE de PRE-VISUALIZACAO gerado
+  # pelo provedor (sem transmitir a SEFAZ, sem consumir numeracao). Mais fiel
+  # ao DANFE real que o espelho local em HTML.
+  def previsualizar
+    preview = Fiscal::EmissorFiscal.new(
+      @venda, modelo: 55,
+      cod_funcionario: current_collaborator.cod_funcionario
+    ).pre_visualizar(tipo_arquivo: 1)
+
+    if preview.sucesso?
+      send_data preview.conteudo,
+                filename: "previsualizacao-nfe-venda-#{@venda.cod_venda}.pdf",
+                type: "application/pdf", disposition: "inline"
+    else
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "Não foi possível pré-visualizar: #{preview.erro}"
+    end
+  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+         Fiscal::EmissorFiscal::SemConfig,
+         Fiscal::EmissorFiscal::SemOperacao => e
+    redirect_to collaborators_backoffice_report_sales_path, alert: e.message
+  rescue => e
+    Rails.logger.error("[DocumentosFiscais#previsualizar] venda #{@venda.cod_venda}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_report_sales_path,
+                alert: "Falha ao pré-visualizar: #{e.message}"
   end
 
   # GET .../documentos_fiscais/:id  — detalhes do documento (status, mensagem).

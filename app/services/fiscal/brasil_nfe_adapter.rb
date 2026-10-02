@@ -40,6 +40,30 @@ module Fiscal
       to_result(resposta)
     end
 
+    # Pre-visualizacao: gera o DANFE/DANFCE (PDF) ou XML do documento SEM
+    # transmitir a SEFAZ e sem consumir numeracao. Doc 2.0:
+    # POST /PreVisualizarNotaFiscal com TipoEnvio=1 (objeto), onde a(s) nota(s)
+    # vao em notaFiscal.nFInfos: [ ... ]. Reaproveita o mesmo payload por nota
+    # do EnviarNotaFiscal (montar_payload).
+    #
+    # tipo_arquivo: 1 = PDF (default), 0 = XML.
+    # tarja: exibe "SEM VALOR FISCAL - PRE-VISUALIZACAO" (default true).
+    def pre_visualizar(documento, tipo_arquivo: 1, tarja: true)
+      nota = montar_payload(documento)
+      body = {
+        "TipoArquivo"                 => tipo_arquivo.to_i,
+        "TipoEnvio"                   => 1,
+        "mostrarTarjaPreVisualizacao" => tarja ? true : false,
+        "notaFiscal" => {
+          "TipoAmbiente"    => ambiente,
+          "ModeloDocumento" => documento[:modelo] || 55,
+          "nFInfos"         => [nota]
+        }
+      }
+      resposta = post("/PreVisualizarNotaFiscal", body)
+      to_preview(resposta, tipo_arquivo: tipo_arquivo)
+    end
+
     # Devolução = emissão com Finalidade 4 + chaves das notas de origem.
     def devolver(documento_origem, itens)
       doc = documento_origem.merge(finalidade: 4)
@@ -189,6 +213,23 @@ module Fiscal
         danfe_url: nil, # DANFE vem em Base64File, não URL
         mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
         bruto:     resposta
+      )
+    end
+
+    # Converte a resposta do PreVisualizarNotaFiscal no FiscalPreview neutro.
+    # Resposta: { Status, Base64File, Error, Avisos }. Base64File traz o PDF
+    # (TipoArquivo=1) ou o XML (TipoArquivo=0).
+    def to_preview(resposta, tipo_arquivo:)
+      erro = resposta["Error"].to_s
+      ok   = resposta["Status"] == true && resposta["Base64File"].present? && resposta["_http_status"].to_i < 400
+      b64  = ok ? resposta["Base64File"] : nil
+
+      FiscalPreview.new(
+        pdf_base64: tipo_arquivo.to_i == 1 ? b64 : nil,
+        xml_base64: tipo_arquivo.to_i == 0 ? b64 : nil,
+        erro:       ok ? nil : (erro.presence || "Falha ao gerar a pré-visualização."),
+        avisos:     resposta["Avisos"],
+        bruto:      resposta
       )
     end
 

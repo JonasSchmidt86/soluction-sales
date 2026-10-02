@@ -21,38 +21,10 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
 
   # POST .../compras/:compra_id/devolucao
   def create
-    config = FiscalConfig.find_by(cod_empresa: @compra.cod_empresa)
-    if config.nil? || !config.ativo?
-      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Empresa sem configuração fiscal ativa."
-      return
-    end
+    emissor = montar_emissor
+    return if emissor.nil? # ja redirecionou com alerta
 
-    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
-               OperacaoFiscal.find_by(nome: "Devolucao de compra")
-
-    extractor = Fiscal::DevolucaoCompraExtractor.new(@compra)
-    itens = aplicar_edicoes(extractor.itens)
-    chave = params[:chave_referencia].presence || extractor.chave_referencia
-
-    if itens.empty?
-      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Nenhum item para devolver."
-      return
-    end
-
-    finalidade = params[:finalidade].presence || 4
-
-    builder = Fiscal::DevolucaoCompraBuilder.new(
-      @compra, config: config, itens: itens, chave_referencia: chave,
-      natureza_operacao: params[:natureza_operacao].presence || operacao&.natureza_operacao,
-      cfop: params[:cfop].presence, modelo: 55, finalidade: finalidade
-    )
-
-    origem = Fiscal::OrigemDevolucao.new(@compra.empresa)
-    documento = Fiscal::EmissorFiscal.new(
-      origem, modelo: 55, operacao: operacao,
-      cod_funcionario: current_collaborator.cod_funcionario,
-      builder: builder, cod_compra: @compra.cod_compra, finalidade: finalidade
-    ).emitir
+    documento = emissor.emitir
 
     if documento.autorizada?
       redirect_to collaborators_backoffice_compra_path(@compra),
@@ -71,7 +43,70 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
                 alert: "Falha ao emitir devolução: #{e.message}"
   end
 
+  # POST .../compras/:compra_id/devolucao/previsualizar
+  # Gera o DANFE de PRE-VISUALIZACAO da devolucao (sem transmitir a SEFAZ),
+  # usando os mesmos itens/CFOP/finalidade do formulario.
+  def previsualizar
+    emissor = montar_emissor
+    return if emissor.nil?
+
+    preview = emissor.pre_visualizar(tipo_arquivo: 1)
+    if preview.sucesso?
+      send_data preview.conteudo, filename: "previsualizacao-devolucao-compra-#{@compra.cod_compra}.pdf",
+                type: "application/pdf", disposition: "inline"
+    else
+      redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra),
+                  alert: "Não foi possível pré-visualizar: #{preview.erro}"
+    end
+  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+         Fiscal::EmissorFiscal::SemConfig,
+         Fiscal::EmissorFiscal::SemOperacao => e
+    redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra), alert: e.message
+  rescue => e
+    Rails.logger.error("[DevolucoesCompra#previsualizar] compra #{@compra.cod_compra}: #{e.class} - #{e.message}")
+    redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra),
+                alert: "Falha ao pré-visualizar: #{e.message}"
+  end
+
   private
+
+  # Monta o EmissorFiscal da devolucao a partir dos params do form (itens
+  # editados, CFOP, natureza, finalidade). Retorna nil (apos redirecionar com
+  # alerta) quando falta config ou nao ha itens. Usado por create e previsualizar.
+  def montar_emissor
+    config = FiscalConfig.find_by(cod_empresa: @compra.cod_empresa)
+    if config.nil? || !config.ativo?
+      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Empresa sem configuração fiscal ativa."
+      return nil
+    end
+
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
+               OperacaoFiscal.find_by(nome: "Devolucao de compra")
+
+    extractor = Fiscal::DevolucaoCompraExtractor.new(@compra)
+    itens = aplicar_edicoes(extractor.itens)
+    chave = params[:chave_referencia].presence || extractor.chave_referencia
+
+    if itens.empty?
+      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Nenhum item para devolver."
+      return nil
+    end
+
+    finalidade = params[:finalidade].presence || 4
+
+    builder = Fiscal::DevolucaoCompraBuilder.new(
+      @compra, config: config, itens: itens, chave_referencia: chave,
+      natureza_operacao: params[:natureza_operacao].presence || operacao&.natureza_operacao,
+      cfop: params[:cfop].presence, modelo: 55, finalidade: finalidade
+    )
+
+    origem = Fiscal::OrigemDevolucao.new(@compra.empresa)
+    Fiscal::EmissorFiscal.new(
+      origem, modelo: 55, operacao: operacao,
+      cod_funcionario: current_collaborator.cod_funcionario,
+      builder: builder, cod_compra: @compra.cod_compra, finalidade: finalidade
+    )
+  end
 
   def set_compra
     @compra = Compra.find_by(cod_compra: params[:compra_id])

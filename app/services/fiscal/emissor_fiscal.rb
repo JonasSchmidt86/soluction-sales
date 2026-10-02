@@ -73,6 +73,26 @@ module Fiscal
       raise
     end
 
+    # Pre-visualiza o documento (PDF por padrao) SEM transmitir a SEFAZ, sem
+    # criar DocumentoFiscal, sem consumir numeracao e sem mexer no estoque.
+    # Monta o MESMO payload da emissao (via builder) e delega ao FiscalService.
+    # Retorna FiscalPreview. Valida os dados fiscais e levanta
+    # DadosFiscaisIncompletos se faltar o essencial (mesma trava da emissao),
+    # para a pre-visualizacao refletir o que seria emitido.
+    def pre_visualizar(tipo_arquivo: 1, tarja: true)
+      raise SemConfig,   "Empresa sem configuração fiscal ativa" unless @config&.ativo?
+      raise SemOperacao, "Operação fiscal não encontrada" if @operacao.nil?
+
+      builder = @builder_injetado ||
+                DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo, finalidade: @finalidade)
+      doc_payload = builder.montar
+
+      pendencias = validar_dados_fiscais(doc_payload)
+      raise DadosFiscaisIncompletos, "Não é possível pré-visualizar. #{pendencias.join('; ')}" if pendencias.any?
+
+      FiscalService.new(@config).pre_visualizar(doc_payload, tipo_arquivo: tipo_arquivo, tarja: tarja)
+    end
+
     private
 
     # Baixa o estoque fiscal (qtdfiscal) apos a NF ser autorizada. Falha aqui
