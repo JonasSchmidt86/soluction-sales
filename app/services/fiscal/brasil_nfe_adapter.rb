@@ -157,6 +157,26 @@ module Fiscal
       to_consulta(resposta)
     end
 
+    # Baixa em lote os documentos de um periodo (zip de XML/PDF ou planilha
+    # Excel). Doc 2.0: POST /ObterArquivosPorPeriodo. Resposta JSON com
+    # Base64FilesCompacted (zip/xlsx em base64). Retorna FiscalPacote.
+    #   tipo_arquivo: 0 = PDF, 1 = XML (default), 2 = EXCEL.
+    #   tipo_nota: 1 = saidas (default), 2 = entradas, 3 = ambos.
+    def obter_arquivos_periodo(dt_inicio:, dt_fim:, tipo_arquivo: 1, tipo_nota: 1,
+                               incluir_cce: false, juntar_pdf: false)
+      body = {
+        "DtInicio"          => dt_inicio.to_s,
+        "DtFim"             => dt_fim.to_s,
+        "Type"              => tipo_arquivo.to_i,
+        "TipoAmbiente"      => ambiente.to_i,
+        "TipoNota"          => tipo_nota.to_i,
+        "JuntarArquivosPDF" => juntar_pdf ? true : false,
+        "incluirCCe"        => incluir_cce ? true : false
+      }
+      resposta = post("/ObterArquivosPorPeriodo", body)
+      to_pacote(resposta, tipo_arquivo: tipo_arquivo)
+    end
+
     # Obtem o arquivo (XML ou PDF) de um documento fiscal ja existente na base,
     # pela chave de acesso. Doc 2.0: POST /ObterArquivoNotaFiscal.
     #   chave: chave de acesso (44 digitos).
@@ -178,6 +198,25 @@ module Fiscal
       to_arquivo(res, file_type: file_type)
     end
 
+    # Obtem o arquivo de um EVENTO (CC-e, cancelamento) associado a um documento.
+    # Doc 2.0: POST /ObterArquivoEvento com ChaveNF + NuProtocolo + TipoArquivo
+    # (1 = XML do evento, 2 = PDF da CC-e). Resposta base64 pura (como o
+    # ObterArquivoNotaFiscal). Retorna FiscalArquivo.
+    def obter_arquivo_evento(chave:, protocolo:, tipo_arquivo: 2)
+      ch = chave.to_s.gsub(/\D/, "")
+      raise ConfiguracaoInvalida, "Chave de acesso invalida (esperado 44 digitos)" unless ch.length == 44
+      raise ConfiguracaoInvalida, "Protocolo do evento ausente" if protocolo.to_s.strip.empty?
+
+      body = {
+        "ChaveNF"     => ch,
+        "NuProtocolo" => protocolo.to_s,
+        "TipoArquivo" => tipo_arquivo.to_i
+      }
+      res = post_raw("/ObterArquivoEvento", body)
+      # TipoArquivo do evento: 1 = XML, 2 = PDF (mapeia para o file_type do to_arquivo).
+      to_arquivo(res, file_type: tipo_arquivo.to_i == 1 ? 1 : 2)
+    end
+
     # Consulta o status operacional da SEFAZ para um modelo de documento.
     # Doc 2.0: POST /ConsultarStatusSefaz com ModeloDocumento (55/65/57/58/67).
     # A consulta e SEMPRE em producao (independente do ambiente da empresa).
@@ -185,6 +224,18 @@ module Fiscal
     def consultar_status(modelo: 55)
       resposta = post("/ConsultarStatusSefaz", { "ModeloDocumento" => modelo.to_i })
       to_status(resposta)
+    end
+
+    # Consulta o cadastro de um contribuinte no CCC da SEFAZ (situacao cadastral,
+    # IE, credenciamento NF-e). Doc 2.0: POST /ConsultarCadastroSefaz com uf +
+    # cpfCnpjIe. Retorna FiscalCadastro.
+    def consultar_cadastro(uf:, documento:)
+      doc = documento.to_s.gsub(/\D/, "")
+      raise ConfiguracaoInvalida, "UF ausente para consulta de cadastro" if uf.to_s.strip.empty?
+      raise ConfiguracaoInvalida, "CPF/CNPJ/IE ausente para consulta de cadastro" if doc.empty?
+
+      resposta = post("/ConsultarCadastroSefaz", { "uf" => uf.to_s.upcase, "cpfCnpjIe" => doc })
+      to_cadastro(resposta)
     end
 
     private
@@ -353,6 +404,54 @@ module Fiscal
       FiscalArquivo.new(
         xml_base64: file_type.to_i == 1 ? b64 : nil,
         pdf_base64: file_type.to_i == 2 ? b64 : nil
+      )
+    end
+
+    # Converte a resposta do ObterArquivosPorPeriodo no FiscalPacote neutro.
+    # Base64FilesCompacted = zip (XML/PDF) ou xlsx (Excel) em base64.
+    def to_pacote(resposta, tipo_arquivo:)
+      erro = resposta["Error"].to_s
+      b64  = resposta["Base64FilesCompacted"].to_s
+      ok   = erro.blank? && resposta["_http_status"].to_i < 400 && b64.present?
+      avisos = Array(resposta["Avisos"]).map { |a| a.is_a?(Hash) ? a["mensagem"] : a }.compact
+
+      FiscalPacote.new(
+        sucesso:    ok,
+        base64:     ok ? b64 : nil,
+        quantidade: resposta["Quantidade"].to_i,
+        excel:      tipo_arquivo.to_i == 2,
+        erro:       ok ? nil : (erro.presence || "Falha ao gerar o pacote de arquivos."),
+        avisos:     avisos,
+        bruto:      resposta
+      )
+    end
+
+    # Converte a resposta do ConsultarCadastroSefaz no FiscalCadastro neutro.
+    # situacao: 1 habilitado, 2 suspenso, 3 baixado, 4 nulo, 5 outros.
+    SITUACAO_CADASTRO = {
+      1 => "Habilitado", 2 => "Suspenso", 3 => "Baixado", 4 => "Nulo", 5 => "Outros"
+    }.freeze
+
+    def to_cadastro(resposta)
+      ok   = resposta["status"].to_i == 1 && resposta["Error"].blank? && resposta["_http_status"].to_i < 400
+      sit  = resposta["situacao"].to_i
+
+      FiscalCadastro.new(
+        sucesso:         ok,
+        situacao_cod:    (sit if sit > 0),
+        situacao:        SITUACAO_CADASTRO[sit],
+        habilitado:      sit == 1,
+        cpf_cnpj:        resposta["cpfCnpj"],
+        ie:              resposta["ie"].presence || resposta["ieAtual"].presence,
+        razao_social:    resposta["razaoSocial"],
+        nome_fantasia:   resposta["nomeFantasia"],
+        regime:          resposta["regimeApuracao"],
+        cnae:            resposta["cnaePrincipal"],
+        credenciado_nfe: resposta["indicadorCredenciamentoNFe"].to_i == 1,
+        uf:              resposta["ufConsultada"],
+        fonte:           resposta["fonte"],
+        mensagem:        resposta["mensagem"].presence || resposta["Error"].presence,
+        bruto:           resposta
       )
     end
 

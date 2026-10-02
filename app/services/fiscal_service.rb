@@ -82,11 +82,33 @@ class FiscalService
     delegar(:consultar_status, modelo: modelo)
   end
 
+  # Consulta o cadastro de um contribuinte na SEFAZ (situação/IE). Retorna
+  # FiscalCadastro (habilitado?). Útil para validar o destinatário antes de emitir.
+  def consultar_cadastro(uf:, documento:)
+    delegar(:consultar_cadastro, uf: uf, documento: documento)
+  end
+
+  # Baixa em lote os documentos de um período (zip XML/PDF ou Excel). Retorna
+  # FiscalPacote. tipo_arquivo: 0 PDF, 1 XML, 2 Excel. tipo_nota: 1 saídas,
+  # 2 entradas, 3 ambos.
+  def obter_arquivos_periodo(dt_inicio:, dt_fim:, tipo_arquivo: 1, tipo_nota: 1,
+                             incluir_cce: false, juntar_pdf: false)
+    delegar(:obter_arquivos_periodo, dt_inicio: dt_inicio, dt_fim: dt_fim,
+            tipo_arquivo: tipo_arquivo, tipo_nota: tipo_nota,
+            incluir_cce: incluir_cce, juntar_pdf: juntar_pdf)
+  end
+
   # Obtém o arquivo (XML/PDF) de um documento já existente, pela chave.
   # Retorna FiscalArquivo. file_type: 1 = XML, 2 = PDF.
   # tipo_documento: 0 = entrada (compra), 1 = saída (venda).
   def obter_arquivo(chave:, file_type: 1, tipo_documento: 1)
     delegar(:obter_arquivo, chave: chave, file_type: file_type, tipo_documento: tipo_documento)
+  end
+
+  # Obtém o arquivo de um EVENTO (CC-e/cancelamento) pela chave + protocolo.
+  # Retorna FiscalArquivo. tipo_arquivo: 1 = XML do evento, 2 = PDF da CC-e.
+  def obter_arquivo_evento(chave:, protocolo:, tipo_arquivo: 2)
+    delegar(:obter_arquivo_evento, chave: chave, protocolo: protocolo, tipo_arquivo: tipo_arquivo)
   end
 
   private

@@ -41,6 +41,26 @@
     <% end %>
   </li>
 
+<% elsif doc&.cancelada? %>
+  <li><h6 class="dropdown-header">NF-e cancelada</h6></li>
+  <% evento_canc = doc.eventos.cancelamentos.where.not(protocolo: [nil, ""]).order(cod_documento_fiscal_evento: :desc).first %>
+  <% if evento_canc %>
+    <li>
+      <%= link_to evento_arquivo_collaborators_backoffice_venda_documento_fiscal_path(sale, doc, evento_id: evento_canc.cod_documento_fiscal_evento, tipo: "pdf"),
+                  target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+        <i class="fa fa-file-pdf" style="width: 35px;"></i> Comprovante de cancelamento
+      <% end %>
+    </li>
+    <li>
+      <%= link_to evento_arquivo_collaborators_backoffice_venda_documento_fiscal_path(sale, doc, evento_id: evento_canc.cod_documento_fiscal_evento, tipo: "xml"),
+                  class: "dropdown-item btn btn-info btn-circle" do %>
+        <i class="fa fa-file-code" style="width: 35px;"></i> XML do cancelamento
+      <% end %>
+    </li>
+  <% else %>
+    <li><span class="dropdown-item-text small text-muted">Sem protocolo de cancelamento registrado.</span></li>
+  <% end %>
+
 <% elsif doc && %w[rejeitada erro].include?(doc.status) %>
   <li><h6 class="dropdown-header text-danger">NF-e <%= doc.status %></h6></li>
   <% if doc.mensagem_sefaz.present? %>

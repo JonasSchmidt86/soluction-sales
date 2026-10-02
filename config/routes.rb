@@ -148,6 +148,7 @@ Rails.application.routes.draw do
         get :danfe, on: :member
         get :xml, on: :member # baixa o XML (do banco ou do provedor pela chave)
         post :reconciliar, on: :member # consulta a SEFAZ e atualiza o status
+        get :evento_arquivo, on: :member # PDF/XML de evento (CC-e/cancelamento)
       end
     end
 
@@ -222,6 +223,11 @@ Rails.application.routes.draw do
     resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config do
       # Status operacional da SEFAZ (JSON) para o modelo informado (55/65).
       get :status_sefaz
+      # Consulta de cadastro de contribuinte na SEFAZ (JSON).
+      get :consultar_cadastro
+      # Exportacao fiscal por periodo (zip XML/PDF ou Excel).
+      get :exportar
+      post :exportar_download
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 

@@ -1,0 +1,55 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h4 class="mb-0"><i class="fa fa-file-zipper me-2"></i> Exportação fiscal por período</h4>
+      <div class="ms-auto">
+        <%= link_to collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">
+        Baixa os documentos fiscais do período em um único arquivo (ZIP de XML/PDF
+        ou planilha Excel). Útil para enviar à contabilidade.
+      </p>
+
+      <%= form_with url: exportar_download_collaborators_backoffice_fiscal_config_path, method: :post, local: true do %>
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Início</label>
+            <%= date_field_tag :dt_inicio, Date.today.beginning_of_month, class: "form-control", required: true %>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Fim</label>
+            <%= date_field_tag :dt_fim, Date.today, class: "form-control", required: true %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Notas</label>
+            <%= select_tag :tipo_nota,
+                  options_for_select([["Saídas", 1], ["Entradas", 2], ["Saídas e entradas", 3]], 1),
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Formato</label>
+            <%= select_tag :tipo_arquivo,
+                  options_for_select([["XML", 1], ["PDF", 0], ["Excel", 2]], 1),
+                  class: "form-select" %>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <div class="form-check">
+              <%= check_box_tag :incluir_cce, "1", false, class: "form-check-input", id: "incluirCce" %>
+              <label class="form-check-label" for="incluirCce">Incluir CC-e</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-success">
+            <i class="fa fa-download me-1"></i> Gerar e baixar
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

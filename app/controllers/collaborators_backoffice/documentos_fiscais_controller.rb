@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe, :xml, :reconciliar]
-  before_action :set_documento, only: [:show, :cancelar, :danfe, :xml, :reconciliar]
+  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe, :xml, :reconciliar, :evento_arquivo]
+  before_action :set_documento, only: [:show, :cancelar, :danfe, :xml, :reconciliar, :evento_arquivo]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
   # Emite (ou reemite) a NF-e modelo 55 da venda. O EmissorFiscal reaproveita
@@ -107,6 +107,45 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   rescue => e
     Rails.logger.error("[DocumentosFiscais#reconciliar] doc #{@documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_report_sales_path, alert: "Falha ao consultar: #{e.message}"
+  end
+
+  # GET .../documentos_fiscais/:id/evento_arquivo?evento_id=&tipo=
+  # Baixa o arquivo de um EVENTO (CC-e/cancelamento) via provedor
+  # (ObterArquivoEvento), usando a chave do documento + o protocolo do evento.
+  # tipo: "pdf" (default, PDF da CC-e) ou "xml" (XML do evento).
+  def evento_arquivo
+    evento = @documento.eventos.find_by(cod_documento_fiscal_evento: params[:evento_id])
+    if evento.nil? || evento.protocolo.blank? || @documento.chave_acesso.blank?
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "Evento sem protocolo ou documento sem chave."
+      return
+    end
+
+    tipo_arquivo = params[:tipo].to_s == "xml" ? 1 : 2
+    config = FiscalConfig.find_by(cod_empresa: @documento.cod_empresa)
+    if config.nil? || !config.ativo?
+      redirect_to collaborators_backoffice_report_sales_path, alert: "Empresa sem configuração fiscal ativa."
+      return
+    end
+
+    arquivo = FiscalService.new(config).obter_arquivo_evento(
+      chave: @documento.chave_acesso, protocolo: evento.protocolo, tipo_arquivo: tipo_arquivo
+    )
+
+    if arquivo.sucesso?
+      ext = tipo_arquivo == 1 ? "xml" : "pdf"
+      mime = tipo_arquivo == 1 ? "application/xml" : "application/pdf"
+      disp = tipo_arquivo == 1 ? "attachment" : "inline"
+      send_data arquivo.conteudo,
+                filename: "evento-#{evento.tipo}-#{evento.protocolo}.#{ext}",
+                type: mime, disposition: disp
+    else
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "Arquivo do evento indisponível: #{arquivo.erro}"
+    end
+  rescue => e
+    Rails.logger.error("[DocumentosFiscais#evento_arquivo] doc #{@documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_report_sales_path, alert: "Falha ao obter o evento: #{e.message}"
   end
 
   # GET .../documentos_fiscais/:id  — detalhes do documento (status, mensagem).

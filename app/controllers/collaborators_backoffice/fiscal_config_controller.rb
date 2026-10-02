@@ -43,6 +43,83 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
     render json: { operante: false, mensagem: "Falha ao consultar: #{e.message}" }
   end
 
+  # GET .../fiscal_config/consultar_cadastro?uf=PR&documento=... — consulta o
+  # cadastro do contribuinte na SEFAZ e devolve JSON para a tela.
+  def consultar_cadastro
+    uf  = params[:uf].to_s.strip
+    doc = params[:documento].to_s.gsub(/\D/, "")
+
+    if uf.empty? || doc.empty?
+      render json: { sucesso: false, mensagem: "Informe UF e CPF/CNPJ." }
+      return
+    end
+    unless @config&.persisted? && @config.ativo?
+      render json: { sucesso: false, mensagem: "Configuração fiscal ausente ou inativa." }
+      return
+    end
+
+    cad = FiscalService.new(@config).consultar_cadastro(uf: uf, documento: doc)
+    render json: {
+      sucesso:         cad.sucesso?,
+      habilitado:      cad.habilitado?,
+      situacao:        cad.situacao,
+      ie:              cad.ie,
+      razao_social:    cad.razao_social,
+      nome_fantasia:   cad.nome_fantasia,
+      regime:          cad.regime,
+      credenciado_nfe: cad.credenciado_nfe?,
+      uf:              cad.uf,
+      fonte:           cad.fonte,
+      mensagem:        cad.mensagem
+    }
+  rescue FiscalService::NaoConfigurado => e
+    render json: { sucesso: false, mensagem: e.message }
+  rescue => e
+    Rails.logger.error("[FiscalConfig#consultar_cadastro] #{e.class} - #{e.message}")
+    render json: { sucesso: false, mensagem: "Falha ao consultar: #{e.message}" }
+  end
+
+  # GET .../fiscal_config/exportar — tela de exportação fiscal por período.
+  def exportar
+  end
+
+  # POST .../fiscal_config/exportar_download — baixa o pacote (zip/xlsx) do
+  # período informado via ObterArquivosPorPeriodo.
+  def exportar_download
+    unless @config&.persisted? && @config.ativo?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Configuração fiscal ausente ou inativa."
+      return
+    end
+
+    dt_inicio = params[:dt_inicio].presence
+    dt_fim    = params[:dt_fim].presence
+    if dt_inicio.blank? || dt_fim.blank?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Informe o período (início e fim)."
+      return
+    end
+
+    tipo_arquivo = params[:tipo_arquivo].presence&.to_i || 1 # 0 PDF, 1 XML, 2 Excel
+    tipo_nota    = params[:tipo_nota].presence&.to_i || 1    # 1 saídas, 2 entradas, 3 ambos
+    incluir_cce  = ActiveModel::Type::Boolean.new.cast(params[:incluir_cce])
+
+    pacote = FiscalService.new(@config).obter_arquivos_periodo(
+      dt_inicio: dt_inicio, dt_fim: dt_fim,
+      tipo_arquivo: tipo_arquivo, tipo_nota: tipo_nota, incluir_cce: incluir_cce
+    )
+
+    if pacote.sucesso?
+      send_data pacote.conteudo,
+                filename: "fiscal-#{dt_inicio}_a_#{dt_fim}.#{pacote.extensao}",
+                type: pacote.mime, disposition: "attachment"
+    else
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path,
+                  alert: "Não foi possível gerar o pacote: #{pacote.erro}"
+    end
+  rescue => e
+    Rails.logger.error("[FiscalConfig#exportar_download] #{e.class} - #{e.message}")
+    redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Falha ao exportar: #{e.message}"
+  end
+
   private
 
   # Config unica por empresa: acha a existente ou monta uma nova (sem salvar).

@@ -2,7 +2,12 @@
   <div class="card">
     <div class="card-header bg-primary d-flex align-items-center">
       <h4 class="text-white mb-0"><i class="fa fa-gear me-2"></i> Configuração Fiscal</h4>
-      <div class="ms-auto">
+      <div class="ms-auto d-flex gap-2">
+        <% if @config.persisted? && @config.ativo? %>
+          <%= link_to exportar_collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
+            <i class="fa fa-file-zipper me-1"></i> Exportar período
+          <% end %>
+        <% end %>
         <%= link_to edit_collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
           <i class="fa fa-pencil me-1"></i> Editar
         <% end %>
@@ -68,6 +73,34 @@
       </div>
     </div>
 
+    <%# ---- Consulta de cadastro de contribuinte na SEFAZ ---- %>
+    <div class="card mt-3">
+      <div class="card-header">
+        <strong><i class="fa fa-id-card me-2"></i>Consultar cadastro na SEFAZ</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-2">
+            <label class="form-label mb-1">UF</label>
+            <input id="cadUf" class="form-control" maxlength="2" placeholder="PR"
+                   value="<%= @config.empresa&.uf rescue nil %>">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label mb-1">CPF / CNPJ / IE</label>
+            <input id="cadDoc" class="form-control" placeholder="Somente números">
+          </div>
+          <div class="col-md-2">
+            <button id="btnCadastro" type="button" class="btn btn-outline-primary">
+              <i class="fa fa-magnifying-glass me-1"></i> Consultar
+            </button>
+          </div>
+        </div>
+        <div id="cadastroResultado" class="mt-3 text-muted">
+          Informe UF e documento para verificar a situação cadastral do contribuinte.
+        </div>
+      </div>
+    </div>
+
     <script>
       (function () {
         var btn   = document.getElementById('btnStatusSefaz');
@@ -96,6 +129,49 @@
               out.textContent = 'Falha ao consultar o status da SEFAZ.';
             })
             .finally(function () { btn.disabled = false; });
+        });
+
+        // ---- Consulta de cadastro ----
+        var cadBtn = document.getElementById('btnCadastro');
+        var cadUf  = document.getElementById('cadUf');
+        var cadDoc = document.getElementById('cadDoc');
+        var cadOut = document.getElementById('cadastroResultado');
+        var cadUrl = "<%= consultar_cadastro_collaborators_backoffice_fiscal_config_path %>";
+
+        cadBtn.addEventListener('click', function () {
+          cadBtn.disabled = true;
+          cadOut.className = 'mt-3 text-muted';
+          cadOut.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
+
+          var q = 'uf=' + encodeURIComponent(cadUf.value.trim()) +
+                  '&documento=' + encodeURIComponent(cadDoc.value.trim());
+          fetch(cadUrl + '?' + q, { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d.sucesso) {
+                cadOut.className = 'mt-3 text-danger';
+                cadOut.textContent = d.mensagem || 'Não foi possível consultar.';
+                return;
+              }
+              var badge = d.habilitado
+                ? '<span class="badge bg-success">Habilitado</span>'
+                : '<span class="badge bg-warning text-dark">' + (d.situacao || 'Verificar') + '</span>';
+              var linhas = [
+                badge,
+                d.razao_social ? '<strong>' + d.razao_social + '</strong>' : null,
+                d.ie ? 'IE: ' + d.ie : 'IE: —',
+                d.credenciado_nfe ? 'Credenciado NF-e' : 'NF-e: não credenciado',
+                d.regime, d.uf, d.fonte ? ('fonte: ' + d.fonte) : null,
+                d.mensagem
+              ].filter(Boolean);
+              cadOut.className = 'mt-3';
+              cadOut.innerHTML = linhas.join('<br>');
+            })
+            .catch(function () {
+              cadOut.className = 'mt-3 text-danger';
+              cadOut.textContent = 'Falha ao consultar o cadastro.';
+            })
+            .finally(function () { cadBtn.disabled = false; });
         });
       })();
     </script>
