@@ -8,6 +8,8 @@ class DocumentoFiscal < ApplicationRecord
              foreign_key: "cod_empresa", primary_key: "cod_empresa"
   belongs_to :venda, class_name: "Venda",
              foreign_key: "cod_venda", primary_key: "cod_venda", optional: true
+  belongs_to :compra, class_name: "Compra",
+             foreign_key: "cod_compra", primary_key: "cod_compra", optional: true
 
   has_many :eventos, class_name: "DocumentoFiscalEvento",
            foreign_key: "cod_documento_fiscal", primary_key: "cod_documento_fiscal",
@@ -38,6 +40,11 @@ class DocumentoFiscal < ApplicationRecord
 
   def modelo_nome
     nfce? ? "NFC-e" : "NF-e"
+  end
+
+  # NF de devolucao de compra (vinculada a uma compra, finalidade 4).
+  def devolucao_compra?
+    cod_compra.present?
   end
 
   # Mapeia o status do FiscalResult (masculino: autorizado/rejeitado/...)

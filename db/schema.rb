@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000004) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -429,7 +429,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000004) do
     t.datetime "emitido_em"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "cod_compra", comment: "compra de origem (NF de devolução de compra)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
+    t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"
     t.index ["cod_venda"], name: "idx_documento_fiscal_venda"
   end

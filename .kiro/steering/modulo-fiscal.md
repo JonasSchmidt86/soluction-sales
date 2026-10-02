@@ -9,6 +9,25 @@ inclusion: manual
 
 ---
 
+# DOC BrasilNFe — EnviarNotaFiscal (payload de emissao, confirmado)
+POST /EnviarNotaFiscal. Campos-chave (camelCase do provedor):
+- Topo: Serie/Numero/Lote/Codigo (vazio=auto), DataEmissao/DataEntradaSaida, NaturezaOperacao,
+  ModeloDocumento (55/65), Finalidade (1 normal,2 complementar,3 ajuste,4 DEVOLUCAO,5 cred,6 deb),
+  TipoAmbiente ("1"/"2"), ConsumidorFinal, IndicadorPresenca, IdentificadorInterno,
+  **NFReferencia: [chaves 44 dig]** (SO chave NF-e/NFC-e; modelo 1/1A/2 em papel NAO tem campo nesta API),
+  ValorFrete, ValorTotal (validacao), Cliente{}, Produtos[], Pagamentos[], Cobranca{}, Transporte{}.
+- Produto: NmProduto, CodProdutoServico, EAN, NCM, CEST, UnidadeComercial, Quantidade,
+  ValorUnitario, ValorTotal, ValorDesconto/Seguro/Frete/OutrasDespesas, CFOP, OrigemProduto,
+  **ChaveAcessoReferenciada + NItemReferenciado** (ref item a item), Imposto{}.
+- Imposto.ICMS: CodSituacaoTributaria(CSOSN/CST), AliquotaICMS, BaseCalculo, ValorIcms, STRetido{...}, FCP...
+  Imposto.IPI: CodEnquadramento, CodSituacaoTributaria, Aliquota, **ValorIpiDevolvido, PercentualMercadoriaDevolvida** (devolucao).
+  Imposto.PIS/COFINS: CodSituacaoTributaria, Aliquota, BaseCalculo. Imposto.IBSCBS (reforma).
+- IMPORTANTE: aceita VALORES destacados (BaseCalculo/ValorIcms) -> da p/ ESPELHAR impostos da nota de entrada na devolucao.
+- Resposta: Base64Xml, Base64File, ReturnNF{ Numero, Serie, ChaveNF, NumeroProtocolo, CodStatusRespostaSefaz, DsStatusRespostaSefaz, Ok, Detalhes{} }, Error, Avisos[].
+- Lote assincrono: /EnviarNotaFiscalLote (webhook nfe.lote.finalizado) — nao usado ainda.
+
+---
+
 # ESTADO ATUAL (atualizado — leia isto primeiro)
 
 > As seções mais abaixo são o DESIGN histórico (Fatia 1). Esta seção reflete o que
