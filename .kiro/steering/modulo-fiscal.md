@@ -129,6 +129,24 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
 - qtdfiscal baixado pelo EstoqueFiscalService na emissão (respeita controla_estoque); estorna no cancelar.
 - NÃO há espelho pós-emissão (doc avulso não persiste itens; usar DANFE/XML).
 
+## DEVOLUCAO DE COMPRA — FEITA (Fatia 1) ✅
+- Botao "Emitir Devolucao (NF-e)" em compras#show (super_admin+modulo, compra nao cancelada).
+- CollaboratorsBackoffice::DevolucoesCompraController (new=revisao, create=emite). Rota aninhada:
+  compras/:compra_id/devolucao (resource :devolucao).
+- Fiscal::DevolucaoCompraExtractor: le XML da compra (compra.xml_file) -> itens com impostos
+  destacados (ICMS/IPI/PIS/COFINS: cst/base/aliquota/valor). Chave de referencia vem do
+  filename do blob (NFe+44). Fallback itemcompra se sem XML.
+- Fiscal::DevolucaoCompraBuilder: doc neutro finalidade 4, cliente=fornecedor, nf_referencia=chave,
+  Produtos com Imposto ESPELHADO + ChaveAcessoReferenciada/NItemReferenciado. CFOP: escolhido na
+  tela (varia por fornecedor: devolucao/remessa conserto) OU converte CFOP de entrada p/ saida.
+- NAO usa regra fiscal/perfil para devolucao (tributacao espelha o XML da entrada). validar_dados_fiscais
+  do EmissorFiscal RELAXA p/ finalidade 4 (so exige CFOP). qtdfiscal baixa (mercadoria sai).
+- EmissorFiscal aceita builder: injetado + cod_compra:. documento_fiscal.cod_compra vincula a compra.
+- Tela permite marcar/desmarcar itens, editar qtd/valor, informar chave de referencia manual.
+- LIMITACAO: referencia so por CHAVE NF-e (API nao tem campo p/ NF modelo 1/1A/2 em papel).
+- Testado via runner com stub (local sem XML fisico -> impostos vazios; em prod virao do XML).
+- FALTA validar em HOMOLOGACAO com XML real (impostos espelhados de verdade).
+
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
 3. Fix do trigger `tgrf_estoquevenda` (coluna ambígua `quantidade` no ramo de alteração de
