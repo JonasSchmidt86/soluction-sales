@@ -128,10 +128,48 @@ class CollaboratorsBackoffice::PessoasController < CollaboratorsBackofficeContro
         telefone: company[:telefone],
         email: company[:email],
         data_abertura: company[:data_abertura],
+        uf: company[:uf],
         cod_cidade: BrasilapiService.get_id_cidade(company)
       }
     end
-  
+
+    # Consulta o cadastro do CNPJ na SEFAZ (CCC) para complementar o que a
+    # BrasilAPI nao traz: Inscricao Estadual e situacao cadastral. So funciona
+    # quando a empresa logada tem o modulo fiscal ativo. Usado via AJAX no
+    # cadastro de PJ, apos o preenchimento pela BrasilAPI.
+    def consultar_cadastro_sefaz
+      unless empresa_tem_modulo_fiscal?
+        render json: { status: "sem_modulo" }
+        return
+      end
+
+      config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
+      if config.nil? || !config.ativo?
+        render json: { status: "sem_config" }
+        return
+      end
+
+      doc = params[:cnpj].to_s.gsub(/\D/, "")
+      uf  = params[:uf].to_s.strip.presence || current_collaborator.empresa&.uf.to_s
+      if doc.empty? || uf.empty?
+        render json: { status: "invalido" }
+        return
+      end
+
+      cad = FiscalService.new(config).consultar_cadastro(uf: uf, documento: doc)
+      render json: {
+        status:      cad.sucesso? ? "ok" : "falha",
+        habilitado:  cad.habilitado?,
+        situacao:    cad.situacao,
+        ie:          cad.ie,
+        razao_social: cad.razao_social,
+        mensagem:    cad.mensagem
+      }
+    rescue => e
+      Rails.logger.error("[Pessoas#consultar_cadastro_sefaz] #{e.class} - #{e.message}")
+      render json: { status: "erro", mensagem: e.message }
+    end
+
     private
   
     def set_pessoa

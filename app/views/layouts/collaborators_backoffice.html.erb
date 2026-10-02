@@ -716,6 +716,32 @@
             });
           }
 
+          // Consulta a SEFAZ (CCC) para preencher a Inscricao Estadual e avisar a
+          // situacao cadastral. So complementa; se nao houver modulo fiscal, ignora.
+          function complementarComSefaz(escopo, cnpjValue, uf) {
+            var url = '<%= collaborators_backoffice_pessoas_consultar_cadastro_sefaz_path %>' +
+                      '?cnpj=' + encodeURIComponent(cnpjValue) +
+                      (uf ? '&uf=' + encodeURIComponent(uf) : '');
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+              .then(function(r) { return r.json().catch(function() { return null; }); })
+              .then(function(d) {
+                if (!d || d.status === 'sem_modulo' || d.status === 'sem_config') return;
+                if (d.status !== 'ok') {
+                  if (d.mensagem) growl('SEFAZ: ' + d.mensagem, 'warning');
+                  return;
+                }
+                // Preenche a IE se veio e o campo estiver vazio.
+                if (d.ie) {
+                  var ieEl = escopo.querySelector('[name*="[rg_ie]"]');
+                  if (ieEl && !ieEl.value) { ieEl.value = d.ie; }
+                }
+                var msg = 'SEFAZ: ' + (d.situacao || (d.habilitado ? 'Habilitado' : 'verificar'));
+                if (d.ie) msg += ' — IE ' + d.ie;
+                growl(msg, d.habilitado ? 'success' : 'warning');
+              })
+              .catch(function(e) { console.error('Erro SEFAZ:', e); });
+          }
+
           function processarCNPJ(cnpjInput) {
             const cnpjValue = cnpjInput.value.replace(/\D/g, '');
             // So dispara quando o CNPJ estiver completo (14 digitos).
@@ -748,6 +774,8 @@
                 }
                 // 3) Preenche os campos e salva automaticamente (somente o que veio da API).
                 preencherCamposEmpresa(escopo, apiData);
+                // 3b) Complementa com IE/situacao da SEFAZ (so se modulo fiscal ativo).
+                complementarComSefaz(escopo, cnpjValue, apiData.uf);
                 salvarAutomaticamentePJ(cnpjValue);
               });
             })
