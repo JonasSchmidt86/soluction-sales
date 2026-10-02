@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000005) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -519,6 +519,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000005) do
     t.datetime "created_at", precision: nil, default: -> { "timezone('America/Sao_Paulo'::text, now())" }, null: false
     t.bigint "cod_funcionario"
     t.string "origem_sistema", limit: 15
+    t.decimal "qtdfiscal_antes", precision: 15, scale: 2
+    t.decimal "qtdfiscal_movida", precision: 15, scale: 2
+    t.decimal "qtdfiscal_depois", precision: 15, scale: 2
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
     t.index ["created_at"], name: "idx_estoque_logs_data"
     t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"

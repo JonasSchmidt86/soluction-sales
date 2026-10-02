@@ -72,9 +72,15 @@ module Fiscal
         cod_cor:           item[:cod_cor],
         operacao:          operacao,
         origem:            "NFE_FISCAL",
-        quantidade_antes:  antes,
-        quantidade_movida: movida,
-        quantidade_depois: depois,
+        # Este serviço mexe SOMENTE no estoque fiscal (qtdfiscal); as colunas
+        # físicas (quantidade_*) ficam nil porque o estoque físico é gravado
+        # pela trigger de venda, em outro momento (linha separada no log).
+        quantidade_antes:  nil,
+        quantidade_movida: nil,
+        quantidade_depois: nil,
+        qtdfiscal_antes:   antes,
+        qtdfiscal_movida:  movida,
+        qtdfiscal_depois:  depois,
         cod_referencia:    @cod_referencia,
         cod_funcionario:   @cod_funcionario,
         usuario:           nil,
