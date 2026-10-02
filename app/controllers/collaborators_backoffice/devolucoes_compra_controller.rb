@@ -19,6 +19,37 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
     end
   end
 
+  # GET .../compras/:compra_id/devolucao/baixar_xml
+  # Baixa o XML da NOTA DE ENTRADA (compra) buscando no provedor pela chave
+  # (ObterArquivoNotaFiscal, tipo documento = entrada). Util quando o XML local
+  # nao esta disponivel (ex.: storage de producao).
+  def baixar_xml
+    chave = Fiscal::DevolucaoCompraExtractor.new(@compra).chave_referencia
+    if chave.blank?
+      redirect_to collaborators_backoffice_compra_path(@compra),
+                  alert: "Compra sem chave de NF-e para buscar o XML."
+      return
+    end
+
+    config = FiscalConfig.find_by(cod_empresa: @compra.cod_empresa)
+    if config.nil? || !config.ativo?
+      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Empresa sem configuração fiscal ativa."
+      return
+    end
+
+    arquivo = FiscalService.new(config).obter_arquivo(chave: chave, file_type: 1, tipo_documento: 0)
+    if arquivo.sucesso?
+      send_data arquivo.conteudo, filename: "nfe-entrada-#{chave}.xml",
+                type: "application/xml", disposition: "attachment"
+    else
+      redirect_to collaborators_backoffice_compra_path(@compra),
+                  alert: "XML da entrada indisponível: #{arquivo.erro}"
+    end
+  rescue => e
+    Rails.logger.error("[DevolucoesCompra#baixar_xml] compra #{@compra.cod_compra}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_compra_path(@compra), alert: "Falha ao obter o XML: #{e.message}"
+  end
+
   # POST .../compras/:compra_id/devolucao
   def create
     emissor = montar_emissor

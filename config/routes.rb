@@ -146,6 +146,7 @@ Rails.application.routes.draw do
         get :previsualizar, on: :collection # DANFE de pre-visualizacao (provedor)
         post :cancelar, on: :member
         get :danfe, on: :member
+        get :xml, on: :member # baixa o XML (do banco ou do provedor pela chave)
       end
     end
 
@@ -166,6 +167,8 @@ Rails.application.routes.draw do
       resource :devolucao, only: [:new, :create], controller: "devolucoes_compra" do
         # Pre-visualizacao do DANFE da devolucao (sem transmitir a SEFAZ).
         post :previsualizar
+        # Baixa o XML da nota de entrada (compra) pela chave, via provedor.
+        get :baixar_xml
       end
     end
     resources :pedidos_compras

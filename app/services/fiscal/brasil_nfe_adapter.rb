@@ -134,6 +134,27 @@ module Fiscal
       nao_implementado(:consultar)
     end
 
+    # Obtem o arquivo (XML ou PDF) de um documento fiscal ja existente na base,
+    # pela chave de acesso. Doc 2.0: POST /ObterArquivoNotaFiscal.
+    #   chave: chave de acesso (44 digitos).
+    #   file_type: 1 = XML (default), 2 = PDF (DANFE/DANFCE).
+    #   tipo_documento: 0 = entrada (compra), 1 = saida (venda) [default].
+    # IMPORTANTE: a resposta e uma STRING BASE64 PURA (nao JSON). Em caso de
+    # erro, a API pode devolver um JSON { Error: ... }.
+    # Retorna FiscalArquivo (xml_base64 / pdf_base64 / erro).
+    def obter_arquivo(chave:, file_type: 1, tipo_documento: 1)
+      ch = chave.to_s.gsub(/\D/, "")
+      raise ConfiguracaoInvalida, "Chave de acesso invalida (esperado 44 digitos)" unless ch.length == 44
+
+      body = {
+        "ChaveNF"             => ch,
+        "FileType"            => file_type.to_i,
+        "TipoDocumentoFiscal" => tipo_documento.to_i
+      }
+      res = post_raw("/ObterArquivoNotaFiscal", body)
+      to_arquivo(res, file_type: file_type)
+    end
+
     # Consulta o status operacional da SEFAZ para um modelo de documento.
     # Doc 2.0: POST /ConsultarStatusSefaz com ModeloDocumento (55/65/57/58/67).
     # A consulta e SEMPRE em producao (independente do ambiente da empresa).
@@ -175,6 +196,16 @@ module Fiscal
     end
 
     def post(path, body)
+      res = post_raw(path, body)
+      return { "Error" => res[:erro], "_http_status" => res[:status] } if res[:erro]
+
+      parsed = JSON.parse(res[:body]) rescue { "Error" => "Resposta não-JSON (HTTP #{res[:status]})", "_raw" => res[:body] }
+      parsed.merge("_http_status" => res[:status])
+    end
+
+    # Transporte cru: devolve { status:, body:, erro: }. Usado quando a resposta
+    # NAO e JSON (ex.: ObterArquivoNotaFiscal retorna uma string base64 pura).
+    def post_raw(path, body)
       uri = URI("#{BASE_URL}#{path}")
       raise ConfiguracaoInvalida, "Token do Brasil NFe ausente" if token.blank?
 
@@ -189,12 +220,11 @@ module Fiscal
       req.body = body.to_json
 
       res = http.request(req)
-      parsed = JSON.parse(res.body) rescue { "Error" => "Resposta não-JSON (HTTP #{res.code})", "_raw" => res.body }
-      parsed.merge("_http_status" => res.code.to_i)
+      { status: res.code.to_i, body: res.body.to_s }
     rescue Net::OpenTimeout, Net::ReadTimeout => e
-      { "Error" => "Timeout ao contatar Brasil NFe: #{e.message}", "_http_status" => 0 }
+      { status: 0, erro: "Timeout ao contatar Brasil NFe: #{e.message}" }
     rescue => e
-      { "Error" => "Falha na requisição: #{e.message}", "_http_status" => 0 }
+      { status: 0, erro: "Falha na requisição: #{e.message}" }
     end
 
     # Converte a resposta do Brasil NFe no FiscalResult neutro.
@@ -222,6 +252,32 @@ module Fiscal
         danfe_url: nil, # DANFE vem em Base64File, não URL
         mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
         bruto:     resposta
+      )
+    end
+
+    # Converte a resposta crua do ObterArquivoNotaFiscal em FiscalArquivo.
+    # Sucesso: corpo = string base64 pura. Falha: HTTP>=400, erro de transporte,
+    # ou corpo em JSON com { Error: ... }.
+    def to_arquivo(res, file_type:)
+      if res[:erro]
+        return FiscalArquivo.new(erro: res[:erro])
+      end
+      corpo = res[:body].to_s.strip
+      if res[:status].to_i >= 400 || corpo.empty?
+        erro = (JSON.parse(corpo)["Error"] rescue nil) if corpo.start_with?("{")
+        return FiscalArquivo.new(erro: erro.presence || "Falha ao obter o arquivo (HTTP #{res[:status]}).")
+      end
+      # Se vier JSON de erro mesmo com HTTP 200.
+      if corpo.start_with?("{")
+        j = JSON.parse(corpo) rescue nil
+        return FiscalArquivo.new(erro: j["Error"].presence || "Resposta inesperada do provedor.") if j && j["Error"].present?
+      end
+
+      # Corpo pode vir com aspas (JSON string) — remove se for o caso.
+      b64 = corpo.start_with?('"') && corpo.end_with?('"') ? corpo[1..-2] : corpo
+      FiscalArquivo.new(
+        xml_base64: file_type.to_i == 1 ? b64 : nil,
+        pdf_base64: file_type.to_i == 2 ? b64 : nil
       )
     end
 

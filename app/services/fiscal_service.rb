@@ -82,6 +82,13 @@ class FiscalService
     delegar(:consultar_status, modelo: modelo)
   end
 
+  # Obtém o arquivo (XML/PDF) de um documento já existente, pela chave.
+  # Retorna FiscalArquivo. file_type: 1 = XML, 2 = PDF.
+  # tipo_documento: 0 = entrada (compra), 1 = saída (venda).
+  def obter_arquivo(chave:, file_type: 1, tipo_documento: 1)
+    delegar(:obter_arquivo, chave: chave, file_type: file_type, tipo_documento: tipo_documento)
+  end
+
   private
 
   def delegar(metodo, *args, **kwargs)

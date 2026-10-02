@@ -1,7 +1,7 @@
 class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe]
-  before_action :set_documento, only: [:show, :cancelar, :danfe]
+  before_action :set_venda, only: [:emitir, :espelho, :previsualizar, :show, :cancelar, :danfe, :xml]
+  before_action :set_documento, only: [:show, :cancelar, :danfe, :xml]
 
   # POST /collaborators_backoffice/vendas/:venda_id/documentos_fiscais/emitir
   # Emite (ou reemite) a NF-e modelo 55 da venda. O EmissorFiscal reaproveita
@@ -93,18 +93,42 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   def show
   end
 
-  # GET .../documentos_fiscais/:id/danfe — baixa o PDF do DANFE (base64).
+  # GET .../documentos_fiscais/:id/danfe — baixa o PDF do DANFE.
+  # Usa o danfe_base64 salvo; se ausente, BUSCA no provedor pela chave
+  # (ObterArquivoNotaFiscal). Assim o DANFE fica sempre disponível.
   def danfe
-    if @documento.danfe_base64.blank?
-      redirect_to edit_collaborators_backoffice_venda_path(@venda),
-                  alert: "DANFE indisponível para este documento."
+    if @documento.danfe_base64.present?
+      send_data Base64.decode64(@documento.danfe_base64),
+                filename: "danfe-#{nome_arquivo(@documento)}.pdf",
+                type: "application/pdf", disposition: "inline"
       return
     end
 
-    send_data Base64.decode64(@documento.danfe_base64),
-              filename: "danfe-#{@documento.chave_acesso.presence || @documento.cod_documento_fiscal}.pdf",
-              type: "application/pdf",
-              disposition: "inline"
+    arquivo = buscar_arquivo_no_provedor(@documento, file_type: 2)
+    if arquivo&.sucesso?
+      send_data arquivo.conteudo, filename: "danfe-#{nome_arquivo(@documento)}.pdf",
+                type: "application/pdf", disposition: "inline"
+    else
+      redirect_to edit_collaborators_backoffice_venda_path(@venda),
+                  alert: "DANFE indisponível: #{arquivo&.erro || 'documento sem chave ou não encontrado'}."
+    end
+  end
+
+  # GET .../documentos_fiscais/:id/xml — baixa o XML da NF. Usa o salvo; se
+  # ausente, busca no provedor pela chave (ObterArquivoNotaFiscal).
+  def xml
+    if @documento.xml_base64.present?
+      enviar_xml(Base64.decode64(@documento.xml_base64), @documento)
+      return
+    end
+
+    arquivo = buscar_arquivo_no_provedor(@documento, file_type: 1)
+    if arquivo&.sucesso?
+      enviar_xml(arquivo.conteudo, @documento)
+    else
+      redirect_to edit_collaborators_backoffice_venda_path(@venda),
+                  alert: "XML indisponível: #{arquivo&.erro || 'documento sem chave ou não encontrado'}."
+    end
   end
 
   # POST .../documentos_fiscais/:id/cancelar — cancela NF autorizada.
@@ -164,6 +188,30 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
 
     venda.update_columns(cancelada: true, cod_funcionario: current_collaborator.cod_funcionario)
     venda.itensvenda.where(cancelado: [false, nil]).update_all(cancelado: true)
+  end
+
+  # Busca o arquivo (XML/PDF) do documento no provedor pela chave de acesso.
+  # Retorna FiscalArquivo ou nil (sem chave/config). Venda = saida (tipo 1).
+  def buscar_arquivo_no_provedor(documento, file_type:)
+    return nil if documento.chave_acesso.blank?
+    config = FiscalConfig.find_by(cod_empresa: documento.cod_empresa)
+    return nil if config.nil? || !config.ativo?
+
+    FiscalService.new(config).obter_arquivo(
+      chave: documento.chave_acesso, file_type: file_type, tipo_documento: 1
+    )
+  rescue => e
+    Rails.logger.error("[DocumentosFiscais#buscar_arquivo] doc #{documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    nil
+  end
+
+  def enviar_xml(conteudo, documento)
+    send_data conteudo, filename: "nfe-#{nome_arquivo(documento)}.xml",
+              type: "application/xml", disposition: "attachment"
+  end
+
+  def nome_arquivo(documento)
+    documento.chave_acesso.presence || documento.cod_documento_fiscal
   end
 
   def set_venda

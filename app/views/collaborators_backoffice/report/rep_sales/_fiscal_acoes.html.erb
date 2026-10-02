@@ -8,14 +8,20 @@
 
 <% if doc&.autorizada? %>
   <li><h6 class="dropdown-header">NF-e autorizada</h6></li>
-  <% if doc.danfe_base64.present? %>
-    <li>
-      <%= link_to danfe_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
-                  target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
-        <i class="fa fa-file-pdf" style="width: 35px;"></i> Ver DANFE
-      <% end %>
-    </li>
-  <% end %>
+  <%# DANFE: usa o salvo ou busca no provedor pela chave (ObterArquivoNotaFiscal). %>
+  <li>
+    <%= link_to danfe_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+      <i class="fa fa-file-pdf" style="width: 35px;"></i> Ver DANFE
+    <% end %>
+  </li>
+  <%# XML: usa o salvo ou busca no provedor pela chave. %>
+  <li>
+    <%= link_to xml_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                class: "dropdown-item btn btn-info btn-circle" do %>
+      <i class="fa fa-file-code" style="width: 35px;"></i> Baixar XML
+    <% end %>
+  </li>
   <li>
     <%= button_to cancelar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
                   method: :post, params: { justificativa: "", escopo: "nf" },
