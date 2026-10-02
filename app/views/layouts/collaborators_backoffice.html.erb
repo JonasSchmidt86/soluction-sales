@@ -338,6 +338,11 @@
               </a>
               <div class="collapse" id="collapseFiscal" data-bs-parent="#sidenavAccordion">
                 <nav class="sb-sidenav-menu-nested nav">
+                  <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                    <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
+                      <i class="fa fa-gauge-high me-1"></i> Dashboard
+                    <% end %>
+                  <% end %>
                   <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
                     <i class="fa fa-tags me-1"></i> Perfis Tributários
                   <% end %>
@@ -347,6 +352,9 @@
                   <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
                     <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
                       <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
+                    <% end %>
+                    <%= link_to exportar_collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
+                      <i class="fa fa-file-zipper me-1"></i> Exportar período
                     <% end %>
                   <% end %>
                   <% if access_control.can_view?('fiscal_config') %>
