@@ -21,6 +21,28 @@
 <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
   Lembretes
 <% end %>
+
+<%# ---- Modulo Fiscal (so super_admin + empresa com modulo ativo) ---- %>
+<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+  <div class="nav-link text-uppercase small text-muted mt-2 mb-0" style="letter-spacing:.5px;">
+    <i class="fa fa-file-invoice fa-fw"></i> Fiscal
+  </div>
+  <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link ps-4" do %>
+    <i class="fa fa-gauge-high fa-fw"></i> Dashboard
+  <% end %>
+  <%= link_to new_collaborators_backoffice_notas_avulsa_path(modelo: 55), class: "nav-link ps-4" do %>
+    <i class="fa fa-file-circle-plus fa-fw"></i> Emitir NF avulsa
+  <% end %>
+  <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link ps-4" do %>
+    <i class="fa fa-layer-group fa-fw"></i> Perfis Tributários
+  <% end %>
+  <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link ps-4" do %>
+    <i class="fa fa-gear fa-fw"></i> Configuração Fiscal
+  <% end %>
+  <%= link_to exportar_collaborators_backoffice_fiscal_config_path, class: "nav-link ps-4" do %>
+    <i class="fa fa-file-zipper fa-fw"></i> Exportar período
+  <% end %>
+<% end %>
 <% if access_control.can_view?('whatsapp_contacts') %>
   <%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
     whatsapp Contact

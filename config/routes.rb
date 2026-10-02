@@ -217,6 +217,9 @@ Rails.application.routes.draw do
     end
 
     # Módulo Fiscal (em desenvolvimento — visível apenas via permissão fiscal_*)
+    # Dashboard do modulo fiscal (primeiro link da aba Fiscal).
+    get 'fiscal_dashboard', to: 'fiscal_dashboard#index', as: :fiscal_dashboard
+
     resources :perfis_tributarios do
       resources :regras_fiscais, only: [:new, :create, :edit, :update, :destroy]
     end

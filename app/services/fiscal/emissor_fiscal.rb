@@ -42,6 +42,11 @@ module Fiscal
                 DocumentoFiscalBuilder.new(@venda, operacao: @operacao, config: @config, modelo: @modelo, finalidade: @finalidade)
       doc_payload = builder.montar
 
+      # Guarda o valor total da nota (soma dos itens do payload) no documento,
+      # para o dashboard somar de forma uniforme (venda/avulsa/devolucao).
+      total = total_do_payload(doc_payload)
+      documento.update_column(:valor_total, total) if total&.nonzero?
+
       # Trava: NAO envia para a SEFAZ se faltar dado fiscal essencial. Em
       # homologacao a SEFAZ costuma autorizar notas incompletas (sem CFOP/CST),
       # o que mascara o erro; em producao seria rejeitada. Falhar aqui evita
@@ -94,6 +99,14 @@ module Fiscal
     end
 
     private
+
+    # Soma o ValorTotal dos produtos do payload neutro (chaves camelCase do
+    # provedor). Fonte uniforme do valor da nota para venda, avulsa e devolucao.
+    def total_do_payload(payload)
+      Array(payload[:produtos]).sum { |p| (p["ValorTotal"] || p[:ValorTotal]).to_d }
+    rescue
+      nil
+    end
 
     # Baixa o estoque fiscal (qtdfiscal) apos a NF ser autorizada. Falha aqui
     # NAO desfaz a emissao (a NF ja esta autorizada na SEFAZ); loga o erro.
