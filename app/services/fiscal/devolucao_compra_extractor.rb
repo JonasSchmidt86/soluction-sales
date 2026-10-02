@@ -89,7 +89,11 @@ module Fiscal
           cfop_original:  txt(prod, "CFOP"),
           ean:            txt(prod, "cEAN"),
           unidade:        txt(prod, "uCom").presence || "UN",
-          quantidade:     quantidade,
+          quantidade:          quantidade,
+          # Quantidade original da nota de entrada — usada para recalcular os
+          # impostos proporcionalmente quando a devolucao for parcial. NAO deve
+          # ser editada pelo controller.
+          quantidade_original: quantidade,
           valor_unitario: vl_unit,
           valor_total:    (vl_total.nonzero? || (quantidade * vl_unit)).to_d,
           origem:         extrair_origem(imp),
@@ -164,7 +168,8 @@ module Fiscal
           ncm:            ic.produto&.ncm,
           cfop_original:  ic.produto&.cfop,
           unidade:        "UN",
-          quantidade:     qtd,
+          quantidade:          qtd,
+          quantidade_original: qtd,
           valor_unitario: vu,
           valor_total:    (qtd * vu),
           origem:         ic.produto&.origem,
