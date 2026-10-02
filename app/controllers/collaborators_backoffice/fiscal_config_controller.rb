@@ -67,9 +67,16 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
       razao_social:    cad.razao_social,
       nome_fantasia:   cad.nome_fantasia,
       regime:          cad.regime,
+      cnae:            cad.cnae,
       credenciado_nfe: cad.credenciado_nfe?,
+      credenciado_cte: cad.credenciado_cte?,
       uf:              cad.uf,
       fonte:           cad.fonte,
+      data_inicio:     cad.data_inicio,
+      data_baixa:      cad.data_baixa,
+      data_alteracao:  cad.data_alteracao,
+      endereco:        cad.endereco_linha,
+      contato:         cad.contato,
       mensagem:        cad.mensagem
     }
   rescue FiscalService::NaoConfigurado => e

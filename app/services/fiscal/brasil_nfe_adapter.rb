@@ -435,6 +435,16 @@ module Fiscal
     def to_cadastro(resposta)
       ok   = resposta["status"].to_i == 1 && resposta["Error"].blank? && resposta["_http_status"].to_i < 400
       sit  = resposta["situacao"].to_i
+      end_api = resposta["Endereco"]
+      con_api = resposta["Contato"]
+
+      endereco = end_api.is_a?(Hash) ? end_api.transform_keys(&:to_s).slice(
+        "logradouro", "numero", "complemento", "bairro", "municipio", "cep", "uf"
+      ).reject { |_, v| v.blank? }.presence : nil
+
+      contato = con_api.is_a?(Hash) ? con_api.transform_keys(&:to_s).slice(
+        "telefone", "email", "fax"
+      ).reject { |_, v| v.blank? }.presence : nil
 
       FiscalCadastro.new(
         sucesso:         ok,
@@ -448,9 +458,15 @@ module Fiscal
         regime:          resposta["regimeApuracao"],
         cnae:            resposta["cnaePrincipal"],
         credenciado_nfe: resposta["indicadorCredenciamentoNFe"].to_i == 1,
+        credenciado_cte: resposta["indicadorCredenciamentoCTe"].to_i == 1,
         uf:              resposta["ufConsultada"],
         fonte:           resposta["fonte"],
         mensagem:        resposta["mensagem"].presence || resposta["Error"].presence,
+        data_inicio:     resposta["dataInicioAtividade"],
+        data_baixa:      resposta["dataOcorrenciaBaixa"],
+        data_alteracao:  resposta["dataUltimaAlteracaoCadastral"],
+        endereco:        endereco,
+        contato:         contato,
         bruto:           resposta
       )
     end

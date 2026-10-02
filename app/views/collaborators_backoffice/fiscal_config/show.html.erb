@@ -156,12 +156,22 @@
               var badge = d.habilitado
                 ? '<span class="badge bg-success">Habilitado</span>'
                 : '<span class="badge bg-warning text-dark">' + (d.situacao || 'Verificar') + '</span>';
+              var contato = d.contato
+                ? [d.contato.telefone, d.contato.email].filter(Boolean).join(' · ')
+                : null;
               var linhas = [
                 badge,
                 d.razao_social ? '<strong>' + d.razao_social + '</strong>' : null,
-                d.ie ? 'IE: ' + d.ie : 'IE: —',
-                d.credenciado_nfe ? 'Credenciado NF-e' : 'NF-e: não credenciado',
-                d.regime, d.uf, d.fonte ? ('fonte: ' + d.fonte) : null,
+                d.nome_fantasia ? ('Fantasia: ' + d.nome_fantasia) : null,
+                d.ie ? ('IE: ' + d.ie) : 'IE: —',
+                d.cnae ? ('CNAE: ' + d.cnae) : null,
+                d.regime,
+                d.endereco ? ('<i class="fa fa-location-dot me-1"></i>' + d.endereco) : null,
+                contato ? ('<i class="fa fa-phone me-1"></i>' + contato) : null,
+                [d.credenciado_nfe ? 'Credenciado NF-e' : 'NF-e não credenciado',
+                 d.credenciado_cte ? 'Credenciado CT-e' : null].filter(Boolean).join(' · '),
+                d.data_inicio ? ('Início: ' + String(d.data_inicio).substring(0,10)) : null,
+                [d.uf, d.fonte ? ('fonte: ' + d.fonte) : null].filter(Boolean).join(' — '),
                 d.mensagem
               ].filter(Boolean);
               cadOut.className = 'mt-3';
