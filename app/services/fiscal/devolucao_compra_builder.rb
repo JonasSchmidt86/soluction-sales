@@ -129,9 +129,12 @@ module Fiscal
       qtd_dev / qtd_orig
     end
 
-    # CFOP: o escolhido na tela (mesmo para todos) tem prioridade; senao, o CFOP
-    # original da compra convertido para saida (1xxx->5xxx, 2xxx->6xxx).
+    # CFOP, por ordem de prioridade:
+    #   1) CFOP do proprio item (editado na linha) — vence tudo;
+    #   2) CFOP geral escolhido na tela (operacao) — padrao para todos;
+    #   3) CFOP original da compra convertido para saida (1xxx->5xxx, 2xxx->6xxx).
     def cfop_do_item(it)
+      return it[:cfop].to_s.gsub(/\D/, "").to_i if it[:cfop].present?
       return @cfop.to_i if @cfop.present?
       cfop_saida(it[:cfop_original])
     end

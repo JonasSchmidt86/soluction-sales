@@ -171,6 +171,7 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
         valor_unitario:   MoedaBr.parse(ed["valor_unitario"]).presence || it[:valor_unitario],
         valor_total:      (MoedaBr.parse(ed["quantidade"]).to_d.nonzero? && MoedaBr.parse(ed["valor_unitario"]).to_d.nonzero?) ?
                             (MoedaBr.parse(ed["quantidade"]).to_d * MoedaBr.parse(ed["valor_unitario"]).to_d) : it[:valor_total],
+        cfop:             ed["cfop"].to_s.gsub(/\D/, "").presence, # CFOP por item (sobrepoe o geral)
         imposto_override: override.presence
       )
     end

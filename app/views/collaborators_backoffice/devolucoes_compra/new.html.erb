@@ -1,177 +1,222 @@
 <div id="layoutAuthentication_content">
   <main>
-    <div class="card mt-3">
-      <div class="card-header bg-primary text-white d-flex align-items-center">
-        <i class="fa fa-rotate-left me-2"></i>
-        <h4 class="mb-0">Devolução de compra — NF #<%= @compra.numeronf %> (<%= @compra.pessoa&.nome %>)</h4>
-      </div>
+    <div class="card-body">
+      <div class="row justify-content-center">
+        <div class="">
+          <div class="card mt-3">
+            <h4 class="card-header text-center bg-primary text-white">
+              <i class="fa fa-rotate-left me-2"></i> Devolução de Compra
+            </h4>
 
-      <div class="card-body">
-        <% unless @tem_xml %>
-          <div class="alert alert-warning py-2">
-            <i class="fa fa-triangle-exclamation me-1"></i>
-            Sem XML da nota de compra disponível — os impostos não puderam ser espelhados automaticamente.
-            Revise os valores antes de emitir.
-          </div>
-        <% end %>
-
-        <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
-          <div class="row mb-3">
-            <div class="col-md-3">
-              <div class="form-floating">
-                <%= select_tag :cod_operacao_fiscal,
-                      options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
-                      class: "form-select" %>
-                <label>Operação</label>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-floating">
-                <%= text_field_tag :natureza_operacao, @operacao_padrao&.natureza_operacao || "Devolucao de compra", class: "form-control" %>
-                <label>Natureza da operação</label>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-floating">
-                <%= select_tag :finalidade,
-                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 4),
-                      class: "form-select" %>
-                <label>Finalidade</label>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-floating">
-                <%= text_field_tag :cfop, nil, class: "form-control", placeholder: "ex: 5202" %>
-                <label>CFOP (todos os itens)</label>
-              </div>
-              <small class="text-muted">Vazio = converte o CFOP de entrada p/ saída.</small>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Documento referenciado (chave NF-e)</label>
-            <%= text_field_tag :chave_referencia, @chave_referencia, class: "form-control", placeholder: "Chave de 44 dígitos (se houver)" %>
-          </div>
-
-          <table class="table table-sm table-bordered align-middle">
-            <thead class="table-light">
-              <tr>
-                <th style="width:40px;">Dev?</th>
-                <th>Produto</th>
-                <th>NCM</th>
-                <th>CFOP orig.</th>
-                <th class="text-end">Qtd</th>
-                <th class="text-end">Vl Unit.</th>
-                <th>Impostos (espelho)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @itens.each_with_index do |it, i| %>
-                <% imp0 = it[:imposto] || {} %>
-                <tr class="dev-item"
-                    data-qtd-orig="<%= it[:quantidade_original].to_d %>"
-                    data-icms-base="<%= (imp0[:icms] || {})[:base_calculo].to_d %>"
-                    data-icms-valor="<%= (imp0[:icms] || {})[:valor].to_d %>"
-                    data-ipi-valor="<%= (imp0[:ipi] || {})[:valor].to_d %>"
-                    data-pis-base="<%= (imp0[:pis] || {})[:base_calculo].to_d %>"
-                    data-cofins-base="<%= (imp0[:cofins] || {})[:base_calculo].to_d %>">
-                  <td class="text-center">
-                    <%= check_box_tag "itens[#{i}][devolver]", "1", true %>
-                  </td>
-                  <td>
-                    <%= it[:descricao] %>
-                    <div class="small text-muted"><%= it[:cod_produto] %></div>
-                  </td>
-                  <td><%= it[:ncm] %></td>
-                  <td><%= it[:cfop_original] %></td>
-                  <td class="text-end" style="width:90px;">
-                    <%= text_field_tag "itens[#{i}][quantidade]",
-                          number_with_precision(it[:quantidade], precision: 2, separator: ",", delimiter: ""),
-                          class: "form-control form-control-sm text-end dev-qtd" %>
-                  </td>
-                  <td class="text-end" style="width:110px;">
-                    <%= text_field_tag "itens[#{i}][valor_unitario]",
-                          number_with_precision(it[:valor_unitario], precision: 2, separator: ",", delimiter: ""),
-                          class: "form-control form-control-sm text-end" %>
-                  </td>
-                  <td class="small">
-                    <% imp = it[:imposto] || {} %>
-                    <% if imp.present? %>
-                      <%# Fator de rateio pela quantidade atual (igual ao do builder). %>
-                      <% q_orig = it[:quantidade_original].to_d
-                         q_dev  = it[:quantidade].to_d
-                         fator  = (q_orig.nonzero? && q_dev.nonzero?) ? (q_dev / q_orig) : 1.to_d
-                         icms   = imp[:icms] || {}
-                         ipi    = imp[:ipi] || {}
-                         pis    = imp[:pis] || {}
-                         cof    = imp[:cofins] || {}
-                         rateia = ->(v) { v.to_d.nonzero? ? (v.to_d * fator).round(2) : nil } %>
-
-                      <% if icms.present? %>
-                        <div class="d-flex align-items-center gap-1 mb-1">
-                          <span class="text-muted" style="width:46px;">ICMS</span>
-                          <% icms_base_auto = rateia.(icms[:base_calculo]) ? number_with_precision(rateia.(icms[:base_calculo]), precision: 2, separator: ",", delimiter: "") : "" %>
-                          <% icms_valor_auto = rateia.(icms[:valor]) ? number_with_precision(rateia.(icms[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
-                          <span class="input-group input-group-sm" style="max-width:150px;">
-                            <span class="input-group-text">Base</span>
-                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control text-end imp-field", data: { campo: "icms_base" }, placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto, class: "imp-auto", data: { campo: "icms_base" } %>
-                          </span>
-                          <span class="input-group input-group-sm" style="max-width:150px;">
-                            <span class="input-group-text">R$</span>
-                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control text-end imp-field", data: { campo: "icms_valor" }, placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto, class: "imp-auto", data: { campo: "icms_valor" } %>
-                          </span>
-                          <span class="text-muted">CST <%= icms[:cst] || "—" %> · <%= icms[:aliquota] %>%</span>
-                        </div>
-                      <% end %>
-
-                      <% if ipi.present? %>
-                        <div class="d-flex align-items-center gap-1 mb-1">
-                          <span class="text-muted" style="width:46px;">IPI</span>
-                          <% ipi_valor_auto = rateia.(ipi[:valor]) ? number_with_precision(rateia.(ipi[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
-                          <span class="input-group input-group-sm" style="max-width:150px;">
-                            <span class="input-group-text">R$</span>
-                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto, class: "imp-auto", data: { campo: "ipi_valor" } %>
-                          </span>
-                          <span class="text-muted">CST <%= ipi[:cst] || "—" %> · <%= ipi[:aliquota] %>%</span>
-                        </div>
-                      <% end %>
-
-                      <%# PIS/COFINS: apenas informativo (rateado automaticamente). %>
-                      <% if pis.present? %>
-                        <span class="badge text-bg-light border me-1">PIS base <span class="imp-pis"><%= number_with_precision(rateia.(pis[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= pis[:aliquota] %>%</span>
-                      <% end %>
-                      <% if cof.present? %>
-                        <span class="badge text-bg-light border me-1">COFINS base <span class="imp-cofins"><%= number_with_precision(rateia.(cof[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= cof[:aliquota] %>%</span>
-                      <% end %>
-                      <div class="text-muted" style="font-size:11px;">Valores já rateados pela quantidade. Edite se precisar ajustar.</div>
-                    <% else %>
-                      <span class="text-muted">sem impostos destacados</span>
-                    <% end %>
-                  </td>
-                </tr>
+            <div class="card-body">
+              <% unless @tem_xml %>
+                <div class="alert alert-warning py-2">
+                  <i class="fa fa-triangle-exclamation me-1"></i>
+                  Sem XML da nota de compra disponível — os impostos não puderam ser espelhados automaticamente.
+                  Revise os valores antes de emitir.
+                </div>
               <% end %>
-            </tbody>
-          </table>
 
-          <div class="d-flex justify-content-between mt-3">
-            <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
-            <div class="d-flex gap-2">
-              <%# Pre-visualizar: submete o mesmo form para a acao de preview, em nova aba. %>
-              <button type="submit" class="btn btn-outline-info"
-                      formaction="<%= previsualizar_collaborators_backoffice_compra_devolucao_path(@compra) %>"
-                      formtarget="_blank" formnovalidate>
-                <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
-              </button>
-              <button type="submit" class="btn btn-success"
-                      onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
-                <i class="fa fa-check-double me-1"></i> Emitir devolução
-              </button>
+              <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
+
+                <%# ---- Fornecedor + NF de origem ---- %>
+                <div class="row my-2 mx-1 align-items-center">
+                  <div class="col-md-7">
+                    <div class="form-floating">
+                      <%= text_field_tag :fornecedor_nome, @compra.pessoa&.nome,
+                            class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                      <label>Fornecedor</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-floating">
+                      <%= text_field_tag :fornecedor_doc, @compra.pessoa&.cpf_cnpj,
+                            class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                      <label>CNPJ/CPF</label>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-floating">
+                      <%= text_field_tag :nf_origem, @compra.numeronf,
+                            class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                      <label>NF de origem</label>
+                    </div>
+                  </div>
+                </div>
+
+                <%# ---- Operacao / Finalidade / Natureza / CFOP padrao ---- %>
+                <div class="row my-2 mx-1 g-2">
+                  <div class="col-md-3">
+                    <div class="form-floating">
+                      <%= select_tag :cod_operacao_fiscal,
+                            options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                            class: "form-select" %>
+                      <label>Operação</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-floating">
+                      <%= select_tag :finalidade,
+                            options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 4),
+                            class: "form-select" %>
+                      <label>Finalidade</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                      <%= text_field_tag :natureza_operacao, @operacao_padrao&.natureza_operacao || "Devolucao de compra", class: "form-control" %>
+                      <label>Natureza da operação</label>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-floating">
+                      <%= text_field_tag :cfop, nil, id: "cfopGeral", class: "form-control", placeholder: "ex: 5202" %>
+                      <label>CFOP padrão</label>
+                    </div>
+                    <small class="text-muted">Aplica aos itens sem CFOP próprio.</small>
+                  </div>
+                </div>
+
+                <div class="row my-2 mx-1">
+                  <div class="col-md-12">
+                    <div class="form-floating">
+                      <%= text_field_tag :chave_referencia, @chave_referencia,
+                            class: "form-control", placeholder: "Chave de 44 dígitos (se houver)" %>
+                      <label>Documento referenciado (chave NF-e)</label>
+                    </div>
+                  </div>
+                </div>
+
+                <%# ---- Itens ---- %>
+                <div class="table-responsive mt-2">
+                  <table class="table table-sm align-middle table-light table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th style="width:40px;" class="text-center">Dev?</th>
+                        <th style="width:90px;">Cód</th>
+                        <th>Produto (XML)</th>
+                        <th style="width:90px;">NCM</th>
+                        <th style="width:90px;">CFOP</th>
+                        <th style="width:80px;" class="text-end">Qtd</th>
+                        <th style="width:110px;" class="text-end">Vl Unit.</th>
+                        <th>Impostos (espelho — editável)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% @itens.each_with_index do |it, i| %>
+                        <% imp0 = it[:imposto] || {} %>
+                        <tr class="dev-item"
+                            data-qtd-orig="<%= it[:quantidade_original].to_d %>"
+                            data-icms-base="<%= (imp0[:icms] || {})[:base_calculo].to_d %>"
+                            data-icms-valor="<%= (imp0[:icms] || {})[:valor].to_d %>"
+                            data-ipi-valor="<%= (imp0[:ipi] || {})[:valor].to_d %>"
+                            data-pis-base="<%= (imp0[:pis] || {})[:base_calculo].to_d %>"
+                            data-cofins-base="<%= (imp0[:cofins] || {})[:base_calculo].to_d %>">
+                          <td class="text-center">
+                            <%= check_box_tag "itens[#{i}][devolver]", "1", true %>
+                          </td>
+                          <td>
+                            <span class="fw-semibold"><%= it[:cod_produto] %></span>
+                            <% if it[:cod_cor].present? %><div class="small text-muted">cor <%= it[:cod_cor] %></div><% end %>
+                          </td>
+                          <td><%= it[:descricao] %></td>
+                          <td><%= it[:ncm] %></td>
+                          <td>
+                            <%# CFOP por item: vazio usa o padrao; placeholder mostra o convertido da entrada. %>
+                            <%= text_field_tag "itens[#{i}][cfop]", nil,
+                                  class: "form-control form-control-sm",
+                                  placeholder: it[:cfop_original].to_s.sub(/^1/, "5").sub(/^2/, "6") %>
+                          </td>
+                          <td class="text-end">
+                            <%= text_field_tag "itens[#{i}][quantidade]",
+                                  number_with_precision(it[:quantidade], precision: 2, separator: ",", delimiter: ""),
+                                  class: "form-control form-control-sm text-end dev-qtd" %>
+                          </td>
+                          <td class="text-end">
+                            <%= text_field_tag "itens[#{i}][valor_unitario]",
+                                  number_with_precision(it[:valor_unitario], precision: 2, separator: ",", delimiter: ""),
+                                  class: "form-control form-control-sm text-end" %>
+                          </td>
+                          <td class="small">
+                            <% imp = it[:imposto] || {} %>
+                            <% if imp.present? %>
+                              <% q_orig = it[:quantidade_original].to_d
+                                 q_dev  = it[:quantidade].to_d
+                                 fator  = (q_orig.nonzero? && q_dev.nonzero?) ? (q_dev / q_orig) : 1.to_d
+                                 icms   = imp[:icms] || {}
+                                 ipi    = imp[:ipi] || {}
+                                 pis    = imp[:pis] || {}
+                                 cof    = imp[:cofins] || {}
+                                 rateia = ->(v) { v.to_d.nonzero? ? (v.to_d * fator).round(2) : nil } %>
+
+                              <% if icms.present? %>
+                                <div class="d-flex align-items-center gap-1 mb-1 flex-wrap">
+                                  <span class="text-muted" style="width:42px;">ICMS</span>
+                                  <% icms_base_auto = rateia.(icms[:base_calculo]) ? number_with_precision(rateia.(icms[:base_calculo]), precision: 2, separator: ",", delimiter: "") : "" %>
+                                  <% icms_valor_auto = rateia.(icms[:valor]) ? number_with_precision(rateia.(icms[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
+                                  <span class="input-group input-group-sm" style="max-width:150px;">
+                                    <span class="input-group-text">Base</span>
+                                    <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control text-end imp-field", data: { campo: "icms_base" }, placeholder: "0,00" %>
+                                    <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto, class: "imp-auto", data: { campo: "icms_base" } %>
+                                  </span>
+                                  <span class="input-group input-group-sm" style="max-width:150px;">
+                                    <span class="input-group-text">R$</span>
+                                    <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control text-end imp-field", data: { campo: "icms_valor" }, placeholder: "0,00" %>
+                                    <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto, class: "imp-auto", data: { campo: "icms_valor" } %>
+                                  </span>
+                                  <span class="text-muted">CST <%= icms[:cst] || "—" %> · <%= icms[:aliquota] %>%</span>
+                                </div>
+                              <% end %>
+
+                              <% if ipi.present? %>
+                                <div class="d-flex align-items-center gap-1 mb-1 flex-wrap">
+                                  <span class="text-muted" style="width:42px;">IPI</span>
+                                  <% ipi_valor_auto = rateia.(ipi[:valor]) ? number_with_precision(rateia.(ipi[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
+                                  <span class="input-group input-group-sm" style="max-width:150px;">
+                                    <span class="input-group-text">R$</span>
+                                    <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "0,00" %>
+                                    <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto, class: "imp-auto", data: { campo: "ipi_valor" } %>
+                                  </span>
+                                  <span class="text-muted">CST <%= ipi[:cst] || "—" %> · <%= ipi[:aliquota] %>%</span>
+                                </div>
+                              <% end %>
+
+                              <% if pis.present? %>
+                                <span class="badge text-bg-light border me-1">PIS base <span class="imp-pis"><%= number_with_precision(rateia.(pis[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= pis[:aliquota] %>%</span>
+                              <% end %>
+                              <% if cof.present? %>
+                                <span class="badge text-bg-light border me-1">COFINS base <span class="imp-cofins"><%= number_with_precision(rateia.(cof[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= cof[:aliquota] %>%</span>
+                              <% end %>
+                              <div class="text-muted" style="font-size:11px;">Rateado pela quantidade. Edite se precisar ajustar.</div>
+                            <% else %>
+                              <span class="text-muted">sem impostos destacados</span>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                  <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
+                  <div class="d-flex gap-2">
+                    <%# Pre-visualizar: submete o mesmo form para a acao de preview, em nova aba. %>
+                    <button type="submit" class="btn btn-outline-info"
+                            formaction="<%= previsualizar_collaborators_backoffice_compra_devolucao_path(@compra) %>"
+                            formtarget="_blank" formnovalidate>
+                      <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
+                    </button>
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
+                      <i class="fa fa-check-double me-1"></i> Emitir devolução
+                    </button>
+                  </div>
+                </div>
+              <% end %>
             </div>
           </div>
-        <% end %>
+        </div>
       </div>
     </div>
   </main>
@@ -206,14 +251,12 @@
         if (!(campo in cheio)) return;
         var autoEl = tr.querySelector('.imp-auto[data-campo="' + campo + '"]');
         var autoVal = autoEl ? autoEl.value : '';
-        // So recalcula se o usuario NAO alterou (campo ainda igual ao auto).
         var alteradoManual = (input.value.trim() !== String(autoVal).trim());
         var novo = cheio[campo] ? fmtBR(Math.round(cheio[campo] * fator * 100) / 100) : '';
-        if (autoEl) autoEl.value = novo; // auto sempre acompanha o rateio atual
+        if (autoEl) autoEl.value = novo;
         if (!alteradoManual) input.value = novo;
       });
 
-      // PIS/COFINS (informativo)
       var pis = parseFloat(tr.getAttribute('data-pis-base')) || 0;
       var cof = parseFloat(tr.getAttribute('data-cofins-base')) || 0;
       var pisEl = tr.querySelector('.imp-pis');
