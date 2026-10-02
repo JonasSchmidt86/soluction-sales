@@ -17,6 +17,32 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
     end
   end
 
+  # GET .../fiscal_config/status_sefaz?modelo=55 — consulta o status da SEFAZ
+  # (sempre em producao) e devolve JSON para a tela exibir sem recarregar.
+  def status_sefaz
+    modelo = params[:modelo].presence&.to_i || 55
+
+    unless @config&.persisted? && @config.ativo?
+      render json: { operante: false, mensagem: "Configuração fiscal ausente ou inativa." }
+      return
+    end
+
+    status = FiscalService.new(@config).consultar_status(modelo: modelo)
+    render json: {
+      operante: status.operante?,
+      codigo:   status.codigo,
+      mensagem: status.mensagem,
+      uf:       status.uf,
+      ambiente: status.ambiente,
+      modelo:   modelo
+    }
+  rescue FiscalService::NaoConfigurado => e
+    render json: { operante: false, mensagem: e.message }
+  rescue => e
+    Rails.logger.error("[FiscalConfig#status_sefaz] #{e.class} - #{e.message}")
+    render json: { operante: false, mensagem: "Falha ao consultar: #{e.message}" }
+  end
+
   private
 
   # Config unica por empresa: acha a existente ou monta uma nova (sem salvar).

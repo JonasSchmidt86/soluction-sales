@@ -76,6 +76,12 @@ class FiscalService
     delegar(:pre_visualizar, documento, tipo_arquivo: tipo_arquivo, tarja: tarja)
   end
 
+  # Consulta o status operacional da SEFAZ para um modelo (55/65). Retorna
+  # FiscalStatus (operante?). Útil antes de emitir, para evitar timeouts.
+  def consultar_status(modelo: 55)
+    delegar(:consultar_status, modelo: modelo)
+  end
+
   private
 
   def delegar(metodo, *args, **kwargs)

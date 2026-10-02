@@ -45,4 +45,59 @@
       <% end %>
     </div>
   </div>
+
+  <% if @config.persisted? && @config.ativo? %>
+    <%# ---- Status operacional da SEFAZ (consulta sob demanda) ---- %>
+    <div class="card mt-3">
+      <div class="card-header d-flex align-items-center">
+        <strong><i class="fa fa-tower-broadcast me-2"></i>Status da SEFAZ</strong>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <select id="statusModelo" class="form-select form-select-sm" style="width:auto;">
+            <option value="55">NF-e (55)</option>
+            <option value="65">NFC-e (65)</option>
+          </select>
+          <button id="btnStatusSefaz" type="button" class="btn btn-sm btn-outline-primary">
+            <i class="fa fa-rotate me-1"></i> Verificar
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="statusSefazResultado" class="text-muted">
+          Clique em <em>Verificar</em> para consultar a disponibilidade da SEFAZ (consulta sempre em produção).
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var btn   = document.getElementById('btnStatusSefaz');
+        var sel   = document.getElementById('statusModelo');
+        var out   = document.getElementById('statusSefazResultado');
+        var url   = "<%= status_sefaz_collaborators_backoffice_fiscal_config_path %>";
+
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          out.className = 'text-muted';
+          out.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
+
+          fetch(url + '?modelo=' + encodeURIComponent(sel.value), { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              var badge = d.operante
+                ? '<span class="badge bg-success">Operante</span>'
+                : '<span class="badge bg-danger">Indisponível</span>';
+              var detalhe = [d.mensagem, d.uf, d.ambiente].filter(Boolean).join(' — ');
+              out.className = '';
+              out.innerHTML = badge + ' ' + (detalhe || '') +
+                (d.codigo ? ' <small class="text-muted">(cód ' + d.codigo + ')</small>' : '');
+            })
+            .catch(function () {
+              out.className = 'text-danger';
+              out.textContent = 'Falha ao consultar o status da SEFAZ.';
+            })
+            .finally(function () { btn.disabled = false; });
+        });
+      })();
+    </script>
+  <% end %>
 </div>

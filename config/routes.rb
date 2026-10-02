@@ -215,7 +215,10 @@ Rails.application.routes.draw do
     resources :perfis_tributarios do
       resources :regras_fiscais, only: [:new, :create, :edit, :update, :destroy]
     end
-    resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config
+    resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config do
+      # Status operacional da SEFAZ (JSON) para o modelo informado (55/65).
+      get :status_sefaz
+    end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
     # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);

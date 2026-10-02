@@ -134,6 +134,15 @@ module Fiscal
       nao_implementado(:consultar)
     end
 
+    # Consulta o status operacional da SEFAZ para um modelo de documento.
+    # Doc 2.0: POST /ConsultarStatusSefaz com ModeloDocumento (55/65/57/58/67).
+    # A consulta e SEMPRE em producao (independente do ambiente da empresa).
+    # Retorna FiscalStatus (operante? / mensagem / uf / codigo).
+    def consultar_status(modelo: 55)
+      resposta = post("/ConsultarStatusSefaz", { "ModeloDocumento" => modelo.to_i })
+      to_status(resposta)
+    end
+
     private
 
     def credentials_token
@@ -212,6 +221,25 @@ module Fiscal
         xml:       resposta["Base64Xml"],
         danfe_url: nil, # DANFE vem em Base64File, não URL
         mensagem:  ret["DsStatusRespostaSefaz"].presence || erro.presence,
+        bruto:     resposta
+      )
+    end
+
+    # Converte a resposta do ConsultarStatusSefaz no FiscalStatus neutro.
+    # SEFAZ: 107 = "Servico em Operacao" (operante). Outros codigos indicam
+    # instabilidade/indisponibilidade. erros/status != 0 = falha na consulta.
+    def to_status(resposta)
+      cod   = resposta["CodStatusRespostaSefaz"]
+      falha = resposta["Error"].present? || resposta["_http_status"].to_i >= 400 || resposta["status"].to_i != 0
+      erros = Array(resposta["erros"]).map { |e| e["descricao"] }.compact.presence
+
+      FiscalStatus.new(
+        operante:  !falha && cod.to_i == 107,
+        codigo:    cod,
+        mensagem:  resposta["DsStatusRespostaSefaz"].presence || resposta["Error"].presence || Array(erros).join("; ").presence,
+        ambiente:  resposta["DsTipoAmbiente"],
+        uf:        resposta["DsEstadoEmitente"],
+        avisos:    resposta["Avisos"],
         bruto:     resposta
       )
     end
