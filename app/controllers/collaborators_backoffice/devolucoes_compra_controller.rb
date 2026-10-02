@@ -13,6 +13,15 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
     @operacao_padrao = OperacaoFiscal.find_by(nome: "Devolucao de compra")
     @finalidades = DocumentoFiscal::FINALIDADES
 
+    # Pre-resolve o CFOP de cada item pela regra fiscal do perfil do produto
+    # para a operacao padrao. Sem regra, cai no CFOP convertido do XML (saida).
+    resolver = Fiscal::CfopResolver.new(empresa: @compra.empresa, destino_uf: @compra.pessoa&.uf)
+    @itens = @itens.map do |it|
+      produto = Produto.find_by(cod_produto: it[:cod_produto])
+      cfop_regra = @operacao_padrao && produto ? resolver.cfop(produto, @operacao_padrao) : nil
+      it.merge(cfop_sugerido: cfop_regra || cfop_convertido(it[:cfop_original]))
+    end
+
     if @itens.empty?
       redirect_to collaborators_backoffice_compra_path(@compra),
                   alert: "A compra não tem itens para devolver."
@@ -48,6 +57,29 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
   rescue => e
     Rails.logger.error("[DevolucoesCompra#baixar_xml] compra #{@compra.cod_compra}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_compra_path(@compra), alert: "Falha ao obter o XML: #{e.message}"
+  end
+
+  # GET .../compras/:compra_id/devolucao/resolver_cfop?cod_produto=&cod_operacao_fiscal=
+  # Resolve o CFOP de um produto para a operacao escolhida, pela regra fiscal do
+  # perfil (destino = UF do fornecedor da compra). Fallback: converte o CFOP de
+  # entrada do item. Usado via AJAX ao trocar a operacao (no topo ou por item).
+  def resolver_cfop
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal])
+    produto  = Produto.find_by(cod_produto: params[:cod_produto])
+
+    cfop = nil
+    origem = "fallback"
+    if operacao && produto
+      cfop = Fiscal::CfopResolver.new(empresa: @compra.empresa, destino_uf: @compra.pessoa&.uf)
+                                 .cfop(produto, operacao)
+      origem = "regra" if cfop.present?
+    end
+    cfop ||= cfop_convertido(params[:cfop_original])
+
+    render json: { cfop: cfop, origem: origem }
+  rescue => e
+    Rails.logger.error("[DevolucoesCompra#resolver_cfop] #{e.class} - #{e.message}")
+    render json: { cfop: nil, origem: "erro" }
   end
 
   # POST .../compras/:compra_id/devolucao
@@ -137,6 +169,14 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
       cod_funcionario: current_collaborator.cod_funcionario,
       builder: builder, cod_compra: @compra.cod_compra, finalidade: finalidade
     )
+  end
+
+  # Converte um CFOP de entrada (1/2/3xxx) para saida (5/6/7xxx), para o
+  # fallback quando o produto nao tem regra fiscal de devolucao.
+  def cfop_convertido(cfop_entrada)
+    c = cfop_entrada.to_s.gsub(/\D/, "")
+    return nil if c.length < 4
+    { "1" => "5", "2" => "6", "3" => "7" }.fetch(c[0], c[0]) + c[1..]
   end
 
   def set_compra

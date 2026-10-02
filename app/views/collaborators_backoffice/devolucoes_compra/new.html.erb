@@ -50,9 +50,10 @@
                     <div class="form-floating">
                       <%= select_tag :cod_operacao_fiscal,
                             options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
-                            class: "form-select" %>
-                      <label>Operação</label>
+                            id: "operacaoGeral", class: "form-select" %>
+                      <label>Operação (padrão)</label>
                     </div>
+                    <small class="text-muted">Aplica a todos os itens e recalcula o CFOP.</small>
                   </div>
                   <div class="col-md-3">
                     <div class="form-floating">
@@ -121,11 +122,16 @@
                           </td>
                           <td><%= it[:descricao] %></td>
                           <td><%= it[:ncm] %></td>
-                          <td>
-                            <%# CFOP por item: vazio usa o padrao; placeholder mostra o convertido da entrada. %>
-                            <%= text_field_tag "itens[#{i}][cfop]", nil,
-                                  class: "form-control form-control-sm",
-                                  placeholder: it[:cfop_original].to_s.sub(/^1/, "5").sub(/^2/, "6") %>
+                          <td style="min-width:150px;">
+                            <%# Operacao por item: ao trocar, resolve o CFOP pela regra do perfil. %>
+                            <%= select_tag "itens[#{i}][cod_operacao_fiscal]",
+                                  options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                                  class: "form-select form-select-sm mb-1 dev-op-item",
+                                  data: { cod_produto: it[:cod_produto], cfop_original: it[:cfop_original] } %>
+                            <%# CFOP por item: pre-preenchido pela regra; editavel. %>
+                            <%= text_field_tag "itens[#{i}][cfop]", it[:cfop_sugerido],
+                                  class: "form-control form-control-sm text-end dev-cfop",
+                                  placeholder: "CFOP" %>
                           </td>
                           <td class="text-end">
                             <%= text_field_tag "itens[#{i}][quantidade]",
@@ -272,5 +278,49 @@
         qtd.addEventListener('blur', function () { recalcLinha(tr); });
       }
     });
+  })();
+
+  // Resolve o CFOP pela regra fiscal ao trocar a OPERACAO (no topo = todos os
+  // itens; por item = so a linha). Chama o endpoint resolver_cfop.
+  (function () {
+    var RESOLVER_URL = "<%= resolver_cfop_collaborators_backoffice_compra_devolucao_path(@compra) %>";
+
+    function resolverItem(tr) {
+      var sel  = tr.querySelector('.dev-op-item');
+      var cfop = tr.querySelector('.dev-cfop');
+      if (!sel || !cfop) return;
+      var codProduto    = sel.getAttribute('data-cod-produto');
+      var cfopOriginal  = sel.getAttribute('data-cfop-original') || '';
+      var codOperacao   = sel.value;
+
+      var url = RESOLVER_URL + '?cod_produto=' + encodeURIComponent(codProduto) +
+                '&cod_operacao_fiscal=' + encodeURIComponent(codOperacao) +
+                '&cfop_original=' + encodeURIComponent(cfopOriginal);
+      fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (d) {
+          if (d && d.cfop) { cfop.value = d.cfop; }
+        })
+        .catch(function (e) { console.error('resolver_cfop:', e); });
+    }
+
+    // Troca por item.
+    document.querySelectorAll('tr.dev-item .dev-op-item').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        resolverItem(sel.closest('tr.dev-item'));
+      });
+    });
+
+    // Troca no topo: aplica a todos os itens (sincroniza o seletor da linha
+    // e resolve o CFOP de cada um).
+    var geral = document.getElementById('operacaoGeral');
+    if (geral) {
+      geral.addEventListener('change', function () {
+        document.querySelectorAll('tr.dev-item').forEach(function (tr) {
+          var sel = tr.querySelector('.dev-op-item');
+          if (sel) { sel.value = geral.value; resolverItem(tr); }
+        });
+      });
+    }
   })();
 </script>

@@ -171,6 +171,8 @@ Rails.application.routes.draw do
         post :previsualizar
         # Baixa o XML da nota de entrada (compra) pela chave, via provedor.
         get :baixar_xml
+        # Resolve o CFOP de um item pela regra fiscal ao trocar a operacao.
+        get :resolver_cfop
       end
     end
     resources :pedidos_compras
