@@ -67,7 +67,14 @@
             </thead>
             <tbody>
               <% @itens.each_with_index do |it, i| %>
-                <tr>
+                <% imp0 = it[:imposto] || {} %>
+                <tr class="dev-item"
+                    data-qtd-orig="<%= it[:quantidade_original].to_d %>"
+                    data-icms-base="<%= (imp0[:icms] || {})[:base_calculo].to_d %>"
+                    data-icms-valor="<%= (imp0[:icms] || {})[:valor].to_d %>"
+                    data-ipi-valor="<%= (imp0[:ipi] || {})[:valor].to_d %>"
+                    data-pis-base="<%= (imp0[:pis] || {})[:base_calculo].to_d %>"
+                    data-cofins-base="<%= (imp0[:cofins] || {})[:base_calculo].to_d %>">
                   <td class="text-center">
                     <%= check_box_tag "itens[#{i}][devolver]", "1", true %>
                   </td>
@@ -80,7 +87,7 @@
                   <td class="text-end" style="width:90px;">
                     <%= text_field_tag "itens[#{i}][quantidade]",
                           number_with_precision(it[:quantidade], precision: 2, separator: ",", delimiter: ""),
-                          class: "form-control form-control-sm text-end" %>
+                          class: "form-control form-control-sm text-end dev-qtd" %>
                   </td>
                   <td class="text-end" style="width:110px;">
                     <%= text_field_tag "itens[#{i}][valor_unitario]",
@@ -107,13 +114,13 @@
                           <% icms_valor_auto = rateia.(icms[:valor]) ? number_with_precision(rateia.(icms[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
                           <span class="input-group input-group-sm" style="max-width:150px;">
                             <span class="input-group-text">Base</span>
-                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control text-end", placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto %>
+                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control text-end imp-field", data: { campo: "icms_base" }, placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto, class: "imp-auto", data: { campo: "icms_base" } %>
                           </span>
                           <span class="input-group input-group-sm" style="max-width:150px;">
                             <span class="input-group-text">R$</span>
-                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control text-end", placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto %>
+                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control text-end imp-field", data: { campo: "icms_valor" }, placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto, class: "imp-auto", data: { campo: "icms_valor" } %>
                           </span>
                           <span class="text-muted">CST <%= icms[:cst] || "—" %> · <%= icms[:aliquota] %>%</span>
                         </div>
@@ -125,8 +132,8 @@
                           <% ipi_valor_auto = rateia.(ipi[:valor]) ? number_with_precision(rateia.(ipi[:valor]), precision: 2, separator: ",", delimiter: "") : "" %>
                           <span class="input-group input-group-sm" style="max-width:150px;">
                             <span class="input-group-text">R$</span>
-                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control text-end", placeholder: "0,00" %>
-                            <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto %>
+                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "0,00" %>
+                            <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto, class: "imp-auto", data: { campo: "ipi_valor" } %>
                           </span>
                           <span class="text-muted">CST <%= ipi[:cst] || "—" %> · <%= ipi[:aliquota] %>%</span>
                         </div>
@@ -134,10 +141,10 @@
 
                       <%# PIS/COFINS: apenas informativo (rateado automaticamente). %>
                       <% if pis.present? %>
-                        <span class="badge text-bg-light border me-1">PIS base <%= number_with_precision(rateia.(pis[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %> · <%= pis[:aliquota] %>%</span>
+                        <span class="badge text-bg-light border me-1">PIS base <span class="imp-pis"><%= number_with_precision(rateia.(pis[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= pis[:aliquota] %>%</span>
                       <% end %>
                       <% if cof.present? %>
-                        <span class="badge text-bg-light border me-1">COFINS base <%= number_with_precision(rateia.(cof[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %> · <%= cof[:aliquota] %>%</span>
+                        <span class="badge text-bg-light border me-1">COFINS base <span class="imp-cofins"><%= number_with_precision(rateia.(cof[:base_calculo]), precision: 2, separator: ",", delimiter: ".") %></span> · <%= cof[:aliquota] %>%</span>
                       <% end %>
                       <div class="text-muted" style="font-size:11px;">Valores já rateados pela quantidade. Edite se precisar ajustar.</div>
                     <% else %>
@@ -169,3 +176,58 @@
     </div>
   </main>
 </div>
+
+<script>
+  // Recalcula ao vivo os impostos rateados quando a QUANTIDADE do item muda.
+  // Espelha o rateio do backend: valor_rateado = valor_cheio * (qtd / qtd_orig).
+  // So atualiza os campos que o usuario NAO editou manualmente (continuam == auto).
+  (function () {
+    function parseBR(v) {
+      if (v == null) return 0;
+      return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    function fmtBR(n) {
+      return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalcLinha(tr) {
+      var qtdOrig = parseFloat(tr.getAttribute('data-qtd-orig')) || 0;
+      var qtdDev  = parseBR(tr.querySelector('.dev-qtd') ? tr.querySelector('.dev-qtd').value : 0);
+      var fator   = (qtdOrig > 0 && qtdDev > 0) ? (qtdDev / qtdOrig) : 1;
+
+      var cheio = {
+        icms_base:  parseFloat(tr.getAttribute('data-icms-base'))  || 0,
+        icms_valor: parseFloat(tr.getAttribute('data-icms-valor')) || 0,
+        ipi_valor:  parseFloat(tr.getAttribute('data-ipi-valor'))  || 0
+      };
+
+      tr.querySelectorAll('.imp-field').forEach(function (input) {
+        var campo = input.getAttribute('data-campo');
+        if (!(campo in cheio)) return;
+        var autoEl = tr.querySelector('.imp-auto[data-campo="' + campo + '"]');
+        var autoVal = autoEl ? autoEl.value : '';
+        // So recalcula se o usuario NAO alterou (campo ainda igual ao auto).
+        var alteradoManual = (input.value.trim() !== String(autoVal).trim());
+        var novo = cheio[campo] ? fmtBR(Math.round(cheio[campo] * fator * 100) / 100) : '';
+        if (autoEl) autoEl.value = novo; // auto sempre acompanha o rateio atual
+        if (!alteradoManual) input.value = novo;
+      });
+
+      // PIS/COFINS (informativo)
+      var pis = parseFloat(tr.getAttribute('data-pis-base')) || 0;
+      var cof = parseFloat(tr.getAttribute('data-cofins-base')) || 0;
+      var pisEl = tr.querySelector('.imp-pis');
+      var cofEl = tr.querySelector('.imp-cofins');
+      if (pisEl) pisEl.textContent = fmtBR(Math.round(pis * fator * 100) / 100);
+      if (cofEl) cofEl.textContent = fmtBR(Math.round(cof * fator * 100) / 100);
+    }
+
+    document.querySelectorAll('tr.dev-item').forEach(function (tr) {
+      var qtd = tr.querySelector('.dev-qtd');
+      if (qtd) {
+        qtd.addEventListener('input', function () { recalcLinha(tr); });
+        qtd.addEventListener('blur', function () { recalcLinha(tr); });
+      }
+    });
+  })();
+</script>
