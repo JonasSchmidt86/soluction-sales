@@ -198,11 +198,14 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
 - CSC: o CSC NAO vai no payload (a doc confirma) — e do painel do provedor. O contador gerou
   o CSC de homologacao na SEFAZ-PR: Id 000001 e Id 000002 (ambos ativos). No painel Brasil NFe
   esta cadastrado Id 000002 + CSC EO0RJL0TXJTS1KIEGLIKTVYF3HMQUOMQP966 (bate com a SEFAZ).
-- BLOQUEIO ATUAL NFC-e: rejeicao 462 "Codigo Identificador do CSC no QR-Code nao cadastrado
-  na SEFAZ" (doc 29, chave 41261014993084000116650010000010001034846509). Par idCSC+CSC
-  parece correto no painel. Proximo passo = suporte Brasil NFe (so eles veem o idCSC enviado
-  no QR-Code) OU aguardar propagacao / conferir caractere ambiguo (O/0, I/1/l). NAO e codigo
-  do nosso sistema. Resto da NFC-e (numeracao, CFOP, payload, pre-visualizacao HTML) OK.
+- NFC-e AUTORIZADA em homologacao ✅ (doc 32, numero 1001, chave
+  41261014993084000116650010000010011034852190, DANFCE+XML gravados). O que resolveu
+  o 462: o CSC que estava no painel era de PRODUCAO; o contador gerou o CSC de HOMOLOGACAO
+  na SEFAZ-PR (Id 000001 / ETXGGC...) e atualizou no painel Brasil NFe. CSC e por ambiente.
+  Numeracao: faixa 1..10 estava inutilizada em homolog; emitiu no 1001 (contador agora 1002).
+  Codigo da NFC-e 100% ok (numeracao, CFOP 5102, CSOSN, payload, DANFCE HTML).
+- PRODUCAO: configurar o CSC de PRODUCAO (outro valor) no painel quando virar a chave;
+  numeracao de producao comeca limpa (do 1).
 
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
