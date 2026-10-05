@@ -214,6 +214,18 @@ Endpoints base https://api.brasilnfe.com.br/services/fiscal, header Token, TipoA
   (resolveu a antiga rejeição 974). **NF-e já foram emitidas e autorizadas de verdade.**
 - Ou seja, o motor de emissão está validado ponta a ponta na SEFAZ real, não só homologação.
 
+## DOC DO PROVEDOR (Brasil NFe) — consultar antes de mexer no adapter/payload
+- PDFs e resumo em **docs/brasilnfe/** (README.md tem os fatos-chave extraidos).
+  A doc online e renderizada por JS (nao da pra fetch); por isso guardamos os PDFs.
+- Pontos que ja usamos de la:
+  - Serie/Numero/Lote em branco => Brasil NFe numera automatico (empresa+modelo+
+    serie+ambiente). Enviar so para controle manual (migracao / pular inutilizado).
+  - **NFC-e (65) so aceita CFOPs: 5101,5102,5103,5104,5115,5405,5656,5667,5933,
+    6108,6109,6110.** Fora disso = rejeicao 725 (CFOP invalido) / 386 (CFOP x CSOSN).
+  - Rejeicao 787: NFC-e IndicadorPresenca=4 exige destinatario.
+  - CSC NAO vai no payload do EnviarNotaFiscal — e do painel/empresa, por ambiente.
+  - Pre-visualizacao NFC-e vem em HTML (nao PDF).
+
 ## Arquivos-chave (orientação rápida)
 - services/fiscal/: emissor_fiscal.rb, documento_fiscal_builder.rb, brasil_nfe_adapter.rb; services/fiscal_service.rb, fiscal_result.rb
 - models/: documento_fiscal.rb, documento_fiscal_evento.rb, perfil_tributario.rb, regra_fiscal.rb, operacao_fiscal.rb, fiscal_config.rb; concerns/moeda_br.rb; venda.rb (editavel?/nfe_autorizada?)
