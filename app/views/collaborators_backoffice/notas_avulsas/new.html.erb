@@ -93,8 +93,10 @@
                       data-url="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>">
                 <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
               </button>
+              <%# data-confirm-msg (nao data-confirm) para o Rails UJS NAO disparar
+                  um segundo confirm; o nosso JS de submit cuida da confirmacao. %>
               <button type="submit" class="btn btn-success" id="emitirBtn"
-                      data-confirm="Emitir a <%= modelo_nome %> agora?">
+                      data-confirm-msg="Emitir a <%= modelo_nome %> agora?">
                 <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
               </button>
             </div>
@@ -369,10 +371,11 @@
     }
   });
 
-  // ---------- Confirm no submit (emitir) ----------
+  // ---------- Confirm no submit (emitir) — unico ponto de confirmacao ----------
   document.getElementById('formAvulsa').addEventListener('submit', function (e) {
     var btn = e.submitter || document.getElementById('emitirBtn');
-    if (btn && btn.dataset && btn.dataset.confirm && !confirm(btn.dataset.confirm)) { e.preventDefault(); }
+    var msg = btn && btn.dataset ? btn.dataset.confirmMsg : null;
+    if (msg && !confirm(msg)) { e.preventDefault(); }
   });
 
   // ---------- Pre-visualizacao via AJAX (nao abre aba em erro) ----------
