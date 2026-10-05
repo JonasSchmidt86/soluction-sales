@@ -114,18 +114,12 @@ class DocumentoFiscal < ApplicationRecord
 
   # Estorna o estoque fiscal (qtdfiscal) ao cancelar a NF — devolve o que a
   # emissão havia baixado, respeitando controla_estoque de cada item.
-  # Só funciona para NF de venda (tem a venda para resolver as regras); NF
-  # avulsa resolverá seus itens quando esse fluxo existir.
+  # Reconstrói os itens a partir dos ESTOQUE_LOGS de SAIDA_FISCAL deste documento
+  # (o que a emissao de fato baixou). Assim funciona tanto para NF de venda quanto
+  # para NF AVULSA (sem venda) e devolucao — nao depende de reabrir a venda/builder.
   def estornar_estoque_fiscal!(cod_funcionario = nil)
-    return if venda.nil?
-
-    operacao = OperacaoFiscal.find_by(nome: "Venda")
-    config   = empresa.fiscal_config
-    return if operacao.nil? || config.nil?
-
-    itens = Fiscal::DocumentoFiscalBuilder.new(
-      venda, operacao: operacao, config: config, modelo: modelo
-    ).itens_estoque_fiscal
+    itens = itens_estoque_fiscal_do_log
+    return if itens.empty?
 
     Fiscal::EstoqueFiscalService.new(
       cod_empresa:     cod_empresa,
@@ -136,6 +130,23 @@ class DocumentoFiscal < ApplicationRecord
     ).estornar!
   rescue => e
     Rails.logger.error("[DocumentoFiscal#estornar_estoque_fiscal] doc #{cod_documento_fiscal}: #{e.class} - #{e.message}")
+  end
+
+  # Reconstrói os itens que tiveram baixa fiscal (qtdfiscal) na EMISSAO deste
+  # documento, lendo os estoque_logs de SAIDA_FISCAL. Soma por produto+cor (caso
+  # haja mais de um log). Quantidade = total baixado (movida negativa -> positiva).
+  def itens_estoque_fiscal_do_log
+    logs = EstoqueLog.where(cod_referencia: cod_documento_fiscal,
+                            operacao: "SAIDA_FISCAL", origem: "NFE_FISCAL")
+    agrupado = Hash.new(0.to_d)
+    logs.each do |l|
+      chave = [l.cod_produto, l.cod_cor]
+      agrupado[chave] += l.qtdfiscal_movida.to_d.abs
+    end
+    agrupado.map do |(cod_produto, cod_cor), qtd|
+      next if qtd.zero?
+      { cod_produto: cod_produto, cod_cor: cod_cor, quantidade: qtd, controla_estoque: "proprio" }
+    end.compact
   end
 
   # Reconcilia o status deste documento com a SEFAZ via ConsultarNotaFiscal.
