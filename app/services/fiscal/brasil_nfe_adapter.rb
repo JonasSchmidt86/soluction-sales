@@ -22,11 +22,17 @@ module Fiscal
     attr_reader :ambiente, :token
 
     # config: FiscalConfig (opcional nesta fase). token: sobrescreve o das credentials.
-    def initialize(config: nil, token: nil)
+    def initialize(config: nil, token: nil, user_token: nil)
       @config = config
       @ambiente = (config&.producao? ? "1" : "2") # default homologacao
       @token = token || credentials_token
+      # UserToken (token da CONTA, nao da empresa). So e preciso nos endpoints de
+      # /services/empresa (numeracao, certificado...). Vem das credentials.
+      @user_token = user_token || credentials_user_token
     end
+
+    # Base de /services/empresa (gestao da empresa: numeracao, certificado...).
+    EMPRESA_URL = "https://api.brasilnfe.com.br/services/empresa".freeze
 
     # ---- Contrato FiscalService ----
 
@@ -128,6 +134,29 @@ module Fiscal
       }
       resposta = post("/InutilizarNumeracao", payload)
       to_evento_result(resposta, status_sucesso: :autorizado)
+    end
+
+    # Consulta as numeracoes cadastradas da empresa (/services/empresa).
+    # Retorna o proximo numero por modelo+serie+ambiente. Usa Token + UserToken.
+    # Resposta: { status, Numeracoes: [{ TipoAmbiente, ModeloDocumento, Serie,
+    #             Numero, Padrao }], Error, Avisos }.
+    def consultar_numeracao
+      post_empresa("/ConsultarNumeracao", {})
+    end
+
+    # Atualiza (ou cria) o contador de numeracao de modelo+serie+ambiente.
+    # Use para PULAR uma faixa inutilizada (ex. NFC-e homolog. 1..N queimados).
+    # ATENCAO: nunca definir numero <= a um ja AUTORIZADO (gera chave duplicada).
+    #   modelo: 55/65/... serie: "1" numero: proximo a usar  padrao: marca padrao
+    def atualizar_numeracao(modelo:, serie:, numero:, padrao: true, ambiente_num: nil)
+      payload = {
+        "TipoAmbiente"    => (ambiente_num || ambiente).to_i,
+        "ModeloDocumento" => modelo.to_i,
+        "Serie"           => serie.to_s,
+        "Numero"          => numero.to_i,
+        "Padrao"          => padrao ? true : false
+      }
+      post_empresa("/AtualizarNumeracao", payload)
     end
 
     # Consulta a situacao de emissao de um documento ja enviado. Doc 2.0:
@@ -244,6 +273,41 @@ module Fiscal
       Rails.application.credentials.brasilnfe_token
     rescue
       nil
+    end
+
+    # UserToken (token da conta) — necessario nos endpoints de /services/empresa.
+    def credentials_user_token
+      Rails.application.credentials.brasilnfe_user_token
+    rescue
+      nil
+    end
+
+    # POST em /services/empresa (envia Token + UserToken). Retorna o JSON parseado.
+    def post_empresa(path, body)
+      raise ConfiguracaoInvalida, "Token da empresa ausente" if token.blank?
+      raise ConfiguracaoInvalida, "UserToken ausente (configure brasilnfe_user_token nas credentials)" if @user_token.blank?
+
+      uri = URI("#{EMPRESA_URL}#{path}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.open_timeout = 15
+      http.read_timeout = 60
+
+      req = Net::HTTP::Post.new(uri)
+      req["Content-Type"] = "application/json"
+      req["Token"] = token
+      req["UserToken"] = @user_token
+      req.body = body.to_json
+
+      res = http.request(req)
+      parsed = JSON.parse(res.body.to_s) rescue { "Error" => "Resposta não-JSON (HTTP #{res.code})" }
+      parsed.merge("_http_status" => res.code.to_i)
+    rescue Net::OpenTimeout, Net::ReadTimeout => e
+      { "Error" => "Timeout ao contatar Brasil NFe: #{e.message}", "_http_status" => 0 }
+    rescue ConfiguracaoInvalida
+      raise
+    rescue => e
+      { "Error" => "Falha na requisição: #{e.message}", "_http_status" => 0 }
     end
 
     # Monta o corpo do EnviarNotaFiscal a partir do documento neutro.
