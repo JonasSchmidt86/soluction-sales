@@ -587,13 +587,26 @@
               bairroInput.value = removerAcentos((data.bairro || "").toUpperCase());
             }
             if (citySelect) {
+              // Casa a cidade por NOME + UF. Antes comparava so o nome e pegava a
+              // primeira homonima (ex. Toledo/MG no lugar de Toledo/PR), gerando
+              // CFOP interestadual indevido. Agora exige a UF do CEP (data.uf).
               const desiredCity = removerAcentos((data.localidade || "").toUpperCase());
+              const desiredUf   = (data.uf || "").toUpperCase().trim();
+              var achou = false;
               for (let i = 0; i < citySelect.options.length; i++) {
-                if (removerAcentos(citySelect.options[i].text.toUpperCase()) === desiredCity) {
-                    citySelect.value = citySelect.options[i].value;
-                    break;
+                var opt = citySelect.options[i];
+                if (!opt.value) continue;
+                var optUf = (opt.getAttribute('data-uf') || "").toUpperCase().trim();
+                // Nome do option pode vir "CIDADE - UF"; isola o nome antes do " - ".
+                var optNome = removerAcentos(opt.text.toUpperCase()).replace(/\s*-\s*[A-Z]{2}\s*$/, '').trim();
+                if (optNome === desiredCity && (!desiredUf || optUf === desiredUf)) {
+                  citySelect.value = opt.value;
+                  achou = true;
+                  break;
                 }
               }
+              // Sem match exato de nome+UF: nao chuta cidade de outro estado.
+              if (!achou) citySelect.value = "";
             }
           } else {
             if (enderecoInput) {
