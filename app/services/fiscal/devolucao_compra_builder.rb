@@ -112,6 +112,18 @@ module Fiscal
     def montar_produtos
       raise DocumentoFiscalBuilder::DadoFiscalAusente, "Devolucao sem itens" if @itens.empty?
 
+      # Bloqueia a emissao/pre-visualizacao quando algum item NAO tem regra fiscal
+      # para a operacao escolhida (perfil + operacao do topo). Sem regra, nao ha
+      # de onde tirar CFOP/CST com seguranca (espelhar o CST cru do XML rejeita no
+      # Simples). O usuario deve cadastrar a regra ou trocar o perfil do item.
+      sem_regra = @itens.reject { |it| regra_do_item(it) }
+      if sem_regra.any?
+        nomes = sem_regra.map { |it| it[:descricao].presence || "produto #{it[:cod_produto]}" }
+        raise DocumentoFiscalBuilder::DadoFiscalAusente,
+              "Sem regra fiscal para a operacao '#{@operacao&.nome}' nos itens: " \
+              "#{nomes.join('; ')}. Cadastre a regra no perfil ou troque o perfil do item."
+      end
+
       @itens.each_with_index.map do |it, idx|
         {
           "NmProduto"        => it[:descricao],
@@ -133,10 +145,11 @@ module Fiscal
     end
 
     # Monta o Imposto do item no modelo HIBRIDO:
-    #   - CST/CSOSN e aliquotas vem da REGRA do perfil (quando existe);
+    #   - CST/CSOSN e aliquotas vem da REGRA do perfil (sempre existe aqui: itens
+    #     sem regra sao bloqueados em montar_produtos);
     #   - VALORES (base/valor ICMS, IPI, PIS/COFINS base) vem do XML da compra,
     #     rateados pela quantidade e com override manual da tela.
-    # Sem regra, cai no espelho puro do XML (CST + valores do fornecedor).
+    # montar_imposto (espelho puro do XML) fica como salvaguarda defensiva.
     def imposto_do_item(it)
       regra  = regra_do_item(it)
       fator  = fator_proporcional(it)
