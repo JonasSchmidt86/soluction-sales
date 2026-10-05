@@ -13,8 +13,14 @@ Base URL: `https://api.brasilnfe.com.br/services/fiscal`
 Auth: header `Token: <token da empresa>` (obrigatório em todas as operações fiscais).
 
 ## Arquivos nesta pasta
-- `nfe-nfce.pdf` — Emissão de NF-e / NFC-e (EnviarNotaFiscal / EnviarNotaFiscalLote).
-  (Adicione os demais PDFs conforme exportar: eventos, consultas, empresas, etc.)
+- `NF-e e NFC-e - Brasil NFe - API 2.0 _ Brasil NFe.pdf` — Emissão NF-e/NFC-e
+  (EnviarNotaFiscal / EnviarNotaFiscalLote). É a base dos fatos abaixo.
+- `Consultas - Brasil NFe - API 2.0 _ Brasil NFe.pdf` — pré-visualização,
+  consulta de status/nota/cadastro, obter arquivos.
+- `Eventos NF-e _ NFC-e - Brasil NFe - API 2.0 _ Brasil NFe.pdf` — cancelamento,
+  carta de correção, inutilização, manifestação do destinatário.
+- `Empresas - Brasil NFe - API 2.0 _ Brasil NFe.pdf` — cadastro de empresa,
+  certificado, consultar/atualizar numeração.
 
 ## EnviarNotaFiscal — fatos-chave (NF-e 55 / NFC-e 65)
 

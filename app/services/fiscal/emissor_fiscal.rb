@@ -19,6 +19,10 @@ module Fiscal
     # Rascunho/enviada = ficou pela metade (ex: queda de rede antes do retorno).
     STATUS_REAPROVEITAVEIS = %w[rascunho enviada rejeitada erro].freeze
 
+    # CFOPs aceitos na NFC-e (modelo 65) — venda a consumidor final. Fonte: doc
+    # Brasil NFe (docs/brasilnfe). Fora desta lista a SEFAZ rejeita com 725.
+    CFOPS_NFCE = %w[5101 5102 5103 5104 5115 5405 5656 5667 5933 6108 6109 6110].freeze
+
     def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil, finalidade: nil)
       @venda   = venda
       @modelo  = modelo
@@ -135,10 +139,21 @@ module Fiscal
       # (CST/valores vem do XML), nao do perfil do Simples. Entao exigimos so o
       # essencial estrutural (CFOP); NCM/CST sao herdados da nota original.
       devolucao = payload[:finalidade].to_i == 4
+      nfce      = payload[:modelo].to_i == 65
 
       produtos.each do |p|
         nome = p["NmProduto"].presence || "produto #{p["CodProdutoServico"]}"
-        pendencias << "#{nome}: sem CFOP" if p["CFOP"].blank?
+        cfop = p["CFOP"].to_s.gsub(/\D/, "")
+        pendencias << "#{nome}: sem CFOP" if cfop.blank?
+
+        # NFC-e (modelo 65) so aceita CFOPs de venda a consumidor final. Fora da
+        # lista, a SEFAZ rejeita com 725 (CFOP invalido para NFC-e). Barramos aqui
+        # com mensagem clara, em vez de deixar a SEFAZ rejeitar.
+        if nfce && cfop.present? && !CFOPS_NFCE.include?(cfop)
+          pendencias << "#{nome}: CFOP #{cfop} nao e valido para NFC-e (modelo 65). " \
+                        "Permitidos: #{CFOPS_NFCE.join(', ')}. Use NF-e 55 ou ajuste a regra/operacao."
+        end
+
         next if devolucao
 
         pendencias << "#{nome}: sem NCM" if p["NCM"].blank? || p["NCM"].to_s == "00000000"
