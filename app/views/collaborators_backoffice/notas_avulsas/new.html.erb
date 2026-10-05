@@ -389,12 +389,13 @@
       var fd = new FormData(form);
       fetch(btnPrev.dataset.url, {
         method: 'POST',
-        headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/pdf' },
+        headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/pdf, text/html' },
         body: fd
       })
       .then(function (resp) {
         var ct = resp.headers.get('Content-Type') || '';
-        if (resp.ok && ct.indexOf('application/pdf') !== -1) {
+        // DANFE (NF-e 55) vem em PDF; DANFCE (NFC-e 65) vem em HTML. Abre os dois.
+        if (resp.ok && (ct.indexOf('application/pdf') !== -1 || ct.indexOf('text/html') !== -1)) {
           return resp.blob().then(function (blob) {
             var url = URL.createObjectURL(blob);
             window.open(url, '_blank');

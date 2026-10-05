@@ -122,8 +122,11 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
                                    .pre_visualizar(tipo_arquivo: 1)
 
     if preview.sucesso?
-      send_data preview.conteudo, filename: "previsualizacao-avulsa-#{@modelo}.pdf",
-                type: "application/pdf", disposition: "inline"
+      # NFC-e (65) devolve o DANFCE em HTML; NF-e (55) em PDF. Serve com o
+      # Content-Type real detectado para o navegador renderizar corretamente.
+      send_data preview.conteudo,
+                filename: "previsualizacao-avulsa-#{@modelo}.#{preview.extensao}",
+                type: preview.content_type, disposition: "inline"
     else
       render json: { erro: "Não foi possível pré-visualizar: #{preview.erro}" },
              status: :unprocessable_entity
