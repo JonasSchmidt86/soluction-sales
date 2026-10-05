@@ -29,7 +29,7 @@ module Fiscal
     # a autorização da NF. Reusa a mesma resolução de regra do montar.
     def itens_estoque_fiscal
       @venda.itensvenda.reject(&:cancelado?).map do |item|
-        regra = regra_para(item.produto)
+        regra = regra_para(item.produto, item)
         {
           cod_produto:      item.cod_produto,
           cod_cor:          item.cod_cor,
@@ -106,9 +106,16 @@ module Fiscal
 
       itens.map do |item|
         produto = item.produto
-        regra   = regra_para(produto)
+        regra   = regra_para(produto, item)
 
-        cfop = RegraFiscal.cfop_por_uf(regra&.cfop_base, uf_origem, uf_destino)
+        # CFOP: override do item (escolhido na tela, ex. avulsa) vence; senao,
+        # resolve pela regra por UF. Itens de venda nao tem override -> regra.
+        cfop =
+          if item.respond_to?(:cfop) && item.cfop.present?
+            item.cfop.to_s.gsub(/\D/, "").to_i
+          else
+            RegraFiscal.cfop_por_uf(regra&.cfop_base, uf_origem, uf_destino)
+          end
 
         {
           "NmProduto"        => produto&.nome,
@@ -171,8 +178,16 @@ module Fiscal
     # a prioridade da regra desempata. Assim "especifico vence generico".
     #   Ex.: regra (uf=PR, cliente=consumidor_final) vence regra (uf=*, cliente=*)
     #   para um consumidor final do PR; para um cliente de SC, cai na (uf=*).
-    def regra_para(produto)
-      perfil = produto&.perfil_tributario
+    def regra_para(produto, item = nil)
+      # Perfil escolhido no item (tela avulsa) tem prioridade; senao, o perfil do
+      # proprio produto (comportamento da venda). Retrocompativel: itens de venda
+      # nao respondem a perfil_tributario_escolhido -> cai no perfil do produto.
+      perfil =
+        if item.respond_to?(:perfil_tributario_escolhido)
+          item.perfil_tributario_escolhido
+        else
+          produto&.perfil_tributario
+        end
       return nil if perfil.nil? || @operacao.nil?
 
       tipo = tipo_cliente_atual

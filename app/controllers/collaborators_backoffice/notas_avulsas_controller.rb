@@ -17,31 +17,50 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @modelo = modelo_param
     @operacoes = OperacaoFiscal.ativos.order(:nome)
     @operacao_padrao = OperacaoFiscal.find_by(nome: "NF avulsa") || OperacaoFiscal.find_by(nome: "Venda")
+    @perfis = PerfilTributario.ativos.de_saida.order(:nome)
     @finalidades = DocumentoFiscal::FINALIDADES
+    # Itens re-exibidos quando o create falha (preserva o que o usuario digitou).
+    @itens_preenchidos = @itens_preenchidos || []
+  end
+
+  # GET .../notas_avulsas/resolver_cfop?cod_produto=&cod_operacao_fiscal=&cod_perfil_tributario=
+  # Resolve o CFOP de um item pela regra (perfil + operacao do topo), com destino
+  # = UF do destinatario informado (ou UF da empresa). Sem regra, CFOP em branco.
+  def resolver_cfop
+    empresa = current_collaborator.empresa
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal])
+    produto  = Produto.find_by(cod_produto: params[:cod_produto])
+    perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario])
+    destino  = Pessoa.find_by(cod_pessoa: params[:cod_pessoa])&.uf
+
+    cfop = nil
+    if operacao && (perfil || produto)
+      cfop = Fiscal::CfopResolver.new(empresa: empresa, destino_uf: destino)
+                                 .cfop(produto, operacao, perfil: perfil)
+    end
+    render json: { cfop: cfop, origem: cfop.present? ? "regra" : "sem_regra" }
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#resolver_cfop] #{e.class} - #{e.message}")
+    render json: { cfop: nil, origem: "erro" }
   end
 
   # Emite a NF avulsa a partir dos itens (e destinatario, se 55).
   def create
     @modelo = modelo_param
     empresa = current_collaborator.empresa
-
     cliente = resolver_cliente
+    itens   = itens_param
+
+    # Validacoes: em erro, RE-EXIBE o form com os dados preenchidos (sem redirect,
+    # que recarregava o new vazio e apagava tudo que o usuario digitou).
     if @modelo == 55 && cliente.nil?
-      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: 55),
-                  alert: "NF-e (55) exige um destinatário. Informe o cliente."
-      return
+      return reexibir_form("NF-e (55) exige um destinatário. Informe o cliente.")
     end
-
-    itens = itens_param
     if itens.empty?
-      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
-                  alert: "Informe ao menos um produto."
-      return
+      return reexibir_form("Informe ao menos um produto.")
     end
 
-    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
-               OperacaoFiscal.find_by(nome: "NF avulsa") ||
-               OperacaoFiscal.find_by(nome: "Venda")
+    operacao = operacao_escolhida
 
     avulso = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
     documento = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo,
@@ -53,17 +72,15 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       redirect_to collaborators_backoffice_notas_avulsa_path(documento),
                   notice: "NF autorizada. Chave: #{documento.chave_acesso}"
     else
-      redirect_to collaborators_backoffice_notas_avulsas_path,
-                  alert: "NF #{documento.status}: #{documento.mensagem_sefaz}"
+      reexibir_form("NF #{documento.status}: #{documento.mensagem_sefaz}")
     end
   rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
          Fiscal::EmissorFiscal::SemConfig,
          Fiscal::EmissorFiscal::SemOperacao => e
-    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo), alert: e.message
+    reexibir_form(e.message)
   rescue => e
     Rails.logger.error("[NotasAvulsas#create] #{e.class} - #{e.message}")
-    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
-                alert: "Falha ao emitir: #{e.message}"
+    reexibir_form("Falha ao emitir: #{e.message}")
   end
 
   def show
@@ -79,15 +96,12 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     itens   = itens_param
 
     if itens.empty?
-      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
-                  alert: "Informe ao menos um produto para pré-visualizar."
+      render json: { erro: "Informe ao menos um produto para pré-visualizar." },
+             status: :unprocessable_entity
       return
     end
 
-    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
-               OperacaoFiscal.find_by(nome: "NF avulsa") ||
-               OperacaoFiscal.find_by(nome: "Venda")
-
+    operacao = operacao_escolhida
     avulso  = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
     preview = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo, operacao: operacao,
                                         finalidade: params[:finalidade],
@@ -98,17 +112,16 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       send_data preview.conteudo, filename: "previsualizacao-avulsa-#{@modelo}.pdf",
                 type: "application/pdf", disposition: "inline"
     else
-      redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
-                  alert: "Não foi possível pré-visualizar: #{preview.erro}"
+      render json: { erro: "Não foi possível pré-visualizar: #{preview.erro}" },
+             status: :unprocessable_entity
     end
   rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
          Fiscal::EmissorFiscal::SemConfig,
          Fiscal::EmissorFiscal::SemOperacao => e
-    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo), alert: e.message
+    render json: { erro: e.message }, status: :unprocessable_entity
   rescue => e
     Rails.logger.error("[NotasAvulsas#previsualizar] #{e.class} - #{e.message}")
-    redirect_to new_collaborators_backoffice_notas_avulsa_path(modelo: @modelo),
-                alert: "Falha ao pré-visualizar: #{e.message}"
+    render json: { erro: "Falha ao pré-visualizar: #{e.message}" }, status: :unprocessable_entity
   end
 
   # PDF do DANFE (quando autorizada).
@@ -164,21 +177,49 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     cod ? Pessoa.find_by(cod_pessoa: cod) : nil
   end
 
-  # Monta a lista de itens a partir dos params do form.
-  # Espera params[:itens] = [{ cod_produto, cod_cor, quantidade, valorunitario }, ...]
-  def itens_param
+  # Operacao escolhida no topo (fallback: NF avulsa / Venda).
+  def operacao_escolhida
+    OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
+      OperacaoFiscal.find_by(nome: "NF avulsa") ||
+      OperacaoFiscal.find_by(nome: "Venda")
+  end
+
+  # Re-exibe o form (new) com os dados que o usuario digitou e a mensagem de erro,
+  # SEM redirect (que recarregaria o new vazio). Preserva itens/destinatario.
+  def reexibir_form(mensagem)
+    @operacoes = OperacaoFiscal.ativos.order(:nome)
+    @operacao_padrao = operacao_escolhida
+    @perfis = PerfilTributario.ativos.de_saida.order(:nome)
+    @finalidades = DocumentoFiscal::FINALIDADES
+    @finalidade_sel = params[:finalidade]
+    @cod_pessoa_sel = params[:cod_pessoa]
+    @itens_preenchidos = itens_raw
+    flash.now[:alert] = mensagem
+    render :new, status: :unprocessable_entity
+  end
+
+  # Itens no formato CRU (strings do form), para re-exibir sem perder formatacao.
+  def itens_raw
     brutos = params[:itens]
     brutos = brutos.values if brutos.is_a?(ActionController::Parameters)
-    Array(brutos).map { |i| i.permit(:cod_produto, :cod_cor, :quantidade, :valorunitario).to_h }
+    Array(brutos).map { |i| i.permit(:cod_produto, :cod_cor, :quantidade, :valorunitario, :cod_perfil_tributario, :cfop, :nome_produto).to_h }
                  .reject { |i| i["cod_produto"].blank? }
-                 .map do |i|
-                   {
-                     cod_produto:   i["cod_produto"],
-                     cod_cor:       i["cod_cor"],
-                     quantidade:    MoedaBr.parse(i["quantidade"]),
-                     valorunitario: MoedaBr.parse(i["valorunitario"])
-                   }
-                 end
+  end
+
+  # Monta a lista de itens a partir dos params do form (ja parseada p/ emissao).
+  # Espera params[:itens] = [{ cod_produto, cod_cor, quantidade, valorunitario,
+  #                            cod_perfil_tributario, cfop }, ...]
+  def itens_param
+    itens_raw.map do |i|
+      {
+        cod_produto:           i["cod_produto"],
+        cod_cor:               i["cod_cor"],
+        quantidade:            MoedaBr.parse(i["quantidade"]),
+        valorunitario:         MoedaBr.parse(i["valorunitario"]),
+        cod_perfil_tributario: i["cod_perfil_tributario"].presence,
+        cfop:                  i["cfop"].presence
+      }
+    end
   end
 
   def autorizar_fiscal!

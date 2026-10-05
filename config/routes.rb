@@ -246,6 +246,7 @@ Rails.application.routes.draw do
       collection do
         get :cores_produto # cores de um produto (p/ o select de cor)
         post :previsualizar # DANFE/DANFCE de pre-visualizacao (sem SEFAZ)
+        get :resolver_cfop # resolve CFOP de um item pela regra (perfil + operacao)
       end
     end
 

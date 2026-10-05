@@ -35,8 +35,13 @@ module Fiscal
   end
 
   # Item neutro compatível com Itemvenda (para builder/estoque fiscal).
+  # Alem dos campos de venda, aceita (opcional) o PERFIL escolhido na tela e um
+  # CFOP override — usados na emissao avulsa no modelo da devolucao (perfil +
+  # operacao do topo resolvem CFOP/CST). Itens de venda nao informam esses
+  # campos, entao o comportamento antigo (perfil do produto) e preservado.
   class ItemAvulso
-    attr_reader :cod_produto, :cod_cor, :quantidade, :valorunitario
+    attr_reader :cod_produto, :cod_cor, :quantidade, :valorunitario,
+                :cod_perfil_tributario, :cfop
 
     def initialize(attrs)
       a = attrs.symbolize_keys
@@ -44,10 +49,21 @@ module Fiscal
       @cod_cor       = a[:cod_cor]
       @quantidade    = a[:quantidade].to_d
       @valorunitario = a[:valorunitario].to_d
+      @cod_perfil_tributario = a[:cod_perfil_tributario].presence
+      @cfop                  = a[:cfop].presence
     end
 
     def produto
       @produto ||= Produto.find_by(cod_produto: @cod_produto)
+    end
+
+    # Perfil escolhido na tela (prioridade) ou o perfil do proprio produto.
+    def perfil_tributario_escolhido
+      if @cod_perfil_tributario
+        PerfilTributario.find_by(cod_perfil_tributario: @cod_perfil_tributario)
+      else
+        produto&.perfil_tributario
+      end
     end
 
     def cancelado?

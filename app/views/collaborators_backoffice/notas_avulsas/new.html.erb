@@ -1,4 +1,5 @@
 <% modelo_nome = @modelo == 65 ? "NFC-e (modelo 65)" : "NF-e (modelo 55)" %>
+<% itens_preenchidos = @itens_preenchidos || [] %>
 <div id="layoutAuthentication_content">
   <main>
     <div class="card mt-3">
@@ -14,6 +15,10 @@
       </div>
 
       <div class="card-body">
+        <% if flash[:alert].present? %>
+          <div class="alert alert-danger"><%= flash[:alert] %></div>
+        <% end %>
+
         <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :post, local: true, id: "formAvulsa" do %>
           <%= hidden_field_tag :modelo, @modelo %>
 
@@ -23,14 +28,14 @@
               <div class="form-floating">
                 <%= select_tag :cod_operacao_fiscal,
                       options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
-                      class: "form-select" %>
+                      id: "operacaoGeral", class: "form-select" %>
                 <label>Operação (natureza)</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-floating">
                 <%= select_tag :finalidade,
-                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 1),
+                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, (@finalidade_sel.presence || 1).to_i),
                       class: "form-select" %>
                 <label>Finalidade</label>
               </div>
@@ -46,27 +51,31 @@
             <div class="position-relative">
               <input type="text" id="clienteBusca" class="form-control"
                      placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off">
-              <%= hidden_field_tag :cod_pessoa, "", id: "codPessoa" %>
+              <%= hidden_field_tag :cod_pessoa, @cod_pessoa_sel, id: "codPessoa" %>
               <div id="clienteLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
             </div>
             <small id="clienteSelecionado" class="text-success"></small>
           </div>
 
-          <%# ---- Itens ---- %>
+          <%# ---- Itens (planilha estilo devolucao) ---- %>
           <h5 class="mt-4">Produtos</h5>
-          <table class="table table-sm align-top">
-            <thead class="table-light">
-              <tr>
-                <th style="width:38%;">Produto</th>
-                <th>Cor</th>
-                <th style="width:10%;">Qtd</th>
-                <th style="width:14%;">Vl Unitário</th>
-                <th style="width:14%;">Total</th>
-                <th style="width:40px;"></th>
-              </tr>
-            </thead>
-            <tbody id="itensBody"></tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-top">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%;">Produto</th>
+                  <th>Cor</th>
+                  <th style="width:16%;">Perfil tributário</th>
+                  <th style="width:9%;">CFOP</th>
+                  <th style="width:9%;">Qtd</th>
+                  <th style="width:12%;">Vl Unitário</th>
+                  <th style="width:12%;">Total</th>
+                  <th style="width:40px;"></th>
+                </tr>
+              </thead>
+              <tbody id="itensBody"></tbody>
+            </table>
+          </div>
           <button type="button" class="btn btn-primary btn-sm" id="addItem">
             <i class="fa fa-plus me-1"></i> Adicionar produto
           </button>
@@ -77,11 +86,11 @@
 
           <div class="d-flex justify-content-between mt-4">
             <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
-            <div class="d-flex gap-2">
-              <%# Pre-visualizar: mesmo form, mas submete para a acao de preview em nova aba (sem emitir). %>
-              <button type="submit" class="btn btn-outline-info"
-                      formaction="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>"
-                      formtarget="_blank" formnovalidate>
+            <div class="d-flex align-items-center gap-2">
+              <span id="avulsaErro" class="text-danger small"></span>
+              <%# Pre-visualizar via AJAX: so abre aba quando vem PDF; erro aparece inline. %>
+              <button type="button" class="btn btn-outline-info" id="btnPrevisualizar"
+                      data-url="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>">
                 <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
               </button>
               <button type="submit" class="btn btn-success" id="emitirBtn"
@@ -96,21 +105,32 @@
   </main>
 </div>
 
+<%# Opcoes de perfil (reaproveitadas por item). %>
+<% perfil_options = @perfis.map { |p| [p.nome, p.cod_perfil_tributario] } %>
+
 <%# Linha-modelo (template) para novos itens %>
 <template id="itemTemplate">
   <tr class="item-row">
     <td class="position-relative">
-      <input type="text" class="form-control produto-busca" placeholder="Produto — digite para buscar" autocomplete="off">
+      <input type="text" class="form-control form-control-sm produto-busca" placeholder="Produto — digite para buscar" autocomplete="off">
       <input type="hidden" class="cod-produto field-cod-produto">
+      <input type="hidden" class="field-nome-produto">
       <div class="list-group position-absolute w-100 produto-lista" style="display:none; z-index:1000;"></div>
     </td>
     <td>
-      <select class="form-select cod-cor field-cod-cor">
+      <select class="form-select form-select-sm cod-cor field-cod-cor">
         <option value="">—</option>
       </select>
     </td>
-    <td><input type="number" min="0" step="1" value="1" class="form-control qtd field-quantidade"></td>
-    <td><input type="text" class="form-control vlunit field-valorunitario" value="0,00"></td>
+    <td>
+      <select class="form-select form-select-sm field-perfil item-perfil">
+        <option value="">—</option>
+        <%= options_for_select(perfil_options) %>
+      </select>
+    </td>
+    <td><input type="text" class="form-control form-control-sm item-cfop field-cfop" readonly placeholder="—"></td>
+    <td><input type="number" min="0" step="1" value="1" class="form-control form-control-sm qtd field-quantidade"></td>
+    <td><input type="text" class="form-control form-control-sm vlunit field-valorunitario" value="0,00"></td>
     <td class="total-item align-middle">R$ 0,00</td>
     <td class="align-middle">
       <button type="button" class="btn btn-outline-danger btn-sm rm-item"><i class="fa fa-trash-can"></i></button>
@@ -118,11 +138,17 @@
   </tr>
 </template>
 
+<%# Itens preenchidos (re-exibidos quando o create falhou). JSON p/ o JS repopular. %>
+<script type="application/json" id="itensPreenchidos"><%== itens_preenchidos.to_json %></script>
+
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
 (function () {
   var base = window.location.origin + '/collaborators_backoffice/';
   var csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  var RESOLVER_URL = "<%= resolver_cfop_collaborators_backoffice_notas_avulsas_path %>";
+  var opTopo = document.getElementById('operacaoGeral');
+  var codPessoaHidden = document.getElementById('codPessoa');
 
   // ---------- Destinatario (autocomplete) ----------
   var cliInput = document.getElementById('clienteBusca');
@@ -147,6 +173,8 @@
             cliInput.value = p.nome;
             cliSel.textContent = 'Selecionado: ' + p.nome;
             cliLista.style.display = 'none';
+            // UF do destinatario muda o CFOP (5/6/7) -> recalcula tudo.
+            document.querySelectorAll('.item-row').forEach(resolverLinha);
           });
           cliLista.appendChild(it);
         });
@@ -170,12 +198,30 @@
     document.getElementById('totalNota').textContent = fmtBR(total);
   }
 
+  // ---------- Resolucao de CFOP pela regra (perfil + operacao do topo + UF) ----------
+  function resolverLinha(row) {
+    var pHidden = row.querySelector('.cod-produto');
+    var perfil  = row.querySelector('.item-perfil');
+    var cfop    = row.querySelector('.item-cfop');
+    if (!pHidden || !cfop) return;
+    var codProduto = pHidden.value;
+    if (!codProduto) { cfop.value = ''; return; }
+    var url = RESOLVER_URL + '?cod_produto=' + encodeURIComponent(codProduto) +
+              '&cod_perfil_tributario=' + encodeURIComponent(perfil ? perfil.value : '') +
+              '&cod_operacao_fiscal=' + encodeURIComponent(opTopo ? opTopo.value : '') +
+              '&cod_pessoa=' + encodeURIComponent(codPessoaHidden ? codPessoaHidden.value : '');
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (d) { cfop.value = (d && d.cfop) ? d.cfop : ''; })
+      .catch(function (e) { console.error('resolver_cfop:', e); });
+  }
+
   // ---------- Itens ----------
   var body = document.getElementById('itensBody');
   var tpl = document.getElementById('itemTemplate');
 
-  function carregarCores(codProduto, selectEl) {
-    fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
+  function carregarCores(codProduto, selectEl, corSelecionada) {
+    return fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
       .then(function (r) { return r.json(); })
       .then(function (cores) {
         selectEl.innerHTML = '<option value="">—</option>';
@@ -183,24 +229,29 @@
           var o = document.createElement('option');
           o.value = c.cod_cor; o.textContent = c.nmcor;
           o.dataset.valorvenda = c.valorvenda;
+          if (corSelecionada && String(c.cod_cor) === String(corSelecionada)) o.selected = true;
           selectEl.appendChild(o);
         });
       });
   }
 
-  function addItem() {
+  function addItem(dados) {
+    dados = dados || {};
     var frag = tpl.content.cloneNode(true);
     body.appendChild(frag);
     var row = body.lastElementChild;
 
-    var pInput = row.querySelector('.produto-busca');
+    var pInput  = row.querySelector('.produto-busca');
     var pHidden = row.querySelector('.cod-produto');
-    var pLista = row.querySelector('.produto-lista');
-    var corSel = row.querySelector('.cod-cor');
+    var pNome   = row.querySelector('.field-nome-produto');
+    var pLista  = row.querySelector('.produto-lista');
+    var corSel  = row.querySelector('.cod-cor');
+    var perfil  = row.querySelector('.item-perfil');
 
     pInput.addEventListener('input', function () {
       var q = this.value.trim();
-      pHidden.value = '';
+      pHidden.value = ''; pNome.value = '';
+      row.querySelector('.item-cfop').value = '';
       if (q.length < 1) { pLista.style.display = 'none'; return; }
       fetch(base + 'buscas/buscar_produtos?entidade=Produto&query=' + encodeURIComponent(q))
         .then(function (r) { return r.json(); })
@@ -212,9 +263,11 @@
             it.textContent = p.produto;
             it.addEventListener('click', function () {
               pHidden.value = p.cod_produto;
+              pNome.value = p.produto;
               pInput.value = p.produto;
               pLista.style.display = 'none';
               carregarCores(p.cod_produto, corSel);
+              resolverLinha(row); // CFOP pela regra do perfil + operacao
             });
             pLista.appendChild(it);
           });
@@ -230,29 +283,103 @@
       }
     });
 
+    // Trocar o perfil recalcula o CFOP so desta linha.
+    if (perfil) perfil.addEventListener('change', function () { resolverLinha(row); });
+
     row.querySelector('.qtd').addEventListener('input', recalc);
     row.querySelector('.vlunit').addEventListener('input', recalc);
     row.querySelector('.rm-item').addEventListener('click', function () { row.remove(); reindex(); recalc(); });
+
+    // Pre-popular (re-exibicao apos erro no create).
+    if (dados.cod_produto) {
+      pHidden.value = dados.cod_produto;
+      pNome.value = dados.nome_produto || '';
+      pInput.value = dados.nome_produto || ('Produto ' + dados.cod_produto);
+      if (perfil && dados.cod_perfil_tributario) perfil.value = dados.cod_perfil_tributario;
+      if (dados.quantidade) row.querySelector('.qtd').value = dados.quantidade;
+      if (dados.valorunitario) row.querySelector('.vlunit').value = dados.valorunitario;
+      if (dados.cfop) row.querySelector('.item-cfop').value = dados.cfop;
+      carregarCores(dados.cod_produto, corSel, dados.cod_cor).then(function () {
+        if (!dados.cfop) resolverLinha(row);
+      });
+    }
+    return row;
   }
 
   // Atribui names indexados itens[i][campo] para o Rails montar array de hashes.
   function reindex() {
     document.querySelectorAll('#itensBody .item-row').forEach(function (row, i) {
-      row.querySelector('.field-cod-produto').name   = 'itens[' + i + '][cod_produto]';
-      row.querySelector('.field-cod-cor').name        = 'itens[' + i + '][cod_cor]';
-      row.querySelector('.field-quantidade').name     = 'itens[' + i + '][quantidade]';
-      row.querySelector('.field-valorunitario').name  = 'itens[' + i + '][valorunitario]';
+      row.querySelector('.field-cod-produto').name    = 'itens[' + i + '][cod_produto]';
+      row.querySelector('.field-nome-produto').name   = 'itens[' + i + '][nome_produto]';
+      row.querySelector('.field-cod-cor').name         = 'itens[' + i + '][cod_cor]';
+      row.querySelector('.field-perfil').name          = 'itens[' + i + '][cod_perfil_tributario]';
+      row.querySelector('.field-cfop').name            = 'itens[' + i + '][cfop]';
+      row.querySelector('.field-quantidade').name      = 'itens[' + i + '][quantidade]';
+      row.querySelector('.field-valorunitario').name   = 'itens[' + i + '][valorunitario]';
     });
   }
 
   document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); });
-  addItem(); reindex(); // comeca com uma linha
 
-  // confirm no submit — so quando o submitter for o botao de EMITIR.
-  // O botao de Pre-visualizar (formaction/_blank) nao pede confirmacao.
+  // Operacao do topo recalcula CFOP de TODAS as linhas.
+  if (opTopo) {
+    opTopo.addEventListener('change', function () {
+      document.querySelectorAll('.item-row').forEach(resolverLinha);
+    });
+  }
+
+  // Inicializacao: repopula itens preenchidos (apos erro) ou comeca com 1 linha.
+  var preenchidos = [];
+  try { preenchidos = JSON.parse(document.getElementById('itensPreenchidos').textContent || '[]'); } catch (e) {}
+  if (preenchidos.length) {
+    preenchidos.forEach(function (i) { addItem(i); });
+    // Repopula destinatario selecionado (so o cod; o nome o usuario reconhece).
+    var codSel = codPessoaHidden ? codPessoaHidden.value : '';
+    if (codSel) cliSel.textContent = 'Destinatário selecionado (cód ' + codSel + ')';
+  } else {
+    addItem();
+  }
+  reindex(); recalc();
+
+  // ---------- Confirm no submit (emitir) ----------
   document.getElementById('formAvulsa').addEventListener('submit', function (e) {
     var btn = e.submitter || document.getElementById('emitirBtn');
     if (btn && btn.dataset && btn.dataset.confirm && !confirm(btn.dataset.confirm)) { e.preventDefault(); }
   });
+
+  // ---------- Pre-visualizacao via AJAX (nao abre aba em erro) ----------
+  var btnPrev = document.getElementById('btnPrevisualizar');
+  var out = document.getElementById('avulsaErro');
+  if (btnPrev) {
+    btnPrev.addEventListener('click', function () {
+      var form = document.getElementById('formAvulsa');
+      if (!form) return;
+      out.textContent = '';
+      btnPrev.disabled = true;
+      var original = btnPrev.innerHTML;
+      btnPrev.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Gerando...';
+      var fd = new FormData(form);
+      fetch(btnPrev.dataset.url, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/pdf' },
+        body: fd
+      })
+      .then(function (resp) {
+        var ct = resp.headers.get('Content-Type') || '';
+        if (resp.ok && ct.indexOf('application/pdf') !== -1) {
+          return resp.blob().then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+          });
+        }
+        return resp.json().then(function (j) {
+          out.textContent = (j && j.erro) ? j.erro : 'Não foi possível pré-visualizar.';
+        }).catch(function () { out.textContent = 'Não foi possível pré-visualizar.'; });
+      })
+      .catch(function () { out.textContent = 'Falha de conexão ao pré-visualizar.'; })
+      .finally(function () { btnPrev.disabled = false; btnPrev.innerHTML = original; });
+    });
+  }
 })();
 </script>
