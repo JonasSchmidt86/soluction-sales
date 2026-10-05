@@ -27,18 +27,31 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   # Resolve o CFOP de um item pela regra (perfil + operacao do topo), com destino
   # = UF do destinatario informado (ou UF da empresa). Sem regra, CFOP em branco.
   def resolver_cfop
-    empresa = current_collaborator.empresa
+    empresa  = current_collaborator.empresa
     operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal])
     produto  = Produto.find_by(cod_produto: params[:cod_produto])
-    perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario])
-    destino  = Pessoa.find_by(cod_pessoa: params[:cod_pessoa])&.uf
+    # Perfil explicito (escolhido na tela) tem prioridade; senao, o do produto.
+    perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario]) ||
+               produto&.perfil_tributario
+    destinatario = Pessoa.find_by(cod_pessoa: params[:cod_pessoa])
+
+    # tipo_cliente segue a mesma logica da venda: sem destinatario (ou PF) =
+    # consumidor_final; PJ = contribuinte. Fixar "contribuinte" fazia a regra de
+    # Venda (consumidor_final) nao casar e o CFOP vir vazio.
+    tipo_cliente = if destinatario&.pessoa_juridica? then "contribuinte" else "consumidor_final" end
 
     cfop = nil
     if operacao && (perfil || produto)
-      cfop = Fiscal::CfopResolver.new(empresa: empresa, destino_uf: destino)
+      cfop = Fiscal::CfopResolver.new(empresa: empresa, destino_uf: destinatario&.uf,
+                                      tipo_cliente: tipo_cliente)
                                  .cfop(produto, operacao, perfil: perfil)
     end
-    render json: { cfop: cfop, origem: cfop.present? ? "regra" : "sem_regra" }
+    render json: {
+      cfop:   cfop,
+      origem: cfop.present? ? "regra" : "sem_regra",
+      # Devolve o perfil do produto para o front pre-selecionar o select.
+      cod_perfil_tributario: produto&.cod_perfil_tributario
+    }
   rescue => e
     Rails.logger.error("[NotasAvulsas#resolver_cfop] #{e.class} - #{e.message}")
     render json: { cfop: nil, origem: "erro" }

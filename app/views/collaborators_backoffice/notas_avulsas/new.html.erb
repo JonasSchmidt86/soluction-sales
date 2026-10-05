@@ -212,7 +212,14 @@
               '&cod_pessoa=' + encodeURIComponent(codPessoaHidden ? codPessoaHidden.value : '');
     fetch(url, { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json().catch(function () { return null; }); })
-      .then(function (d) { cfop.value = (d && d.cfop) ? d.cfop : ''; })
+      .then(function (d) {
+        if (!d) { cfop.value = ''; return; }
+        // Pre-seleciona o perfil do produto quando o usuario ainda nao escolheu.
+        if (perfil && !perfil.value && d.cod_perfil_tributario) {
+          perfil.value = String(d.cod_perfil_tributario);
+        }
+        cfop.value = d.cfop ? d.cfop : '';
+      })
       .catch(function (e) { console.error('resolver_cfop:', e); });
   }
 
