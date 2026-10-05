@@ -341,6 +341,16 @@
   }
   reindex(); recalc();
 
+  // ---------- Enter NAO submete o form ----------
+  // Nos campos de texto (busca de produto/destinatario, qtd, valor) o Enter
+  // dispararia o submit (= emitir a NF). Bloqueia o Enter nesses inputs; o
+  // usuario emite so clicando no botao Emitir. (textarea e select nao afetados.)
+  document.getElementById('formAvulsa').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+      e.preventDefault();
+    }
+  });
+
   // ---------- Confirm no submit (emitir) ----------
   document.getElementById('formAvulsa').addEventListener('submit', function (e) {
     var btn = e.submitter || document.getElementById('emitirBtn');
