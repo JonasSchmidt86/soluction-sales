@@ -10,9 +10,14 @@ class PerfilTributario < ApplicationRecord
   has_many :produtos, class_name: "Produto",
            foreign_key: "cod_perfil_tributario", primary_key: "cod_perfil_tributario"
 
+  TIPOS = %w[saida entrada].freeze
+
   validates :nome, presence: true
+  validates :tipo, inclusion: { in: TIPOS }
 
   scope :ativos, -> { where(ativo: true) }
+  scope :de_saida,   -> { where(tipo: "saida") }
+  scope :de_entrada, -> { where(tipo: "entrada") }
 
   def to_s
     nome

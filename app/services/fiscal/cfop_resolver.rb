@@ -16,18 +16,19 @@ module Fiscal
       @tipo_cliente = tipo_cliente
     end
 
-    # CFOP completo (5/6/7 + base) resolvido pela regra; nil se nao houver regra
-    # para o produto/operacao.
-    def cfop(produto, operacao)
-      regra = regra_para(produto, operacao)
+    # CFOP completo (5/6/7 + base) resolvido pela regra; nil se nao houver regra.
+    # perfil: quando informado, usa esse perfil (escolhido na tela); senao, usa
+    # o perfil tributario do proprio produto.
+    def cfop(produto, operacao, perfil: nil)
+      regra = regra_para(produto, operacao, perfil: perfil)
       return nil if regra.nil?
       RegraFiscal.cfop_por_uf(regra.cfop_base, @uf_origem, @uf_destino)
     end
 
     # Regra do perfil que casa com a operacao + UF destino + tipo cliente.
     # Especifico vence curinga (mesma pontuacao do DocumentoFiscalBuilder).
-    def regra_para(produto, operacao)
-      perfil = produto&.perfil_tributario
+    def regra_para(produto, operacao, perfil: nil)
+      perfil ||= produto&.perfil_tributario
       return nil if perfil.nil? || operacao.nil?
 
       candidatas = perfil.regras.select do |r|

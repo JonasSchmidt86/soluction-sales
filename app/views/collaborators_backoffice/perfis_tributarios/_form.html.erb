@@ -16,13 +16,19 @@
   </h6>
 
   <div class="row mb-3">
-    <div class="col-md-8">
+    <div class="col-md-6">
       <div class="form-floating">
         <%= f.text_field :nome, class: "form-control", placeholder: "Nome", id: "perfil_nome" %>
         <%= f.label :nome, "Nome do perfil" %>
       </div>
     </div>
-    <div class="col-md-4 d-flex align-items-center">
+    <div class="col-md-3">
+      <div class="form-floating">
+        <%= f.select :tipo, options_for_select([["Saída (venda/devolução de compra)", "saida"], ["Entrada (devolução de venda)", "entrada"]], @perfil.tipo.presence || "saida"), {}, class: "form-select" %>
+        <%= f.label :tipo, "Tipo" %>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-center">
       <div class="form-check form-switch fs-5">
         <%= f.check_box :ativo, class: "form-check-input", id: "perfil_ativo" %>
         <%= f.label :ativo, "Ativo", class: "form-check-label ms-1" %>

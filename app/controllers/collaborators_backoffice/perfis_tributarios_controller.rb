@@ -53,7 +53,7 @@ class CollaboratorsBackoffice::PerfisTributariosController < CollaboratorsBackof
   end
 
   def perfil_params
-    params.require(:perfil_tributario).permit(:nome, :descricao, :ativo)
+    params.require(:perfil_tributario).permit(:nome, :descricao, :tipo, :ativo)
   end
 
   def current_empresa_id

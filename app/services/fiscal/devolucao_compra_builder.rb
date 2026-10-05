@@ -27,7 +27,7 @@ module Fiscal
   class DevolucaoCompraBuilder
     def initialize(compra, config:, itens:, chave_referencia: nil,
                    natureza_operacao: "Devolucao de compra", cfop: nil, modelo: 55,
-                   finalidade: 4)
+                   finalidade: 4, operacao: nil)
       @compra    = compra
       @config    = config
       @itens     = Array(itens)
@@ -38,6 +38,10 @@ module Fiscal
       @finalidade = (finalidade.presence && finalidade.to_i) || 4
       @empresa   = compra.empresa
       @fornecedor = compra.pessoa
+      # Operacao da NF escolhida no topo (Devolucao de compra, Remessa p/ conserto...).
+      # A tributacao de cada item vem da regra do perfil PARA ESSA operacao.
+      @operacao = operacao || OperacaoFiscal.find_by(nome: "Devolucao de compra")
+      @resolver = CfopResolver.new(empresa: @empresa, destino_uf: @fornecedor&.uf)
     end
 
     def montar
@@ -45,7 +49,9 @@ module Fiscal
         modelo:               @modelo,
         finalidade:           @finalidade,
         natureza:             @natureza.presence || "Devolucao de compra",
-        consumidor_final:     false,
+        # Fornecedor sem IE = nao contribuinte -> consumidor final (exigencia da
+        # SEFAZ, rejeicao 696). Com IE = contribuinte -> consumidor final false.
+        consumidor_final:     !fornecedor_contribuinte?,
         indicador_presenca:   0, # nao se aplica (operacao entre empresas)
         identificador_interno: "DEVCOMPRA-#{@compra.cod_compra}",
         nf_referencia:        Array(@chave_ref).reject(&:blank?),
@@ -54,6 +60,11 @@ module Fiscal
         pagamentos:           montar_pagamentos,
         enviar_email:         false
       }.compact
+    end
+
+    # Fornecedor e contribuinte de ICMS quando possui Inscricao Estadual.
+    def fornecedor_contribuinte?
+      @fornecedor&.rg_ie.to_s.gsub(/\D/, "").present?
     end
 
     # Itens para baixa de ESTOQUE FISCAL. Numa devolucao de compra a mercadoria
@@ -73,11 +84,15 @@ module Fiscal
 
     def montar_fornecedor
       return nil if @fornecedor.blank?
+      contribuinte = fornecedor_contribuinte?
       {
-        "CpfCnpj"   => digitos(@fornecedor.cpf_cnpj),
-        "NmCliente" => @fornecedor.nome,
-        "Ie"        => @fornecedor.rg_ie.presence,
-        "Endereco"  => endereco_fornecedor
+        "CpfCnpj"     => digitos(@fornecedor.cpf_cnpj),
+        "NmCliente"   => @fornecedor.nome,
+        # IndicadorIe: 1 = contribuinte ICMS; 9 = nao contribuinte. Coerente com
+        # consumidor_final para evitar a rejeicao 696.
+        "IndicadorIe" => contribuinte ? 1 : 9,
+        "Ie"          => contribuinte ? @fornecedor.rg_ie.to_s.gsub(/\D/, "") : nil,
+        "Endereco"    => endereco_fornecedor
       }.compact
     end
 
@@ -112,9 +127,88 @@ module Fiscal
           # Referencia item a item a NF de compra original (se houver chave).
           "ChaveAcessoReferenciada" => @chave_ref.presence,
           "NItemReferenciado"       => (idx + 1),
-          "Imposto"          => montar_imposto(it[:imposto], fator_proporcional(it), it[:imposto_override])
+          "Imposto"          => imposto_do_item(it)
         }.compact
       end
+    end
+
+    # Monta o Imposto do item no modelo HIBRIDO:
+    #   - CST/CSOSN e aliquotas vem da REGRA do perfil (quando existe);
+    #   - VALORES (base/valor ICMS, IPI, PIS/COFINS base) vem do XML da compra,
+    #     rateados pela quantidade e com override manual da tela.
+    # Sem regra, cai no espelho puro do XML (CST + valores do fornecedor).
+    def imposto_do_item(it)
+      regra  = regra_do_item(it)
+      fator  = fator_proporcional(it)
+      ov     = (it[:imposto_override] || {}).symbolize_keys
+      espelho = (it[:imposto] || {}).symbolize_keys
+
+      return montar_imposto(espelho, fator, it[:imposto_override]) if regra.nil?
+
+      montar_imposto_hibrido(regra, espelho, fator, ov)
+    end
+
+    # CST/CSOSN da regra + valores do XML (rateados/override). Cobre Simples
+    # (CSOSN sem destaque -> valores podem ser zerados pela tela) e regime
+    # normal (CST + ICMS/IPI/PIS/COFINS destacados com valor, como no DANFE).
+    def montar_imposto_hibrido(regra, espelho, fator, ov)
+      icms_x = espelho[:icms] || {}
+      ipi_x  = espelho[:ipi] || {}
+      pis_x  = espelho[:pis] || {}
+      cof_x  = espelho[:cofins] || {}
+
+      out = {}
+
+      # ICMS: codigo da regra (CSOSN no Simples); se a regra nao tiver, usa o
+      # CST que veio do XML. Valores e ALIQUOTA sempre editaveis pela tela
+      # (override); senao vem da regra; senao do XML.
+      out["ICMS"] = {
+        "CodSituacaoTributaria" => regra.csosn.presence || icms_x[:cst],
+        "AliquotaICMS"          => aliquota_final(ov[:icms_aliquota], regra.aliquota_icms, icms_x[:aliquota]),
+        "BaseCalculo"           => valor_final(ov[:icms_base], icms_x[:base_calculo], fator),
+        "ValorIcms"             => valor_final(ov[:icms_valor], icms_x[:valor], fator)
+      }.compact
+
+      # IPI: CST da regra; valor e aliquota rateados do XML (ou override da tela).
+      if regra.cst_ipi.present? || ipi_x[:valor].to_d.nonzero?
+        out["IPI"] = {
+          "CodSituacaoTributaria" => regra.cst_ipi.presence || ipi_x[:cst],
+          "CodEnquadramento"      => regra.cod_enquadramento_ipi.presence || "999",
+          "Aliquota"              => aliquota_final(ov[:ipi_aliquota], regra.aliquota_ipi, ipi_x[:aliquota]),
+          "ValorIpiDevolvido"     => valor_final(ov[:ipi_valor], ipi_x[:valor], fator),
+          "PercentualMercadoriaDevolvida" => 100
+        }.compact
+      end
+
+      # PIS/COFINS: CST/aliquota da regra; base rateada do XML.
+      out["PIS"] = {
+        "CodSituacaoTributaria" => regra.cst_pis.presence || pis_x[:cst],
+        "Aliquota"              => (regra.aliquota_pis.presence&.to_f) || to_f_or_nil(pis_x[:aliquota]),
+        "BaseCalculo"           => ratear(pis_x[:base_calculo], fator)
+      }.compact
+      out["COFINS"] = {
+        "CodSituacaoTributaria" => regra.cst_cofins.presence || cof_x[:cst],
+        "Aliquota"              => (regra.aliquota_cofins.presence&.to_f) || to_f_or_nil(cof_x[:aliquota]),
+        "BaseCalculo"           => ratear(cof_x[:base_calculo], fator)
+      }.compact
+
+      out.reject { |_, v| v.blank? }
+    end
+
+    # Resolve a regra fiscal para a operacao de devolucao. Usa o perfil escolhido
+    # na linha (it[:cod_perfil_tributario]) com prioridade; senao, o perfil do
+    # proprio produto. Memoiza por item para nao reconsultar.
+    def regra_do_item(it)
+      return nil if @operacao.nil?
+      @regra_cache ||= {}
+      chave = [it[:cod_produto], it[:cod_perfil_tributario]]
+      return @regra_cache[chave] if @regra_cache.key?(chave)
+
+      produto = Produto.find_by(cod_produto: it[:cod_produto])
+      perfil  = PerfilTributario.find_by(cod_perfil_tributario: it[:cod_perfil_tributario]) if it[:cod_perfil_tributario].present?
+      @regra_cache[chave] = @resolver.regra_para(produto, @operacao, perfil: perfil)
+    rescue
+      nil
     end
 
     # Fator de rateio dos impostos quando a devolucao e parcial.
@@ -131,12 +225,18 @@ module Fiscal
 
     # CFOP, por ordem de prioridade:
     #   1) CFOP do proprio item (editado na linha) — vence tudo;
-    #   2) CFOP geral escolhido na tela (operacao) — padrao para todos;
-    #   3) CFOP original da compra convertido para saida (1xxx->5xxx, 2xxx->6xxx).
+    #   2) CFOP geral informado;
+    #   3) CFOP da REGRA do perfil PARA A OPERACAO escolhida no topo (por UF).
+    # Sem regra para essa operacao, fica EM BRANCO (nil) — nao converte o XML.
     def cfop_do_item(it)
       return it[:cfop].to_s.gsub(/\D/, "").to_i if it[:cfop].present?
       return @cfop.to_i if @cfop.present?
-      cfop_saida(it[:cfop_original])
+      regra = regra_do_item(it)
+      if regra
+        c = RegraFiscal.cfop_por_uf(regra.cfop_base, @empresa&.uf, @fornecedor&.uf)
+        return c.to_i if c.present?
+      end
+      nil
     end
 
     # Converte CFOP de entrada (nota de compra, 1/2/3xxx) para saida (5/6/7xxx).
@@ -162,8 +262,8 @@ module Fiscal
         i = imp[:icms]
         out["ICMS"] = {
           "CodSituacaoTributaria" => i[:cst],
-          "AliquotaICMS"          => to_f_or_nil(i[:aliquota]),
-          # Override manual (digitado na tela) tem prioridade; senao, rateia.
+          # Override manual (digitado na tela) tem prioridade; senao, do XML.
+          "AliquotaICMS"          => aliquota_final(ov[:icms_aliquota], nil, i[:aliquota]),
           "BaseCalculo"           => valor_final(ov[:icms_base], i[:base_calculo], fator),
           "ValorIcms"             => valor_final(ov[:icms_valor], i[:valor], fator)
         }.compact
@@ -173,7 +273,7 @@ module Fiscal
         i = imp[:ipi]
         out["IPI"] = {
           "CodSituacaoTributaria"        => i[:cst],
-          "Aliquota"                     => to_f_or_nil(i[:aliquota]),
+          "Aliquota"                     => aliquota_final(ov[:ipi_aliquota], nil, i[:aliquota]),
           "ValorIpiDevolvido"            => valor_final(ov[:ipi_valor], i[:valor], fator),
           "PercentualMercadoriaDevolvida"=> 100
         }.compact
@@ -213,6 +313,17 @@ module Fiscal
     def valor_final(override, bruto, fator)
       return override.to_d.round(2).to_f if override.present?
       ratear(bruto, fator)
+    end
+
+    # Aliquota final: override da tela (aceita 0 informado) > regra > XML.
+    # O override "" (vazio) significa "nao informado" -> cai na regra/XML.
+    # O override "0" significa zerar explicitamente -> retorna 0.0.
+    def aliquota_final(override, da_regra, do_xml)
+      unless override.nil? || override.to_s.strip.empty?
+        return override.to_d.to_f
+      end
+      return da_regra.to_f if da_regra.present?
+      to_f_or_nil(do_xml)
     end
 
     def montar_pagamentos

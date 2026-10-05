@@ -77,10 +77,10 @@
     <%# --- ICMS --- %>
     <div class="tab-pane fade show active" id="aba-icms">
       <div class="row g-3">
-        <div class="col-md-5">
-          <label class="form-label">CSOSN</label>
-          <%= f.select :csosn, options_for_select(csosn_para_select, @regra.csosn),
-                { include_blank: "Selecione o CSOSN" }, class: "form-select" %>
+        <div class="col-md-6">
+          <label class="form-label">CST / CSOSN do ICMS</label>
+          <%= f.select :csosn, cst_csosn_icms_grouped_options(@regra.csosn),
+                { include_blank: "Selecione" }, class: "form-select" %>
         </div>
         <div class="col-md-3">
           <label class="form-label">Alíquota ICMS (%)</label>
@@ -91,7 +91,10 @@
           <%= f.number_field :aliquota_fcp, step: "0.01", class: "form-control", placeholder: "0,00" %>
         </div>
       </div>
-      <p class="text-muted small mt-2 mb-0">No Simples (sem ST), normalmente CSOSN 102 e alíquotas zeradas.</p>
+      <p class="text-muted small mt-2 mb-0">
+        <strong>Simples (sem destaque):</strong> use CSOSN (ex. 102/400) e alíquota zerada.
+        <strong>Com destaque de ICMS</strong> (ex. devolução espelhando a entrada): use CST (ex. 00/090) e informe a alíquota — aí o ICMS sai com valor na nota.
+      </p>
     </div>
 
     <%# --- IPI --- %>

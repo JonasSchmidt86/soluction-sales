@@ -129,23 +129,61 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
 - qtdfiscal baixado pelo EstoqueFiscalService na emissão (respeita controla_estoque); estorna no cancelar.
 - NÃO há espelho pós-emissão (doc avulso não persiste itens; usar DANFE/XML).
 
-## DEVOLUCAO DE COMPRA — FEITA (Fatia 1) ✅
+## DEVOLUCAO DE COMPRA — REFORMULADA ✅ (modelo operacao-no-topo + perfil-por-item)
 - Botao "Emitir Devolucao (NF-e)" em compras#show (super_admin+modulo, compra nao cancelada).
-- CollaboratorsBackoffice::DevolucoesCompraController (new=revisao, create=emite). Rota aninhada:
-  compras/:compra_id/devolucao (resource :devolucao).
+- CollaboratorsBackoffice::DevolucoesCompraController (new=revisao/planilha, create=emite,
+  previsualizar=DANFE via AJAX, resolver_cfop=AJAX). Rota aninhada compras/:compra_id/devolucao.
 - Fiscal::DevolucaoCompraExtractor: le XML da compra (compra.xml_file) -> itens com impostos
-  destacados (ICMS/IPI/PIS/COFINS: cst/base/aliquota/valor). Chave de referencia vem do
-  filename do blob (NFe+44). Fallback itemcompra se sem XML.
-- Fiscal::DevolucaoCompraBuilder: doc neutro finalidade 4, cliente=fornecedor, nf_referencia=chave,
-  Produtos com Imposto ESPELHADO + ChaveAcessoReferenciada/NItemReferenciado. CFOP: escolhido na
-  tela (varia por fornecedor: devolucao/remessa conserto) OU converte CFOP de entrada p/ saida.
-- NAO usa regra fiscal/perfil para devolucao (tributacao espelha o XML da entrada). validar_dados_fiscais
-  do EmissorFiscal RELAXA p/ finalidade 4 (so exige CFOP). qtdfiscal baixa (mercadoria sai).
-- EmissorFiscal aceita builder: injetado + cod_compra:. documento_fiscal.cod_compra vincula a compra.
-- Tela permite marcar/desmarcar itens, editar qtd/valor, informar chave de referencia manual.
+  destacados (ICMS/IPI/PIS/COFINS: cst/base/aliquota/valor). Chave de referencia do filename do
+  blob (NFe+44). Fallback itemcompra se sem XML.
+
+### Modelo de resolucao (confirmado pelo usuario)
+- **Topo da tela = OPERACAO da NF** (select `operacaoGeral`). Lista TODAS as operacoes ativas
+  (`OperacaoFiscal.ativos`), inclusive tipo=entrada (ex. "Devolucao de venda"), pois a regra do
+  perfil pode usar qualquer operacao. O `tipo` da operacao e so catalogo — NAO vira TpNF no XML.
+- **Por item = PERFIL tributario** (select `.dev-perfil`, trocavel; default = perfil do produto).
+- **CFOP + CST/CSOSN saem da REGRA** `(perfil + operacao do topo + UF)`. Sem regra para essa
+  combinacao, CFOP fica EM BRANCO (nao converte CFOP do XML — fallback removido). Resolve via
+  Fiscal::CfopResolver.cfop(produto, operacao, perfil:) e regra_para(...).
+- **Tributacao HIBRIDA** (DevolucaoCompraBuilder#montar_imposto_hibrido): CST/CSOSN + aliquotas da
+  REGRA; VALORES (base/valor ICMS, IPI, PIS/COFINS base) do XML da compra, rateados por quantidade
+  e EDITAVEIS na tela (colunas ICMS%/ICMS Base/ICMS R$/IPI%/IPI R$). Override vazio+auto = zera.
+- qtdfiscal baixa (mercadoria sai) via EmissorFiscal#baixar_estoque_fiscal -> EstoqueFiscalService.
+
+### SENTIDO DA NF = CFOP (nao o tipo da operacao)
+- O provedor Brasil NFe NAO recebe TpNF; o sentido (entrada 1/2/3 vs saida 5/6/7) vem do 1o digito
+  do CFOP de cada item. Devolucao de compra sempre sai 5/6/7. cfop_por_uf resolve 5/6/7 por UF.
+
+### DESTAQUE DE ICMS no SIMPLES = CSOSN 900 (nao CST)
+- Empresa e Simples (CRT 1). Para DESTACAR ICMS numa devolucao (como a NF real HENN: ICMS 12%,
+  IPI 3,25%, CFOP 6202) usa-se **CSOSN 900** (grupo ICMSSN900). A DANFE imprime "090" por
+  convencao visual, mas no XML e CSOSN 900. CST (ex. 090/51) e so regime normal — o provedor
+  REJEITA CST com emitente Simples ("CSOSN invalido para Simples/MEI").
+- ARMADILHA ja vivida: regra gravada com "90" (2 digitos) rejeita — CSOSN tem 3 digitos (900).
+  A tabela CST_ICMS no helper tinha "90" e "090" juntos, confundia; corrigir campo da regra p/ 900.
+- Sem regra, o builder NAO deve espelhar o CST cru do XML (vira CST incompativel com Simples) —
+  pendente decidir fallback (bloquear exigindo regra vs CSOSN seguro). Com regra CSOSN 900, ok.
+
+### IE do destinatario / HOMOLOGACAO
+- Destinatario = fornecedor. Com IE no cadastro -> contribuinte: IndicadorIe 1 + IE,
+  consumidor_final=false. Sem IE -> IndicadorIe 9, consumidor_final=true (evita rejeicao 696).
+  Criterio e so "tem IE?", NAO olha ambiente (igual a NF real HENN: destinatario contribuinte).
+- Em HOMOLOGACAO a SEFAZ NAO valida IE real: a DANFE de pre-visualizacao mostra a IE "errada" e,
+  se a nota DESTACA ICMS, da conflito (rejeicao "IE invalida" com contribuinte, OU rejeicao 600
+  "CSOSN incompativel com Nao Contribuinte" se forcar IndicadorIe 9). As duas rejeicoes sao
+  mutuamente exclusivas em teste — e LIMITACAO do ambiente, nao bug. Em PRODUCAO a IE real e
+  valida e o destaque e coerente (a NF real HENN prova). Validar emissao com destaque em producao.
+- NAO tentar "ajustar IE so em homologacao" (ja testado: forcar IndicadorIe 9 quebra o CSOSN 900 —
+  rejeicao 600). Revertido.
+
+### Outros
+- EmissorFiscal aceita builder injetado + cod_compra:. documento_fiscal.cod_compra vincula a compra.
+  validar_dados_fiscais RELAXA p/ finalidade 4 (so exige CFOP estrutural).
+- Perfil tributario ganhou coluna `tipo` (saida/entrada), scopes de_saida/de_entrada. Seletor de
+  perfil por item usa de_saida.
 - LIMITACAO: referencia so por CHAVE NF-e (API nao tem campo p/ NF modelo 1/1A/2 em papel).
-- Testado via runner com stub (local sem XML fisico -> impostos vazios; em prod virao do XML).
-- FALTA validar em HOMOLOGACAO com XML real (impostos espelhados de verdade).
+- VALIDADO em homologacao com XML real: pre-visualizacao OK com CSOSN 900 + ICMS destacado
+  (compra 30218, fornecedor HENN). Emissao real com destaque = fazer em producao.
 
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.

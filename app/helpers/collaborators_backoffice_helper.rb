@@ -62,6 +62,36 @@ module CollaboratorsBackofficeHelper
         CSOSN_SIMPLES.map { |cod, desc| ["#{cod} - #{desc}", cod] }
     end
 
+    # CST de ICMS (regime normal). Usado quando a operacao DESTACA o ICMS com
+    # valor (ex.: devolucao de compra espelhando a entrada). Os mais comuns.
+    CST_ICMS = {
+        "00" => "Tributada integralmente",
+        "10" => "Tributada e com cobranca do ICMS por ST",
+        "20" => "Com reducao de base de calculo",
+        "40" => "Isenta",
+        "41" => "Nao tributada",
+        "50" => "Suspensao",
+        "51" => "Diferimento",
+        "60" => "ICMS cobrado anteriormente por ST",
+        "70" => "Com reducao de BC e cobranca do ICMS por ST",
+        "90" => "Outras"
+    }.freeze
+    # NOTA: CST tem 2 digitos (regime normal). Para o SIMPLES DESTACAR ICMS numa
+    # devolucao use CSOSN 900 (grupo ICMSSN900), NAO o CST 90/090 — o provedor
+    # rejeita CST com emitente Simples. O CSOSN 900 ja esta em CSOSN_SIMPLES.
+
+    # Opcoes do select do codigo de ICMS, separando CSOSN (Simples) e CST
+    # (regime normal), para o usuario escolher conforme o caso. Em grupos.
+    def cst_csosn_icms_grouped_options(selecionado = nil)
+        grouped_options_for_select(
+            {
+                "CSOSN (Simples Nacional)" => CSOSN_SIMPLES.map { |cod, desc| ["#{cod} - #{desc}", cod] },
+                "CST (Regime Normal — destaca ICMS)" => CST_ICMS.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+            },
+            selecionado
+        )
+    end
+
     # Descricao "102 - Tributada..." a partir do codigo. Retorna vazio se nil.
     def csosn_descricao(codigo)
         cod = codigo.to_s.strip

@@ -9,17 +9,34 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
     @itens = extractor.itens
     @chave_referencia = extractor.chave_referencia
     @tem_xml = extractor.tem_xml?
-    @operacoes = OperacaoFiscal.where(tipo: "saida").order(:nome)
+    # Lista TODAS as operacoes ativas (saida e entrada). O usuario precisa poder
+    # escolher no topo a MESMA operacao que esta cadastrada na regra do perfil
+    # (algumas regras usam operacoes tipo "entrada", ex. Devolucao de venda).
+    # O CFOP so e resolvido quando existe regra (perfil + operacao); sem regra,
+    # fica em branco.
+    @operacoes = OperacaoFiscal.ativos.order(:nome)
     @operacao_padrao = OperacaoFiscal.find_by(nome: "Devolucao de compra")
     @finalidades = DocumentoFiscal::FINALIDADES
+    # Perfis de SAIDA para o seletor por item. A operacao da NF (topo) + o perfil
+    # resolvem o CFOP; se o perfil nao tiver regra para a operacao, o CFOP fica
+    # em branco (o usuario cadastra a regra ou informa o CFOP na mao).
+    @perfis = PerfilTributario.ativos.de_saida.order(:nome)
 
-    # Pre-resolve o CFOP de cada item pela regra fiscal do perfil do produto
-    # para a operacao padrao. Sem regra, cai no CFOP convertido do XML (saida).
+    # Pre-resolve, por item, o perfil (o do produto) e o CFOP pela regra desse
+    # perfil para a operacao de devolucao. Sem regra, cai no CFOP do XML.
+    # CFOP de cada item: regra do perfil do produto PARA A OPERACAO padrao
+    # (devolucao de compra). Sem regra, fica em branco (usuario resolve). O CFOP
+    # recalcula ao trocar a operacao do topo ou o perfil do item (via JS).
     resolver = Fiscal::CfopResolver.new(empresa: @compra.empresa, destino_uf: @compra.pessoa&.uf)
     @itens = @itens.map do |it|
       produto = Produto.find_by(cod_produto: it[:cod_produto])
-      cfop_regra = @operacao_padrao && produto ? resolver.cfop(produto, @operacao_padrao) : nil
-      it.merge(cfop_sugerido: cfop_regra || cfop_convertido(it[:cfop_original]))
+      perfil  = produto&.perfil_tributario
+      regra   = (@operacao_padrao && produto) ? resolver.regra_para(produto, @operacao_padrao) : nil
+      cfop_regra = regra ? RegraFiscal.cfop_por_uf(regra.cfop_base, @compra.empresa&.uf, @compra.pessoa&.uf) : nil
+      it.merge(
+        cod_perfil_tributario: perfil&.cod_perfil_tributario,
+        cfop_sugerido:         cfop_regra # nil = em branco quando nao ha regra
+      )
     end
 
     if @itens.empty?
@@ -61,22 +78,23 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
 
   # GET .../compras/:compra_id/devolucao/resolver_cfop?cod_produto=&cod_operacao_fiscal=
   # Resolve o CFOP de um produto para a operacao escolhida, pela regra fiscal do
-  # perfil (destino = UF do fornecedor da compra). Fallback: converte o CFOP de
-  # entrada do item. Usado via AJAX ao trocar a operacao (no topo ou por item).
+  # perfil (destino = UF do fornecedor da compra). Sem regra (perfil + operacao),
+  # retorna vazio e o CFOP fica em branco. Usado via AJAX ao trocar a operacao
+  # (no topo ou por item).
   def resolver_cfop
-    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal])
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
+               OperacaoFiscal.find_by(nome: "Devolucao de compra")
     produto  = Produto.find_by(cod_produto: params[:cod_produto])
+    perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario])
 
+    # CFOP vem da regra (perfil + operacao). Sem regra, retorna vazio (branco).
     cfop = nil
-    origem = "fallback"
-    if operacao && produto
+    if operacao && (perfil || produto)
       cfop = Fiscal::CfopResolver.new(empresa: @compra.empresa, destino_uf: @compra.pessoa&.uf)
-                                 .cfop(produto, operacao)
-      origem = "regra" if cfop.present?
+                                 .cfop(produto, operacao, perfil: perfil)
     end
-    cfop ||= cfop_convertido(params[:cfop_original])
 
-    render json: { cfop: cfop, origem: origem }
+    render json: { cfop: cfop, origem: cfop.present? ? "regra" : "sem_regra" }
   rescue => e
     Rails.logger.error("[DevolucoesCompra#resolver_cfop] #{e.class} - #{e.message}")
     render json: { cfop: nil, origem: "erro" }
@@ -84,10 +102,7 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
 
   # POST .../compras/:compra_id/devolucao
   def create
-    emissor = montar_emissor
-    return if emissor.nil? # ja redirecionou com alerta
-
-    documento = emissor.emitir
+    documento = montar_emissor.emitir
 
     if documento.autorizada?
       redirect_to collaborators_backoffice_compra_path(@compra),
@@ -96,7 +111,8 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
       redirect_to collaborators_backoffice_compra_path(@compra),
                   alert: "Devolução #{documento.status}: #{documento.mensagem_sefaz}"
     end
-  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+  rescue DevolucaoInvalida,
+         Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
          Fiscal::EmissorFiscal::SemConfig,
          Fiscal::EmissorFiscal::SemOperacao => e
     redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra), alert: e.message
@@ -109,26 +125,24 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
   # POST .../compras/:compra_id/devolucao/previsualizar
   # Gera o DANFE de PRE-VISUALIZACAO da devolucao (sem transmitir a SEFAZ),
   # usando os mesmos itens/CFOP/finalidade do formulario.
+  # Via AJAX: responde o PDF (sucesso) ou JSON com erro (falha). O front so
+  # abre a aba quando o PDF chega; em erro, mostra o alerta na propria tela.
   def previsualizar
-    emissor = montar_emissor
-    return if emissor.nil?
-
-    preview = emissor.pre_visualizar(tipo_arquivo: 1)
+    preview = montar_emissor.pre_visualizar(tipo_arquivo: 1)
     if preview.sucesso?
       send_data preview.conteudo, filename: "previsualizacao-devolucao-compra-#{@compra.cod_compra}.pdf",
                 type: "application/pdf", disposition: "inline"
     else
-      redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra),
-                  alert: "Não foi possível pré-visualizar: #{preview.erro}"
+      render json: { erro: "Não foi possível pré-visualizar: #{preview.erro}" }, status: :unprocessable_entity
     end
-  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+  rescue DevolucaoInvalida,
+         Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
          Fiscal::EmissorFiscal::SemConfig,
          Fiscal::EmissorFiscal::SemOperacao => e
-    redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra), alert: e.message
+    render json: { erro: e.message }, status: :unprocessable_entity
   rescue => e
     Rails.logger.error("[DevolucoesCompra#previsualizar] compra #{@compra.cod_compra}: #{e.class} - #{e.message}")
-    redirect_to new_collaborators_backoffice_compra_devolucao_path(@compra),
-                alert: "Falha ao pré-visualizar: #{e.message}"
+    render json: { erro: "Falha ao pré-visualizar: #{e.message}" }, status: :unprocessable_entity
   end
 
   private
@@ -136,12 +150,11 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
   # Monta o EmissorFiscal da devolucao a partir dos params do form (itens
   # editados, CFOP, natureza, finalidade). Retorna nil (apos redirecionar com
   # alerta) quando falta config ou nao ha itens. Usado por create e previsualizar.
+  class DevolucaoInvalida < StandardError; end
+
   def montar_emissor
     config = FiscalConfig.find_by(cod_empresa: @compra.cod_empresa)
-    if config.nil? || !config.ativo?
-      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Empresa sem configuração fiscal ativa."
-      return nil
-    end
+    raise DevolucaoInvalida, "Empresa sem configuração fiscal ativa." if config.nil? || !config.ativo?
 
     operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
                OperacaoFiscal.find_by(nome: "Devolucao de compra")
@@ -150,17 +163,15 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
     itens = aplicar_edicoes(extractor.itens)
     chave = params[:chave_referencia].presence || extractor.chave_referencia
 
-    if itens.empty?
-      redirect_to collaborators_backoffice_compra_path(@compra), alert: "Nenhum item para devolver."
-      return nil
-    end
+    raise DevolucaoInvalida, "Nenhum item para devolver." if itens.empty?
 
     finalidade = params[:finalidade].presence || 4
 
     builder = Fiscal::DevolucaoCompraBuilder.new(
       @compra, config: config, itens: itens, chave_referencia: chave,
       natureza_operacao: params[:natureza_operacao].presence || operacao&.natureza_operacao,
-      cfop: params[:cfop].presence, modelo: 55, finalidade: finalidade
+      cfop: params[:cfop].presence, modelo: 55, finalidade: finalidade,
+      operacao: operacao # operacao da NF escolhida no topo (resolve CFOP/tributacao)
     )
 
     origem = Fiscal::OrigemDevolucao.new(@compra.empresa)
@@ -201,10 +212,17 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
       # automatico (comparado ao campo *_auto escondido). Assim, mudar so a
       # quantidade NAO congela o imposto no valor pre-preenchido.
       override = {
-        icms_base:  imposto_override(ed["icms_base"],  ed["icms_base_auto"]),
-        icms_valor: imposto_override(ed["icms_valor"], ed["icms_valor_auto"]),
-        ipi_valor:  imposto_override(ed["ipi_valor"],  ed["ipi_valor_auto"])
+        icms_base:     imposto_override(ed["icms_base"],     ed["icms_base_auto"]),
+        icms_valor:    imposto_override(ed["icms_valor"],    ed["icms_valor_auto"]),
+        icms_aliquota: imposto_override(ed["icms_aliquota"], ed["icms_aliquota_auto"]),
+        ipi_valor:     imposto_override(ed["ipi_valor"],     ed["ipi_valor_auto"]),
+        ipi_aliquota:  imposto_override(ed["ipi_aliquota"],  ed["ipi_aliquota_auto"])
       }.compact
+
+      # Perfil escolhido na linha. Se o PRODUTO ainda nao tem perfil, grava o
+      # escolhido como padrao do produto (fica salvo para as proximas vezes).
+      cod_perfil = ed["cod_perfil_tributario"].presence
+      aplicar_perfil_ao_produto(it[:cod_produto], cod_perfil) if cod_perfil
 
       it.merge(
         quantidade:       MoedaBr.parse(ed["quantidade"]).presence || it[:quantidade],
@@ -212,19 +230,39 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
         valor_total:      (MoedaBr.parse(ed["quantidade"]).to_d.nonzero? && MoedaBr.parse(ed["valor_unitario"]).to_d.nonzero?) ?
                             (MoedaBr.parse(ed["quantidade"]).to_d * MoedaBr.parse(ed["valor_unitario"]).to_d) : it[:valor_total],
         cfop:             ed["cfop"].to_s.gsub(/\D/, "").presence, # CFOP por item (sobrepoe o geral)
+        cod_perfil_tributario: cod_perfil, # perfil escolhido na tela (prioridade sobre o do produto)
         imposto_override: override.presence
       )
     end
   end
 
-  # Retorna o valor do imposto como override SOMENTE se o usuario mudou o campo
-  # em relacao ao valor automatico (rateado) pre-preenchido. Senao, nil (deixa
-  # o builder ratear pela quantidade). Compara em centavos para evitar ruido de
-  # formatacao.
+  # Grava o perfil escolhido como padrao do produto, mas SO quando o produto
+  # ainda nao tem perfil (nao sobrescreve um perfil ja definido).
+  def aplicar_perfil_ao_produto(cod_produto, cod_perfil)
+    produto = Produto.find_by(cod_produto: cod_produto)
+    return if produto.nil? || produto.cod_perfil_tributario.present?
+    produto.update_column(:cod_perfil_tributario, cod_perfil)
+  rescue => e
+    Rails.logger.error("[DevolucoesCompra#aplicar_perfil_ao_produto] #{e.class} - #{e.message}")
+  end
+
+  # Interpreta o campo de imposto editado em relacao ao valor automatico
+  # pre-preenchido (campo *_auto). Regras:
+  #   - vazio E o auto tinha valor  -> usuario APAGOU: zera (retorna 0);
+  #   - vazio E o auto tambem vazio  -> nao mexeu: nil;
+  #   - preenchido = auto            -> nao mexeu: nil (deixa o builder usar o XML);
+  #   - preenchido != auto           -> override com o valor digitado.
+  # Assim, apagar o campo tira o imposto (nao volta ao valor do XML).
   def imposto_override(valor, valor_auto)
+    bruto = valor.to_s.strip
+    auto  = MoedaBr.parse(valor_auto)
+
+    if bruto.empty?
+      return auto.present? ? 0 : nil   # apagou um campo que tinha valor -> zera
+    end
+
     v = MoedaBr.parse(valor)
     return nil if v.nil?
-    auto = MoedaBr.parse(valor_auto)
     return v if auto.nil?
     (v.to_d.round(2) == auto.to_d.round(2)) ? nil : v
   end
