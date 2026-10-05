@@ -185,6 +185,25 @@ Contexto: `qtdfiscal` tem ENTRADA (compra) e SAÍDA (venda/NF).
 - VALIDADO em homologacao com XML real: pre-visualizacao OK com CSOSN 900 + ICMS destacado
   (compra 30218, fornecedor HENN). Emissao real com destaque = fazer em producao.
 
+## NFC-e (modelo 65) — status e bloqueios (homologacao)
+- NF-e 55 ja AUTORIZADA em homologacao (2 notas). NFC-e 65: nunca autorizada ainda.
+- IMPORTANTE: NF-e 55 NAO usa CSC; CSC e exclusivo da NFC-e (QR-Code). Entao "a 55 emite"
+  nao prova nada sobre CSC.
+- Numeracao: contador do provedor por empresa+modelo+serie+ambiente. Em homologacao os
+  numeros 1..5 da NFC-e ficaram INUTILIZADOS (rejeicao 206). RESOLVIDO avancando o contador
+  via BrasilNfeAdapter#atualizar_numeracao(modelo:65, serie:"1", numero:1000). Metodos novos
+  no adapter: consultar_numeracao / atualizar_numeracao (base /services/empresa, exigem
+  Token + UserToken). UserToken (Token Pessoal da conta) = credentials.brasilnfe_user_token
+  (UUID, diferente do brasilnfe_token da empresa). Em producao a numeracao comeca limpa.
+- CSC: o CSC NAO vai no payload (a doc confirma) — e do painel do provedor. O contador gerou
+  o CSC de homologacao na SEFAZ-PR: Id 000001 e Id 000002 (ambos ativos). No painel Brasil NFe
+  esta cadastrado Id 000002 + CSC EO0RJL0TXJTS1KIEGLIKTVYF3HMQUOMQP966 (bate com a SEFAZ).
+- BLOQUEIO ATUAL NFC-e: rejeicao 462 "Codigo Identificador do CSC no QR-Code nao cadastrado
+  na SEFAZ" (doc 29, chave 41261014993084000116650010000010001034846509). Par idCSC+CSC
+  parece correto no painel. Proximo passo = suporte Brasil NFe (so eles veem o idCSC enviado
+  no QR-Code) OU aguardar propagacao / conferir caractere ambiguo (O/0, I/1/l). NAO e codigo
+  do nosso sistema. Resto da NFC-e (numeracao, CFOP, payload, pre-visualizacao HTML) OK.
+
 ## PENDÊNCIAS (não feito ainda)
 1. Trocar gate `super_admin` → só `empresa_tem_modulo_fiscal?` quando liberar pra outros.
 3. Fix do trigger `tgrf_estoquevenda` (coluna ambígua `quantidade` no ramo de alteração de
