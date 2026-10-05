@@ -97,6 +97,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   end
 
   def show
+    # A NF avulsa NAO persiste itens no nosso banco; eles vivem no XML autorizado
+    # que a SEFAZ devolveu. Extraimos o resumo (geral + itens) para exibir na tela.
+    @resumo = resumo_do_xml(@documento)
   end
 
   # POST /collaborators_backoffice/notas_avulsas/previsualizar
@@ -197,6 +200,47 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def set_documento
     @documento = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa, cod_venda: nil)
                                 .find(params[:id])
+  end
+
+  # Le o XML autorizado (xml_base64) e devolve um Hash com os dados gerais e os
+  # itens da nota, para exibir na tela show. nil quando nao ha XML.
+  def resumo_do_xml(documento)
+    b64 = documento.xml_base64.presence
+    return nil if b64.blank?
+
+    xml = Base64.decode64(b64)
+    doc = Nokogiri::XML(xml)
+    g = ->(xp) { doc.at_xpath(xp)&.text }
+
+    dest_nome = g.call('//*[local-name()="dest"]/*[local-name()="xNome"]')
+
+    itens = doc.xpath('//*[local-name()="det"]').map do |det|
+      prod = det.at_xpath('.//*[local-name()="prod"]')
+      pg = ->(xp) { prod&.at_xpath(xp)&.text }
+      {
+        n:      det["nItem"],
+        codigo: pg.call('.//*[local-name()="cProd"]'),
+        nome:   pg.call('.//*[local-name()="xProd"]'),
+        ncm:    pg.call('.//*[local-name()="NCM"]'),
+        cfop:   pg.call('.//*[local-name()="CFOP"]'),
+        qtd:    pg.call('.//*[local-name()="qCom"]').to_f,
+        vun:    pg.call('.//*[local-name()="vUnCom"]').to_f,
+        vprod:  pg.call('.//*[local-name()="vProd"]').to_f
+      }
+    end
+
+    {
+      numero:    g.call('//*[local-name()="ide"]/*[local-name()="nNF"]'),
+      serie:     g.call('//*[local-name()="ide"]/*[local-name()="serie"]'),
+      natureza:  g.call('//*[local-name()="ide"]/*[local-name()="natOp"]'),
+      emitida_em: g.call('//*[local-name()="ide"]/*[local-name()="dhEmi"]'),
+      destinatario: dest_nome,
+      total:     g.call('//*[local-name()="ICMSTot"]/*[local-name()="vNF"]').to_f,
+      itens:     itens
+    }
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#resumo_do_xml] doc #{documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    nil
   end
 
   # Detecta o Content-Type do arquivo do DANFE/DANFCE pelos primeiros bytes.
