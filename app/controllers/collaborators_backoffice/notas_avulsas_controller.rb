@@ -146,9 +146,14 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       redirect_to collaborators_backoffice_notas_avulsa_path(@documento), alert: "DANFE indisponível."
       return
     end
-    send_data Base64.decode64(@documento.danfe_base64),
-              filename: "danfe-avulsa-#{@documento.cod_documento_fiscal}.pdf",
-              type: "application/pdf", disposition: "inline"
+    conteudo = Base64.decode64(@documento.danfe_base64)
+    # NFC-e (modelo 65) tem o DANFCE em HTML; NF-e 55 em PDF. Detecta o formato
+    # real pelos primeiros bytes e serve com o Content-Type certo (senao o
+    # navegador tenta abrir HTML como PDF e falha).
+    tipo, ext = danfe_tipo_extensao(conteudo)
+    send_data conteudo,
+              filename: "danfe-avulsa-#{@documento.cod_documento_fiscal}.#{ext}",
+              type: tipo, disposition: "inline"
   end
 
   # Cancela a NF avulsa autorizada.
@@ -192,6 +197,19 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def set_documento
     @documento = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa, cod_venda: nil)
                                 .find(params[:id])
+  end
+
+  # Detecta o Content-Type do arquivo do DANFE/DANFCE pelos primeiros bytes.
+  # PDF (NF-e 55) comeca com "%PDF"; DANFCE (NFC-e 65) e HTML.
+  def danfe_tipo_extensao(conteudo)
+    amostra = conteudo.to_s[0, 64].to_s
+    if amostra.start_with?("%PDF")
+      ["application/pdf", "pdf"]
+    elsif amostra.lstrip.downcase.start_with?("<html", "<!doctype")
+      ["text/html", "html"]
+    else
+      ["application/pdf", "pdf"] # fallback
+    end
   end
 
   def modelo_param
