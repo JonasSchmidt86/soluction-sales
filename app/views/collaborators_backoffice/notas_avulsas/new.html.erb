@@ -121,7 +121,6 @@
       <select class="form-select form-select-sm cod-cor field-cod-cor">
         <option value="">— selecione a cor —</option>
       </select>
-      <small class="cor-estoque text-muted d-block mt-1"></small>
     </td>
     <td>
       <select class="form-select form-select-sm field-perfil item-perfil">
@@ -221,18 +220,6 @@
   var body = document.getElementById('itensBody');
   var tpl = document.getElementById('itemTemplate');
 
-  // Mostra o saldo fiscal (qtdfiscal) da cor selecionada embaixo do select.
-  function mostrarEstoqueCor(selectEl, row) {
-    var box = row.querySelector('.cor-estoque');
-    if (!box) return;
-    var opt = selectEl.selectedOptions[0];
-    if (!opt || !opt.value) { box.textContent = ''; return; }
-    var qf = parseFloat(opt.dataset.qtdfiscal || '0');
-    var qt = parseFloat(opt.dataset.quantidade || '0');
-    box.innerHTML = 'Estoque fiscal: <strong class="' + (qf > 0 ? 'text-success' : 'text-danger') +
-                    '">' + fmtBR(qf) + '</strong> &nbsp;|&nbsp; físico: ' + fmtBR(qt);
-  }
-
   function carregarCores(codProduto, selectEl, corSelecionada, row) {
     return fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
       .then(function (r) { return r.json(); })
@@ -256,7 +243,6 @@
           }
           try { selectEl.focus(); } catch (e) {}
         }
-        if (row) mostrarEstoqueCor(selectEl, row);
       });
   }
 
@@ -306,7 +292,6 @@
         var vl = row.querySelector('.vlunit');
         if (parseBR(vl.value) === 0) { vl.value = fmtBR(parseFloat(opt.dataset.valorvenda) || 0); recalc(); }
       }
-      mostrarEstoqueCor(this, row); // atualiza o saldo fiscal exibido
     });
 
     // Trocar o perfil recalcula o CFOP so desta linha.
