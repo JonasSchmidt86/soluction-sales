@@ -150,13 +150,25 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     redirect_to collaborators_backoffice_notas_avulsas_path, alert: "Falha ao cancelar: #{e.message}"
   end
 
-  # Cores de um produto (JSON) para o select de cor no form.
+  # Cores de um produto (JSON) para o select de cor no form. Traz tambem a
+  # qtdfiscal (estoque FISCAL) e a quantidade (estoque fisico) por cor, para o
+  # usuario ver o saldo fiscal disponivel antes de emitir (a NF baixa qtdfiscal).
   def cores_produto
-    cores = Core.select(:nmcor, :cod_cor, :valorvenda)
+    cores = Core.select("cores.nmcor, cores.cod_cor, empresaproduto.valorvenda, " \
+                        "empresaproduto.qtdfiscal, empresaproduto.quantidade")
                 .joins(:empresaprodutos)
-                .where("cod_produto = ? and cod_empresa = ?", params[:cod_produto], current_collaborator.cod_empresa)
+                .where("empresaproduto.cod_produto = ? and empresaproduto.cod_empresa = ?",
+                       params[:cod_produto], current_collaborator.cod_empresa)
                 .order(:nmcor, :cod_cor)
-    render json: cores.map { |c| { cod_cor: c.cod_cor, nmcor: c.nmcor, valorvenda: c.valorvenda } }
+    render json: cores.map { |c|
+      {
+        cod_cor:    c.cod_cor,
+        nmcor:      c.nmcor,
+        valorvenda: c.valorvenda,
+        qtdfiscal:  c.qtdfiscal.to_f,
+        quantidade: c.quantidade.to_f
+      }
+    }
   end
 
   private

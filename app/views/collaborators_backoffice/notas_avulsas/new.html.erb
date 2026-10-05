@@ -119,8 +119,9 @@
     </td>
     <td>
       <select class="form-select form-select-sm cod-cor field-cod-cor">
-        <option value="">—</option>
+        <option value="">— selecione a cor —</option>
       </select>
+      <small class="cor-estoque text-muted d-block mt-1"></small>
     </td>
     <td>
       <select class="form-select form-select-sm field-perfil item-perfil">
@@ -220,18 +221,42 @@
   var body = document.getElementById('itensBody');
   var tpl = document.getElementById('itemTemplate');
 
-  function carregarCores(codProduto, selectEl, corSelecionada) {
+  // Mostra o saldo fiscal (qtdfiscal) da cor selecionada embaixo do select.
+  function mostrarEstoqueCor(selectEl, row) {
+    var box = row.querySelector('.cor-estoque');
+    if (!box) return;
+    var opt = selectEl.selectedOptions[0];
+    if (!opt || !opt.value) { box.textContent = ''; return; }
+    var qf = parseFloat(opt.dataset.qtdfiscal || '0');
+    var qt = parseFloat(opt.dataset.quantidade || '0');
+    box.innerHTML = 'Estoque fiscal: <strong class="' + (qf > 0 ? 'text-success' : 'text-danger') +
+                    '">' + fmtBR(qf) + '</strong> &nbsp;|&nbsp; físico: ' + fmtBR(qt);
+  }
+
+  function carregarCores(codProduto, selectEl, corSelecionada, row) {
     return fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
       .then(function (r) { return r.json(); })
       .then(function (cores) {
-        selectEl.innerHTML = '<option value="">—</option>';
+        selectEl.innerHTML = '<option value="">— selecione a cor —</option>';
         cores.forEach(function (c) {
           var o = document.createElement('option');
-          o.value = c.cod_cor; o.textContent = c.nmcor;
+          var qf = (typeof c.qtdfiscal === 'number') ? c.qtdfiscal : parseFloat(c.qtdfiscal || '0');
+          o.value = c.cod_cor;
+          o.textContent = c.nmcor + '  (fiscal: ' + fmtBR(qf) + ')';
           o.dataset.valorvenda = c.valorvenda;
+          o.dataset.qtdfiscal  = qf;
+          o.dataset.quantidade = c.quantidade;
           if (corSelecionada && String(c.cod_cor) === String(corSelecionada)) o.selected = true;
           selectEl.appendChild(o);
         });
+        // Abre o select para o usuario escolher a cor assim que o produto entra.
+        if (!corSelecionada && cores.length) {
+          if (cores.length === 1) {
+            selectEl.selectedIndex = 1; // uma cor so: ja seleciona
+          }
+          try { selectEl.focus(); } catch (e) {}
+        }
+        if (row) mostrarEstoqueCor(selectEl, row);
       });
   }
 
@@ -266,7 +291,7 @@
               pNome.value = p.produto;
               pInput.value = p.produto;
               pLista.style.display = 'none';
-              carregarCores(p.cod_produto, corSel);
+              carregarCores(p.cod_produto, corSel, null, row);
               resolverLinha(row); // CFOP pela regra do perfil + operacao
             });
             pLista.appendChild(it);
@@ -281,6 +306,7 @@
         var vl = row.querySelector('.vlunit');
         if (parseBR(vl.value) === 0) { vl.value = fmtBR(parseFloat(opt.dataset.valorvenda) || 0); recalc(); }
       }
+      mostrarEstoqueCor(this, row); // atualiza o saldo fiscal exibido
     });
 
     // Trocar o perfil recalcula o CFOP so desta linha.
@@ -299,7 +325,7 @@
       if (dados.quantidade) row.querySelector('.qtd').value = dados.quantidade;
       if (dados.valorunitario) row.querySelector('.vlunit').value = dados.valorunitario;
       if (dados.cfop) row.querySelector('.item-cfop').value = dados.cfop;
-      carregarCores(dados.cod_produto, corSel, dados.cod_cor).then(function () {
+      carregarCores(dados.cod_produto, corSel, dados.cod_cor, row).then(function () {
         if (!dados.cfop) resolverLinha(row);
       });
     }
