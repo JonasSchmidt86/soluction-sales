@@ -4,8 +4,8 @@
       <h4 class="text-white mb-0"><i class="fa fa-gear me-2"></i> Configuração Fiscal</h4>
       <div class="ms-auto d-flex gap-2">
         <% if @config.persisted? && @config.ativo? %>
-          <%= link_to exportar_collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
-            <i class="fa fa-file-zipper me-1"></i> Exportar período
+          <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "btn btn-light btn-sm" do %>
+            <i class="fa fa-box-archive me-1"></i> Pacotes XML
           <% end %>
         <% end %>
         <%= link_to edit_collaborators_backoffice_fiscal_config_path, class: "btn btn-light btn-sm" do %>
