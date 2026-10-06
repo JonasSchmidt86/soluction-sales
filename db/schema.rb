@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000011) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -867,6 +867,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000011) do
     t.boolean "ativo", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "pacote_fiscal", primary_key: "cod_pacote_fiscal", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.date "periodo_inicio", null: false
+    t.date "periodo_fim", null: false
+    t.integer "tipo_arquivo", default: 1, comment: "0 PDF / 1 XML / 2 Excel"
+    t.integer "tipo_nota", default: 1, comment: "1 saidas / 2 entradas / 3 ambos"
+    t.boolean "incluir_cce", default: false
+    t.string "nome_arquivo", limit: 150
+    t.string "mime", limit: 60
+    t.integer "quantidade", comment: "qtd de notas no pacote (Quantidade da API)"
+    t.bigint "tamanho_bytes"
+    t.datetime "gerado_em"
+    t.datetime "enviado_contador_em"
+    t.string "email_destino", limit: 120
+    t.bigint "cod_funcionario", comment: "quem gerou"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "periodo_inicio", "periodo_fim"], name: "idx_pacote_fiscal_empresa_periodo"
   end
 
   create_table "parametros", primary_key: "cod_parametro", id: :bigint, default: -> { "nextval('parametro_codigo_seq'::regclass)" }, force: :cascade do |t|

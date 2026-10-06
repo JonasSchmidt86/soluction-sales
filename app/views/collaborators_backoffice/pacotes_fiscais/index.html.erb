@@ -1,0 +1,98 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-box-archive me-2"></i>
+        <h4 class="mb-0">Pacotes fiscais (XML p/ contabilidade)</h4>
+      </div>
+
+      <div class="card-body">
+        <% if flash[:notice].present? %><div class="alert alert-success py-2"><%= flash[:notice] %></div><% end %>
+        <% if flash[:alert].present? %><div class="alert alert-danger py-2"><%= flash[:alert] %></div><% end %>
+
+        <%# ---- Gerar novo pacote ---- %>
+        <%= form_with url: gerar_collaborators_backoffice_pacotes_fiscais_path, method: :post, local: true, class: "row g-2 align-items-end mb-4" do %>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Início</label>
+            <%= date_field_tag :dt_inicio, Date.today.beginning_of_month, class: "form-control form-control-sm", required: true %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Fim</label>
+            <%= date_field_tag :dt_fim, Date.today, class: "form-control form-control-sm", required: true %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Notas</label>
+            <%= select_tag :tipo_nota, options_for_select([["Saídas",1],["Entradas",2],["Ambas",3]], 1), class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Formato</label>
+            <%= select_tag :tipo_arquivo, options_for_select([["XML",1],["PDF",0],["Excel",2]], 1), class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <div class="form-check">
+              <%= check_box_tag :incluir_cce, "1", false, class: "form-check-input", id: "incCce" %>
+              <label class="form-check-label small" for="incCce">Incluir CC-e</label>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success btn-sm w-100">
+              <i class="fa fa-plus me-1"></i> Gerar pacote
+            </button>
+          </div>
+        <% end %>
+
+        <%# ---- Historico ---- %>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Gerado em</th>
+                <th>Período</th>
+                <th>Notas</th>
+                <th>Formato</th>
+                <th class="text-end">Qtd</th>
+                <th>Enviado ao contador</th>
+                <th style="width:230px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if @pacotes.empty? %>
+                <tr><td colspan="7" class="text-center text-muted py-3">Nenhum pacote gerado ainda.</td></tr>
+              <% end %>
+              <% @pacotes.each do |p| %>
+                <tr>
+                  <td><%= p.gerado_em&.strftime("%d/%m/%Y %H:%M") %></td>
+                  <td><%= p.periodo_inicio.strftime("%d/%m/%Y") %> a <%= p.periodo_fim.strftime("%d/%m/%Y") %></td>
+                  <td><%= p.tipo_nota_label %></td>
+                  <td><%= p.tipo_arquivo_label %></td>
+                  <td class="text-end"><%= p.quantidade %></td>
+                  <td>
+                    <% if p.enviado? %>
+                      <span class="badge text-bg-success">enviado</span>
+                      <small class="text-muted d-block"><%= p.enviado_contador_em.strftime("%d/%m/%Y %H:%M") %><br><%= p.email_destino %></small>
+                    <% else %>
+                      <span class="badge text-bg-light">não enviado</span>
+                    <% end %>
+                  </td>
+                  <td class="text-nowrap">
+                    <%= link_to "Baixar", baixar_collaborators_backoffice_pacotes_fiscai_path(p), class: "btn btn-outline-primary btn-sm" %>
+                    <%= button_to "Enviar", enviar_contador_collaborators_backoffice_pacotes_fiscai_path(p), method: :post,
+                          class: "btn btn-outline-success btn-sm", form: { style: "display:inline-block" },
+                          data: { confirm: "Enviar este pacote ao contador?" } %>
+                    <%= button_to "Excluir", collaborators_backoffice_pacotes_fiscai_path(p), method: :delete,
+                          class: "btn btn-outline-danger btn-sm", form: { style: "display:inline-block" },
+                          data: { confirm: "Excluir este pacote? Você poderá gerar novamente." } %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <% if @pacotes.respond_to?(:total_pages) %>
+          <div class="text-center"><%= paginate @pacotes %></div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

@@ -248,6 +248,15 @@ Rails.application.routes.draw do
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
+    # Historico de pacotes fiscais gerados (zip de XML salvo p/ baixar/reenviar).
+    resources :pacotes_fiscais, only: [:index, :destroy] do
+      collection { post :gerar }
+      member do
+        get  :baixar
+        post :enviar_contador
+      end
+    end
+
     # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);
     # create=emite; show=detalhe; danfe/espelho/cancelar.
     resources :notas_avulsas, only: [:index, :new, :create, :show] do
