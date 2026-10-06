@@ -207,7 +207,7 @@ class DashboardDataService
 
     # Lista dos retornos pendentes mais próximos (para exibir no widget)
     pendentes = pendentes_scope.includes(:pessoa)
-                               .order(:return_at)
+                               .order(return_at: :desc)
                                .limit(50)
 
     { hoje: hoje, retorno: retorno, pendentes: pendentes }
