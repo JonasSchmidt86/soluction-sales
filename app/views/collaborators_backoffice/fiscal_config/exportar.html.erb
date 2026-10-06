@@ -44,10 +44,26 @@
           </div>
         </div>
 
-        <div class="mt-4">
+        <div class="mt-4 d-flex gap-2 align-items-center">
           <button type="submit" class="btn btn-success">
             <i class="fa fa-download me-1"></i> Gerar e baixar
           </button>
+
+          <%# Enviar ao contador por e-mail (Brevo). Usa os mesmos campos do form. %>
+          <% if @config&.email_xml.present? %>
+            <button type="submit" class="btn btn-primary"
+                    formaction="<%= enviar_contador_collaborators_backoffice_fiscal_config_path %>"
+                    data-confirm="Enviar o pacote do período para <%= @config.email_xml %>?">
+              <i class="fa fa-paper-plane me-1"></i> Enviar ao contador
+            </button>
+            <span class="text-muted small">→ <%= @config.email_xml %></span>
+          <% else %>
+            <span class="text-muted small">
+              <i class="fa fa-circle-info me-1"></i>
+              Para enviar por e-mail, cadastre o e-mail do contador em
+              <%= link_to "Configuração", collaborators_backoffice_fiscal_config_path %>.
+            </span>
+          <% end %>
         </div>
       <% end %>
     </div>

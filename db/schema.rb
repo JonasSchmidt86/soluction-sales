@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000010) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000011) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -545,6 +545,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000010) do
     t.boolean "ativo", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "email_xml", limit: 120, comment: "e-mail do contador para envio do pacote de XMLs"
     t.index ["cod_empresa"], name: "idx_fiscal_config_empresa", unique: true
   end
 

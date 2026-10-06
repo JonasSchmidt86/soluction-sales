@@ -92,6 +92,19 @@
           </div>
         </div>
 
+        <%# ===== Envio ao contador ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-paper-plane me-1"></i> Envio de XML ao contador
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              <%= f.email_field :email_xml, class: "form-control", placeholder: "email@contador.com" %>
+              <%= f.label :email_xml, "E-mail do contador (recebe o .zip de XMLs)" %>
+            </div>
+          </div>
+        </div>
+
         <%# ===== Certificado e Provedor ===== %>
         <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
           <i class="fa fa-certificate me-1"></i> Certificado e Provedor

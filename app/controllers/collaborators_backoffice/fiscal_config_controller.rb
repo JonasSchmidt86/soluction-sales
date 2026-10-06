@@ -150,6 +150,63 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
     redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Falha ao exportar: #{e.message}"
   end
 
+  # POST .../fiscal_config/enviar_contador — gera o pacote do periodo (mesmo do
+  # exportar_download) e ENVIA por e-mail ao contador (via Brevo), em vez de
+  # baixar. O destinatario e o email_xml cadastrado na config.
+  def enviar_contador
+    unless @config&.persisted? && @config.ativo?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Configuração fiscal ausente ou inativa."
+      return
+    end
+    if @config.email_xml.blank?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path,
+                  alert: "Cadastre o e-mail do contador na Configuração fiscal antes de enviar."
+      return
+    end
+
+    dt_inicio = params[:dt_inicio].presence
+    dt_fim    = params[:dt_fim].presence
+    if dt_inicio.blank? || dt_fim.blank?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path, alert: "Informe o período (início e fim)."
+      return
+    end
+
+    tipo_arquivo = params[:tipo_arquivo].presence&.to_i || 1
+    tipo_nota    = params[:tipo_nota].presence&.to_i || 1
+    incluir_cce  = ActiveModel::Type::Boolean.new.cast(params[:incluir_cce])
+
+    pacote = FiscalService.new(@config).obter_arquivos_periodo(
+      dt_inicio: dt_inicio, dt_fim: dt_fim,
+      tipo_arquivo: tipo_arquivo, tipo_nota: tipo_nota, incluir_cce: incluir_cce
+    )
+
+    unless pacote.sucesso?
+      redirect_to exportar_collaborators_backoffice_fiscal_config_path,
+                  alert: "Não foi possível gerar o pacote: #{pacote.erro}"
+      return
+    end
+
+    empresa = current_collaborator.empresa
+    nome_arquivo = "fiscal-#{dt_inicio}_a_#{dt_fim}.#{pacote.extensao}"
+    ContadorMailer.enviar_notas(
+      destinatarios:  @config.email_xml,
+      remetente:      "nao-responda@mail.moveisrosa.shop",
+      assunto:        "Notas fiscais #{empresa&.nome} — #{dt_inicio} a #{dt_fim}",
+      corpo:          "Segue em anexo o pacote de notas fiscais de #{empresa&.nome} " \
+                      "referente ao período de #{dt_inicio} a #{dt_fim}.",
+      anexo_nome:     nome_arquivo,
+      anexo_conteudo: pacote.conteudo,
+      anexo_mime:     pacote.mime
+    ).deliver_now
+
+    redirect_to exportar_collaborators_backoffice_fiscal_config_path,
+                notice: "Pacote enviado para #{@config.email_xml}."
+  rescue => e
+    Rails.logger.error("[FiscalConfig#enviar_contador] #{e.class} - #{e.message}")
+    redirect_to exportar_collaborators_backoffice_fiscal_config_path,
+                alert: "Falha ao enviar o e-mail: #{e.message}"
+  end
+
   private
 
   # Config unica por empresa: acha a existente ou monta uma nova (sem salvar).
@@ -162,7 +219,7 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
       :ambiente, :regime_tributario, :crt,
       :serie_nfe, :serie_nfce, :proximo_numero_nfe, :proximo_numero_nfce,
       :csc_id, :csc_token, :certificado_nome, :certificado_validade,
-      :provedor, :ativo
+      :provedor, :ativo, :email_xml
     ).merge(cod_empresa: current_collaborator.cod_empresa)
   end
 

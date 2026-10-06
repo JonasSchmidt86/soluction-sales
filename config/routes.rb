@@ -244,6 +244,7 @@ Rails.application.routes.draw do
       # Exportacao fiscal por periodo (zip XML/PDF ou Excel).
       get :exportar
       post :exportar_download
+      post :enviar_contador  # envia o pacote por e-mail ao contador (Brevo)
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
