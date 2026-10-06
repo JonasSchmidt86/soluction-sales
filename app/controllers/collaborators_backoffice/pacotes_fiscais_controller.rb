@@ -62,22 +62,23 @@ class CollaboratorsBackoffice::PacotesFiscaisController < CollaboratorsBackoffic
     redirect_to pacotes_path, alert: "Falha ao gerar o pacote: #{e.message}"
   end
 
-  # Baixa o pacote SALVO (sem chamar o provedor).
+  # Baixa o pacote SALVO. Se o arquivo tiver sumido do disco, REGENERA do
+  # provedor (mesmo periodo/tipo do registro) antes de baixar.
   def baixar
-    unless @pacote.arquivo.attached?
-      return redirect_to pacotes_path, alert: "Arquivo do pacote não encontrado."
+    unless garantir_arquivo!(@pacote)
+      return redirect_to pacotes_path, alert: "Arquivo indisponível e não foi possível regerar o pacote."
     end
     send_data @pacote.conteudo, filename: @pacote.nome_arquivo,
               type: @pacote.mime.presence || "application/octet-stream", disposition: "attachment"
   end
 
-  # Envia o pacote SALVO ao contador por e-mail (Brevo), sem regerar.
+  # Envia o pacote ao contador por e-mail (Brevo). Regenera se o arquivo sumiu.
   def enviar_contador
     if @config.email_xml.blank?
       return redirect_to pacotes_path, alert: "Cadastre o e-mail do contador na Configuração fiscal."
     end
-    unless @pacote.arquivo.attached?
-      return redirect_to pacotes_path, alert: "Arquivo do pacote não encontrado."
+    unless garantir_arquivo!(@pacote)
+      return redirect_to pacotes_path, alert: "Arquivo indisponível e não foi possível regerar o pacote."
     end
 
     empresa = current_collaborator.empresa
@@ -113,6 +114,44 @@ class CollaboratorsBackoffice::PacotesFiscaisController < CollaboratorsBackoffic
 
   def set_pacote
     @pacote = PacoteFiscal.da_empresa(current_collaborator.cod_empresa).find(params[:id])
+  end
+
+  # Garante que o pacote tem o arquivo disponivel. Se o anexo sumiu (registro no
+  # banco sem arquivo no disco), REGENERA do provedor usando o periodo/tipo
+  # salvos no proprio registro e reanexa. Retorna true se o arquivo esta pronto.
+  def garantir_arquivo!(pacote)
+    return true if pacote.arquivo.attached? && arquivo_existe_no_disco?(pacote)
+
+    # Anexo pendente/orfao: limpa antes de reanexar.
+    pacote.arquivo.purge if pacote.arquivo.attached?
+    return false unless @config&.persisted? && @config.ativo?
+
+    pacote_api = FiscalService.new(@config).obter_arquivos_periodo(
+      dt_inicio: pacote.periodo_inicio, dt_fim: pacote.periodo_fim,
+      tipo_arquivo: pacote.tipo_arquivo, tipo_nota: pacote.tipo_nota,
+      incluir_cce: pacote.incluir_cce
+    )
+    return false unless pacote_api.sucesso?
+
+    conteudo = pacote_api.conteudo
+    empresa_slug = current_collaborator.empresa&.nome.to_s.parameterize(separator: "_").presence || "empresa_#{current_collaborator.cod_empresa}"
+    mes_pasta    = pacote.periodo_inicio.strftime("%Y-%m")
+    key_custom   = "#{empresa_slug}/#{mes_pasta}/#{SecureRandom.hex(4)}-#{pacote.nome_arquivo}"
+    pacote.arquivo.attach(io: StringIO.new(conteudo), filename: pacote.nome_arquivo,
+                          content_type: pacote.mime, key: key_custom)
+    pacote.update(tamanho_bytes: conteudo.bytesize, quantidade: (pacote_api.quantidade rescue pacote.quantidade))
+    true
+  rescue => e
+    Rails.logger.error("[PacotesFiscais#garantir_arquivo] pacote #{pacote.cod_pacote_fiscal}: #{e.class} - #{e.message}")
+    false
+  end
+
+  # O anexo pode constar como attached no banco mas o arquivo fisico ter sumido.
+  def arquivo_existe_no_disco?(pacote)
+    caminho = pacote.arquivo.blob.service.send(:path_for, pacote.arquivo.key)
+    File.exist?(caminho)
+  rescue
+    false
   end
 
   def pacotes_path
