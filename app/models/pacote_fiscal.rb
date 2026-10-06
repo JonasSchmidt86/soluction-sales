@@ -5,7 +5,11 @@ class PacoteFiscal < ApplicationRecord
   self.table_name = "pacote_fiscal"
   self.primary_key = "cod_pacote_fiscal"
 
-  has_one_attached :arquivo, service: :xml_storage
+  has_one_attached :arquivo, service: :pacotes_storage
+
+  # Purga o arquivo do disco de forma SINCRONA ao excluir o pacote (sem depender
+  # de job em fila), para nao deixar .zip orfao em storage/PACOTES.
+  before_destroy { arquivo.purge if arquivo.attached? }
 
   belongs_to :empresa, class_name: "Empresa", foreign_key: "cod_empresa"
 

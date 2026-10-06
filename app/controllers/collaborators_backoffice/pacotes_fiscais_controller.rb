@@ -47,9 +47,9 @@ class CollaboratorsBackoffice::PacotesFiscaisController < CollaboratorsBackoffic
       gerado_em:      Time.current,
       cod_funcionario: current_collaborator.cod_funcionario
     )
-    # Organiza o arquivo em storage/XML/<empresa>/<AAAA-MM>/<nome>. A key custom
-    # vira o caminho real (StorageService). Mes = inicio do periodo. Sufixo curto
-    # evita colisao se gerar o mesmo tipo/periodo mais de uma vez.
+    # Organiza o arquivo em storage/PACOTES/<empresa>/<AAAA-MM>/<nome> (service
+    # pacotes_storage = PacotesDiskService, sem particionar). Mes = inicio do
+    # periodo. Sufixo curto evita colisao ao gerar o mesmo tipo/periodo 2x.
     empresa_slug = current_collaborator.empresa&.nome.to_s.parameterize(separator: "_").presence || "empresa_#{current_collaborator.cod_empresa}"
     mes_pasta    = Date.parse(dt_inicio).strftime("%Y-%m") rescue Time.current.strftime("%Y-%m")
     key_custom   = "#{empresa_slug}/#{mes_pasta}/#{SecureRandom.hex(4)}-#{nome}"
