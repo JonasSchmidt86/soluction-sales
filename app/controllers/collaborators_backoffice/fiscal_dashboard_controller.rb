@@ -13,9 +13,18 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
     autorizadas = @docs_periodo.where(status: "autorizada")
     @qtd_nfe   = autorizadas.where(modelo: 55).where("finalidade <> 4 OR finalidade IS NULL").count
     @qtd_nfce  = autorizadas.where(modelo: 65).count
-    @qtd_devol = autorizadas.where(finalidade: 4).count
     @qtd_cancel = @docs_periodo.where(status: "cancelada").count
     @qtd_problema = @docs_periodo.where(status: %w[rejeitada erro denegada]).count
+
+    # ---- Compras COM NF que somaram no estoque fiscal (qtdfiscal) ----
+    # A entrada de qtdfiscal da compra e feita pela trigger do Postgres quando a
+    # compra tem numeronf > 0. Aqui contamos essas compras no periodo (pela data
+    # da compra) e somamos a quantidade dos itens (= qtdfiscal que entrou).
+    compras_nf = Compra.where(cod_empresa: @cod_empresa, cancelada: [false, nil])
+                       .where("datacompra::date BETWEEN ? AND ?", @inicio, @fim)
+                       .where("COALESCE(NULLIF(regexp_replace(numeronf, '\\D', '', 'g'), ''), '0')::bigint > 0")
+    @qtd_compras_nf = compras_nf.count
+    @qtd_fiscal_entrada = Itemcompra.where(cod_compra: compras_nf.select(:cod_compra)).sum(:quantidade)
 
     @valor_autorizado = autorizadas.sum(:valor_total)
     @valor_nfe   = autorizadas.where(modelo: 55).sum(:valor_total)

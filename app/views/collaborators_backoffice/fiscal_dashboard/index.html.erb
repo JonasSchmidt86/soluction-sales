@@ -45,9 +45,9 @@
     <div class="col-md-3">
       <div class="card border-start border-4 border-warning h-100">
         <div class="card-body">
-          <div class="text-muted small">Devoluções (compra)</div>
-          <div class="h3 mb-0"><%= @qtd_devol %></div>
-          <div class="small text-muted">finalidade 4</div>
+          <div class="text-muted small">Compras com NF (estoque fiscal)</div>
+          <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
+          <div class="small text-muted">+<%= number_with_precision(@qtd_fiscal_entrada, precision: 0, delimiter: ".") %> un. na qtdfiscal</div>
         </div>
       </div>
     </div>
