@@ -34,7 +34,9 @@ class CollaboratorsBackoffice::PacotesFiscaisController < CollaboratorsBackoffic
     end
 
     conteudo = pacote_api.conteudo
-    nome = "fiscal-#{dt_inicio}_a_#{dt_fim}.#{pacote_api.extensao}"
+    # Prefixo pelo tipo de nota (saida/entrada) para o contador identificar fácil.
+    prefixo = { 1 => "saida", 2 => "entrada", 3 => "saida-entrada" }[tipo_nota] || "fiscal"
+    nome = "#{prefixo}-#{dt_inicio}_a_#{dt_fim}.#{pacote_api.extensao}"
     pacote = PacoteFiscal.new(
       cod_empresa:    current_collaborator.cod_empresa,
       periodo_inicio: dt_inicio, periodo_fim: dt_fim,
