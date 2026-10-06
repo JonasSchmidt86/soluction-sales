@@ -40,6 +40,7 @@ class AccessControlService
     fiscal_perfis
     fiscal_config
     fiscal_pendencias
+    notas_fiscais
   ].freeze
 
   def initialize(collaborator)
