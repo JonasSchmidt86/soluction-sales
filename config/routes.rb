@@ -222,6 +222,17 @@ Rails.application.routes.draw do
     # Dashboard do modulo fiscal (primeiro link da aba Fiscal).
     get 'fiscal_dashboard', to: 'fiscal_dashboard#index', as: :fiscal_dashboard
 
+    # Painel de Notas Recebidas de fornecedor (entradas, automatico via SEFAZ).
+    resources :notas_recebidas, only: [:index] do
+      collection do
+        post :sincronizar          # busca na SEFAZ as notas de entrada do periodo
+        post :sincronizar_status   # atualiza o status SEFAZ das notas (cancelamento)
+      end
+      member do
+        post :importar             # leva ao fluxo de compra (produtoxmls#new)
+      end
+    end
+
     resources :perfis_tributarios do
       resources :regras_fiscais, only: [:new, :create, :edit, :update, :destroy]
     end

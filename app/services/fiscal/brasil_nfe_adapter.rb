@@ -186,6 +186,26 @@ module Fiscal
       to_consulta(resposta)
     end
 
+    # Lista as notas de um periodo (resumo, sem XML). Doc 2.0: POST
+    # /ObterNotasFiscais. Usado para o recebimento AUTOMATICO de notas de
+    # ENTRADA (emitidas por fornecedores contra o CNPJ da empresa).
+    #   tipo_documento: 0 = entradas (recebidas) / 1 = saidas (emitidas).
+    #   tipo_participacao (so entradas): 0 destinatario / 1 transportador / 2 ambos.
+    # Resposta: { Notas: [{ Chave, Serie, Numero, ModeloDocumento, Valor, ... }],
+    #             Error, Avisos }. Em producao traz as notas reais; em homologacao
+    #             normalmente vem vazio (nao ha emissoes reais contra o CNPJ).
+    # Retorna o Hash cru parseado (o service interpreta).
+    def obter_notas(dt_inicio:, dt_fim:, tipo_documento: 0, tipo_participacao: 0)
+      body = {
+        "TipoDocumentoFiscal" => tipo_documento.to_i,
+        "DtInicio"            => to_iso_datetime(dt_inicio, fim: false),
+        "DtFim"               => to_iso_datetime(dt_fim, fim: true),
+        "TipoAmbiente"        => ambiente.to_i
+      }
+      body["TipoParticipacao"] = tipo_participacao.to_i if tipo_documento.to_i == 0
+      post("/ObterNotasFiscais", body)
+    end
+
     # Baixa em lote os documentos de um periodo (zip de XML/PDF ou planilha
     # Excel). Doc 2.0: POST /ObterArquivosPorPeriodo. Resposta JSON com
     # Base64FilesCompacted (zip/xlsx em base64). Retorna FiscalPacote.
@@ -273,6 +293,15 @@ module Fiscal
       Rails.application.credentials.brasilnfe_token
     rescue
       nil
+    end
+
+    # Converte Date/String para o formato ISO com offset -03:00 que a API espera.
+    # fim: true usa 23:59:59 (fim do dia); false usa 00:00:00 (inicio do dia).
+    def to_iso_datetime(valor, fim: false)
+      return valor.to_s if valor.is_a?(String) && valor.include?("T")
+      d = valor.is_a?(Date) || valor.is_a?(Time) ? valor.to_date : Date.parse(valor.to_s)
+      hora = fim ? "23:59:59" : "00:00:00"
+      "#{d.strftime('%Y-%m-%d')}T#{hora}-03:00"
     end
 
     # UserToken (token da conta) — necessario nos endpoints de /services/empresa.

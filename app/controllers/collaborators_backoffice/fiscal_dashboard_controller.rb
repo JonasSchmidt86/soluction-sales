@@ -23,6 +23,7 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
     compras_nf = Compra.where(cod_empresa: @cod_empresa, cancelada: [false, nil])
                        .where("datacompra::date BETWEEN ? AND ?", @inicio, @fim)
                        .where("COALESCE(NULLIF(regexp_replace(numeronf, '\\D', '', 'g'), ''), '0')::bigint > 0")
+    @valor_compras_nf = compras_nf.sum(:valortotal)
     @qtd_compras_nf = compras_nf.count
     @qtd_fiscal_entrada = Itemcompra.where(cod_compra: compras_nf.select(:cod_compra)).sum(:quantidade)
 

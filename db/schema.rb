@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000009) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -789,6 +789,33 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000009) do
     t.index ["responsavel_id"], name: "index_melhorias_on_responsavel_id"
     t.index ["status"], name: "index_melhorias_on_status"
     t.index ["tipo"], name: "index_melhorias_on_tipo"
+  end
+
+  create_table "nota_recebida", primary_key: "cod_nota_recebida", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false, comment: "empresa destinataria (dona da nota recebida)"
+    t.string "chave_acesso", limit: 44, null: false, comment: "chave de acesso da NF-e (44 digitos)"
+    t.bigint "cod_pessoa", comment: "fornecedor emitente (resolvido pelo CNPJ do emit)"
+    t.integer "modelo", comment: "55 NF-e / 65 NFC-e"
+    t.string "numero", limit: 20
+    t.string "serie", limit: 10
+    t.datetime "data_emissao"
+    t.decimal "valor_total", precision: 15, scale: 2
+    t.string "emitente_cnpj", limit: 20
+    t.string "emitente_nome", limit: 120
+    t.string "natureza_operacao", limit: 120
+    t.integer "tipo_nf", comment: "tpNF: 0 entrada / 1 saida (sob a otica do emitente)"
+    t.string "transportadora_nome", limit: 120
+    t.string "transportadora_cnpj", limit: 20
+    t.string "status_sefaz", limit: 15, default: "desconhecida", null: false
+    t.datetime "status_sincronizado_em", comment: "ultima consulta de status na SEFAZ"
+    t.bigint "cod_compra", comment: "compra gerada na importacao (nil = nao integrada)"
+    t.bigint "xml_file_id", comment: "XmlFile com o XML baixado (reaproveita infra atual)"
+    t.string "origem", limit: 15, default: "sefaz", comment: "sefaz (automatico) / upload (manual)"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_compra"], name: "idx_nota_recebida_compra"
+    t.index ["cod_empresa", "chave_acesso"], name: "idx_nota_recebida_empresa_chave", unique: true
+    t.index ["cod_empresa", "status_sefaz"], name: "idx_nota_recebida_empresa_status"
   end
 
   create_table "operacao_fiscal", primary_key: "cod_operacao_fiscal", force: :cascade do |t|

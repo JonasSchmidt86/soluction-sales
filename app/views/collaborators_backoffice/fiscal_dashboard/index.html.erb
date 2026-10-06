@@ -47,7 +47,7 @@
         <div class="card-body">
           <div class="text-muted small">Compras com NF (estoque fiscal)</div>
           <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
-          <div class="small text-muted">+<%= number_with_precision(@qtd_fiscal_entrada, precision: 0, delimiter: ".") %> un. na qtdfiscal</div>
+          <div class="small text-muted">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, delimiter: ".") %> </div>
         </div>
       </div>
     </div>
