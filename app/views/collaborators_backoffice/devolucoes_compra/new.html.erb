@@ -1,0 +1,345 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card-body">
+      <div class="row justify-content-center">
+        <div class="">
+          <div class="card mt-3">
+            <h4 class="card-header text-center bg-primary text-white">
+              <i class="fa fa-rotate-left me-2"></i> Devolução de Compra
+            </h4>
+
+            <div class="card-body">
+              <% unless @tem_xml %>
+                <div class="alert alert-warning py-2">
+                  <i class="fa fa-triangle-exclamation me-1"></i>
+                  Sem XML da nota de compra disponível — os impostos não puderam ser espelhados automaticamente.
+                  Revise os valores antes de emitir.
+                </div>
+              <% end %>
+
+                <%# O CFOP de cada item vem da regra (perfil + operacao do topo).
+                    Sem regra para a operacao escolhida, o CFOP fica em branco. %>
+
+              <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
+
+                <%# ---- Cabecalho: fornecedor, NF origem, operacao, finalidade ---- %>
+                <div class="row my-2 mx-1 g-2 align-items-center">
+                  <div class="col-md-5">
+                    <div class="form-floating">
+                      <%= text_field_tag :fornecedor_nome, @compra.pessoa&.nome,
+                            class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                      <label>Fornecedor</label>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-floating">
+                      <%= text_field_tag :nf_origem, @compra.numeronf,
+                            class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
+                      <label>NF de origem</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-floating">
+                      <%= select_tag :cod_operacao_fiscal,
+                            options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                            id: "operacaoGeral", class: "form-select" %>
+                      <label>Operação</label>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="form-floating">
+                      <%= select_tag :finalidade,
+                            options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, 4),
+                            class: "form-select" %>
+                      <label>Finalidade</label>
+                    </div>
+                  </div>
+                </div>
+
+                <%# Chave de referencia: veio da NF de compra; apenas informativa. %>
+                <% if @chave_referencia.present? %>
+                  <div class="row mx-1">
+                    <div class="col-12">
+                      <small class="text-muted">
+                        <i class="fa fa-link me-1"></i>NF referenciada: <%= @chave_referencia %>
+                      </small>
+                      <%= hidden_field_tag :chave_referencia, @chave_referencia %>
+                    </div>
+                  </div>
+                <% end %>
+                <%# Natureza vai junto da operacao escolhida (sem campo editavel). %>
+                <%# A natureza da NF vem da operacao escolhida no topo (no controller). %>
+
+                <%# ---- Itens (grade estilo planilha; impostos na mesma linha) ---- %>
+                <div class="table-responsive mt-2">
+                  <table class="table table-sm table-bordered align-middle mb-0" style="font-size:12px;">
+                    <thead class="table-light text-center">
+                      <tr>
+                        <th style="width:34px;">Dev</th>
+                        <th style="width:70px;">Cód</th>
+                        <th style="min-width:220px;">Produto</th>
+                        <th style="width:80px;">NCM</th>
+                        <th style="min-width:160px;">Perfil tributário</th>
+                        <th style="width:70px;">CFOP</th>
+                        <th style="width:60px;">Qtd</th>
+                        <th style="width:90px;">Vl Unit.</th>
+                        <th style="width:70px;">ICMS %</th>
+                        <th style="width:95px;">ICMS Base</th>
+                        <th style="width:85px;">ICMS R$</th>
+                        <th style="width:60px;">IPI %</th>
+                        <th style="width:85px;">IPI R$</th>
+                        <th style="width:85px;">PIS Base</th>
+                        <th style="width:95px;">COFINS Base</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% @itens.each_with_index do |it, i| %>
+                        <% imp  = it[:imposto] || {}
+                           icms = imp[:icms] || {}
+                           ipi  = imp[:ipi] || {}
+                           pis  = imp[:pis] || {}
+                           cof  = imp[:cofins] || {}
+                           q_orig = it[:quantidade_original].to_d
+                           q_dev  = it[:quantidade].to_d
+                           fator  = (q_orig.nonzero? && q_dev.nonzero?) ? (q_dev / q_orig) : 1.to_d
+                           rt = ->(v) { v.to_d.nonzero? ? number_with_precision((v.to_d * fator).round(2), precision: 2, separator: ",", delimiter: "") : "" }
+                           nome_completo = it[:descricao].to_s
+                           nome_tela = nome_completo.length > 200 ? "#{nome_completo[0, 200]}…" : nome_completo %>
+                        <tr class="dev-item"
+                            data-qtd-orig="<%= q_orig %>"
+                            data-icms-base="<%= icms[:base_calculo].to_d %>"
+                            data-icms-valor="<%= icms[:valor].to_d %>"
+                            data-ipi-valor="<%= ipi[:valor].to_d %>"
+                            data-pis-base="<%= pis[:base_calculo].to_d %>"
+                            data-cofins-base="<%= cof[:base_calculo].to_d %>">
+                          <td class="text-center">
+                            <%= check_box_tag "itens[#{i}][devolver]", "1", true %>
+                          </td>
+                          <td class="text-center"><%= it[:cod_produto] %></td>
+                          <td title="<%= nome_completo %>">
+                            <%= nome_tela %>
+                            <%# Nome completo vai para a emissao (XML/DANFE). %>
+                            <%= hidden_field_tag "itens[#{i}][descricao]", nome_completo %>
+                          </td>
+                          <td class="text-center"><%= it[:ncm] %></td>
+                          <td>
+                            <%= select_tag "itens[#{i}][cod_perfil_tributario]",
+                                  options_from_collection_for_select(@perfis, :cod_perfil_tributario, :nome, it[:cod_perfil_tributario]),
+                                  include_blank: "—",
+                                  class: "form-select form-select-sm dev-perfil",
+                                  data: { cod_produto: it[:cod_produto], cfop_original: it[:cfop_original] } %>
+                          </td>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][cfop]", it[:cfop_sugerido],
+                                  class: "form-control form-control-sm text-center dev-cfop", placeholder: "CFOP" %>
+                          </td>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][quantidade]",
+                                  number_with_precision(it[:quantidade], precision: 2, separator: ",", delimiter: ""),
+                                  class: "form-control form-control-sm text-end dev-qtd" %>
+                          </td>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][valor_unitario]",
+                                  number_with_precision(it[:valor_unitario], precision: 2, separator: ",", delimiter: ""),
+                                  class: "form-control form-control-sm text-end" %>
+                          </td>
+                          <%# Valores (rateados) e aliquota (percentual, nao rateia) sempre do XML
+                              e editaveis. CST/CSOSN vem da regra; o usuario ajusta base/valor/aliquota.
+                              Zerar os 3 campos de ICMS tira o destaque de forma consistente. %>
+                          <% fmt = ->(v) { v.to_d.nonzero? ? number_with_precision(v.to_d, precision: 2, separator: ",", delimiter: "") : "" } %>
+                          <% icms_aliq_auto = fmt.(icms[:aliquota]) %>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][icms_aliquota]", icms_aliq_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_aliquota" }, placeholder: "—" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_aliquota_auto]", icms_aliq_auto, class: "imp-auto", data: { campo: "icms_aliquota" } %>
+                          </td>
+                          <% icms_base_auto = rt.(icms[:base_calculo]) %>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_base" }, placeholder: "—" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto, class: "imp-auto", data: { campo: "icms_base" } %>
+                          </td>
+                          <% icms_valor_auto = rt.(icms[:valor]) %>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_valor" }, placeholder: "—" %>
+                            <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto, class: "imp-auto", data: { campo: "icms_valor" } %>
+                          </td>
+                          <% ipi_aliq_auto = fmt.(ipi[:aliquota]) %>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][ipi_aliquota]", ipi_aliq_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_aliquota" }, placeholder: "—" %>
+                            <%= hidden_field_tag "itens[#{i}][ipi_aliquota_auto]", ipi_aliq_auto, class: "imp-auto", data: { campo: "ipi_aliquota" } %>
+                          </td>
+                          <% ipi_valor_auto = rt.(ipi[:valor]) %>
+                          <td>
+                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "—" %>
+                            <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto, class: "imp-auto", data: { campo: "ipi_valor" } %>
+                          </td>
+                          <td class="text-end imp-pis"><%= rt.(pis[:base_calculo]) %></td>
+                          <td class="text-end imp-cofins"><%= rt.(cof[:base_calculo]) %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+                <small class="text-muted">Impostos espelhados do XML e rateados pela quantidade — edite se precisar. Perfil define o CFOP (regra fiscal).</small>
+
+                <div class="d-flex justify-content-between mt-3">
+                  <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
+                  <div class="d-flex gap-2 align-items-center">
+                    <span id="devErro" class="text-danger small me-2"></span>
+                    <%# Pre-visualizar via AJAX: so abre aba se vier PDF; erro aparece ao lado. %>
+                    <button type="button" id="btnPrevisualizar"
+                            class="btn btn-outline-info"
+                            data-url="<%= previsualizar_collaborators_backoffice_compra_devolucao_path(@compra) %>">
+                      <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
+                    </button>
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
+                      <i class="fa fa-check-double me-1"></i> Emitir devolução
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Recalcula ao vivo os impostos rateados quando a QUANTIDADE do item muda.
+  // Espelha o rateio do backend: valor_rateado = valor_cheio * (qtd / qtd_orig).
+  // So atualiza os campos que o usuario NAO editou manualmente (continuam == auto).
+  (function () {
+    function parseBR(v) {
+      if (v == null) return 0;
+      return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    function fmtBR(n) {
+      return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalcLinha(tr) {
+      var qtdOrig = parseFloat(tr.getAttribute('data-qtd-orig')) || 0;
+      var qtdDev  = parseBR(tr.querySelector('.dev-qtd') ? tr.querySelector('.dev-qtd').value : 0);
+      var fator   = (qtdOrig > 0 && qtdDev > 0) ? (qtdDev / qtdOrig) : 1;
+
+      var cheio = {
+        icms_base:  parseFloat(tr.getAttribute('data-icms-base'))  || 0,
+        icms_valor: parseFloat(tr.getAttribute('data-icms-valor')) || 0,
+        ipi_valor:  parseFloat(tr.getAttribute('data-ipi-valor'))  || 0
+      };
+
+      tr.querySelectorAll('.imp-field').forEach(function (input) {
+        var campo = input.getAttribute('data-campo');
+        if (!(campo in cheio)) return;
+        var autoEl = tr.querySelector('.imp-auto[data-campo="' + campo + '"]');
+        var autoVal = autoEl ? autoEl.value : '';
+        var alteradoManual = (input.value.trim() !== String(autoVal).trim());
+        var novo = cheio[campo] ? fmtBR(Math.round(cheio[campo] * fator * 100) / 100) : '';
+        if (autoEl) autoEl.value = novo;
+        if (!alteradoManual) input.value = novo;
+      });
+
+      var pis = parseFloat(tr.getAttribute('data-pis-base')) || 0;
+      var cof = parseFloat(tr.getAttribute('data-cofins-base')) || 0;
+      var pisEl = tr.querySelector('.imp-pis');
+      var cofEl = tr.querySelector('.imp-cofins');
+      if (pisEl) pisEl.textContent = fmtBR(Math.round(pis * fator * 100) / 100);
+      if (cofEl) cofEl.textContent = fmtBR(Math.round(cof * fator * 100) / 100);
+    }
+
+    document.querySelectorAll('tr.dev-item').forEach(function (tr) {
+      var qtd = tr.querySelector('.dev-qtd');
+      if (qtd) {
+        qtd.addEventListener('input', function () { recalcLinha(tr); });
+        qtd.addEventListener('blur', function () { recalcLinha(tr); });
+      }
+    });
+  })();
+
+  // CFOP de cada item = regra (perfil do item + OPERACAO do topo). Recalcula ao
+  // trocar a operacao do topo (todos os itens) ou o perfil de uma linha. Se nao
+  // houver regra para a operacao, o CFOP fica em branco.
+  (function () {
+    var RESOLVER_URL = "<%= resolver_cfop_collaborators_backoffice_compra_devolucao_path(@compra) %>";
+    var opTopo = document.getElementById('operacaoGeral');
+
+    function resolverItem(tr) {
+      var sel  = tr.querySelector('.dev-perfil');
+      var cfop = tr.querySelector('.dev-cfop');
+      if (!sel || !cfop) return;
+      var codProduto  = sel.getAttribute('data-cod-produto');
+      var codPerfil   = sel.value;
+      var codOperacao = opTopo ? opTopo.value : '';
+
+      var url = RESOLVER_URL + '?cod_produto=' + encodeURIComponent(codProduto) +
+                '&cod_perfil_tributario=' + encodeURIComponent(codPerfil) +
+                '&cod_operacao_fiscal=' + encodeURIComponent(codOperacao);
+      fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (d) {
+          // Atualiza sempre: com regra -> CFOP; sem regra -> limpa (branco).
+          cfop.value = (d && d.cfop) ? d.cfop : '';
+        })
+        .catch(function (e) { console.error('resolver_cfop:', e); });
+    }
+
+    // Trocar o PERFIL de uma linha recalcula so aquela linha.
+    document.querySelectorAll('tr.dev-item .dev-perfil').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        resolverItem(sel.closest('tr.dev-item'));
+      });
+    });
+
+    // Trocar a OPERACAO do topo recalcula TODOS os itens.
+    if (opTopo) {
+      opTopo.addEventListener('change', function () {
+        document.querySelectorAll('tr.dev-item').forEach(function (tr) { resolverItem(tr); });
+      });
+    }
+  })();
+
+  // Pre-visualizacao via AJAX: envia o form; se vier PDF, abre em nova aba;
+  // se vier erro (JSON), mostra ao lado do botao SEM abrir aba.
+  (function () {
+    var btn = document.getElementById('btnPrevisualizar');
+    if (!btn) return;
+    var out = document.getElementById('devErro');
+
+    btn.addEventListener('click', function () {
+      var form = btn.closest('form');
+      if (!form) return;
+      out.textContent = '';
+      btn.disabled = true;
+      var original = btn.innerHTML;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Gerando...';
+
+      var fd = new FormData(form);
+      var token = document.querySelector('meta[name="csrf-token"]');
+      fetch(btn.dataset.url, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': token ? token.content : '', 'Accept': 'application/pdf' },
+        body: fd
+      })
+      .then(function (resp) {
+        var ct = resp.headers.get('Content-Type') || '';
+        if (resp.ok && ct.indexOf('application/pdf') !== -1) {
+          return resp.blob().then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');           // abre a aba SO com PDF
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+          });
+        }
+        // Erro: tenta ler a mensagem JSON.
+        return resp.json().then(function (j) {
+          out.textContent = (j && j.erro) ? j.erro : 'Não foi possível pré-visualizar.';
+        }).catch(function () {
+          out.textContent = 'Não foi possível pré-visualizar.';
+        });
+      })
+      .catch(function () { out.textContent = 'Falha de conexão ao pré-visualizar.'; })
+      .finally(function () { btn.disabled = false; btn.innerHTML = original; });
+    });
+  })();
+</script>

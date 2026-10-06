@@ -48,7 +48,7 @@
         <div class="row my-2 mx-2 align-items-center">
           <div class="col-md-2">
             <div class="form-floating">
-              <%= sale.text_field :datavenda,value: post_date(DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
+              <%= sale.text_field :datavenda, value: post_date(sale.object.datavenda || DateTime.now), class: "fallback form-control border-top-0 border-start-0 border-end-0 border-dark datepicker" %>
               <%= sale.label :data_venda, class:"" %>
             </div>
           </div>
@@ -105,7 +105,7 @@
           <div class="tab-pane active" id="product" role="tabpanel" aria-labelledby="product-tab" tabindex="0">
             <div class="card-body">
               <div class="table-responsive">
-                <table id="tblProdutos" class="table table-sm align-middle table-light table-striped table-hover table-borderless">
+                <table id="tblProdutos" class="table table-sm align-top table-light table-striped table-hover table-borderless">
                   <thead>
                     <tr>
                       <th style="width: 35%;">Nome</th>
@@ -189,18 +189,90 @@
       </div>
       <%# Token de idempotencia: impede duplicar a venda em duplo clique/reenvio %>
       <%= sale.hidden_field :submit_token, value: SecureRandom.uuid %>
+      <%# Flag "salvar e emitir": o botao azul marca 1 antes de submeter. %>
+      <%= hidden_field_tag :emitir_nfe, "", id: "emitirNfeFlag" %>
+
       <div class="position-fixed bottom-0 end-0 m-4">
-        <div class="d-block my-3 mx-3">
-          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3">
+        <div class="d-flex flex-column align-items-end gap-2 my-3 mx-3">
+          <%# Botao fiscal (so super_admin + empresa com modulo): salvar e emitir/reemitir. %>
+          <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+            <% ultima_nfe = @sale.persisted? ? DocumentoFiscal.where(cod_venda: @sale.cod_venda, modelo: 55).order(cod_documento_fiscal: :desc).first : nil %>
+            <% pode_reemitir = ultima_nfe && %w[rejeitada erro rascunho enviada].include?(ultima_nfe.status) %>
+            <% ja_autorizada = ultima_nfe&.autorizada? %>
+            <% rotulo_fiscal = pode_reemitir ? "Salvar e reemitir NF-e" : "Salvar e emitir NF-e" %>
+
+            <% unless ja_autorizada %>
+              <button type="submit" id="emitButton"
+                      class="btn btn-primary rounded-circle p-3"
+                      title="<%= rotulo_fiscal %>"
+                      onclick="document.getElementById('emitirNfeFlag').value = '1';">
+                <i class="fa fa-file-invoice fa-2x"></i>
+              </button>
+            <% end %>
+          <% end %>
+
+          <%# Botao verde: salvar (sem emitir). %>
+          <button id="saveButton" type="submit" class="btn btn-success rounded-circle p-3"
+                  title="Salvar venda"
+                  onclick="document.getElementById('emitirNfeFlag').value = '';">
             <i id="saveIcon" class="fa fa-check fa-2x"></i>
           </button>
         </div>
       </div>
     <% end %>
+
   </div>
 </div>
 <%= render partial: 'collaborators_backoffice/vendas/shared/cores_modal' %>
 <%= render partial: 'layouts/shared/modal_alert' %>
+
+<%# Modal de perfil tributario do produto (so super_admin + modulo fiscal). %>
+<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+  <%# Estilos escopados: o custom.scss zera .modal-content (transparente/sem %>
+  <%# borda) e .modal-body (padding:0 !important) para TODOS os modais; aqui %>
+  <%# revertemos apenas para este modal, sem afetar os outros.               %>
+  <style>
+    #perfilFiscalModal .modal-dialog { margin: 1.75rem auto; max-width: 500px; }
+    #perfilFiscalModal .modal-content {
+      background: #fff !important;
+      border: 1px solid rgba(0,0,0,.15) !important;
+      border-radius: .5rem;
+      overflow: hidden;
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.25);
+    }
+    #perfilFiscalModal .modal-header { padding: 1rem 1.25rem !important; }
+    #perfilFiscalModal .modal-body   { padding: 1.25rem !important; }
+    #perfilFiscalModal .modal-footer { padding: .75rem 1.25rem !important; gap: .5rem; }
+  </style>
+  <div class="modal fade" id="perfilFiscalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title mb-0"><i class="fa fa-receipt me-2"></i> Perfil tributário do produto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="perfilFiscalCodProduto">
+          <p class="mb-3 fw-semibold text-secondary" id="perfilFiscalProdutoNome"></p>
+          <div class="form-floating mb-2">
+            <select id="perfilFiscalSelect" class="form-select">
+              <option value="">Selecione um perfil...</option>
+            </select>
+            <label for="perfilFiscalSelect">Perfil tributário</label>
+          </div>
+          <div id="perfilFiscalPendencias" class="small text-danger"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="perfilFiscalSalvar">
+            <i class="fa fa-check me-1"></i> Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
   // ---------------------------------
@@ -886,6 +958,116 @@
           }, 100); // Aguarda 100ms para garantir que o item foi removido antes de recalcular o total
       });
 </script>
+
+<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+<script>
+  // ===================================================================
+  // Perfil tributario do produto na venda.
+  // Mostra "Sem perfil fiscal" / nome do perfil embaixo do produto; o link
+  // abre um modal para escolher o perfil, que grava direto no produto (AJAX).
+  // ===================================================================
+  (function () {
+    var base = window.location.origin + '/collaborators_backoffice/';
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    var statusLinkAtual = null; // link que abriu o modal (para atualizar depois)
+
+    // Cor do texto para os dois estados (estilo "link" discreto).
+    var CLS_OK  = ['text-primary'];
+    var CLS_NOK = ['text-danger'];
+
+    // Atualiza texto/cor/icone de um badge de status a partir do retorno da API.
+    function pintarStatus(link, dados) {
+      if (!link) { return; }
+      var label = link.querySelector('.perfil-fiscal-label');
+      var icone = link.querySelector('.perfil-fiscal-icone');
+      link.dataset.codProduto = dados.cod_produto || link.dataset.codProduto;
+      link.style.display = ''; // tem produto => visivel
+      CLS_OK.concat(CLS_NOK).forEach(function (c) { link.classList.remove(c); });
+      if (dados.cod_perfil_tributario) {
+        label.textContent = dados.perfil_nome || 'Perfil definido';
+        CLS_OK.forEach(function (c) { link.classList.add(c); });
+        if (icone) { icone.className = 'fa fa-receipt perfil-fiscal-icone me-1'; }
+      } else {
+        label.textContent = 'Sem perfil fiscal';
+        CLS_NOK.forEach(function (c) { link.classList.add(c); });
+        if (icone) { icone.className = 'fa fa-triangle-exclamation perfil-fiscal-icone me-1'; }
+      }
+    }
+
+    // Consulta o status fiscal de um produto e pinta o link correspondente.
+    function atualizarStatusProduto(link, codProduto) {
+      if (!codProduto) { return; }
+      link.dataset.codProduto = codProduto;
+      fetch(base + 'produto_perfil_fiscal/' + codProduto, { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d) { pintarStatus(link, d); } })
+        .catch(function () {});
+    }
+
+    // Quando um produto e selecionado na busca, atualiza o status da linha.
+    // (delegado: roda apos o handler existente preencher o hidden cod_produto)
+    $(document).on('click', '.products_list .list-group-item', function () {
+      var tr = this.closest('tr');
+      if (!tr) { return; }
+      setTimeout(function () {
+        var hidden = tr.querySelector('input[name*="[cod_produto]"]');
+        var link = tr.querySelector('.perfil-fiscal-status');
+        if (hidden && link) { atualizarStatusProduto(link, hidden.value); }
+      }, 50);
+    });
+
+    // Clique no status abre o modal e carrega os perfis.
+    $(document).on('click', '.perfil-fiscal-status', function (e) {
+      e.preventDefault();
+      var cod = this.dataset.codProduto;
+      if (!cod) { alert('Selecione um produto primeiro.'); return; }
+      statusLinkAtual = this;
+
+      document.getElementById('perfilFiscalCodProduto').value = cod;
+      document.getElementById('perfilFiscalPendencias').textContent = '';
+      var sel = document.getElementById('perfilFiscalSelect');
+
+      // Carrega lista de perfis + status atual do produto.
+      Promise.all([
+        fetch(base + 'produto_perfil_fiscal', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }),
+        fetch(base + 'produto_perfil_fiscal/' + cod, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); })
+      ]).then(function (res) {
+        var perfis = res[0], status = res[1];
+        sel.innerHTML = '<option value="">Selecione um perfil...</option>';
+        perfis.forEach(function (p) {
+          var opt = document.createElement('option');
+          opt.value = p.cod_perfil_tributario;
+          opt.textContent = p.nome;
+          if (status && String(status.cod_perfil_tributario) === String(p.cod_perfil_tributario)) { opt.selected = true; }
+          sel.appendChild(opt);
+        });
+        document.getElementById('perfilFiscalProdutoNome').textContent = status ? (status.nome || ('Produto ' + cod)) : ('Produto ' + cod);
+        if (status && status.pendencias && status.pendencias.length) {
+          document.getElementById('perfilFiscalPendencias').textContent = 'Pendências: ' + status.pendencias.join('; ');
+        }
+        new bootstrap.Modal(document.getElementById('perfilFiscalModal')).show();
+      });
+    });
+
+    // Salvar: grava o perfil no produto e atualiza o link de status.
+    $(document).on('click', '#perfilFiscalSalvar', function () {
+      var cod = document.getElementById('perfilFiscalCodProduto').value;
+      var perfil = document.getElementById('perfilFiscalSelect').value;
+      fetch(base + 'produto_perfil_fiscal/' + cod, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ cod_perfil_tributario: perfil })
+      }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok) { alert(res.d.erro || 'Falha ao salvar o perfil.'); return; }
+          pintarStatus(statusLinkAtual, res.d);
+          bootstrap.Modal.getInstance(document.getElementById('perfilFiscalModal')).hide();
+        })
+        .catch(function () { alert('Erro ao salvar o perfil.'); });
+    });
+  })();
+</script>
+<% end %>
 <% if session[:orcamento_id] %>
   <script>
     $(document).ready(function() {

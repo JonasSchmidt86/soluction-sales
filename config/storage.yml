@@ -10,6 +10,13 @@ xml_storage:
   service: Disk
   root: <%= Rails.root.join("storage/XML") %>
 
+# Pacotes fiscais (zip de XML). DiskService sem particionamento (classe custom
+# ActiveStorage::Service::PacotesDiskService) para o caminho ficar limpo:
+# storage/PACOTES/<empresa>/<AAAA-MM>/<arquivo>.
+pacotes_storage:
+  service: PacotesDisk
+  root: <%= Rails.root.join("storage/PACOTES") %>
+
 produtos_storage:
   service: Disk
   root: <%= Rails.root.join("storage/Produtos") %>

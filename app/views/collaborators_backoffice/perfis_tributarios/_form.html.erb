@@ -1,0 +1,52 @@
+<%= form_with model: [:collaborators_backoffice, @perfil], local: true do |f| %>
+  <% if @perfil.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(@perfil.errors.count, "erro") %> impediram o salvamento:</strong>
+      <ul class="mb-0">
+        <% @perfil.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# ===== Dados do Perfil ===== %>
+  <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+    <i class="fa fa-tag me-1"></i> Dados do Perfil
+  </h6>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="form-floating">
+        <%= f.text_field :nome, class: "form-control", placeholder: "Nome", id: "perfil_nome" %>
+        <%= f.label :nome, "Nome do perfil" %>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-floating">
+        <%= f.select :tipo, options_for_select([["Saída (venda/devolução de compra)", "saida"], ["Entrada (devolução de venda)", "entrada"]], @perfil.tipo.presence || "saida"), {}, class: "form-select" %>
+        <%= f.label :tipo, "Tipo" %>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-center">
+      <div class="form-check form-switch fs-5">
+        <%= f.check_box :ativo, class: "form-check-input", id: "perfil_ativo" %>
+        <%= f.label :ativo, "Ativo", class: "form-check-label ms-1" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-floating mb-4">
+    <%= f.text_field :descricao, class: "form-control", placeholder: "Descrição", id: "perfil_descricao" %>
+    <%= f.label :descricao, "Descrição (opcional)" %>
+  </div>
+
+  <p class="text-muted small">
+    As regras fiscais (impostos por operação) são adicionadas depois de salvar o perfil, na tela de detalhes.
+  </p>
+
+  <div class="d-flex justify-content-end gap-2 border-top pt-3">
+    <%= link_to "Cancelar", collaborators_backoffice_perfis_tributarios_path, class: "btn btn-secondary" %>
+    <%= f.submit "Salvar", class: "btn btn-success" %>
+  </div>
+<% end %>

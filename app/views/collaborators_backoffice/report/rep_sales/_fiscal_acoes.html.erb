@@ -1,0 +1,115 @@
+<%# =================================================================== %>
+<%# ACOES FISCAIS da venda no relatorio (so super_admin + modulo).       %>
+<%# Mostra DANFE / cancelar / reemitir conforme o status da ultima NF-e. %>
+<%# Requer local :sale.                                                  %>
+<%# =================================================================== %>
+<% doc = DocumentoFiscal.where(cod_venda: sale.cod_venda, modelo: 55)
+                        .order(cod_documento_fiscal: :desc).first %>
+
+<% if doc&.autorizada? %>
+  <li><h6 class="dropdown-header">NF-e autorizada</h6></li>
+  <%# DANFE: usa o salvo ou busca no provedor pela chave (ObterArquivoNotaFiscal). %>
+  <li>
+    <%= link_to danfe_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+      <i class="fa fa-file-pdf" style="width: 35px;"></i> Ver DANFE
+    <% end %>
+  </li>
+  <%# XML: usa o salvo ou busca no provedor pela chave. %>
+  <li>
+    <%= link_to xml_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                class: "dropdown-item btn btn-info btn-circle" do %>
+      <i class="fa fa-file-code" style="width: 35px;"></i> Baixar XML
+    <% end %>
+  </li>
+  <li>
+    <%= button_to cancelar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, params: { justificativa: "", escopo: "nf" },
+                  class: "dropdown-item btn btn-danger btn-circle",
+                  form: { class: "d-inline" },
+                  onclick: "var j=prompt('Justificativa do cancelamento da NF (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Cancelar APENAS a NF-e? A venda continua.');" do %>
+      <i class="fa fa-ban" style="width: 35px;"></i> Cancelar só a NF
+    <% end %>
+  </li>
+  <li>
+    <%= button_to cancelar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, params: { justificativa: "", escopo: "ambos" },
+                  class: "dropdown-item btn btn-danger btn-circle",
+                  form: { class: "d-inline" },
+                  onclick: "var j=prompt('Justificativa do cancelamento (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Cancelar a NF-e E a VENDA? Estorna estoque e contas. Exige caixa aberto.');" do %>
+      <i class="fa fa-ban" style="width: 35px;"></i> Cancelar NF + Venda
+    <% end %>
+  </li>
+
+<% elsif doc&.cancelada? %>
+  <li><h6 class="dropdown-header">NF-e cancelada</h6></li>
+  <% evento_canc = doc.eventos.cancelamentos.where.not(protocolo: [nil, ""]).order(cod_documento_fiscal_evento: :desc).first %>
+  <% if evento_canc %>
+    <li>
+      <%= link_to evento_arquivo_collaborators_backoffice_venda_documento_fiscal_path(sale, doc, evento_id: evento_canc.cod_documento_fiscal_evento, tipo: "pdf"),
+                  target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+        <i class="fa fa-file-pdf" style="width: 35px;"></i> Comprovante de cancelamento
+      <% end %>
+    </li>
+    <li>
+      <%= link_to evento_arquivo_collaborators_backoffice_venda_documento_fiscal_path(sale, doc, evento_id: evento_canc.cod_documento_fiscal_evento, tipo: "xml"),
+                  class: "dropdown-item btn btn-info btn-circle" do %>
+        <i class="fa fa-file-code" style="width: 35px;"></i> XML do cancelamento
+      <% end %>
+    </li>
+  <% else %>
+    <li><span class="dropdown-item-text small text-muted">Sem protocolo de cancelamento registrado.</span></li>
+  <% end %>
+
+<% elsif doc && %w[rejeitada erro].include?(doc.status) %>
+  <li><h6 class="dropdown-header text-danger">NF-e <%= doc.status %></h6></li>
+  <% if doc.mensagem_sefaz.present? %>
+    <li><span class="dropdown-item-text small text-muted" style="max-width: 280px; white-space: normal;"><%= doc.mensagem_sefaz %></span></li>
+  <% end %>
+  <%# Reconciliar: a nota pode ter autorizado mesmo com status local de erro. %>
+  <li>
+    <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, class: "dropdown-item btn btn-secondary btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Consultar a SEFAZ e atualizar o status desta NF?" } do %>
+      <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
+    <% end %>
+  </li>
+  <li>
+    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                  method: :post, class: "dropdown-item btn btn-warning btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Reemitir a NF-e desta venda?" } do %>
+      <i class="fa fa-rotate-right" style="width: 35px;"></i> Reemitir NF-e
+    <% end %>
+  </li>
+
+<% elsif doc && %w[rascunho enviada].include?(doc.status) %>
+  <li><h6 class="dropdown-header">NF-e em processamento</h6></li>
+  <%# Reconciliar: confirma se a SEFAZ ja autorizou (resposta pode ter se perdido). %>
+  <li>
+    <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
+                  method: :post, class: "dropdown-item btn btn-secondary btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Consultar a SEFAZ e atualizar o status desta NF?" } do %>
+      <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
+    <% end %>
+  </li>
+  <li>
+    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                  method: :post, class: "dropdown-item btn btn-primary btn-circle",
+                  form: { class: "d-inline" } do %>
+      <i class="fa fa-paper-plane" style="width: 35px;"></i> Emitir NF-e novamente
+    <% end %>
+  </li>
+
+<% elsif !sale.cancelada %>
+  <li>
+    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                  method: :post, class: "dropdown-item btn btn-primary btn-circle",
+                  form: { class: "d-inline" },
+                  data: { confirm: "Emitir a NF-e modelo 55 desta venda?" } do %>
+      <i class="fa fa-file-invoice" style="width: 35px;"></i> Emitir NF-e
+    <% end %>
+  </li>
+<% end %>

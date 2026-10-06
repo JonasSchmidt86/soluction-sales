@@ -89,8 +89,15 @@
   </div>
   <div class="col-md-4">
     <div class="form-floating">
-      <%= form.collection_select(:cod_cidade, Cidade.all.order(:nome), :cod_cidade, :nome, 
-                        { :prompt => 'Não informado' }, { class: "form-control" }) %>
+      <%# Cada option carrega data-uf: o JS do CEP casa a cidade por NOME + UF,
+          evitando pegar homonima de outro estado (ex. Toledo PR x Toledo MG). %>
+      <%= form.select :cod_cidade,
+            Cidade.includes(:estado).order(:nome).map { |c|
+              uf = c.estado&.sigla
+              [[c.nome, uf].compact.join(" - "), c.cod_cidade, { "data-uf" => uf }]
+            },
+            { prompt: 'Não informado' },
+            { class: "form-control" } %>
       <%= form.label :cidade, class: "" %>
     </div>
   </div>

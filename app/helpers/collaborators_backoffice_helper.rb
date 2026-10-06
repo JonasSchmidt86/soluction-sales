@@ -9,6 +9,11 @@ module CollaboratorsBackofficeHelper
         @test = ["Entrada", 2], ["Saida", 3], ["Canceladas", 4]
     end
 
+    # Marca visualmente um dado fiscal ausente na previa da NF-e.
+    def destaque_ausente
+        content_tag(:span, "ausente", class: "badge bg-danger")
+    end
+
     # Tabela oficial de Origem da Mercadoria (SEFAZ) usada na NF-e/NFC-e.
     # Chave = codigo que vai no XML (string "0".."8"), valor = descricao.
     ORIGENS_MERCADORIA = {
@@ -57,11 +62,92 @@ module CollaboratorsBackofficeHelper
         CSOSN_SIMPLES.map { |cod, desc| ["#{cod} - #{desc}", cod] }
     end
 
+    # CST de ICMS (regime normal). Usado quando a operacao DESTACA o ICMS com
+    # valor (ex.: devolucao de compra espelhando a entrada). Os mais comuns.
+    CST_ICMS = {
+        "00" => "Tributada integralmente",
+        "10" => "Tributada e com cobranca do ICMS por ST",
+        "20" => "Com reducao de base de calculo",
+        "40" => "Isenta",
+        "41" => "Nao tributada",
+        "50" => "Suspensao",
+        "51" => "Diferimento",
+        "60" => "ICMS cobrado anteriormente por ST",
+        "70" => "Com reducao de BC e cobranca do ICMS por ST",
+        "90" => "Outras"
+    }.freeze
+    # NOTA: CST tem 2 digitos (regime normal). Para o SIMPLES DESTACAR ICMS numa
+    # devolucao use CSOSN 900 (grupo ICMSSN900), NAO o CST 90/090 — o provedor
+    # rejeita CST com emitente Simples. O CSOSN 900 ja esta em CSOSN_SIMPLES.
+
+    # Opcoes do select do codigo de ICMS, separando CSOSN (Simples) e CST
+    # (regime normal), para o usuario escolher conforme o caso. Em grupos.
+    def cst_csosn_icms_grouped_options(selecionado = nil)
+        grouped_options_for_select(
+            {
+                "CSOSN (Simples Nacional)" => CSOSN_SIMPLES.map { |cod, desc| ["#{cod} - #{desc}", cod] },
+                "CST (Regime Normal — destaca ICMS)" => CST_ICMS.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+            },
+            selecionado
+        )
+    end
+
     # Descricao "102 - Tributada..." a partir do codigo. Retorna vazio se nil.
     def csosn_descricao(codigo)
         cod = codigo.to_s.strip
         return "" if cod.blank?
         desc = CSOSN_SIMPLES[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
+    # CST de PIS e COFINS (mesma tabela oficial para os dois).
+    # Os mais usados; no Simples normalmente "49" ou "99" (sem tributacao).
+    CST_PIS_COFINS = {
+        "01" => "Operacao tributavel - aliquota basica",
+        "02" => "Operacao tributavel - aliquota diferenciada",
+        "03" => "Operacao tributavel - por unidade de medida",
+        "04" => "Operacao tributavel - monofasica (aliquota zero)",
+        "05" => "Operacao tributavel - ST",
+        "06" => "Operacao tributavel - aliquota zero",
+        "07" => "Operacao isenta da contribuicao",
+        "08" => "Operacao sem incidencia da contribuicao",
+        "09" => "Operacao com suspensao da contribuicao",
+        "49" => "Outras operacoes de saida",
+        "99" => "Outras operacoes"
+    }.freeze
+
+    def cst_pis_cofins_para_select
+        CST_PIS_COFINS.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    def cst_pis_cofins_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = CST_PIS_COFINS[cod]
+        desc ? "#{cod} - #{desc}" : cod
+    end
+
+    # CST de IPI (tabela oficial). Saidas mais comuns: 50 (saida tributada),
+    # 51 (saida com aliquota zero), 53 (saida isenta), 99 (outras saidas).
+    CST_IPI = {
+        "49" => "Outras entradas",
+        "50" => "Saida tributada",
+        "51" => "Saida tributavel com aliquota zero",
+        "52" => "Saida isenta",
+        "53" => "Saida nao-tributada",
+        "54" => "Saida imune",
+        "55" => "Saida com suspensao",
+        "99" => "Outras saidas"
+    }.freeze
+
+    def cst_ipi_para_select
+        CST_IPI.map { |cod, desc| ["#{cod} - #{desc}", cod] }
+    end
+
+    def cst_ipi_descricao(codigo)
+        cod = codigo.to_s.strip
+        return "" if cod.blank?
+        desc = CST_IPI[cod]
         desc ? "#{cod} - #{desc}" : cod
     end
 

@@ -6,22 +6,15 @@
 
     <div class="row mb-2">
       <div class="col-md-3">
-        <div class="form-floating mb-md-0">
+        <div class="form-floating mb-3 mb-md-0">
           <%= form.text_field :cod_produto, disabled: true, class: "text form-control", placeholder:"Codigo", id:"text" %>
           <%= form.label :cod_produto, class:"" %>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :ucom, class: "text form-control", placeholder:"Unidade", id: "modal_ucom" %>
-          <%= form.label :ucom, "Unidade", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-6">
         <div class="form-floating">
-          <%= form.collection_select(:cod_margem, Parametro.all.order(:descricao), :cod_parametro, :descricao,
-                        {:prompt => 'Selecione uma Margem'}, class: "form-control") %>
-          <%= form.label :cod_margem, "Margem", class:"" %>
+          <%= form.text_field :ucom, value: (@produto&.ucom.presence || "UN"), class: "text form-control", placeholder:"Unidade", id: "modal_ucom" %>
+          <%= form.label :ucom, "Unidade", class:"" %>
         </div>
       </div>
     </div>
@@ -32,18 +25,25 @@
     </div>
 
     <div class="row mb-2">
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="form-floating mb-3 mb-md-0">
           <%= form.collection_select(:marca, getBrands("%"), :cod_marca, :nome,
                 {:prompt => 'Selecione uma Marca'}, class: "form-control", id:"modal_brands") %>
           <%= form.label :marca, "Marca", class:"" %>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="form-floating">
+      <div class="col-md-4">
+        <div class="form-floating mb-3 mb-md-0">
           <%= form.collection_select(:grupo, Grupo.all.order(:nomegrupo), :cod_grupo, :nomegrupo,
                         {:prompt => 'Selecione um Grupo'}, class: "form-control") %>
           <%= form.label :grupo, "Grupo", class:"" %>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating">
+          <%= form.collection_select(:cod_margem, Parametro.all.order(:descricao), :cod_parametro, :descricao,
+                        {:prompt => 'Selecione uma Margem'}, class: "form-control") %>
+          <%= form.label :cod_margem, "Margem", class:"" %>
         </div>
       </div>
     </div>
@@ -53,48 +53,47 @@
       <i class="fa fa-file-invoice me-1"></i> Dados Fiscais
     </h6>
 
+    <%# Perfil Tributario: define CFOP/CSOSN/tributos por operacao na emissao.
+        Visivel apenas quando o modulo fiscal esta liberado (super_admin). %>
+    <% if access_control.can_view?("fiscal_perfis") %>
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <div class="form-floating">
+            <%= form.select :cod_perfil_tributario,
+                  options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome, @produto&.cod_perfil_tributario),
+                  { include_blank: "Selecione o perfil tributário" },
+                  class: "form-control", id: "modal_perfil_tributario" %>
+            <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <div class="row mb-2">
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="form-floating mb-md-0">
           <%= form.text_field :ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
           <%= form.label :ncm, "NCM", class:"" %>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :cfop, class: "text form-control", placeholder:"CFOP", id: "modal_cfop" %>
-          <%= form.label :cfop, "CFOP", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="form-floating">
           <%= form.text_field :cest, class: "text form-control", placeholder:"CEST", id:"modal_cest" %>
           <%= form.label :cest, "CEST", class:"" %>
         </div>
       </div>
-    </div>
-
-    <div class="row mb-2">
-      <div class="col-md-4">
-        <div class="form-floating mb-md-0">
-          <%= form.select :origem, options_for_select(origens_para_select, @produto&.origem),
-                { include_blank: "Selecione a origem" },
-                class: "form-control", id: "modal_origem" %>
-          <%= form.label :origem, "Origem da mercadoria", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
-          <%= form.label :gtin, "GTIN / Cód. barras", class:"" %>
+          <%= form.select :origem, options_for_select(origens_para_select, @produto&.origem),
+                { include_blank: "Origem" },
+                class: "form-control", id: "modal_origem" %>
+          <%= form.label :origem, "Origem" %>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="form-floating">
-          <%= form.select :csosn, options_for_select(csosn_para_select, @produto&.csosn),
-                { include_blank: "CSOSN" },
-                class: "form-control", id:"modal_csosn" %>
-          <%= form.label :csosn, "CSOSN", class:"" %>
+          <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
+          <%= form.label :gtin, "GTIN" %>
         </div>
       </div>
     </div>

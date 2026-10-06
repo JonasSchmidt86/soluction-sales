@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
+    .marca { text-align: center; color: #b00; border: 1px dashed #b00; padding: 4px; font-weight: bold; letter-spacing: 2px; margin-bottom: 6px; }
+    .box { border: 1px solid #000; padding: 4px 6px; margin-bottom: 4px; }
+    .titulo { font-size: 14px; font-weight: bold; }
+    .row { display: flex; }
+    .col { flex: 1; padding-right: 8px; }
+    .label { font-size: 8px; color: #555; text-transform: uppercase; }
+    .valor { font-size: 11px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 2px; }
+    th, td { border: 1px solid #000; padding: 2px 4px; font-size: 9px; }
+    th { background: #eee; text-align: left; }
+    .text-end { text-align: right; }
+    .totais td { border: none; padding: 1px 4px; }
+    .rodape { margin-top: 8px; font-size: 8px; color: #555; }
+  </style>
+</head>
+<body>
+  <% doc = @documento_neutro %>
+  <% emp = @empresa %>
+  <% cli = doc[:cliente] %>
+
+  <div class="marca">ESPELHO DA NF-e — SEM VALOR FISCAL — NÃO AUTORIZADA PELA SEFAZ</div>
+
+  <%# ---- Emitente ---- %>
+  <div class="box">
+    <div class="titulo"><%= emp&.nome %></div>
+    <div class="row">
+      <div class="col"><span class="label">CNPJ</span><br><span class="valor"><%= emp&.cpf_cnpj %></span></div>
+      <div class="col"><span class="label">Inscr. Estadual</span><br><span class="valor"><%= emp&.inscricaoestadual %></span></div>
+      <div class="col"><span class="label">UF</span><br><span class="valor"><%= emp&.uf %></span></div>
+    </div>
+    <div class="row">
+      <div class="col"><span class="label">Endereço</span><br><span class="valor"><%= [emp&.endereco, emp&.numero].compact.join(", ") %> — <%= emp&.cidade&.nome %></span></div>
+    </div>
+  </div>
+
+  <%# ---- Dados da NF ---- %>
+  <div class="box">
+    <div class="row">
+      <div class="col"><span class="label">Modelo</span><br><span class="valor">55 (NF-e)</span></div>
+      <div class="col"><span class="label">Natureza da Operação</span><br><span class="valor"><%= doc[:natureza] %></span></div>
+      <div class="col"><span class="label">Finalidade</span><br><span class="valor"><%= DocumentoFiscal.finalidade_label(doc[:finalidade]) %></span></div>
+      <div class="col"><span class="label">Venda</span><br><span class="valor">#<%= @venda.cod_vendaempresa %></span></div>
+    </div>
+  </div>
+
+  <%# ---- Destinatário ---- %>
+  <div class="box">
+    <div class="label">Destinatário</div>
+    <% if cli.present? %>
+      <div class="valor"><strong><%= cli["NmCliente"] %></strong> — CPF/CNPJ: <%= cli["CpfCnpj"] || "—" %></div>
+      <% if cli["Endereco"].present? %>
+        <div class="valor">
+          <%= [cli["Endereco"]["Logradouro"], cli["Endereco"]["Numero"], cli["Endereco"]["Bairro"]].compact.join(", ") %>
+          — <%= [cli["Endereco"]["Municipio"], cli["Endereco"]["Uf"]].compact.join("/") %>
+          <%= cli["Endereco"]["Cep"] ? "CEP #{cli["Endereco"]["Cep"]}" : "" %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="valor">Consumidor não identificado</div>
+    <% end %>
+  </div>
+
+  <%# ---- Produtos ---- %>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 8%;">Cód</th>
+        <th>Descrição</th>
+        <th style="width: 9%;">NCM</th>
+        <th style="width: 6%;">CFOP</th>
+        <th style="width: 5%;">Orig</th>
+        <th style="width: 6%;">CSOSN</th>
+        <th class="text-end" style="width: 7%;">Qtd</th>
+        <th class="text-end" style="width: 10%;">Vl Unit.</th>
+        <th class="text-end" style="width: 11%;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% total_geral = 0 %>
+      <% Array(doc[:produtos]).each do |p| %>
+        <% total_geral += p["ValorTotal"].to_f %>
+        <tr>
+          <td><%= p["CodProdutoServico"] %></td>
+          <td><%= p["NmProduto"] %></td>
+          <td><%= p["NCM"] %></td>
+          <td><%= p["CFOP"] %></td>
+          <td><%= p["OrigemProduto"] %></td>
+          <td><%= p.dig("Imposto", "ICMS", "CodSituacaoTributaria") %></td>
+          <td class="text-end"><%= p["Quantidade"] %></td>
+          <td class="text-end"><%= number_to_currency(p["ValorUnitario"], unit: "", separator: ",", delimiter: ".") %></td>
+          <td class="text-end"><%= number_to_currency(p["ValorTotal"], unit: "", separator: ",", delimiter: ".") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%# ---- Totais ---- %>
+  <table class="totais" style="margin-top: 6px;">
+    <tr>
+      <td class="text-end"><span class="label">Valor Total dos Produtos</span></td>
+      <td class="text-end" style="width: 120px;"><strong>R$ <%= number_to_currency(total_geral, unit: "", separator: ",", delimiter: ".") %></strong></td>
+    </tr>
+    <tr>
+      <td class="text-end"><span class="label">Valor Total da Venda</span></td>
+      <td class="text-end"><strong>R$ <%= number_to_currency(@venda.valortotal, unit: "", separator: ",", delimiter: ".") %></strong></td>
+    </tr>
+  </table>
+
+  <div class="rodape">
+    Documento gerado para conferência interna. Não possui valor fiscal nem autorização da SEFAZ.
+    Gerado em <%= Time.current.strftime("%d/%m/%Y %H:%M") %>.
+  </div>
+</body>
+</html>

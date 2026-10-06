@@ -14,6 +14,11 @@ class Produto < ApplicationRecord
     has_many :produto_imagens, class_name: 'ProdutoImagem', foreign_key: 'cod_produto', dependent: :destroy, autosave: true, inverse_of: :produto
     # accepts_nested_attributes_for :produto_imagens, allow_destroy: true, reject_if: :all_blank
   
+    # Perfil tributario (modulo fiscal). csosn/cfop no produto viram legado/fallback.
+    belongs_to :perfil_tributario, class_name: 'PerfilTributario',
+               foreign_key: 'cod_perfil_tributario', primary_key: 'cod_perfil_tributario',
+               optional: true
+
     has_many :empresaprodutos, class_name: 'Empresaproduto', foreign_key: 'cod_produto', inverse_of: :produto
     has_many :itensvenda, class_name: 'Itemvenda', foreign_key: 'cod_produto', inverse_of: :produto
     has_many :itenscompra, class_name: 'Itemcompra', foreign_key: 'cod_produto', inverse_of: :produto
@@ -49,6 +54,19 @@ class Produto < ApplicationRecord
   
     def cod_nome
       "#{nome} - #{cod_produto}"
+    end
+
+    # Motivos que impedem a emissão fiscal deste produto (vazio = ok).
+    def pendencias_fiscais
+      motivos = []
+      motivos << "NCM ausente/zerado" if ncm.blank? || ncm == "00000000"
+      motivos << "Sem perfil tributário" if cod_perfil_tributario.blank?
+      motivos << "Sem origem" if origem.blank?
+      motivos
+    end
+
+    def apto_fiscal?
+      pendencias_fiscais.empty?
     end
   
     def to_s

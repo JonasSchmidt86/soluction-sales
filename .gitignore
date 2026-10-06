@@ -85,3 +85,9 @@ yarn-debug.log*
 *.p12
 *.pem
 *.key
+
+# Scripts operacionais com segredos (ex. senha do banco) — nunca versionar
+/scripts/
+
+# macOS
+.DS_Store

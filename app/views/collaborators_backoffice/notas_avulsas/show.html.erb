@@ -1,0 +1,92 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-file-invoice me-2"></i>
+        <h4 class="mb-0">Nota avulsa #<%= @documento.cod_documento_fiscal %> — <%= @documento.modelo_nome %></h4>
+      </div>
+      <div class="card-body">
+        <% cor = @documento.autorizada? ? "success" : (@documento.cancelada? ? "secondary" : "danger") %>
+        <p><strong>Status:</strong> <span class="badge text-bg-<%= cor %>"><%= @documento.status %></span></p>
+        <% if @documento.chave_acesso.present? %>
+          <p class="text-break"><strong>Chave:</strong> <%= @documento.chave_acesso %></p>
+        <% end %>
+        <% if @documento.protocolo.present? %>
+          <p><strong>Protocolo:</strong> <%= @documento.protocolo %></p>
+        <% end %>
+        <% if @documento.mensagem_sefaz.present? %>
+          <p><strong>Mensagem SEFAZ:</strong> <%= @documento.mensagem_sefaz %></p>
+        <% end %>
+
+        <%# Resumo da nota (dados gerais + itens), extraido do XML autorizado. %>
+        <% if @resumo.present? %>
+          <hr>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><small class="text-muted d-block">Número / Série</small><%= @resumo[:numero] %> / <%= @resumo[:serie] %></div>
+            <div class="col-md-5"><small class="text-muted d-block">Natureza</small><%= @resumo[:natureza] %></div>
+            <div class="col-md-4"><small class="text-muted d-block">Emitida em</small>
+              <%= begin; Time.parse(@resumo[:emitida_em].to_s).strftime("%d/%m/%Y %H:%M"); rescue; @resumo[:emitida_em]; end %>
+            </div>
+          </div>
+          <% if @resumo[:destinatario].present? %>
+            <p class="mb-2"><small class="text-muted d-block">Destinatário</small><%= @resumo[:destinatario] %></p>
+          <% end %>
+
+          <h6 class="mt-3">Itens</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>Código</th>
+                  <th>Produto</th>
+                  <th>NCM</th>
+                  <th>CFOP</th>
+                  <th class="text-end">Qtd</th>
+                  <th class="text-end">Vl Unit.</th>
+                  <th class="text-end">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @resumo[:itens].each do |it| %>
+                  <tr>
+                    <td><%= it[:n] %></td>
+                    <td><%= it[:codigo] %></td>
+                    <td><%= it[:nome] %></td>
+                    <td><%= it[:ncm] %></td>
+                    <td><%= it[:cfop] %></td>
+                    <td class="text-end"><%= number_with_precision(it[:qtd], precision: 2, delimiter: ".", separator: ",") %></td>
+                    <td class="text-end"><%= number_to_currency(it[:vun], unit: "R$ ", delimiter: ".", separator: ",") %></td>
+                    <td class="text-end"><%= number_to_currency(it[:vprod], unit: "R$ ", delimiter: ".", separator: ",") %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+              <tfoot>
+                <tr class="table-light">
+                  <th colspan="7" class="text-end">Total da nota</th>
+                  <th class="text-end"><%= number_to_currency(@resumo[:total], unit: "R$ ", delimiter: ".", separator: ",") %></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        <% elsif @documento.autorizada? %>
+          <p class="text-muted mt-3"><em>Itens indisponíveis (XML não armazenado para esta nota).</em></p>
+        <% end %>
+
+        <div class="d-flex gap-2 mt-3 flex-wrap">
+          <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
+          <% if @documento.autorizada? && @documento.danfe_base64.present? %>
+            <%= link_to "Ver DANFE", danfe_collaborators_backoffice_notas_avulsa_path(@documento), target: "_blank", class: "btn btn-outline-primary" %>
+          <% end %>
+          <% if @documento.autorizada? %>
+            <%= button_to cancelar_collaborators_backoffice_notas_avulsa_path(@documento),
+                          method: :post, params: { justificativa: "" }, class: "btn btn-outline-danger",
+                          onclick: "var j=prompt('Justificativa do cancelamento (min 15 caracteres):'); if(!j||j.trim().length<15){alert('Justificativa invalida.');return false;} this.closest('form').justificativa.value=j; return confirm('Cancelar esta NF?');" do %>
+              <i class="fa fa-ban me-1"></i> Cancelar NF
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

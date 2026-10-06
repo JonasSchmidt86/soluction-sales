@@ -1,0 +1,147 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary">
+      <h4 class="text-white mb-0"><i class="fa fa-gear me-2"></i> Configuração Fiscal</h4>
+    </div>
+    <div class="card-body">
+      <%= form_with model: @config, url: collaborators_backoffice_fiscal_config_path, method: :patch, local: true do |f| %>
+        <% if @config.errors.any? %>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <% @config.errors.full_messages.each do |m| %><li><%= m %></li><% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# ===== Ambiente e Regime ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+          <i class="fa fa-sliders me-1"></i> Ambiente e Regime
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="form-floating">
+              <%= f.select :ambiente,
+                    options_for_select([["Homologação (teste)", "homologacao"], ["Produção", "producao"]], @config.ambiente),
+                    {}, class: "form-select" %>
+              <%= f.label :ambiente, "Ambiente" %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              <%= f.select :regime_tributario,
+                    options_for_select([["Simples Nacional", "simples"], ["Lucro Presumido", "presumido"], ["Lucro Real", "real"]], @config.regime_tributario),
+                    {}, class: "form-select" %>
+              <%= f.label :regime_tributario, "Regime Tributário" %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              <%= f.number_field :crt, class: "form-control" %>
+              <%= f.label :crt, "CRT (1=Simples)" %>
+            </div>
+          </div>
+        </div>
+
+        <%# ===== Numeração e Série ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-list-ol me-1"></i> Numeração e Série
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.number_field :serie_nfe, class: "form-control" %>
+              <%= f.label :serie_nfe, "Série NF-e" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.number_field :proximo_numero_nfe, class: "form-control" %>
+              <%= f.label :proximo_numero_nfe, "Próximo nº NF-e" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.number_field :serie_nfce, class: "form-control" %>
+              <%= f.label :serie_nfce, "Série NFC-e" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.number_field :proximo_numero_nfce, class: "form-control" %>
+              <%= f.label :proximo_numero_nfce, "Próximo nº NFC-e" %>
+            </div>
+          </div>
+        </div>
+
+        <%# ===== NFC-e (CSC) ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-key me-1"></i> NFC-e — CSC
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.text_field :csc_id, class: "form-control" %>
+              <%= f.label :csc_id, "ID do CSC (idToken)" %>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <div class="form-floating">
+              <%= f.text_field :csc_token, class: "form-control" %>
+              <%= f.label :csc_token, "CSC (token)" %>
+            </div>
+          </div>
+        </div>
+
+        <%# ===== Envio ao contador ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-paper-plane me-1"></i> Envio de XML ao contador
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              <%= f.email_field :email_xml, class: "form-control", placeholder: "email@contador.com" %>
+              <%= f.label :email_xml, "E-mail do contador (recebe o .zip de XMLs)" %>
+            </div>
+          </div>
+        </div>
+
+        <%# ===== Certificado e Provedor ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-certificate me-1"></i> Certificado e Provedor
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-5">
+            <div class="form-floating">
+              <%= f.text_field :certificado_nome, class: "form-control" %>
+              <%= f.label :certificado_nome, "Certificado (nome/ref)" %>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.date_field :certificado_validade, class: "form-control" %>
+              <%= f.label :certificado_validade, "Validade" %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-floating">
+              <%= f.select :provedor,
+                    options_for_select([["A definir", ""], ["Focus NFe", "focus"], ["Brasil NFe", "brasilnfe"]], @config.provedor),
+                    {}, class: "form-select" %>
+              <%= f.label :provedor, "Provedor" %>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning small">
+          <i class="fa fa-triangle-exclamation me-1"></i>
+          O arquivo do certificado (.pfx) e credenciais do provedor não ficam aqui — serão configurados de forma segura na integração (Parte B).
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <%= link_to "Cancelar", collaborators_backoffice_fiscal_config_path, class: "btn btn-secondary" %>
+          <%= f.submit "Salvar", class: "btn btn-success" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -16,13 +16,13 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       @produto.cod_produto = Produto.last.cod_produto + 1
       @produto.nome = params[:query][:nome].to_s.upcase
       @produto.ucom = params[:query][:ucom].to_s.upcase
-      @produto.cfop = params[:query][:cfop].to_s.upcase
       @produto.ncm = params[:query][:ncm].to_s.upcase
       @produto.cest = params[:query][:cest].to_s.upcase
-      # Campos fiscais reaproveitados na emissao de saida (vem do XML da nota do fornecedor)
+      # Atributos do produto reaproveitados na emissao (NCM/CEST/origem/GTIN)
       @produto.origem = params[:query][:origem].to_s.strip.presence
       @produto.gtin = params[:query][:gtin].to_s.strip.presence
-      @produto.csosn = params[:query][:csosn].to_s.strip.presence
+      # Tributacao vem do Perfil (CFOP/CSOSN sao resolvidos pela regra do perfil na emissao)
+      @produto.cod_perfil_tributario = params[:query][:cod_perfil_tributario].to_s.strip.presence
 
       begin
         @produto.marca = params[:query][:brands].to_i
@@ -82,6 +82,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       if params[:compra].present?
         compra.numeronf = params[:compra][:numeronf];
         compra.serienf = params[:compra][:serienf];
+        compra.nr_pedido = params[:compra][:nr_pedido];
         compra.desconto = params[:compra][:desconto]&.gsub(',', '.').to_f || 0.0;
         compra.valorfrete = params[:compra][:valorfrete]&.gsub(',', '.').to_f || 0.0;
 
@@ -526,6 +527,7 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
         :dataemissao,
         :numeronf,
         :serienf,
+        :nr_pedido,
         :valorfrete,
         :valortotal,
         :cod_funcionario,

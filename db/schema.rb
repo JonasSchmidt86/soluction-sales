@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -352,6 +352,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.string "arquivoxml", limit: 100
     t.decimal "desconto", precision: 18, scale: 3, default: "0.0"
     t.decimal "outrasdespesas", precision: 18, scale: 3, default: "0.0"
+    t.string "nr_pedido", limit: 30, comment: "numero do pedido de compra"
     t.index ["cod_pessoa"], name: "fki_pessoa"
   end
 
@@ -405,6 +406,50 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.integer "row_span", default: 3, null: false
     t.index ["cod_funcionario", "widget_type"], name: "idx_dashboard_widgets_func_type", unique: true
     t.index ["cod_funcionario"], name: "idx_dashboard_widgets_func"
+  end
+
+  create_table "documento_fiscal", primary_key: "cod_documento_fiscal", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.bigint "cod_venda", comment: "venda de origem (nil se NF avulsa)"
+    t.integer "modelo", null: false, comment: "55 (NF-e) ou 65 (NFC-e)"
+    t.integer "serie"
+    t.integer "numero"
+    t.string "natureza_operacao", limit: 60
+    t.integer "finalidade", default: 1, comment: "1 normal, 4 devolucao..."
+    t.string "ambiente", limit: 12, default: "homologacao", null: false
+    t.string "status", limit: 15, default: "rascunho", null: false, comment: "rascunho/enviada/autorizada/rejeitada/denegada/cancelada/erro"
+    t.string "chave_acesso", limit: 44
+    t.string "protocolo", limit: 30
+    t.integer "cod_status_sefaz"
+    t.string "mensagem_sefaz", limit: 255
+    t.text "xml_base64"
+    t.text "danfe_base64"
+    t.bigint "cod_funcionario", comment: "quem emitiu"
+    t.string "provedor", limit: 20
+    t.datetime "emitido_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "cod_compra", comment: "compra de origem (NF de devolução de compra)"
+    t.decimal "valor_total", precision: 15, scale: 2, comment: "valor total da nota (preenchido na emissao)"
+    t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
+    t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
+    t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"
+    t.index ["cod_venda"], name: "idx_documento_fiscal_venda"
+  end
+
+  create_table "documento_fiscal_evento", primary_key: "cod_documento_fiscal_evento", force: :cascade do |t|
+    t.bigint "cod_documento_fiscal", null: false
+    t.string "tipo", limit: 30, null: false, comment: "cancelamento/carta_correcao/inutilizacao"
+    t.string "status", limit: 15, default: "pendente", null: false
+    t.string "protocolo", limit: 30
+    t.string "justificativa", limit: 255
+    t.text "xml_base64"
+    t.string "mensagem_sefaz", limit: 255
+    t.datetime "registrado_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "cod_funcionario", comment: "quem registrou o evento"
+    t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_evento_documento"
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -475,9 +520,33 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.datetime "created_at", precision: nil, default: -> { "timezone('America/Sao_Paulo'::text, now())" }, null: false
     t.bigint "cod_funcionario"
     t.string "origem_sistema", limit: 15
+    t.decimal "qtdfiscal_antes", precision: 15, scale: 2
+    t.decimal "qtdfiscal_movida", precision: 15, scale: 2
+    t.decimal "qtdfiscal_depois", precision: 15, scale: 2
     t.index ["cod_empresa", "cod_produto", "cod_cor"], name: "idx_estoque_logs_produto"
     t.index ["created_at"], name: "idx_estoque_logs_data"
     t.index ["origem", "cod_referencia"], name: "idx_estoque_logs_origem_ref"
+  end
+
+  create_table "fiscal_config", primary_key: "cod_fiscal_config", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.string "ambiente", limit: 12, default: "homologacao", null: false, comment: "homologacao / producao"
+    t.string "regime_tributario", limit: 20, default: "simples", null: false, comment: "simples / presumido / real"
+    t.integer "crt", default: 1, comment: "1=Simples Nacional (codigo CRT da NF-e)"
+    t.integer "serie_nfe", default: 1
+    t.integer "serie_nfce", default: 1
+    t.integer "proximo_numero_nfe", default: 1
+    t.integer "proximo_numero_nfce", default: 1
+    t.string "csc_id", limit: 10, comment: "identificador do CSC (idToken)"
+    t.string "csc_token", limit: 64, comment: "CSC — mover para credentials na Parte B"
+    t.string "certificado_nome", limit: 120
+    t.date "certificado_validade"
+    t.string "provedor", limit: 20, comment: "focus / brasilnfe (a definir)"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "email_xml", limit: 120, comment: "e-mail do contador para envio do pacote de XMLs"
+    t.index ["cod_empresa"], name: "idx_fiscal_config_empresa", unique: true
   end
 
   create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: -> { "nextval('formaspagamento_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -723,6 +792,44 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.index ["tipo"], name: "index_melhorias_on_tipo"
   end
 
+  create_table "nota_recebida", primary_key: "cod_nota_recebida", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false, comment: "empresa destinataria (dona da nota recebida)"
+    t.string "chave_acesso", limit: 44, null: false, comment: "chave de acesso da NF-e (44 digitos)"
+    t.bigint "cod_pessoa", comment: "fornecedor emitente (resolvido pelo CNPJ do emit)"
+    t.integer "modelo", comment: "55 NF-e / 65 NFC-e"
+    t.string "numero", limit: 20
+    t.string "serie", limit: 10
+    t.datetime "data_emissao"
+    t.decimal "valor_total", precision: 15, scale: 2
+    t.string "emitente_cnpj", limit: 20
+    t.string "emitente_nome", limit: 120
+    t.string "natureza_operacao", limit: 120
+    t.integer "tipo_nf", comment: "tpNF: 0 entrada / 1 saida (sob a otica do emitente)"
+    t.string "transportadora_nome", limit: 120
+    t.string "transportadora_cnpj", limit: 20
+    t.string "status_sefaz", limit: 15, default: "desconhecida", null: false
+    t.datetime "status_sincronizado_em", comment: "ultima consulta de status na SEFAZ"
+    t.bigint "cod_compra", comment: "compra gerada na importacao (nil = nao integrada)"
+    t.bigint "xml_file_id", comment: "XmlFile com o XML baixado (reaproveita infra atual)"
+    t.string "origem", limit: 15, default: "sefaz", comment: "sefaz (automatico) / upload (manual)"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_compra"], name: "idx_nota_recebida_compra"
+    t.index ["cod_empresa", "chave_acesso"], name: "idx_nota_recebida_empresa_chave", unique: true
+    t.index ["cod_empresa", "status_sefaz"], name: "idx_nota_recebida_empresa_status"
+  end
+
+  create_table "operacao_fiscal", primary_key: "cod_operacao_fiscal", force: :cascade do |t|
+    t.string "nome", limit: 60, null: false, comment: "Venda, Devolucao venda, NF avulsa..."
+    t.string "tipo", limit: 10, null: false, comment: "saida / entrada"
+    t.integer "modelo", comment: "55 ou 65 (opcional)"
+    t.string "natureza_operacao", limit: 60, comment: "texto que vai na nota"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ativo"], name: "idx_operacao_fiscal_ativo"
+  end
+
   create_table "orcamentos", primary_key: "cod_orcamento", force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.bigint "cod_pessoa", null: false
@@ -762,6 +869,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "pacote_fiscal", primary_key: "cod_pacote_fiscal", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.date "periodo_inicio", null: false
+    t.date "periodo_fim", null: false
+    t.integer "tipo_arquivo", default: 1, comment: "0 PDF / 1 XML / 2 Excel"
+    t.integer "tipo_nota", default: 1, comment: "1 saidas / 2 entradas / 3 ambos"
+    t.boolean "incluir_cce", default: false
+    t.string "nome_arquivo", limit: 150
+    t.string "mime", limit: 60
+    t.integer "quantidade", comment: "qtd de notas no pacote (Quantidade da API)"
+    t.bigint "tamanho_bytes"
+    t.datetime "gerado_em"
+    t.datetime "enviado_contador_em"
+    t.string "email_destino", limit: 120
+    t.bigint "cod_funcionario", comment: "quem gerou"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "periodo_inicio", "periodo_fim"], name: "idx_pacote_fiscal_empresa_periodo"
+  end
+
   create_table "parametros", primary_key: "cod_parametro", id: :bigint, default: -> { "nextval('parametro_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.boolean "ativo", null: false
     t.date "dataencerramento"
@@ -791,6 +918,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.integer "cod_empresa", null: false
     t.index ["cod_empresa"], name: "index_pedidos_compras_on_cod_empresa"
     t.index ["cod_pessoa"], name: "index_pedidos_compras_on_cod_pessoa"
+  end
+
+  create_table "perfil_tributario", primary_key: "cod_perfil_tributario", force: :cascade do |t|
+    t.string "nome", limit: 100, null: false
+    t.string "descricao", limit: 255
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "tipo", limit: 10, default: "saida", null: false, comment: "saida / entrada"
+    t.index ["ativo"], name: "idx_perfil_tributario_ativo"
   end
 
   create_table "permissao", primary_key: "cod_permissao", id: :bigint, default: -> { "nextval('permissao_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -849,6 +986,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.string "origem", limit: 1
     t.string "gtin", limit: 14
     t.string "csosn", limit: 4
+    t.bigint "cod_perfil_tributario"
+    t.index ["cod_perfil_tributario"], name: "idx_produto_perfil_tributario"
   end
 
   create_table "produto_fiscal_logs", force: :cascade do |t|
@@ -893,6 +1032,37 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000001) do
     t.string "cest", limit: 15
     t.string "origem", limit: 1
     t.string "gtin", limit: 14
+  end
+
+  create_table "regra_fiscal", primary_key: "cod_regra_fiscal", force: :cascade do |t|
+    t.bigint "cod_perfil_tributario", null: false
+    t.bigint "cod_operacao_fiscal", null: false
+    t.bigint "cod_empresa", null: false, comment: "regime/estabelecimento emitente"
+    t.string "uf_destino", limit: 2, default: "*", null: false, comment: "sigla UF ou * (todas)"
+    t.string "tipo_cliente", limit: 20, default: "*", null: false, comment: "consumidor_final / contribuinte / *"
+    t.string "cfop_base", limit: 4, null: false, comment: "3 digitos base, ex 102 (5/6/7 automatico)"
+    t.string "csosn", limit: 4, comment: "CSOSN no Simples"
+    t.decimal "aliquota_icms", precision: 6, scale: 2, comment: "opcional"
+    t.string "cst_pis", limit: 3
+    t.string "cst_cofins", limit: 3
+    t.string "cclasstrib", limit: 10, comment: "IBS/CBS reforma (vazio por ora)"
+    t.integer "prioridade", default: 0, null: false, comment: "maior vence: excecao > padrao"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "soma_total_nota", default: true, null: false
+    t.boolean "soma_duplicatas", default: true, null: false
+    t.string "controla_estoque", limit: 20, default: "proprio"
+    t.string "cst_ibs_cbs", limit: 10
+    t.decimal "aliquota_pis", precision: 6, scale: 2
+    t.decimal "aliquota_cofins", precision: 6, scale: 2
+    t.decimal "aliquota_fcp", precision: 6, scale: 2
+    t.string "cst_ipi", limit: 3
+    t.string "cod_enquadramento_ipi", limit: 3
+    t.decimal "aliquota_ipi", precision: 6, scale: 2
+    t.index ["cod_empresa", "cod_perfil_tributario", "cod_operacao_fiscal", "uf_destino", "tipo_cliente"], name: "idx_regra_fiscal_resolucao"
+    t.index ["cod_operacao_fiscal"], name: "idx_regra_fiscal_operacao"
+    t.index ["cod_perfil_tributario"], name: "idx_regra_fiscal_perfil"
   end
 
   create_table "social_links", force: :cascade do |t|

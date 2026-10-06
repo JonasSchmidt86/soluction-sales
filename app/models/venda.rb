@@ -1,7 +1,11 @@
 class Venda < ApplicationRecord
+    include MoedaBr
 
     self.table_name = "venda"
     self.primary_key = "cod_venda"
+
+    # Aceita valores em formato BR ("1.234,56") vindos do form/nested attributes.
+    moeda_br :valortotal, :acrescimo, :desconto
 
     after_commit :gerar_transferencia, if: -> { tipo == 'T' }
 
@@ -20,10 +24,22 @@ class Venda < ApplicationRecord
     end
 
     has_many :itensvenda, :class_name => 'Itemvenda', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :destroy, autosave: true
-    accepts_nested_attributes_for :itensvenda, allow_destroy: true, update_only: true #, reject_if: :all_blank
+    # update_only nao se aplica a has_many (Rails ignora): o que faz UPDATE em
+    # vez de INSERT e o :id presente em cada hash de itensvenda_attributes.
+    # reject_if descarta apenas LINHAS NOVAS em branco (sem id e sem produto);
+    # nunca descarta um item existente (com id), para nao perder a atualizacao.
+    accepts_nested_attributes_for :itensvenda, allow_destroy: true,
+        reject_if: ->(attrs) { attrs["id"].blank? && attrs["cod_produto"].blank? }
 
     has_many :contas, :class_name => 'Contaspagrec', :foreign_key => 'cod_venda', inverse_of: :venda, dependent: :destroy, autosave: true
-    accepts_nested_attributes_for :contas, allow_destroy: true #, update_only: true , reject_if: :all_blank
+    # Descarta apenas parcelas NOVAS incompletas (sem id e sem numero/valor/
+    # vencimento). Parcela existente (com id) nunca e descartada aqui; o
+    # UPDATE/_destroy dela e tratado normalmente.
+    accepts_nested_attributes_for :contas, allow_destroy: true,
+        reject_if: ->(attrs) {
+          attrs["id"].blank? &&
+            (attrs["numeroparcela"].blank? || attrs["valorparcela"].blank? || attrs["dtvencimento"].blank?)
+        }
 
     belongs_to :pessoa, :class_name => 'Pessoa', :foreign_key => 'cod_pessoa', inverse_of: :vendas
     accepts_nested_attributes_for :pessoa, allow_destroy: false
@@ -37,6 +53,22 @@ class Venda < ApplicationRecord
 
     def transferencia?
         tipo == 'T'
+    end
+
+    # NF-e (modelo 55) autorizada para esta venda? Enquanto houver NF autorizada
+    # a venda nao pode ser editada (os itens divergiriam da nota na SEFAZ).
+    def nfe_autorizada
+        DocumentoFiscal.where(cod_venda: cod_venda, modelo: 55, status: "autorizada")
+                       .order(cod_documento_fiscal: :desc).first
+    end
+
+    def nfe_autorizada?
+        nfe_autorizada.present?
+    end
+
+    # Venda pode ser editada? Nao, se cancelada ou com NF-e autorizada.
+    def editavel?
+        !cancelada? && !nfe_autorizada?
     end
 
     paginates_per 30

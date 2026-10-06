@@ -485,15 +485,16 @@
     function abrirModal(botao) {
       indexAtual = botao.dataset.index;
 
-      document.getElementById('modal_nome').value = botao.dataset.nome || '';
-      document.getElementById('modal_ucom').value = botao.dataset.ucom || '';
-      document.getElementById('modal_ncm').value = botao.dataset.ncm || '';
-      document.getElementById('modal_cfop').value = botao.dataset.cfop || '';
-      document.getElementById('modal_cest').value = botao.dataset.cest || '';
-      document.getElementById('modal_origem').value = botao.dataset.origem || '';
-      document.getElementById('modal_gtin').value = botao.dataset.gtin || '';
-      // CSOSN nao vem no XML (e definicao do contador); limpa para nao herdar de cadastro anterior
-      document.getElementById('modal_csosn').value = '';
+      const setVal = (id, value) => { const e = document.getElementById(id); if (e) e.value = value; };
+
+      setVal('modal_nome', botao.dataset.nome || '');
+      setVal('modal_ucom', botao.dataset.ucom || '');
+      setVal('modal_ncm', botao.dataset.ncm || '');
+      setVal('modal_cest', botao.dataset.cest || '');
+      setVal('modal_origem', botao.dataset.origem || '');
+      setVal('modal_gtin', botao.dataset.gtin || '');
+      // Perfil tributário: começa em branco (usuário seleciona).
+      setVal('modal_perfil_tributario', '');
 
       // (Re)abre o modal manualmente se necessário
       const modal = new bootstrap.Modal(document.getElementById('modalNovoProduto'));
@@ -504,18 +505,20 @@
         event.preventDefault();
         console.log("salvando produto");
 
+        const el = (id) => document.getElementById(id);
+        const val = (id) => (el(id) ? el(id).value : null);
+
         const campos = {
-          nome: document.getElementById('modal_nome').value,
-          ucom: document.getElementById('modal_ucom').value,
-          ncm: document.getElementById('modal_ncm').value,
-          cfop: document.getElementById('modal_cfop').value,
-          cest: document.getElementById('modal_cest').value,
-          origem: document.getElementById('modal_origem').value,
-          gtin: document.getElementById('modal_gtin').value,
-          csosn: document.getElementById('modal_csosn').value,
-          brands: document.getElementById('modal_brands').value,
-          cod_margem: document.getElementById('cod_margem').value,
-          grupo: document.getElementById('grupo').value,
+          nome: val('modal_nome'),
+          ucom: val('modal_ucom'),
+          ncm: val('modal_ncm'),
+          cest: val('modal_cest'),
+          origem: val('modal_origem'),
+          gtin: val('modal_gtin'),
+          cod_perfil_tributario: val('modal_perfil_tributario'),
+          brands: val('modal_brands'),
+          cod_margem: val('cod_margem'),
+          grupo: val('grupo'),
           index: indexAtual
         };
         console.log(campos);

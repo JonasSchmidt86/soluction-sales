@@ -138,9 +138,10 @@
                     </button>
                     <ul class="dropdown-menu" style="width: 50px;">
                       <li>
-                        <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-info btn-circle" do %>
+                        <button type="button" class="dropdown-item btn btn-info btn-circle"
+                                onclick="MudarEstado('vendaDiv<%= sale.cod_venda %>')">
                           <i class="fa fa-info", style="width: 35px;"></i>Informações
-                        <% end %>
+                        </button>
                       </li>
                       <li>
                         <%= link_to collaborators_backoffice_report_sales_client_path(sale.cod_pessoa), class:"dropdown-item btn btn-info btn-circle" do %>
@@ -164,10 +165,26 @@
                       </li>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
                         <li>
-                          <%= link_to editar_itens_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
-                            <i class="fa fa-edit", style="width: 35px;"></i> Editar Itens
+                          <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
+                            <i class="fa fa-edit", style="width: 35px;"></i> Editar Venda
                           <% end %>
                         </li>
+                      <% end %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <li>
+                          <%= link_to espelho_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                                      target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+                            <i class="fa fa-file-invoice" style="width: 35px;"></i> Espelho NF (PDF)
+                          <% end %>
+                        </li>
+                        <li>
+                          <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                                      target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+                            <i class="fa fa-file-pdf" style="width: 35px;"></i> Pré-visualizar DANFE
+                          <% end %>
+                        </li>
+                        <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_acoes",
+                                   locals: { sale: sale } %>
                       <% end %>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                         <span class="visually-hidden">Toggle Dropdown</span>
@@ -185,6 +202,13 @@
                       <% end %>
                     </ul>
                   </div>
+                </td>
+              </tr>
+              <%# Linha oculta: informacoes da venda (contas + produtos). Abre pelo "i". %>
+              <tr id="vendaDiv<%= sale.cod_venda %>" class="detalhe-venda-row" style="display: none;">
+                <td colspan="7">
+                  <%= render partial: "collaborators_backoffice/report/rep_sales/venda_detalhe",
+                             locals: { sale: sale } %>
                 </td>
               </tr>
             <% end %>
@@ -210,6 +234,21 @@
     </div>
   </div>
   <script>
+    // Mostra/esconde a linha de detalhe abaixo da venda (info ou espelho).
+    // Comportamento accordion: ao abrir uma, fecha todas as outras.
+    function MudarEstado(el) {
+      var row = document.getElementById(el);
+      if (!row) { return; }
+      var vaiAbrir = (row.style.display === "none" || row.style.display === "");
+
+      // Fecha todas as linhas de detalhe (de qualquer venda).
+      document.querySelectorAll('.detalhe-venda-row').forEach(function (r) {
+        r.style.display = "none";
+      });
+
+      // Abre a clicada (se nao estava aberta); se estava, fica fechada (toggle).
+      if (vaiAbrir) { row.style.display = "table-row"; }
+    }
     function formatarReal(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
@@ -218,13 +257,9 @@
       document.getElementById("valorPago").value = formatarReal(<%= somaRecebida %>);
       document.getElementById("valorCusto").value = formatarReal(<%= somaCusto %>);
 
-          document.addEventListener('DOMContentLoaded', function() {
-            $('#report-sale').DataTable({
-              "paging": false,  // Desabilita a paginação
-              "searching": false, // Permite a pesquisa na tabela (opcional)
-              "ordering": true,  // Habilita ordenação nas colunas (opcional)
-              "info": false}); // Habilita ordenação nas colunas (opcional)
-          });
+      <%# DataTables foi removido desta tabela: ele contava as colunas da linha %>
+      <%# oculta do espelho fiscal (colspan) e gerava "Incorrect column count". %>
+      <%# A paginacao e busca ja sao feitas pelo Rails (paginate/filtros).      %>
   </script>
   <!-- Modal para alterar vendedor fica fora do loop para melhorar performance -->
   <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>

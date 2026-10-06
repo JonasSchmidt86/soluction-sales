@@ -14,3 +14,10 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym 'RESTful'
 # end
+
+# Modulo fiscal: singulares/plurais irregulares em portugues
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "perfil_tributario", "perfis_tributarios"
+  inflect.irregular "regra_fiscal", "regras_fiscais"
+  inflect.irregular "documento_fiscal", "documentos_fiscais"
+end

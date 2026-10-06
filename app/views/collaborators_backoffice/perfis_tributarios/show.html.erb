@@ -1,0 +1,29 @@
+<div class="container-fluid mt-3">
+  <div class="card">
+    <div class="card-header bg-primary d-flex align-items-center">
+      <h4 class="text-white mb-0"><i class="fa fa-file-invoice-dollar me-2"></i> <%= @perfil.nome %></h4>
+      <div class="ms-auto d-flex gap-2">
+        <%= link_to edit_collaborators_backoffice_perfil_tributario_path(@perfil), class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-pencil me-1"></i> Editar
+        <% end %>
+        <% if @perfil.produtos.count.zero? %>
+          <%= link_to collaborators_backoffice_perfil_tributario_path(@perfil),
+                method: :delete,
+                data: { confirm: "Excluir o perfil \"#{@perfil.nome}\"?" },
+                class: "btn btn-danger btn-sm" do %>
+            <i class="fa fa-trash me-1"></i> Excluir
+          <% end %>
+        <% end %>
+        <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "btn btn-light btn-sm" do %>
+          <i class="fa fa-arrow-left me-1"></i> Voltar
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <p><strong>Descrição:</strong> <%= @perfil.descricao.presence || "—" %></p>
+      <p><strong>Ativo:</strong> <%= @perfil.ativo ? "Sim" : "Não" %></p>
+
+      <%= render "regras_lista" %>
+    </div>
+  </div>
+</div>

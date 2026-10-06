@@ -1,0 +1,259 @@
+<div class="container-fluid mt-3">
+
+  <%# ---- Cabecalho + filtro de periodo ---- %>
+  <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+    <h3 class="mb-0"><i class="fa fa-file-invoice me-2"></i>Painel Fiscal</h3>
+    <% if @homologacao %>
+      <span class="badge bg-warning text-dark ms-2">
+        <i class="fa fa-triangle-exclamation me-1"></i> Ambiente de HOMOLOGAÇÃO (notas sem valor fiscal)
+      </span>
+    <% end %>
+    <%= form_with url: collaborators_backoffice_fiscal_dashboard_path, method: :get, local: true,
+                  class: "ms-auto d-flex align-items-end gap-2" do %>
+      <div>
+        <label class="form-label mb-0 small">Início</label>
+        <%= date_field_tag :inicio, @inicio, class: "form-control form-control-sm" %>
+      </div>
+      <div>
+        <label class="form-label mb-0 small">Fim</label>
+        <%= date_field_tag :fim, @fim, class: "form-control form-control-sm" %>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-filter me-1"></i>Filtrar</button>
+    <% end %>
+  </div>
+
+  <%# ---- Cartoes de resumo ---- %>
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card border-start border-4 border-success h-100">
+        <div class="card-body">
+          <div class="text-muted small">NF-e autorizadas</div>
+          <div class="h3 mb-0"><%= @qtd_nfe %></div>
+          <div class="small text-muted">R$ <%= number_with_precision(@valor_nfe, precision: 2, separator: ",", delimiter: ".") %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-start border-4 border-info h-100">
+        <div class="card-body">
+          <div class="text-muted small">NFC-e autorizadas</div>
+          <div class="h3 mb-0"><%= @qtd_nfce %></div>
+          <div class="small text-muted">R$ <%= number_with_precision(@valor_nfce, precision: 2, separator: ",", delimiter: ".") %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-start border-4 border-warning h-100">
+        <div class="card-body">
+          <div class="text-muted small">Compras com NF (estoque fiscal)</div>
+          <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
+          <div class="small text-muted">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, delimiter: ".") %> </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-start border-4 border-danger h-100">
+        <div class="card-body">
+          <div class="text-muted small">Rejeitadas / erro</div>
+          <div class="h3 mb-0"><%= @qtd_problema %></div>
+          <div class="small text-muted"><%= @qtd_cancel %> cancelada(s) no período</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <%# ---- Grafico ---- %>
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header">
+          <strong>Emissões por dia</strong>
+          <span class="small text-muted">
+            (<%= l @inicio, format: :long rescue @inicio %> a <%= l @fim, format: :long rescue @fim %>) —
+            total autorizado: R$ <%= number_with_precision(@valor_autorizado, precision: 2, separator: ",", delimiter: ".") %>
+          </span>
+        </div>
+        <div class="card-body">
+          <canvas id="graficoEmissoes" height="110"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <%# ---- Status SEFAZ ---- %>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center">
+          <strong><i class="fa fa-tower-broadcast me-2"></i>Status da SEFAZ</strong>
+          <div class="ms-auto d-flex gap-2">
+            <select id="statusModelo" class="form-select form-select-sm" style="width:auto;">
+              <option value="55">NF-e</option>
+              <option value="65">NFC-e</option>
+            </select>
+            <button id="btnStatusSefaz" type="button" class="btn btn-sm btn-outline-primary">Verificar</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="statusSefazResultado" class="text-muted small">
+            Clique em <em>Verificar</em> para consultar a disponibilidade (produção).
+          </div>
+          <hr>
+          <div class="d-grid gap-2">
+            <%= link_to new_collaborators_backoffice_notas_avulsa_path(modelo: 55), class: "btn btn-sm btn-outline-success" do %>
+              <i class="fa fa-file-circle-plus me-1"></i> Emitir NF avulsa
+            <% end %>
+            <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "btn btn-sm btn-outline-secondary" do %>
+              <i class="fa fa-box-archive me-1"></i> Pacotes XML
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Alertas: pendencias e problemas ---- %>
+  <% if @pendentes.any? || @com_problema.any? %>
+    <div class="row g-3 mt-1">
+      <% if @pendentes.any? %>
+        <div class="col-md-6">
+          <div class="card border-warning">
+            <div class="card-header bg-warning-subtle">
+              <strong><i class="fa fa-clock me-1"></i> Em processamento há mais de 30 min (<%= @pendentes.size %>)</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+              <% @pendentes.each do |d| %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <%= d.modelo_nome %> <%= d.numero.present? ? "nº #{d.numero}" : "(sem número)" %>
+                    <span class="badge bg-secondary"><%= d.status %></span>
+                    <small class="text-muted d-block"><%= l d.created_at, format: :short rescue d.created_at %></small>
+                  </span>
+                  <% if d.cod_venda.present? %>
+                    <%= button_to "Atualizar", reconciliar_collaborators_backoffice_venda_documento_fiscal_path(d.cod_venda, d),
+                                  method: :post, class: "btn btn-sm btn-outline-secondary", form: { class: "d-inline" } %>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+      <% if @com_problema.any? %>
+        <div class="col-md-6">
+          <div class="card border-danger">
+            <div class="card-header bg-danger-subtle">
+              <strong><i class="fa fa-circle-exclamation me-1"></i> Com rejeição/erro (<%= @com_problema.size %>)</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+              <% @com_problema.each do |d| %>
+                <li class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <span>
+                      <%= d.modelo_nome %> <%= d.numero.present? ? "nº #{d.numero}" : "" %>
+                      <span class="badge bg-danger"><%= d.status %></span>
+                    </span>
+                    <small class="text-muted"><%= l d.created_at, format: :short rescue d.created_at %></small>
+                  </div>
+                  <% if d.mensagem_sefaz.present? %>
+                    <small class="text-muted d-block" style="white-space: normal;"><%= d.mensagem_sefaz %></small>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# ---- Ultimos documentos ---- %>
+  <div class="card mt-3">
+    <div class="card-header"><strong>Últimos documentos</strong></div>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Modelo</th><th>Número</th><th>Natureza</th><th>Origem</th>
+            <th class="text-end">Valor</th><th>Status</th><th>Emitido</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @ultimos.each do |d| %>
+            <tr>
+              <td><%= d.modelo_nome %></td>
+              <td><%= d.numero %></td>
+              <td><%= d.natureza_operacao %></td>
+              <td>
+                <% if d.cod_venda.present? %>Venda #<%= d.cod_venda %>
+                <% elsif d.cod_compra.present? %>Devol. compra #<%= d.cod_compra %>
+                <% else %>Avulsa<% end %>
+              </td>
+              <td class="text-end">R$ <%= number_with_precision(d.valor_total, precision: 2, separator: ",", delimiter: ".") %></td>
+              <td>
+                <% cls = { "autorizada" => "success", "cancelada" => "dark", "rejeitada" => "danger",
+                           "erro" => "danger", "denegada" => "danger", "enviada" => "info", "rascunho" => "secondary" }[d.status] || "secondary" %>
+                <span class="badge bg-<%= cls %>"><%= d.status %></span>
+              </td>
+              <td><%= (l(d.emitido_em || d.created_at, format: :short) rescue (d.emitido_em || d.created_at)) %></td>
+            </tr>
+          <% end %>
+          <% if @ultimos.empty? %>
+            <tr><td colspan="7" class="text-center text-muted py-3">Nenhum documento fiscal ainda.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    // ---- Grafico de emissoes por dia (empilhado por status) ----
+    var dados = <%= raw({ labels: @serie[:labels], autorizada: @serie[:autorizada],
+                          cancelada: @serie[:cancelada], problema: @serie[:problema] }.to_json) %>;
+    var ctx = document.getElementById('graficoEmissoes');
+    if (ctx && window.Chart) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: dados.labels,
+          datasets: [
+            { label: 'Autorizadas', data: dados.autorizada, backgroundColor: '#198754' },
+            { label: 'Canceladas',  data: dados.cancelada,  backgroundColor: '#212529' },
+            { label: 'Rejeit./erro', data: dados.problema,  backgroundColor: '#dc3545' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // ---- Status SEFAZ (reusa o endpoint JSON da config fiscal) ----
+    var btn = document.getElementById('btnStatusSefaz');
+    var sel = document.getElementById('statusModelo');
+    var out = document.getElementById('statusSefazResultado');
+    var url = "<%= status_sefaz_collaborators_backoffice_fiscal_config_path %>";
+    if (btn) {
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        out.className = 'text-muted small';
+        out.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
+        fetch(url + '?modelo=' + encodeURIComponent(sel.value), { headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var badge = d.operante
+              ? '<span class="badge bg-success">Operante</span>'
+              : '<span class="badge bg-danger">Indisponível</span>';
+            out.className = 'small';
+            out.innerHTML = badge + ' ' + [d.mensagem, d.uf].filter(Boolean).join(' — ');
+          })
+          .catch(function () { out.className = 'text-danger small'; out.textContent = 'Falha ao consultar.'; })
+          .finally(function () { btn.disabled = false; });
+      });
+    }
+  })();
+</script>

@@ -136,10 +136,20 @@ Rails.application.routes.draw do
       end
     end
     
-    resources :vendas, only: [:index, :edit, :new, :create, :destroy] do
+    resources :vendas, only: [:index, :edit, :new, :create, :update, :destroy] do
       patch :atualizar_vendedor, on: :member
-      get :editar_itens, on: :member
-      patch :atualizar_itens, on: :member
+      # Emissao fiscal a partir da venda (NF-e modelo 55). Reaproveita o
+      # mesmo documento numa reemissao (ver Fiscal::EmissorFiscal).
+      resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do
+        post :emitir, on: :collection
+        get :espelho, on: :collection
+        get :previsualizar, on: :collection # DANFE de pre-visualizacao (provedor)
+        post :cancelar, on: :member
+        get :danfe, on: :member
+        get :xml, on: :member # baixa o XML (do banco ou do provedor pela chave)
+        post :reconciliar, on: :member # consulta a SEFAZ e atualiza o status
+        get :evento_arquivo, on: :member # PDF/XML de evento (CC-e/cancelamento)
+      end
     end
 
     namespace :vendas do
@@ -153,7 +163,18 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :compras, only: [:index, :edit, :new, :create, :destroy, :show]
+    resources :compras, only: [:index, :edit, :new, :create, :destroy, :show] do
+      # Devolucao de compra (NF-e finalidade 4). new = tela de revisao/edicao;
+      # create = emite. So super_admin + empresa com modulo fiscal.
+      resource :devolucao, only: [:new, :create], controller: "devolucoes_compra" do
+        # Pre-visualizacao do DANFE da devolucao (sem transmitir a SEFAZ).
+        post :previsualizar
+        # Baixa o XML da nota de entrada (compra) pela chave, via provedor.
+        get :baixar_xml
+        # Resolve o CFOP de um item pela regra fiscal ao trocar a operacao.
+        get :resolver_cfop
+      end
+    end
     resources :pedidos_compras
     resources :produtoxmls, only: [:index, :edit, :new, :create, :destroy]
     resources :pessoas, only: [:index, :edit, :new, :create, :destroy, :update]
@@ -197,6 +218,62 @@ Rails.application.routes.draw do
       end
     end
 
+    # Módulo Fiscal (em desenvolvimento — visível apenas via permissão fiscal_*)
+    # Dashboard do modulo fiscal (primeiro link da aba Fiscal).
+    get 'fiscal_dashboard', to: 'fiscal_dashboard#index', as: :fiscal_dashboard
+
+    # Painel de Notas Recebidas de fornecedor (entradas, automatico via SEFAZ).
+    resources :notas_recebidas, only: [:index] do
+      collection do
+        post :sincronizar          # busca na SEFAZ as notas de entrada do periodo
+        post :sincronizar_status   # atualiza o status SEFAZ das notas (cancelamento)
+      end
+      member do
+        post :importar             # leva ao fluxo de compra (produtoxmls#new)
+      end
+    end
+
+    resources :perfis_tributarios do
+      resources :regras_fiscais, only: [:new, :create, :edit, :update, :destroy]
+    end
+    resource :fiscal_config, only: [:show, :edit, :update], controller: :fiscal_config do
+      # Status operacional da SEFAZ (JSON) para o modelo informado (55/65).
+      get :status_sefaz
+      # Consulta de cadastro de contribuinte na SEFAZ (JSON).
+      get :consultar_cadastro
+    end
+    get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
+
+    # Historico de pacotes fiscais gerados (zip de XML salvo p/ baixar/reenviar).
+    resources :pacotes_fiscais, only: [:index, :destroy] do
+      collection { post :gerar }
+      member do
+        get  :baixar
+        post :enviar_contador
+      end
+    end
+
+    # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);
+    # create=emite; show=detalhe; danfe/espelho/cancelar.
+    resources :notas_avulsas, only: [:index, :new, :create, :show] do
+      member do
+        get  :danfe
+        post :cancelar
+      end
+      collection do
+        get :cores_produto # cores de um produto (p/ o select de cor)
+        post :previsualizar # DANFE/DANFCE de pre-visualizacao (sem SEFAZ)
+        get :resolver_cfop # resolve CFOP de um item pela regra (perfil + operacao)
+      end
+    end
+
+    # Perfil tributario do produto a partir da venda (modal "Sem perfil fiscal").
+    # index -> lista de perfis (JSON); show -> status fiscal do produto (JSON);
+    # update -> grava cod_perfil_tributario no produto.
+    get   'produto_perfil_fiscal',               to: 'produto_perfil_fiscal#index',  as: :produto_perfil_fiscal
+    get   'produto_perfil_fiscal/:cod_produto',  to: 'produto_perfil_fiscal#show',   as: :produto_perfil_fiscal_show
+    patch 'produto_perfil_fiscal/:cod_produto',  to: 'produto_perfil_fiscal#update', as: :produto_perfil_fiscal_update
+
     # Módulo de Controle de Acesso
     resources :access_roles do
       member do
@@ -224,6 +301,8 @@ Rails.application.routes.draw do
     get 'buscas/cores_negativas', to: 'buscas#cores_negativas'
     get 'pessoas/check_cpf_cnpj', to: 'pessoas#check_cpf_cnpj'
     get 'pessoas/buscar_cnpj', to: 'pessoas#buscar_cnpj'
+    # Complementa o cadastro de PJ com IE/situacao da SEFAZ (modulo fiscal).
+    get 'pessoas/consultar_cadastro_sefaz', to: 'pessoas#consultar_cadastro_sefaz'
     get 'vendas/check_cpf_cnpj_venda', to: 'vendas#check_cpf_cnpj_venda'
 
     get 'report_sales', to: 'report/rep_sales#index'

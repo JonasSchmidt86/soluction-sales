@@ -1,9 +1,13 @@
 class Contaspagrec < ApplicationRecord
+   include MoedaBr
 
    default_scope { order(dtvencimento: :asc) }
 
     self.table_name = "contaspagrec"
     self.primary_key = "cod_contaspagrec"
+
+    # Aceita valor em formato BR ("1.234,56") vindo do form/nested attributes.
+    moeda_br :valorparcela
         
     has_many :lancamentos, :class_name => 'Lancamentoscaixa', :foreign_key => 'cod_contaspagrec', dependent: :delete_all, 
             inverse_of: :contaspagrec #, dependent: :destroy

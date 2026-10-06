@@ -1,0 +1,417 @@
+<% modelo_nome = @modelo == 65 ? "NFC-e (modelo 65)" : "NF-e (modelo 55)" %>
+<% itens_preenchidos = @itens_preenchidos || [] %>
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-file-invoice me-2"></i>
+        <h4 class="mb-0">Emissão avulsa — <%= modelo_nome %></h4>
+        <div class="ms-auto btn-group">
+          <%= link_to "NF-e 55", new_collaborators_backoffice_notas_avulsa_path(modelo: 55),
+                      class: "btn btn-sm #{@modelo == 55 ? 'btn-light' : 'btn-outline-light'}" %>
+          <%= link_to "NFC-e 65", new_collaborators_backoffice_notas_avulsa_path(modelo: 65),
+                      class: "btn btn-sm #{@modelo == 65 ? 'btn-light' : 'btn-outline-light'}" %>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <% if flash[:alert].present? %>
+          <div class="alert alert-danger"><%= flash[:alert] %></div>
+        <% end %>
+
+        <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :post, local: true, id: "formAvulsa" do %>
+          <%= hidden_field_tag :modelo, @modelo %>
+
+          <%# ---- Operacao (natureza) e Finalidade ---- %>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <%= select_tag :cod_operacao_fiscal,
+                      options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
+                      id: "operacaoGeral", class: "form-select" %>
+                <label>Operação (natureza)</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-floating">
+                <%= select_tag :finalidade,
+                      options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, (@finalidade_sel.presence || 1).to_i),
+                      class: "form-select" %>
+                <label>Finalidade</label>
+              </div>
+            </div>
+          </div>
+
+          <%# ---- Destinatario ---- %>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Destinatário
+              <% if @modelo == 55 %><span class="text-danger">*</span><% else %><span class="text-muted">(opcional)</span><% end %>
+            </label>
+            <div class="position-relative">
+              <input type="text" id="clienteBusca" class="form-control"
+                     placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off">
+              <%= hidden_field_tag :cod_pessoa, @cod_pessoa_sel, id: "codPessoa" %>
+              <div id="clienteLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
+            </div>
+            <small id="clienteSelecionado" class="text-success"></small>
+          </div>
+
+          <%# ---- Itens (planilha estilo devolucao) ---- %>
+          <h5 class="mt-4">Produtos</h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-top">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%;">Produto</th>
+                  <th>Cor</th>
+                  <th style="width:16%;">Perfil tributário</th>
+                  <th style="width:9%;">CFOP</th>
+                  <th style="width:9%;">Qtd</th>
+                  <th style="width:12%;">Vl Unitário</th>
+                  <th style="width:12%;">Total</th>
+                  <th style="width:40px;"></th>
+                </tr>
+              </thead>
+              <tbody id="itensBody"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="addItem">
+            <i class="fa fa-plus me-1"></i> Adicionar produto
+          </button>
+
+          <div class="text-end mt-3">
+            <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
+            <div class="d-flex align-items-center gap-2">
+              <span id="avulsaErro" class="text-danger small"></span>
+              <%# Pre-visualizar via AJAX: so abre aba quando vem PDF; erro aparece inline. %>
+              <button type="button" class="btn btn-outline-info" id="btnPrevisualizar"
+                      data-url="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>">
+                <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
+              </button>
+              <%# data-confirm-msg (nao data-confirm) para o Rails UJS NAO disparar
+                  um segundo confirm; o nosso JS de submit cuida da confirmacao. %>
+              <button type="submit" class="btn btn-success" id="emitirBtn"
+                      data-confirm-msg="Emitir a <%= modelo_nome %> agora?">
+                <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>
+
+<%# Opcoes de perfil (reaproveitadas por item). %>
+<% perfil_options = @perfis.map { |p| [p.nome, p.cod_perfil_tributario] } %>
+
+<%# Linha-modelo (template) para novos itens %>
+<template id="itemTemplate">
+  <tr class="item-row">
+    <td class="position-relative">
+      <input type="text" class="form-control form-control-sm produto-busca" placeholder="Produto — digite para buscar" autocomplete="off">
+      <input type="hidden" class="cod-produto field-cod-produto">
+      <input type="hidden" class="field-nome-produto">
+      <div class="list-group position-absolute w-100 produto-lista" style="display:none; z-index:1000;"></div>
+    </td>
+    <td>
+      <select class="form-select form-select-sm cod-cor field-cod-cor">
+        <option value="">— selecione a cor —</option>
+      </select>
+    </td>
+    <td>
+      <select class="form-select form-select-sm field-perfil item-perfil">
+        <option value="">—</option>
+        <%= options_for_select(perfil_options) %>
+      </select>
+    </td>
+    <td><input type="text" class="form-control form-control-sm item-cfop field-cfop" readonly placeholder="—"></td>
+    <td><input type="number" min="0" step="1" value="1" class="form-control form-control-sm qtd field-quantidade"></td>
+    <td><input type="text" class="form-control form-control-sm vlunit field-valorunitario" value="0,00"></td>
+    <td class="total-item align-middle">R$ 0,00</td>
+    <td class="align-middle">
+      <button type="button" class="btn btn-outline-danger btn-sm rm-item"><i class="fa fa-trash-can"></i></button>
+    </td>
+  </tr>
+</template>
+
+<%# Itens preenchidos (re-exibidos quando o create falhou). JSON p/ o JS repopular. %>
+<script type="application/json" id="itensPreenchidos"><%== itens_preenchidos.to_json %></script>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+(function () {
+  var base = window.location.origin + '/collaborators_backoffice/';
+  var csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  var RESOLVER_URL = "<%= resolver_cfop_collaborators_backoffice_notas_avulsas_path %>";
+  var opTopo = document.getElementById('operacaoGeral');
+  var codPessoaHidden = document.getElementById('codPessoa');
+
+  // ---------- Destinatario (autocomplete) ----------
+  var cliInput = document.getElementById('clienteBusca');
+  var cliLista = document.getElementById('clienteLista');
+  var cliHidden = document.getElementById('codPessoa');
+  var cliSel = document.getElementById('clienteSelecionado');
+
+  cliInput.addEventListener('input', function () {
+    var q = this.value.trim();
+    cliHidden.value = ''; cliSel.textContent = '';
+    if (q.length < 2) { cliLista.style.display = 'none'; return; }
+    fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (ps) {
+        cliLista.innerHTML = '';
+        ps.forEach(function (p) {
+          var it = document.createElement('button');
+          it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+          it.textContent = p.nome + (p.cpf_cnpj ? ' — ' + p.cpf_cnpj : '');
+          it.addEventListener('click', function () {
+            cliHidden.value = p.cod_pessoa;
+            cliInput.value = p.nome;
+            cliSel.textContent = 'Selecionado: ' + p.nome;
+            cliLista.style.display = 'none';
+            // UF do destinatario muda o CFOP (5/6/7) -> recalcula tudo.
+            document.querySelectorAll('.item-row').forEach(resolverLinha);
+          });
+          cliLista.appendChild(it);
+        });
+        cliLista.style.display = ps.length ? 'block' : 'none';
+      });
+  });
+
+  // ---------- Moeda BR ----------
+  function parseBR(v) { return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0; }
+  function fmtBR(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  function recalc() {
+    var total = 0;
+    document.querySelectorAll('.item-row').forEach(function (row) {
+      var q = parseBR(row.querySelector('.qtd').value);
+      var v = parseBR(row.querySelector('.vlunit').value);
+      var t = q * v;
+      row.querySelector('.total-item').textContent = 'R$ ' + fmtBR(t);
+      total += t;
+    });
+    document.getElementById('totalNota').textContent = fmtBR(total);
+  }
+
+  // ---------- Resolucao de CFOP pela regra (perfil + operacao do topo + UF) ----------
+  function resolverLinha(row) {
+    var pHidden = row.querySelector('.cod-produto');
+    var perfil  = row.querySelector('.item-perfil');
+    var cfop    = row.querySelector('.item-cfop');
+    if (!pHidden || !cfop) return;
+    var codProduto = pHidden.value;
+    if (!codProduto) { cfop.value = ''; return; }
+    var url = RESOLVER_URL + '?cod_produto=' + encodeURIComponent(codProduto) +
+              '&cod_perfil_tributario=' + encodeURIComponent(perfil ? perfil.value : '') +
+              '&cod_operacao_fiscal=' + encodeURIComponent(opTopo ? opTopo.value : '') +
+              '&cod_pessoa=' + encodeURIComponent(codPessoaHidden ? codPessoaHidden.value : '');
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (d) {
+        if (!d) { cfop.value = ''; return; }
+        // Pre-seleciona o perfil do produto quando o usuario ainda nao escolheu.
+        if (perfil && !perfil.value && d.cod_perfil_tributario) {
+          perfil.value = String(d.cod_perfil_tributario);
+        }
+        cfop.value = d.cfop ? d.cfop : '';
+      })
+      .catch(function (e) { console.error('resolver_cfop:', e); });
+  }
+
+  // ---------- Itens ----------
+  var body = document.getElementById('itensBody');
+  var tpl = document.getElementById('itemTemplate');
+
+  function carregarCores(codProduto, selectEl, corSelecionada, row) {
+    return fetch(base + 'notas_avulsas/cores_produto?cod_produto=' + encodeURIComponent(codProduto))
+      .then(function (r) { return r.json(); })
+      .then(function (cores) {
+        selectEl.innerHTML = '<option value="">— selecione a cor —</option>';
+        cores.forEach(function (c) {
+          var o = document.createElement('option');
+          var qf = (typeof c.qtdfiscal === 'number') ? c.qtdfiscal : parseFloat(c.qtdfiscal || '0');
+          o.value = c.cod_cor;
+          o.textContent = c.nmcor + '  (fiscal: ' + fmtBR(qf) + ')';
+          o.dataset.valorvenda = c.valorvenda;
+          o.dataset.qtdfiscal  = qf;
+          o.dataset.quantidade = c.quantidade;
+          if (corSelecionada && String(c.cod_cor) === String(corSelecionada)) o.selected = true;
+          selectEl.appendChild(o);
+        });
+        // Abre o select para o usuario escolher a cor assim que o produto entra.
+        if (!corSelecionada && cores.length) {
+          if (cores.length === 1) {
+            selectEl.selectedIndex = 1; // uma cor so: ja seleciona
+          }
+          try { selectEl.focus(); } catch (e) {}
+        }
+      });
+  }
+
+  function addItem(dados) {
+    dados = dados || {};
+    var frag = tpl.content.cloneNode(true);
+    body.appendChild(frag);
+    var row = body.lastElementChild;
+
+    var pInput  = row.querySelector('.produto-busca');
+    var pHidden = row.querySelector('.cod-produto');
+    var pNome   = row.querySelector('.field-nome-produto');
+    var pLista  = row.querySelector('.produto-lista');
+    var corSel  = row.querySelector('.cod-cor');
+    var perfil  = row.querySelector('.item-perfil');
+
+    pInput.addEventListener('input', function () {
+      var q = this.value.trim();
+      pHidden.value = ''; pNome.value = '';
+      row.querySelector('.item-cfop').value = '';
+      if (q.length < 1) { pLista.style.display = 'none'; return; }
+      fetch(base + 'buscas/buscar_produtos?entidade=Produto&query=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (prods) {
+          pLista.innerHTML = '';
+          prods.forEach(function (p) {
+            var it = document.createElement('button');
+            it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+            it.textContent = p.produto;
+            it.addEventListener('click', function () {
+              pHidden.value = p.cod_produto;
+              pNome.value = p.produto;
+              pInput.value = p.produto;
+              pLista.style.display = 'none';
+              carregarCores(p.cod_produto, corSel, null, row);
+              resolverLinha(row); // CFOP pela regra do perfil + operacao
+            });
+            pLista.appendChild(it);
+          });
+          pLista.style.display = prods.length ? 'block' : 'none';
+        });
+    });
+
+    corSel.addEventListener('change', function () {
+      var opt = this.selectedOptions[0];
+      if (opt && opt.dataset.valorvenda) {
+        var vl = row.querySelector('.vlunit');
+        if (parseBR(vl.value) === 0) { vl.value = fmtBR(parseFloat(opt.dataset.valorvenda) || 0); recalc(); }
+      }
+    });
+
+    // Trocar o perfil recalcula o CFOP so desta linha.
+    if (perfil) perfil.addEventListener('change', function () { resolverLinha(row); });
+
+    row.querySelector('.qtd').addEventListener('input', recalc);
+    row.querySelector('.vlunit').addEventListener('input', recalc);
+    row.querySelector('.rm-item').addEventListener('click', function () { row.remove(); reindex(); recalc(); });
+
+    // Pre-popular (re-exibicao apos erro no create).
+    if (dados.cod_produto) {
+      pHidden.value = dados.cod_produto;
+      pNome.value = dados.nome_produto || '';
+      pInput.value = dados.nome_produto || ('Produto ' + dados.cod_produto);
+      if (perfil && dados.cod_perfil_tributario) perfil.value = dados.cod_perfil_tributario;
+      if (dados.quantidade) row.querySelector('.qtd').value = dados.quantidade;
+      if (dados.valorunitario) row.querySelector('.vlunit').value = dados.valorunitario;
+      if (dados.cfop) row.querySelector('.item-cfop').value = dados.cfop;
+      carregarCores(dados.cod_produto, corSel, dados.cod_cor, row).then(function () {
+        if (!dados.cfop) resolverLinha(row);
+      });
+    }
+    return row;
+  }
+
+  // Atribui names indexados itens[i][campo] para o Rails montar array de hashes.
+  function reindex() {
+    document.querySelectorAll('#itensBody .item-row').forEach(function (row, i) {
+      row.querySelector('.field-cod-produto').name    = 'itens[' + i + '][cod_produto]';
+      row.querySelector('.field-nome-produto').name   = 'itens[' + i + '][nome_produto]';
+      row.querySelector('.field-cod-cor').name         = 'itens[' + i + '][cod_cor]';
+      row.querySelector('.field-perfil').name          = 'itens[' + i + '][cod_perfil_tributario]';
+      row.querySelector('.field-cfop').name            = 'itens[' + i + '][cfop]';
+      row.querySelector('.field-quantidade').name      = 'itens[' + i + '][quantidade]';
+      row.querySelector('.field-valorunitario').name   = 'itens[' + i + '][valorunitario]';
+    });
+  }
+
+  document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); });
+
+  // Operacao do topo recalcula CFOP de TODAS as linhas.
+  if (opTopo) {
+    opTopo.addEventListener('change', function () {
+      document.querySelectorAll('.item-row').forEach(resolverLinha);
+    });
+  }
+
+  // Inicializacao: repopula itens preenchidos (apos erro) ou comeca com 1 linha.
+  var preenchidos = [];
+  try { preenchidos = JSON.parse(document.getElementById('itensPreenchidos').textContent || '[]'); } catch (e) {}
+  if (preenchidos.length) {
+    preenchidos.forEach(function (i) { addItem(i); });
+    // Repopula destinatario selecionado (so o cod; o nome o usuario reconhece).
+    var codSel = codPessoaHidden ? codPessoaHidden.value : '';
+    if (codSel) cliSel.textContent = 'Destinatário selecionado (cód ' + codSel + ')';
+  } else {
+    addItem();
+  }
+  reindex(); recalc();
+
+  // ---------- Enter NAO submete o form ----------
+  // Nos campos de texto (busca de produto/destinatario, qtd, valor) o Enter
+  // dispararia o submit (= emitir a NF). Bloqueia o Enter nesses inputs; o
+  // usuario emite so clicando no botao Emitir. (textarea e select nao afetados.)
+  document.getElementById('formAvulsa').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+      e.preventDefault();
+    }
+  });
+
+  // ---------- Confirm no submit (emitir) — unico ponto de confirmacao ----------
+  document.getElementById('formAvulsa').addEventListener('submit', function (e) {
+    var btn = e.submitter || document.getElementById('emitirBtn');
+    var msg = btn && btn.dataset ? btn.dataset.confirmMsg : null;
+    if (msg && !confirm(msg)) { e.preventDefault(); }
+  });
+
+  // ---------- Pre-visualizacao via AJAX (nao abre aba em erro) ----------
+  var btnPrev = document.getElementById('btnPrevisualizar');
+  var out = document.getElementById('avulsaErro');
+  if (btnPrev) {
+    btnPrev.addEventListener('click', function () {
+      var form = document.getElementById('formAvulsa');
+      if (!form) return;
+      out.textContent = '';
+      btnPrev.disabled = true;
+      var original = btnPrev.innerHTML;
+      btnPrev.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Gerando...';
+      var fd = new FormData(form);
+      fetch(btnPrev.dataset.url, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/pdf, text/html' },
+        body: fd
+      })
+      .then(function (resp) {
+        var ct = resp.headers.get('Content-Type') || '';
+        // DANFE (NF-e 55) vem em PDF; DANFCE (NFC-e 65) vem em HTML. Abre os dois.
+        if (resp.ok && (ct.indexOf('application/pdf') !== -1 || ct.indexOf('text/html') !== -1)) {
+          return resp.blob().then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+          });
+        }
+        return resp.json().then(function (j) {
+          out.textContent = (j && j.erro) ? j.erro : 'Não foi possível pré-visualizar.';
+        }).catch(function () { out.textContent = 'Não foi possível pré-visualizar.'; });
+      })
+      .catch(function () { out.textContent = 'Falha de conexão ao pré-visualizar.'; })
+      .finally(function () { btnPrev.disabled = false; btnPrev.innerHTML = original; });
+    });
+  }
+})();
+</script>

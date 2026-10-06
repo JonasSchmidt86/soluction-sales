@@ -35,8 +35,31 @@ class Empresa < ApplicationRecord
 
     accepts_nested_attributes_for :employees, reject_if: :all_blank, allow_destroy: false #cocoon gem
 
+    belongs_to :cidade, :class_name => 'Cidade', :foreign_key => 'cod_cidade', optional: true
+
+    has_one :fiscal_config, :class_name => 'FiscalConfig',
+            :foreign_key => 'cod_empresa', :primary_key => 'cod_empresa'
+
     def to_s
         self.nome;
+    end
+
+    # Modulo fiscal habilitado = existe FiscalConfig ATIVO para esta empresa.
+    # Controla visibilidade do menu Fiscal, telas e (futuro) botoes de emissao.
+    def modulo_fiscal?
+        fiscal_config.present? && fiscal_config.ativo?
+    end
+
+    # --- Helpers fiscais (UF e municipio via Cidade->Estado) ---
+
+    # Sigla da UF do emitente (ex: "PR"). Usada no CFOP automatico (origem).
+    def uf
+        cidade&.estado&.sigla
+    end
+
+    # Codigo IBGE do municipio (7 digitos) exigido no XML da NF-e.
+    def cod_municipio_ibge
+        cidade&.cod_municipio
     end
 
     def horario_comercial?

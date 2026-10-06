@@ -1,0 +1,117 @@
+<div id="layoutAuthentication_content">
+  <main>
+    <div class="card mt-3">
+      <div class="card-header bg-primary text-white d-flex align-items-center">
+        <i class="fa fa-inbox me-2"></i>
+        <h4 class="mb-0">Notas Recebidas (fornecedores)</h4>
+        <div class="ms-auto">
+          <%= button_to "Buscar na SEFAZ",
+                sincronizar_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
+                method: :post, class: "btn btn-light btn-sm" %>
+          <%= button_to "Atualizar status",
+                sincronizar_status_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
+                method: :post, class: "btn btn-outline-light btn-sm" %>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <% if flash[:notice].present? %><div class="alert alert-success py-2"><%= flash[:notice] %></div><% end %>
+        <% if flash[:alert].present? %><div class="alert alert-danger py-2"><%= flash[:alert] %></div><% end %>
+
+        <%# Alerta: notas importadas que foram canceladas na SEFAZ %>
+        <% if @alertas_canceladas.any? %>
+          <div class="alert alert-warning">
+            <i class="fa fa-triangle-exclamation me-1"></i>
+            <strong><%= @alertas_canceladas.size %></strong> nota(s) já importada(s) como compra foram
+            <strong>CANCELADAS na SEFAZ</strong>. Verifique e cancele a compra correspondente:
+            <%= @alertas_canceladas.map { |n| "NF #{n.numero}" }.join(", ") %>.
+          </div>
+        <% end %>
+
+        <%# Filtros %>
+        <%= form_with url: collaborators_backoffice_notas_recebidas_path, method: :get, local: true, class: "row g-2 mb-3 align-items-end" do %>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">De</label>
+            <%= text_field_tag :inicio, params[:inicio] || Date.today.beginning_of_month.strftime("%Y-%m-%d"), type: "date", class: "form-control form-control-sm" %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Até</label>
+            <%= text_field_tag :fim, params[:fim] || Date.today.strftime("%Y-%m-%d"), type: "date", class: "form-control form-control-sm" %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Status SEFAZ</label>
+            <%= select_tag :status, options_for_select([["Todos", ""], ["Autorizada","autorizada"], ["Cancelada","cancelada"], ["Denegada","denegada"]], params[:status]), class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-0">Integrado</label>
+            <%= select_tag :integrado, options_for_select([["Todos",""],["Sim","1"],["Não","0"]], params[:integrado]), class: "form-select form-select-sm" %>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+          </div>
+        <% end %>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Status SEFAZ</th>
+                <th>Integrado</th>
+                <th>Fornecedor (emitente)</th>
+                <th>NF</th>
+                <th>Série</th>
+                <th>Emissão</th>
+                <th class="text-end">Total</th>
+                <th>Tipo</th>
+                <th>Natureza</th>
+                <th>Transportadora</th>
+                <th>CNPJ Transp.</th>
+                <th style="width:60px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if @notas.empty? %>
+                <tr><td colspan="12" class="text-center text-muted py-3">
+                  Nenhuma nota recebida no período. Clique em <strong>Buscar na SEFAZ</strong> para sincronizar.
+                </td></tr>
+              <% end %>
+              <% @notas.each do |n| %>
+                <tr class="<%= 'table-warning' if n.integrada_mas_cancelada? %>">
+                  <td>
+                    <% badge = { "autorizada" => "success", "cancelada" => "danger", "denegada" => "dark" }[n.status_sefaz] || "secondary" %>
+                    <span class="badge text-bg-<%= badge %>"><%= n.status_sefaz %></span>
+                  </td>
+                  <td>
+                    <% if n.integrada? %>
+                      <%= link_to "Compra ##{n.cod_compra}", collaborators_backoffice_compra_path(n.cod_compra), class: "badge text-bg-info text-decoration-none" %>
+                    <% else %>
+                      <span class="badge text-bg-light">não</span>
+                    <% end %>
+                  </td>
+                  <td><%= n.emitente_nome %><br><small class="text-muted"><%= n.emitente_cnpj %></small></td>
+                  <td><%= n.numero %></td>
+                  <td><%= n.serie %></td>
+                  <td><%= n.data_emissao&.strftime("%d/%m/%Y") %></td>
+                  <td class="text-end"><%= number_to_currency(n.valor_total, unit: "R$ ", delimiter: ".", separator: ",") %></td>
+                  <td><%= n.tipo_nf == 0 ? "Entrada" : (n.tipo_nf == 1 ? "Saída" : "—") %></td>
+                  <td><small><%= n.natureza_operacao %></small></td>
+                  <td><small><%= n.transportadora_nome %></small></td>
+                  <td><small><%= n.transportadora_cnpj %></small></td>
+                  <td>
+                    <% if !n.integrada? && n.status_sefaz == "autorizada" %>
+                      <%= button_to "Importar", importar_collaborators_backoffice_notas_recebida_path(n), method: :post, class: "btn btn-success btn-sm" %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <% if @notas.respond_to?(:total_pages) %>
+          <div class="text-center"><%= paginate @notas %></div>
+        <% end %>
+      </div>
+    </div>
+  </main>
+</div>

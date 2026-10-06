@@ -26,6 +26,14 @@ class CollaboratorsBackofficeController < ApplicationController
     end
     helper_method :access_control
 
+    # Modulo fiscal habilitado para a EMPRESA logada (via FiscalConfig ativo).
+    # Garante que emissao/telas fiscais so aparecem quando logado na empresa
+    # que tem o modulo — evita emitir por empresa errada.
+    def empresa_tem_modulo_fiscal?
+      @empresa_tem_modulo_fiscal ||= current_collaborator&.empresa&.modulo_fiscal? || false
+    end
+    helper_method :empresa_tem_modulo_fiscal?
+
     private
 
     # Informa ao PostgreSQL o funcionario logado e a origem (WEB)
@@ -82,8 +90,6 @@ class CollaboratorsBackofficeController < ApplicationController
       'edit' => :edit,
       'update' => :edit,
       'destroy' => :delete,
-      'editar_itens' => :edit,
-      'atualizar_itens' => :edit,
       'atualizar_vendedor' => :edit,
       'calculate' => :edit,
       'finalize' => :edit,

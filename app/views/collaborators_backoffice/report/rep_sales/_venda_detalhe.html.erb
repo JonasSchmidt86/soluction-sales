@@ -1,0 +1,107 @@
+<%# =================================================================== %>
+<%# DETALHE DA VENDA (somente leitura) em ABAS: Produtos | Contas.       %>
+<%# Abre inline abaixo da linha, pelo botao "i". Produtos ja vem aberta. %>
+<%# Ids sao unicos por venda (varias vendas na mesma pagina).            %>
+<%# Requer local :sale.                                                  %>
+<%# =================================================================== %>
+<% v = sale.cod_venda %>
+<div class="p-2 bg-light border rounded">
+  <ul class="nav nav-tabs justify-content-end" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-bs-toggle="tab"
+              data-bs-target="#prodTab<%= v %>" type="button" role="tab">
+        <i class="fa fa-box me-1"></i> Produtos
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-bs-toggle="tab"
+              data-bs-target="#contasTab<%= v %>" type="button" role="tab">
+        <i class="fa fa-money-bill me-1"></i> Contas
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content border border-top-0 p-2 bg-white">
+    <%# ---- Aba Produtos (aberta por padrao) ---- %>
+    <div class="tab-pane fade show active" id="prodTab<%= v %>" role="tabpanel">
+      <table class="table table-sm table-striped table-borderless mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th style="width: 12%;">Codigo</th>
+            <th style="width: 38%;">Produto</th>
+            <th style="width: 18%;">Cor</th>
+            <th class="text-end" style="width: 8%;">Qtd</th>
+            <th class="text-end" style="width: 8%;">Acrescimo</th>
+            <th class="text-end" style="width: 8%;">Desconto</th>
+            <th class="text-end" style="width: 8%;">Vl Unit.</th>
+            <th class="text-end" style="width: 10%;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% sale.itensvenda.order(:cod_item).each do |item| %>
+            <tr>
+              <td><%= item.full_codigo %></td>
+              <td><%= item.produto&.nome %></td>
+              <td><%= item.cor&.nmcor %></td>
+              <td class="text-end"><%= item.quantidade.to_i %></td>
+              <td class="text-end"><%= number_to_currency(item.valor_acrescimo, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+              <td class="text-end"><%= number_to_currency(item.valor_desconto, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+              <td class="text-end"><%= number_to_currency(item.valorunitario, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+              <td class="text-end"><%= number_to_currency(item.valor_total, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# ---- Aba Contas ---- %>
+    <div class="tab-pane fade" id="contasTab<%= v %>" role="tabpanel">
+      <table class="table table-sm table-striped mb-0">
+        <thead class="table-secondary">
+          <tr>
+            <th style="width: 8%;">Pago?</th>
+            <th style="width: 15%;">Colaborador</th>
+            <th style="width: 10%;">Parcela</th>
+            <th>Cliente</th>
+            <th style="width: 10%;">Dt Venci..</th>
+            <th style="width: 10%;">Ult Pgto..</th>
+            <th class="text-end" style="width: 10%;">Valor Total</th>
+            <th class="text-end" style="width: 10%;">Valor Pago</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% sale.contas.order(:numeroparcela).each do |bill| %>
+            <%
+              status_label = ''
+              row_class = ''
+              if !bill.ativo
+                status_label = 'Cancelada'; row_class = 'text-danger'
+              elsif bill.dtvencimento && bill.dtvencimento < DateTime.now && !bill.quitada
+                status_label = 'Vencida'; row_class = 'text-warning'
+              elsif bill.lancamentos.exists?
+                datapagto = bill.lancamentos.maximum(:datapagto)
+                if datapagto && (datapagto.to_date - bill.dtvencimento.to_date).to_i >= 15
+                  status_label = 'Atrasada'; row_class = 'text-warning'
+                else
+                  status_label = bill.quitada? ? 'Liquidada' : 'Aberto'
+                end
+              else
+                status_label = bill.quitada? ? 'Liquidada' : 'Aberto'
+              end
+            %>
+            <tr class="<%= row_class %>">
+              <td><%= status_label %></td>
+              <td><%= bill.nmCollaborator %></td>
+              <td><%= bill.nmParcela %></td>
+              <td><%= bill.nmPessoa %></td>
+              <td><%= post_date(bill.dtvencimento) if bill.dtvencimento.present? %></td>
+              <td><%= post_date(bill.lancamentos.maximum(:datapagto)) if bill.lancamentos.exists? %></td>
+              <td class="text-end"><%= number_to_currency(bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+              <td class="text-end"><%= number_to_currency(bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

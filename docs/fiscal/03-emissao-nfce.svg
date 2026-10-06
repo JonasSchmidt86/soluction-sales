@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="620" viewBox="0 0 880 620" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="880" height="620" fill="#f4f6f9"/>
+  <rect x="20" y="20" width="840" height="580" rx="8" fill="#fff" stroke="#e3e6ea"/>
+  <rect x="20" y="20" width="840" height="52" rx="8" fill="#0d6efd"/>
+  <rect x="20" y="58" width="840" height="14" fill="#0d6efd"/>
+  <text x="44" y="52" fill="#fff" font-size="18" font-weight="bold">Emitir NFC-e — Venda #4821</text>
+  <rect x="44" y="92" width="792" height="56" rx="6" fill="#f8f9fa" stroke="#e3e6ea"/>
+  <text x="60" y="116" fill="#6c757d" font-size="11">OPERAÇÃO</text>
+  <text x="60" y="138" fill="#212529" font-size="14" font-weight="bold">Venda ▾</text>
+  <text x="260" y="116" fill="#6c757d" font-size="11">EMPRESA (emitente)</text>
+  <text x="260" y="138" fill="#212529" font-size="13">Móveis Rosa — SP</text>
+  <text x="500" y="116" fill="#6c757d" font-size="11">CLIENTE (destino)</text>
+  <text x="500" y="138" fill="#212529" font-size="13">João Silva — PR (fora do estado)</text>
+  <text x="740" y="116" fill="#6c757d" font-size="11">MODELO</text>
+  <text x="740" y="138" fill="#212529" font-size="13">65 (NFC-e)</text>
+  <text x="44" y="176" fill="#6c757d" font-size="12" font-weight="bold" letter-spacing="1">ITENS — REGRAS RESOLVIDAS AUTOMATICAMENTE</text>
+  <line x1="44" y1="184" x2="836" y2="184" stroke="#e3e6ea"/>
+  <rect x="44" y="192" width="792" height="28" fill="#f1f3f5"/>
+  <text x="54" y="211" fill="#495057" font-size="11" font-weight="bold">Produto</text>
+  <text x="320" y="211" fill="#495057" font-size="11" font-weight="bold">Perfil</text>
+  <text x="470" y="211" fill="#495057" font-size="11" font-weight="bold">CFOP</text>
+  <text x="560" y="211" fill="#495057" font-size="11" font-weight="bold">CSOSN</text>
+  <text x="650" y="211" fill="#495057" font-size="11" font-weight="bold">Qtd</text>
+  <text x="720" y="211" fill="#495057" font-size="11" font-weight="bold">Valor</text>
+  <rect x="44" y="220" width="792" height="40" fill="#fff" stroke="#f1f1f1"/>
+  <text x="54" y="245" fill="#212529" font-size="12">SOF BURITI VIGORE 224CM</text>
+  <text x="320" y="245" fill="#495057" font-size="12">Móveis - Revenda</text>
+  <text x="470" y="245" fill="#0d6efd" font-size="12" font-weight="bold">6102</text>
+  <text x="560" y="245" fill="#212529" font-size="12">102</text>
+  <text x="650" y="245" fill="#212529" font-size="12">1</text>
+  <text x="720" y="245" fill="#212529" font-size="12">R$ 2.400</text>
+  <rect x="44" y="260" width="792" height="40" fill="#fbfbfb" stroke="#f1f1f1"/>
+  <text x="54" y="285" fill="#212529" font-size="12">MESA IPANEMA 1,40</text>
+  <text x="320" y="285" fill="#495057" font-size="12">Móveis - Revenda</text>
+  <text x="470" y="285" fill="#0d6efd" font-size="12" font-weight="bold">6102</text>
+  <text x="560" y="285" fill="#212529" font-size="12">102</text>
+  <text x="650" y="285" fill="#212529" font-size="12">1</text>
+  <text x="720" y="285" fill="#212529" font-size="12">R$ 890</text>
+  <rect x="44" y="316" width="792" height="70" rx="6" fill="#e7f1ff" stroke="#b6d4fe"/>
+  <text x="60" y="340" fill="#0d4bb3" font-size="12" font-weight="bold">Como o CFOP virou 6102:</text>
+  <text x="60" y="360" fill="#0d4bb3" font-size="12">Perfil "Móveis - Revenda" + operação "Venda" → CFOP base 102 e CSOSN 102.</text>
+  <text x="60" y="378" fill="#0d4bb3" font-size="12">Empresa SP e cliente PR (fora do estado) → primeiro dígito 6 → 6102. Automático.</text>
+  <line x1="44" y1="408" x2="836" y2="408" stroke="#e3e6ea"/>
+  <text x="600" y="436" fill="#6c757d" font-size="13">Total da nota</text>
+  <text x="740" y="436" fill="#212529" font-size="18" font-weight="bold">R$ 3.290</text>
+  <rect x="44" y="460" width="792" height="46" rx="6" fill="#fff8e1" stroke="#ffe08a"/>
+  <text x="60" y="488" fill="#8a6d00" font-size="12">Status: rascunho — nada foi enviado à SEFAZ ainda. Confira antes de transmitir.</text>
+  <rect x="44" y="524" width="150" height="44" rx="6" fill="#fff" stroke="#ced4da"/>
+  <text x="70" y="551" fill="#495057" font-size="13">Ver payload</text>
+  <rect x="640" y="524" width="196" height="44" rx="6" fill="#198754"/>
+  <text x="666" y="551" fill="#fff" font-size="14" font-weight="bold">Transmitir para SEFAZ</text>
+</svg>
