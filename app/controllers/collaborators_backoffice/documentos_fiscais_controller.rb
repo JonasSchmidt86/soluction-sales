@@ -36,7 +36,7 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   # os dados (emitente, destinatario, itens com tributacao, totais), SEM valor
   # fiscal e sem precisar de autorizacao da SEFAZ. Serve para conferencia/impressao.
   def espelho
-    operacao = OperacaoFiscal.find_by(nome: "Venda")
+    operacao = OperacaoFiscal.find_by(nome: "Venda (NF-e)")
     config   = FiscalConfig.find_by(cod_empresa: @venda.cod_empresa)
 
     if operacao.nil? || config.nil?

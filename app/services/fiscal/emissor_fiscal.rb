@@ -28,7 +28,7 @@ module Fiscal
       @modelo  = modelo
       @empresa = venda.empresa
       @config  = FiscalConfig.find_by(cod_empresa: @empresa.cod_empresa)
-      @operacao = operacao || OperacaoFiscal.find_by(nome: "Venda")
+      @operacao = operacao || OperacaoFiscal.find_by(nome: "Venda (NF-e)")
       @cod_funcionario = cod_funcionario
       @builder_injetado = builder    # devolucao passa um builder proprio
       @cod_compra = cod_compra       # NF de devolucao de compra

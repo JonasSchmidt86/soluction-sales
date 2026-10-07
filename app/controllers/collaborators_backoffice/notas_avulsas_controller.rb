@@ -16,7 +16,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def new
     @modelo = modelo_param
     @operacoes = OperacaoFiscal.ativos.order(:nome)
-    @operacao_padrao = OperacaoFiscal.find_by(nome: "NF avulsa") || OperacaoFiscal.find_by(nome: "Venda")
+    @operacao_padrao = OperacaoFiscal.find_by(nome: "NF avulsa") || OperacaoFiscal.find_by(nome: "Venda (NF-e)")
     @perfis = PerfilTributario.ativos.de_saida.order(:nome)
     @finalidades = DocumentoFiscal::FINALIDADES
     # Itens re-exibidos quando o create falha (preserva o que o usuario digitou).
@@ -271,7 +271,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def operacao_escolhida
     OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal]) ||
       OperacaoFiscal.find_by(nome: "NF avulsa") ||
-      OperacaoFiscal.find_by(nome: "Venda")
+      OperacaoFiscal.find_by(nome: "Venda (NF-e)")
   end
 
   # Re-exibe o form (new) com os dados que o usuario digitou e a mensagem de erro,
