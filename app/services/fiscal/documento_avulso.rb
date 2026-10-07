@@ -57,6 +57,20 @@ module Fiscal
       @produto ||= Produto.find_by(cod_produto: @cod_produto)
     end
 
+    # NF avulsa nao tem acrescimo/desconto por item: o total e o subtotal puro.
+    # Mantem a mesma interface do Itemvenda para o DocumentoFiscalBuilder.
+    def valor_acrescimo
+      BigDecimal("0")
+    end
+
+    def valor_desconto
+      BigDecimal("0")
+    end
+
+    def valor_total
+      (@quantidade.to_d * @valorunitario.to_d)
+    end
+
     # Perfil escolhido na tela (prioridade) ou o perfil do proprio produto.
     def perfil_tributario_escolhido
       if @cod_perfil_tributario
