@@ -348,7 +348,15 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
       if permitido[:contas_attributes].present?
         ids_travados = @sale.contas.select { |c| c.lancamentos.present? }.map { |c| c.cod_contaspagrec.to_s }
-        permitido[:contas_attributes] = permitido[:contas_attributes].reject do |c|
+
+        # contas_attributes pode chegar como Array ([{...}]) ou como Parameters
+        # com chaves indexadas ({"0" => {...}}). Normaliza para a LISTA de hashes
+        # (so os valores) antes de filtrar, senao o reject itera o Parameters
+        # como pares [chave, valor] e c[:id] estoura "Symbol into Integer".
+        contas = permitido[:contas_attributes]
+        lista = contas.respond_to?(:values) ? contas.values : Array(contas)
+
+        permitido[:contas_attributes] = lista.reject do |c|
           ids_travados.include?(c[:id].to_s)
         end
       end
