@@ -343,8 +343,24 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         :datavenda, :valortotal, :acrescimo, :desconto, :aceita, :cod_pessoa,
         itensvenda_attributes: [:id, :cod_produto, :quantidade, :valorunitario, :valor_acrescimo, :valor_desconto, :cod_cor, :cod_empresa, :_destroy],
         contas_attributes: [:id, :cod_venda, :dtvencimento, :numeroparcela, :valorparcela, :_destroy, :cod_empresa, :ativo, :quitada, :cod_tppagamento],
-        pessoa_attributes: [:tipo, :nome, :telefone, :celular, :cep, :cod_cidade, :complemento, :endereco, :bairro, :numero, :email]
+        pessoa_attributes: [:id, :tipo, :cpf_cnpj, :rg_ie, :nome, :telefone, :celular, :cep, :cod_cidade, :complemento, :endereco, :bairro, :numero, :email]
       )
+
+      # Nested attributes de pessoa: sem o :id, o Rails CONSTROI uma pessoa nova
+      # a partir dos pessoa_attributes (perdendo cpf_cnpj/rg_ie que vinham so do
+      # banco) e a validacao estoura "CPF em branco". Com o :id correto, atualiza
+      # a pessoa existente. Alem disso, se o form mandar cpf_cnpj/rg_ie em branco,
+      # NAO apaga o que ja existe no banco (editar venda nao deve zerar o CPF do
+      # cliente). Vale tambem quando a tela nao preencheu o campo escondido.
+      if permitido[:pessoa_attributes].present? && params[:venda][:cod_pessoa].present?
+        pa = permitido[:pessoa_attributes]
+        pessoa_atual = Pessoa.find_by(cod_pessoa: params[:venda][:cod_pessoa])
+        if pessoa_atual
+          pa[:id] = pessoa_atual.cod_pessoa
+          pa[:cpf_cnpj] = pessoa_atual.cpf_cnpj if pa[:cpf_cnpj].blank? && pessoa_atual.cpf_cnpj.present?
+          pa[:rg_ie]    = pessoa_atual.rg_ie    if pa[:rg_ie].blank?    && pessoa_atual.rg_ie.present?
+        end
+      end
 
       if permitido[:contas_attributes].present?
         ids_travados = @sale.contas.select { |c| c.lancamentos.present? }.map { |c| c.cod_contaspagrec.to_s }

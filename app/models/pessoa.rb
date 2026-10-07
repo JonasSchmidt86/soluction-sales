@@ -18,7 +18,15 @@ class Pessoa < ApplicationRecord
     
     paginates_per 30;
 
-    validates :cpf_cnpj, cpf_cnpj: true, presence: true, uniqueness: true
+    # CPF/CNPJ: exigido e validado em cadastros NOVOS ou quando o valor e
+    # ALTERADO. Registros legados (clientes antigos sem CPF ou com CPF invalido,
+    # importados do sistema anterior) NAO sao bloqueados ao serem re-salvos — ex.:
+    # editar uma venda nao deve falhar por causa do CPF do cliente que nem mudou.
+    # A unicidade so e checada quando ha valor (nil/"" nao conflita).
+    validates :cpf_cnpj, cpf_cnpj: true, presence: true,
+              if: -> { new_record? || will_save_change_to_cpf_cnpj? }
+    validates :cpf_cnpj, uniqueness: true,
+              if: -> { cpf_cnpj.present? && (new_record? || will_save_change_to_cpf_cnpj?) }
     #validates :nome, :rg_ie, :celular, :cep, :endereco, presence: true
 
     def to_s
