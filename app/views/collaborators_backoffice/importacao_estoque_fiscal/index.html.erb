@@ -1,0 +1,348 @@
+<div class="container-fluid px-3 px-lg-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 py-3 border-bottom">
+    <div>
+      <h1 class="h4 mb-1">Importação de estoque fiscal</h1>
+      <p class="text-muted mb-0">A quantidade informada substitui o saldo fiscal da cor selecionada. O estoque físico não é alterado.</p>
+    </div>
+    <% if @total_linhas.to_i.positive? %>
+      <%= button_to "Descartar prévia", collaborators_backoffice_limpar_importacao_estoque_fiscal_path,
+          method: :delete, class: "btn btn-outline-secondary", data: { confirm: "Remover a prévia atual?" } %>
+    <% end %>
+  </div>
+  <div class="py-3 border-bottom">
+    <%= form_with url: collaborators_backoffice_importar_importacao_estoque_fiscal_path,
+                  method: :post, multipart: true, local: true,
+                  html: { class: "row g-2 align-items-end" } do |form| %>
+      <div class="col-md-8 col-xl-6">
+        <%= form.label :arquivo, "Planilha CSV ou XLSX", class: "form-label" %>
+        <%= form.file_field :arquivo, accept: ".csv,.xlsx,.xlsm", required: true, class: "form-control" %>
+      </div>
+      <div class="col-auto">
+        <%= form.submit "Carregar prévia", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <% if @total_linhas.to_i.positive? %>
+    <div class="d-flex flex-wrap gap-4 py-3 small align-items-center" data-import-progress>
+      <span><strong data-pending-count><%= @linhas.size %></strong> pendentes</span>
+      <span class="text-success"><strong data-saved-count><%= @linhas_salvas %></strong> salvas de <%= @total_linhas %></span>
+      <% if @linhas.present? %>
+        <button type="button" class="btn btn-sm btn-success ms-auto"
+                data-save-all
+                data-batch-url="<%= collaborators_backoffice_salvar_lote_importacao_estoque_fiscal_path %>">
+          Salvar todas as linhas prontas
+        </button>
+        <div class="small" data-batch-feedback role="status"></div>
+      <% end %>
+    </div>
+    <div class="alert alert-success" data-all-saved-message <%= "hidden" if @linhas.present? %>>
+      Todas as linhas desta planilha foram salvas.
+    </div>
+  <% end %>
+
+  <% if @linhas.present? %>
+    <% encontrados = @linhas.count { |linha| linha[:produto].present? && Array(linha["erros"]).empty? } %>
+    <% nao_encontrados = @linhas.count { |linha| linha[:produto].nil? && Array(linha["erros"]).empty? } %>
+    <% invalidos = @linhas.count { |linha| Array(linha["erros"]).any? } %>
+    <div class="d-flex flex-wrap gap-4 py-3 small">
+      <span><strong><%= @linhas.size %></strong> linhas</span>
+      <span class="text-success"><strong><%= encontrados %></strong> produtos encontrados</span>
+      <span class="text-warning"><strong><%= nao_encontrados %></strong> não encontrados</span>
+      <span class="text-danger"><strong><%= invalidos %></strong> linhas inválidas</span>
+    </div>
+    <div class="table-responsive border rounded">
+      <table class="table table-sm table-hover align-middle mb-0 importacao-estoque-table">
+        <thead class="table-light">
+          <tr>
+            <th>Linha</th>
+            <th>Código</th>
+            <th>Produto na planilha</th>
+            <th>Nome cadastrado no banco (editável)</th>
+            <th>NCM planilha</th>
+            <th>Trocar NCM</th>
+            <th>NCM do cadastro</th>
+            <th style="min-width: 160px;">Perfil tributário</th>
+            <th>Origem</th>
+            <th>CEST</th>
+            <th>Unidade</th>
+            <th>Quantidade importada</th>
+            <th>Cor / saldo fiscal</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @linhas.each do |linha| %>
+            <% produto = linha[:produto] %>
+            <% ncm_planilha = linha["ncm"].to_s.strip %>
+            <% ncm_cadastro = produto&.ncm.to_s.strip %>
+            <% ncm_selecionado = ncm_cadastro.present? ? ncm_cadastro : ncm_planilha %>
+            <% origem_ncm_selecionada = ncm_cadastro.present? ? "cadastro" : "planilha" %>
+            <tr data-import-row data-save-url="<%= collaborators_backoffice_salvar_linha_importacao_estoque_fiscal_path %>">
+              <td><%= linha["linha_planilha"] %></td>
+              <td class="text-nowrap"><%= linha["codigo"].presence || "—" %></td>
+              <td><%= linha["nome"].presence || "—" %></td>
+              <td>
+                <% if produto %>
+                  <input name="nome_produto" class="form-control form-control-sm" value="<%= produto.nome %>" maxlength="100" required>
+                <% else %>
+                  Não encontrado
+                <% end %>
+              </td>
+              <td>
+                <span data-ncm-source="planilha" data-ncm-value="<%= ncm_planilha %>"><%= ncm_planilha.presence || "—" %></span>
+              </td>
+              <td>
+                <% if produto %>
+                  <input type="hidden" name="ncm" value="<%= ncm_selecionado %>" data-ncm-selected data-ncm-source-selected="<%= origem_ncm_selecionada %>">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle-ncm title="Alternar NCM selecionado entre planilha e cadastro" aria-label="Alternar NCM selecionado">
+                    <i class="fa fa-right-left"></i>
+                  </button>
+                  <div class="small text-muted mt-1" data-ncm-selection-label>Selecionado: <%= origem_ncm_selecionada == "planilha" ? "planilha" : "cadastro" %></div>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+              <td>
+                <span data-ncm-source="cadastro" data-ncm-value="<%= ncm_cadastro %>"><%= ncm_cadastro.presence || "—" %></span>
+              </td>
+              <td>
+                <% if produto %>
+                  <select name="cod_perfil_tributario" class="form-select form-select-sm">
+                    <option value="">Sem perfil</option>
+                    <% @perfis.each do |perfil| %>
+                      <option value="<%= perfil.cod_perfil_tributario %>" <%= "selected" if produto.cod_perfil_tributario.to_s == perfil.cod_perfil_tributario.to_s %>>
+                        <%= perfil.nome %>
+                      </option>
+                      <% end %>
+                    </select>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+                <td>
+                  <% if produto %>
+                    <select name="origem" class="form-select form-select-sm">
+                      <option value=""></option>
+                      <% Fiscal::OrigemProdutoNfeService::ORIGENS_VALIDAS.each do |origem| %>
+                        <option value="<%= origem %>" <%= "selected" if produto.origem.to_s == origem %>><%= origem %></option>
+                        <% end %>
+                      </select>
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if produto %>
+                      <input name="cest" class="form-control form-control-sm" value="<%= produto.cest %>" maxlength="7" inputmode="numeric">
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                  <td><%= linha["unidade_medida"].presence || "—" %></td>
+                  <td class="text-end text-nowrap"><%= linha["quantidade"] %></td>
+                  <td>
+                    <% if linha[:cores].any? %>
+                      <select name="cod_cor" class="form-select form-select-sm" required>
+                        <% unless linha[:cor_unica] %>
+                          <option value="">Selecione a cor</option>
+                        <% end %>
+                        <% linha[:cores].each do |empresa_produto| %>
+                          <option value="<%= empresa_produto.cod_cor %>" <%= "selected" if linha[:cor_unica] == empresa_produto.cod_cor %>>
+                            <%= empresa_produto.cor&.nmcor %> · saldo fiscal <%= empresa_produto.qtdfiscal.to_d.to_s("F") %>
+                          </option>
+                        <% end %>
+                      </select>
+                      <% if linha[:cor_unica] %>
+                        <div class="small text-muted mt-1">Cor única pré-selecionada</div>
+                      <% end %>
+                    <% elsif produto %>
+                      <span class="text-warning small">Produto sem cor configurada nesta empresa</span>
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if produto && linha[:cores].any? && Array(linha["erros"]).empty? %>
+                      <input type="hidden" name="linha" value="<%= linha[:draft_index] %>">
+                      <button type="button" class="btn btn-sm btn-success" data-save-import-row>Salvar linha</button>
+                      <div class="small mt-1" data-row-feedback role="status"></div>
+                    <% elsif Array(linha["erros"]).any? %>
+                      <span class="small text-danger"><%= Array(linha["erros"]).join("; ") %></span>
+                    <% else %>
+                      <span class="small text-warning">Sem correspondência</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+    <style>
+      .importacao-estoque-table { min-width: 1500px; }
+      .importacao-estoque-table th { white-space: nowrap; }
+    </style>
+    <script>
+      document.querySelectorAll("[data-toggle-ncm]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var row = button.closest("[data-import-row]");
+          var selected = row.querySelector("[data-ncm-selected]");
+          var nextSource = selected.dataset.ncmSourceSelected === "planilha" ? "cadastro" : "planilha";
+          var nextValue = row.querySelector('[data-ncm-source="' + nextSource + '"]').dataset.ncmValue;
+          selected.value = nextValue;
+          selected.dataset.ncmSourceSelected = nextSource;
+          row.querySelector("[data-ncm-selection-label]").textContent = "Selecionado: " + nextSource;
+        });
+      });
+
+      document.querySelectorAll("[data-save-import-row]").forEach(function (button) {
+        button.addEventListener("click", async function () {
+          var row = button.closest("[data-import-row]");
+          var feedback = row.querySelector("[data-row-feedback]");
+          var color = row.querySelector('[name="cod_cor"]');
+          if (!color.value) {
+            feedback.className = "small mt-1 text-danger";
+            feedback.textContent = "Selecione a cor que receberá o saldo.";
+            return;
+          }
+
+          var payload = new FormData();
+          ["linha", "cod_cor", "nome_produto", "cod_perfil_tributario", "ncm", "origem", "cest"].forEach(function (name) {
+            var input = row.querySelector('[name="' + name + '"]');
+            if (input) payload.append(name, input.value);
+          });
+          button.disabled = true;
+          feedback.className = "small mt-1 text-muted";
+          feedback.textContent = "Salvando...";
+
+          try {
+            var response = await fetch(row.dataset.saveUrl, {
+              method: "PATCH",
+              headers: {
+                "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+                "Accept": "application/json"
+              },
+              body: payload
+            });
+            var result = await response.json();
+            if (!response.ok) throw new Error(result.erro || "Falha ao salvar.");
+            feedback.className = "small mt-1 text-success";
+            feedback.textContent = result.mensagem;
+            row.classList.add("table-success");
+            var pendingCount = document.querySelector("[data-pending-count]");
+            var savedCount = document.querySelector("[data-saved-count]");
+            var remaining = Math.max(0, Number(pendingCount.textContent) - 1);
+            pendingCount.textContent = remaining;
+            savedCount.textContent = Number(savedCount.textContent) + 1;
+            row.remove();
+            if (remaining === 0) document.querySelector("[data-all-saved-message]").hidden = false;
+          } catch (error) {
+            feedback.className = "small mt-1 text-danger";
+            feedback.textContent = error.message;
+            button.disabled = false;
+          }
+        });
+      });
+
+      // Coleta os campos editaveis de UMA linha pronta para envio.
+      // Retorna null se a linha nao estiver pronta (sem cor selecionada).
+      function coletarLinha(row) {
+        var color = row.querySelector('[name="cod_cor"]');
+        if (!color || !color.value) return null;
+        var item = {};
+        ["linha", "cod_cor", "nome_produto", "cod_perfil_tributario", "ncm", "origem", "cest"].forEach(function (name) {
+          var input = row.querySelector('[name="' + name + '"]');
+          if (input) item[name] = input.value;
+        });
+        return item;
+      }
+
+      // Opção 1 (batch): salva TODAS as linhas prontas em uma unica requisicao.
+      var saveAllButton = document.querySelector("[data-save-all]");
+      if (saveAllButton) {
+        saveAllButton.addEventListener("click", async function () {
+          var batchFeedback = document.querySelector("[data-batch-feedback]");
+          var rows = Array.from(document.querySelectorAll("[data-import-row]"));
+          var prontas = [];
+          var semCor = 0;
+
+          rows.forEach(function (row) {
+            var item = coletarLinha(row);
+            if (item) {
+              prontas.push({ row: row, item: item });
+            } else if (row.querySelector('[name="cod_cor"]')) {
+              semCor += 1;
+            }
+          });
+
+          if (prontas.length === 0) {
+            batchFeedback.className = "small text-warning";
+            batchFeedback.textContent = "Nenhuma linha com cor selecionada para salvar.";
+            return;
+          }
+
+          if (!confirm("Salvar " + prontas.length + " linha(s) de uma vez?" +
+              (semCor ? " (" + semCor + " sem cor ficarao de fora)" : ""))) {
+            return;
+          }
+
+          saveAllButton.disabled = true;
+          batchFeedback.className = "small text-muted";
+          batchFeedback.textContent = "Salvando " + prontas.length + " linha(s)...";
+
+          var payload = new FormData();
+          prontas.forEach(function (p, i) {
+            Object.keys(p.item).forEach(function (name) {
+              payload.append("itens[" + i + "][" + name + "]", p.item[name]);
+            });
+          });
+
+          try {
+            var response = await fetch(saveAllButton.dataset.batchUrl, {
+              method: "PATCH",
+              headers: {
+                "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+                "Accept": "application/json"
+              },
+              body: payload
+            });
+            var result = await response.json();
+            if (!response.ok) throw new Error(result.erro || "Falha ao salvar o lote.");
+
+            // Mapeia resultado por indice de linha para atualizar cada <tr>.
+            var porLinha = {};
+            (result.resultados || []).forEach(function (r) { porLinha[String(r.linha)] = r; });
+
+            var pendingCount = document.querySelector("[data-pending-count]");
+            var savedCount = document.querySelector("[data-saved-count]");
+
+            prontas.forEach(function (p) {
+              var idx = String(p.item.linha);
+              var r = porLinha[idx];
+              var feedback = p.row.querySelector("[data-row-feedback]");
+              if (r && r.sucesso) {
+                p.row.classList.add("table-success");
+                pendingCount.textContent = Math.max(0, Number(pendingCount.textContent) - 1);
+                savedCount.textContent = Number(savedCount.textContent) + 1;
+                p.row.remove();
+              } else if (r && r.erro && feedback) {
+                feedback.className = "small mt-1 text-danger";
+                feedback.textContent = r.erro;
+              }
+            });
+
+            batchFeedback.className = "small text-success";
+            batchFeedback.textContent = "Salvas " + (result.salvos || 0) + " de " + (result.total || prontas.length) + " linha(s).";
+            saveAllButton.disabled = false;
+            if (Number(pendingCount.textContent) === 0) {
+              document.querySelector("[data-all-saved-message]").hidden = false;
+            }
+          } catch (error) {
+            batchFeedback.className = "small text-danger";
+            batchFeedback.textContent = error.message;
+            saveAllButton.disabled = false;
+          }
+        });
+      }
+    </script>

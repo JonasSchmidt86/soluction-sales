@@ -243,6 +243,11 @@ Rails.application.routes.draw do
       get :consultar_cadastro
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
+    get 'importacao_estoque_fiscal', to: 'importacao_estoque_fiscal#index', as: :importacao_estoque_fiscal
+    post 'importacao_estoque_fiscal/importar', to: 'importacao_estoque_fiscal#importar', as: :importar_importacao_estoque_fiscal
+    patch 'importacao_estoque_fiscal/salvar_linha', to: 'importacao_estoque_fiscal#salvar_linha', as: :salvar_linha_importacao_estoque_fiscal
+    patch 'importacao_estoque_fiscal/salvar_lote', to: 'importacao_estoque_fiscal#salvar_lote', as: :salvar_lote_importacao_estoque_fiscal
+    delete 'importacao_estoque_fiscal/limpar', to: 'importacao_estoque_fiscal#limpar', as: :limpar_importacao_estoque_fiscal
 
     # Historico de pacotes fiscais gerados (zip de XML salvo p/ baixar/reenviar).
     resources :pacotes_fiscais, only: [:index, :destroy] do

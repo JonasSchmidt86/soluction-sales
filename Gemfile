@@ -15,6 +15,7 @@ gem 'rack-attack'
 #xml nfe ------
 gem 'nokogiri'
 gem 'nfe-io'
+gem 'roo', '~> 2.10'
 # --------------
 # -- upload ----
 gem 'carrierwave'

@@ -181,80 +181,80 @@
               </div>
               <!-- Colapso: Vendas -->
               <% if access_control.can_view?('vendas') || access_control.can_view?('contas_pag_rec') || access_control.can_view?('orcamentos') %>
-              <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
-                <div class="sb-nav-link-icon">
-                  <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                <a class="nav-link collapsed" href="#" data-target="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Vendas
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <% if access_control.can_view?('vendas') %>
+                      <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+                        Cadastro Venda
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('contas_pag_rec') %>
+                      <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+                        Contas pagar/Receber
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('orcamentos') %>
+                      <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
+                        Orçamentos
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('report_sales') %>
+                      <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+                        Relatório de Vendas
+                      <% end %>
+                    <% end %>
+                  </nav>
                 </div>
-                Vendas
-                <div class="sb-sidenav-collapse-arrow">
-                  <i class="fas fa-angle-down"></i>
-                </div>
-              </a>
-              <div id="collapseVenda" class="collapse" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                  <% if access_control.can_view?('vendas') %>
-                    <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
-                      Cadastro Venda
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('contas_pag_rec') %>
-                    <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
-                      Contas pagar/Receber
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('orcamentos') %>
-                    <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
-                      Orçamentos
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('report_sales') %>
-                    <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
-                      Relatório de Vendas
-                    <% end %>
-                  <% end %>
-                </nav>
-              </div>
               <% end %>
               <!-- Colapso: Compras -->
               <% if access_control.can_view?('compras') || access_control.can_view?('xml_files') || access_control.can_view?('pedidos_compras') %>
-              <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
-                <div class="sb-nav-link-icon">
-                  <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                <a class="nav-link collapsed" href="#" data-target="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-scroll fa-flip" style="--fa-flip-x: 1; --fa-flip-y: 0; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Compras
+                  <div class="sb-sidenav-collapse-arrow">
+                    <i class="fas fa-angle-down"></i>
+                  </div>
+                </a>
+                <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <% if access_control.can_view?('xml_files') %>
+                      <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+                        XML    
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('compras') %>
+                      <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
+                        Cad Compra
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('report_buy') %>
+                      <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+                        Relatório de Compra
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('report_sugestao_compra') %>
+                      <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+                        Sugestão de Compra
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('pedidos_compras') %>
+                      <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
+                        Pedidos de Compra
+                      <% end %>
+                    <% end %>
+                  </nav>
                 </div>
-                Compras
-                <div class="sb-sidenav-collapse-arrow">
-                  <i class="fas fa-angle-down"></i>
-                </div>
-              </a>
-              <div id="collapseCompra" class="collapse" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                  <% if access_control.can_view?('xml_files') %>
-                    <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
-                      XML    
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('compras') %>
-                    <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
-                      Cad Compra
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('report_buy') %>
-                    <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
-                      Relatório de Compra
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('report_sugestao_compra') %>
-                    <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
-                      Sugestão de Compra
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('pedidos_compras') %>
-                    <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
-                      Pedidos de Compra
-                    <% end %>
-                  <% end %>
-                </nav>
-              </div>
               <% end %>
               <% if access_control.can_view?('lancamentosdiversos') || access_control.can_view?('contas_pag_rec') || access_control.can_view?('report_rep_dre') || access_control.can_view?('report_put_box') %>
                 <!-- Colapso: Financeiro -->
@@ -295,37 +295,37 @@
               <% end %>
               <!-- Colapso: Comissões -->
               <% if access_control.can_view?('commission_periods') || access_control.can_view?('commission_rules') %>
-              <a class="nav-link collapsed" href="#" data-target="#collapseComissoes" aria-expanded="false" aria-controls="collapseComissoes">
-                <div class="sb-nav-link-icon">
-                  <i class="fa-solid fa-percent fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                <a class="nav-link collapsed" href="#" data-target="#collapseComissoes" aria-expanded="false" aria-controls="collapseComissoes">
+                  <div class="sb-nav-link-icon">
+                    <i class="fa-solid fa-percent fa-flip" style="--fa-flip-x: 0; --fa-flip-y: 1; --fa-animation-duration: 3s;"></i>
+                  </div>
+                  Comissões
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseComissoes" data-bs-parent="#sidenavAccordion">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <% if access_control.can_view?('commission_periods') %>
+                      <%= link_to collaborators_backoffice_commission_periods_path, class: "nav-link" do %>
+                        <i class="fa fa-calculator me-1"></i> Apurações
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('commission_rules') %>
+                      <%= link_to collaborators_backoffice_commission_rules_path, class: "nav-link" do %>
+                        <i class="fa fa-percent me-1"></i> Regras
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('commission_assignments') %>
+                      <%= link_to collaborators_backoffice_commission_assignments_path, class: "nav-link" do %>
+                        <i class="fa fa-link me-1"></i> Atribuições
+                      <% end %>
+                    <% end %>
+                    <% if access_control.can_view?('commission_adjustments') %>
+                      <%= link_to collaborators_backoffice_commission_adjustments_path, class: "nav-link" do %>
+                        <i class="fa fa-adjust me-1"></i> Ajustes
+                      <% end %>
+                    <% end %>
+                  </nav>
                 </div>
-                Comissões
-                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-              </a>
-              <div class="collapse" id="collapseComissoes" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                  <% if access_control.can_view?('commission_periods') %>
-                    <%= link_to collaborators_backoffice_commission_periods_path, class: "nav-link" do %>
-                      <i class="fa fa-calculator me-1"></i> Apurações
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('commission_rules') %>
-                    <%= link_to collaborators_backoffice_commission_rules_path, class: "nav-link" do %>
-                      <i class="fa fa-percent me-1"></i> Regras
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('commission_assignments') %>
-                    <%= link_to collaborators_backoffice_commission_assignments_path, class: "nav-link" do %>
-                      <i class="fa fa-link me-1"></i> Atribuições
-                    <% end %>
-                  <% end %>
-                  <% if access_control.can_view?('commission_adjustments') %>
-                    <%= link_to collaborators_backoffice_commission_adjustments_path, class: "nav-link" do %>
-                      <i class="fa fa-adjust me-1"></i> Ajustes
-                    <% end %>
-                  <% end %>
-                </nav>
-              </div>
               <% end %>
               <% if access_control.can_view?('notas_fiscais') %>
                 <!-- Colapso: Fiscal (aparece se a EMPRESA logada tem modulo fiscal) -->
@@ -333,44 +333,49 @@
                     pode ver a Configuracao (super_admin) — assim da para ATIVAR o modulo
                     numa empresa que ainda nao tem config, sem o paradoxo de o menu sumir. %>
                 <% if empresa_tem_modulo_fiscal? || access_control.can_view?('fiscal_config') %>
-                <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
-                  <div class="sb-nav-link-icon">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                  <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
+                    <div class="sb-nav-link-icon">
+                      <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    Fiscal
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                  </a>
+                  <div class="collapse" id="collapseFiscal" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
+                          <i class="fa fa-gauge-high me-1"></i> Dashboard
+                        <% end %>
+                      <% end %>
+                      <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
+                        <i class="fa fa-tags me-1"></i> Perfis Tributários
+                      <% end %>
+                      <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
+                        <i class="fa fa-triangle-exclamation me-1"></i> Pendências
+                      <% end %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <%= link_to collaborators_backoffice_importacao_estoque_fiscal_path, class: "nav-link" do %>
+                          <i class="fa fa-file-import me-1"></i> Importar Estoque
+                        <% end %>
+                      <% end %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
+                          <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
+                        <% end %>
+                        <%= link_to collaborators_backoffice_notas_recebidas_path, class: "nav-link" do %>
+                          <i class="fa fa-inbox me-1"></i> Notas Recebidas
+                        <% end %>
+                        <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "nav-link" do %>
+                          <i class="fa fa-box-archive me-1"></i> Pacotes XML
+                        <% end %>
+                      <% end %>
+                      <% if access_control.can_view?('fiscal_config') %>
+                        <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
+                          <i class="fa fa-gear me-1"></i> Configuração
+                        <% end %>
+                      <% end %>
+                    </nav>
                   </div>
-                  Fiscal
-                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                </a>
-                <div class="collapse" id="collapseFiscal" data-bs-parent="#sidenavAccordion">
-                  <nav class="sb-sidenav-menu-nested nav">
-                    <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-                      <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
-                        <i class="fa fa-gauge-high me-1"></i> Dashboard
-                      <% end %>
-                    <% end %>
-                    <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
-                      <i class="fa fa-tags me-1"></i> Perfis Tributários
-                    <% end %>
-                    <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
-                      <i class="fa fa-triangle-exclamation me-1"></i> Pendências
-                    <% end %>
-                    <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-                      <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
-                        <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
-                      <% end %>
-                      <%= link_to collaborators_backoffice_notas_recebidas_path, class: "nav-link" do %>
-                        <i class="fa fa-inbox me-1"></i> Notas Recebidas
-                      <% end %>
-                      <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "nav-link" do %>
-                        <i class="fa fa-box-archive me-1"></i> Pacotes XML
-                      <% end %>
-                    <% end %>
-                    <% if access_control.can_view?('fiscal_config') %>
-                      <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
-                        <i class="fa fa-gear me-1"></i> Configuração
-                      <% end %>
-                    <% end %>
-                  </nav>
-                </div>
                 <% end %>
               <% end %>
               <% if access_control.can_view?('empresa_estoque') || access_control.can_view?('acertosestoque') %>
@@ -1104,7 +1109,6 @@
           });
           });
     </script>
-
     <script>
       // Menu do WhatsApp dos aniversariantes.
       // Anexa o menu ao <body> ao abrir e posiciona com position: fixed logo
