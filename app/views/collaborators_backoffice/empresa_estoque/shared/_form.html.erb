@@ -3,14 +3,26 @@
     <h4> <%= "#{action_message} Valor de venda!" %></h4>
   <% end %>
   <div class="card-body">
+    <% # Valores dos filtros vindos dos params (repreenchidos ao nao encontrar). %>
+    <% filtro_produto = params[:format] == "produto" ? params[:id] : nil %>
+    <% # Hidden so recebe o termo quando for codigo numerico (selecao real); %>
+    <% # para nome parcial fica vazio, mas o campo visivel mantem o texto. %>
+    <% filtro_cod_produto = filtro_produto.to_s.match?(/\A\d+\z/) ? filtro_produto : nil %>
+    <% filtro_compra  = params[:format] == "compra"  ? params[:id] : (params[:format].blank? ? params[:id] : nil) %>
+    <% filtro_cor     = params[:cod_cor] %>
+    <% if @nao_encontrado.present? %>
+      <div class="alert alert-warning py-2 mb-3" role="alert">
+        <i class="fa fa-circle-exclamation me-1"></i> <%= @nao_encontrado %>
+      </div>
+    <% end %>
     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
       <div class="position-relative" style="max-width: 260px; flex: 1 1 260px;">
-        <input type="text" id="filtro-nome-produto" class="text form-control form-control-sm produto_search" placeholder="Nome ou código do Produto" autocomplete="off">
-        <input type="hidden" id="filtro-cod-produto">
+        <input type="text" id="filtro-nome-produto" class="text form-control form-control-sm produto_search" placeholder="Nome ou código do Produto" autocomplete="off" value="<%= filtro_produto %>">
+        <input type="hidden" id="filtro-cod-produto" value="<%= filtro_cod_produto %>">
         <div id="produtos_list" class="list-group position-absolute" style="display: none; z-index: 1000; width: 100%;"></div>
       </div>
-      <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*">
-      <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" id="filtro-cod-cor" class="form-control form-control-sm" placeholder="Código da Cor" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*" value="<%= filtro_cor %>">
+      <input type="text" id="filtro-cod-compra" class="form-control form-control-sm" placeholder="Código da Compra" style="max-width: 160px;" inputmode="numeric" pattern="[0-9]*" value="<%= filtro_compra %>">
       <button type="button" id="btn-buscar-estoque" class="btn btn-success btn-sm">Buscar</button>
 
       <div class="ms-auto d-flex align-items-center gap-3">
@@ -77,12 +89,26 @@
     window.addEventListener('load', function() {
       function buscarEstoque() {
         var codProduto = document.getElementById('filtro-cod-produto').value.trim();
+        var textoNome  = document.getElementById('filtro-nome-produto').value.trim();
         var codCompra  = document.getElementById('filtro-cod-compra').value.trim();
         var codCor  = document.getElementById('filtro-cod-cor').value.trim();
-        if (codProduto) {
-          window.location.href = '/collaborators_backoffice/empresa_estoque/' + codProduto + '/edit?cod_cor=' + codCor + '&format=produto';
+
+        // Fecha a listinha de autocomplete (nao vamos depender de selecao).
+        $('#produtos_list').empty().hide();
+
+        // Produto: o termo pode ser o codigo selecionado na lista OU o texto
+        // digitado (codigo ou nome parcial, ex. "rou" / "rou%"). O controller
+        // (format=produto) resolve: so digitos = busca por codigo; texto = ILIKE
+        // por nome. Nao precisa selecionar um item da lista para buscar.
+        var termoProduto = codProduto || textoNome;
+
+        if (termoProduto) {
+          window.location.href = '/collaborators_backoffice/empresa_estoque/'
+            + encodeURIComponent(termoProduto)
+            + '/edit?cod_cor=' + encodeURIComponent(codCor) + '&format=produto';
         } else if (codCompra) {
-          window.location.href = '/collaborators_backoffice/empresa_estoque/' + codCompra + '/edit?format=compra';
+          window.location.href = '/collaborators_backoffice/empresa_estoque/'
+            + encodeURIComponent(codCompra) + '/edit?format=compra';
         }
       }
 
@@ -161,8 +187,9 @@
       inputNome.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
-          // Se ja houver um codigo selecionado, busca o estoque; senao dispara a busca por nome
-          if (hiddenCod.value) { buscarEstoque(); } else { buscarProdutos(); }
+          // Enter sempre busca o estoque com o termo digitado (codigo ou nome).
+          // Nao precisa selecionar um item da lista de sugestoes.
+          buscarEstoque();
         } else if (e.key === 'Escape') {
           $lista.empty().hide();
         }

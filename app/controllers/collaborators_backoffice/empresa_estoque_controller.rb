@@ -1,6 +1,10 @@
 class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackofficeController
     
-    before_action :set_produto, only: [:destroy, :edit, :update]
+    # No edit, params[:id] e o CODIGO do produto/compra (nao o id do
+    # empresaproduto), entao set_produto nao se aplica ali — rodava
+    # Empresaproduto.find(codigo) e estourava RecordNotFound para codigo
+    # inexistente. set_produto fica so em destroy/update (que usam o id real).
+    before_action :set_produto, only: [:destroy, :update]
 
     def index
         # Inicializando a consulta base
@@ -120,19 +124,35 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
         puts "------------------ #{params} ------------------"
         
         if params[:format].present? && params[:format] === "produto"
-            # puts params[:format]
-            if params[:cod_cor].present?
-                @empresa_produtos = Empresaproduto
-                            .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
-                            .where("empresaproduto.cod_cor = ? ", params[:cod_cor])
-                    .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
-                    puts "Passou por aqui!! "
+            termo = params[:id].to_s.strip
+
+            @empresa_produtos = Empresaproduto
+                        .joins(:produto)
+                        .where("empresaproduto.ativo = ?", true)
+
+            # Busca por CODIGO quando o termo e so digitos; senao, por NOME (ILIKE).
+            # Regras do padrao (respeita o que o usuario digitar):
+            #  - Os % digitados sao preservados onde estiverem (inicio, meio, fim).
+            #    So ha % no inicio ("contem") SE o usuario digitar, ex. "%rou".
+            #  - Adicionamos % no final apenas se o usuario nao colocou um.
+            # Ex.: "rou" -> "rou%" (comeca com); "%rou" -> "%rou%" (contem);
+            #      "ROU%HEN%CA" -> "ROU%HEN%CA%".
+            if termo.match?(/\A\d+\z/)
+                @empresa_produtos = @empresa_produtos
+                    .where("empresaproduto.cod_produto = ?", termo)
             else
-                @empresa_produtos = Empresaproduto
-                            .where("empresaproduto.cod_produto = ? and empresaproduto.ativo = ? ",params[:id], true)
-                    .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc ) # Usando símbolo para ordenação
-                    puts "Passou por aqui!! "
+                padrao = termo.end_with?("%") ? termo : "#{termo}%"
+                @empresa_produtos = @empresa_produtos
+                    .where("produto.nome ILIKE ?", padrao)
             end
+
+            if params[:cod_cor].present?
+                @empresa_produtos = @empresa_produtos
+                    .where("empresaproduto.cod_cor = ?", params[:cod_cor])
+            end
+
+            @empresa_produtos = @empresa_produtos
+                .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc)
         else
 
             query = Empresaproduto
@@ -157,7 +177,15 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
                 .where.not(empresaproduto: { quantidade: 0 })
                 .order(cod_produto: :desc, cod_cor: :asc, cod_empresa: :asc)
         end
-        # puts @estoque.size;
+
+        # Nada encontrado para o codigo informado (produto/cor/compra inexistente
+        # ou sem estoque): permanece NA MESMA tela de edicao, com uma mensagem e
+        # os campos de filtro repreenchidos com o que foi buscado. @empresa_produtos
+        # vem vazio (a view trata o estado sem iterar produtos nil).
+        if @empresa_produtos.blank?
+            @empresa_produtos = []
+            @nao_encontrado   = mensagem_nada_encontrado
+        end
     end
 
     def destroy
@@ -173,6 +201,20 @@ class CollaboratorsBackoffice::EmpresaEstoqueController < CollaboratorsBackoffic
 
     def set_produto
         @empresa_produto = Empresaproduto.find(params[:id])
+    end
+
+    # Mensagem amigavel quando o edit nao encontra estoque para o filtro buscado.
+    def mensagem_nada_encontrado
+        cor = " / cor #{params[:cod_cor]}" if params[:cod_cor].present?
+        if params[:format] == "produto"
+            termo = params[:id].to_s
+            alvo = termo.match?(/\A\d+\z/) ? "o produto #{termo}" : "o nome \"#{termo}\""
+            "Nenhum estoque encontrado para #{alvo}#{cor}."
+        elsif params[:format] == "compra"
+            "Nenhum estoque encontrado para a compra #{params[:id]}."
+        else
+            "Nenhum estoque encontrado para o código #{params[:id]}."
+        end
     end
 
 end
