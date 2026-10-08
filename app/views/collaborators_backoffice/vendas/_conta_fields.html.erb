@@ -3,7 +3,11 @@
     <%= f.text_field :numeroparcela, class: "form-control border-top-0 border-start-0 border-end-0 border-dark", readonly: true %>
   </td>
   <td class="">
-    <%= f.text_field :dtvencimento, class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
+    <%# Formata a data existente como dd/mm/aaaa. Sem isso, o Date cru (ISO) %>
+    <%# era reinterpretado pela mascara 99/99/9999 e virava algo como "20/26/". %>
+    <%= f.text_field :dtvencimento,
+          value: (f.object.dtvencimento.present? ? post_date(f.object.dtvencimento) : nil),
+          class: "datepicker fallback form-control border-top-0 border-start-0 border-end-0 border-dark" %>
   </td>
   <td class="">
     <%= f.text_field :valorparcela, 
