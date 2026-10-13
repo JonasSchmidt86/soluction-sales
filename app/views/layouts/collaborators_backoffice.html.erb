@@ -331,7 +331,7 @@
                 <!-- Colapso: Fiscal (aparece se a EMPRESA logada tem modulo fiscal) -->
                 <%# Grupo Fiscal aparece se a empresa TEM o modulo ativo OU se o usuario
                     pode ver a Configuracao (super_admin) — assim da para ATIVAR o modulo
-                    numa empresa que ainda nao tem config, sem o paradoxo de o menu sumir. %>
+                    numa empresa que ainda nao tem config, sem o paradoxo de o menu sumir. #%>
                 <% if empresa_tem_modulo_fiscal? || access_control.can_view?('fiscal_config') %>
                   <a class="nav-link collapsed" href="#" data-target="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
                     <div class="sb-nav-link-icon">
@@ -346,19 +346,6 @@
                         <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
                           <i class="fa fa-gauge-high me-1"></i> Dashboard
                         <% end %>
-                      <% end %>
-                      <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
-                        <i class="fa fa-tags me-1"></i> Perfis Tributários
-                      <% end %>
-                      <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
-                        <i class="fa fa-triangle-exclamation me-1"></i> Pendências
-                      <% end %>
-                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-                        <%= link_to collaborators_backoffice_importacao_estoque_fiscal_path, class: "nav-link" do %>
-                          <i class="fa fa-file-import me-1"></i> Importar Estoque
-                        <% end %>
-                      <% end %>
-                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
                         <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
                           <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
                         <% end %>
@@ -369,7 +356,16 @@
                           <i class="fa fa-box-archive me-1"></i> Pacotes XML
                         <% end %>
                       <% end %>
-                      <% if access_control.can_view?('fiscal_config') %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_config') %>
+                        <%= link_to collaborators_backoffice_importacao_estoque_fiscal_path, class: "nav-link" do %>
+                            <i class="fa fa-file-import me-1"></i> Importar Estoque
+                          <% end %>
+                        <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
+                          <i class="fa fa-tags me-1"></i> Perfis Tributários
+                        <% end %>
+                        <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
+                          <i class="fa fa-triangle-exclamation me-1"></i> Pendências
+                        <% end %>
                         <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
                           <i class="fa fa-gear me-1"></i> Configuração
                         <% end %>

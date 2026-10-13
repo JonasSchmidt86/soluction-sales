@@ -27,6 +27,9 @@ class AccessControlService
     commission_adjustments
     commission_periods
     whatsapp_contacts
+    fiscal_config
+    fiscal_pendencias
+    fiscal_perfis
   ].freeze
 
   # Recursos em desenvolvimento/teste — visíveis SOMENTE para super_admin (cod_funcionario == 1).
@@ -37,9 +40,6 @@ class AccessControlService
     commission_assignments
     commission_periods
     commission_adjustments
-    fiscal_perfis
-    fiscal_config
-    fiscal_pendencias
     notas_fiscais
   ].freeze
 
