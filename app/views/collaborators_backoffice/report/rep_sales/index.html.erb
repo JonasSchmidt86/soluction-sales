@@ -163,7 +163,7 @@
                           <i class="fa fa-truck" style="width: 35px;"></i> Imprimir Recibo Entrega
                         <% end %>
                       </li>
-                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
+                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada && @docs_por_venda.blank?   %>
                         <li>
                           <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
                             <i class="fa fa-edit", style="width: 35px;"></i> Editar Venda
@@ -171,20 +171,16 @@
                         </li>
                       <% end %>
                       <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-                        <li>
-                          <%= link_to espelho_collaborators_backoffice_venda_documentos_fiscais_path(sale),
-                                      target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
-                            <i class="fa fa-file-invoice" style="width: 35px;"></i> Espelho NF (PDF)
-                          <% end %>
-                        </li>
-                        <li>
-                          <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
-                                      target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
-                            <i class="fa fa-file-pdf" style="width: 35px;"></i> Pré-visualizar DANFE
-                          <% end %>
-                        </li>
+                        <% unless @docs_por_venda %>
+                            <li>
+                              <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+                                          target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
+                                <i class="fa fa-file-pdf" style="width: 35px;"></i> Pré-visualizar DANFE
+                              <% end %>
+                            </li>
+                        <% end %>
                         <%= render partial: "collaborators_backoffice/report/rep_sales/fiscal_acoes",
-                                   locals: { sale: sale } %>
+                                  locals: { sale: sale } %>
                       <% end %>
                       <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                         <span class="visually-hidden">Toggle Dropdown</span>
@@ -204,11 +200,16 @@
                   </div>
                 </td>
               </tr>
-              <%# Linha oculta: informacoes da venda (contas + produtos). Abre pelo "i". %>
-              <tr id="vendaDiv<%= sale.cod_venda %>" class="detalhe-venda-row" style="display: none;">
+              <%# Linha oculta: detalhe (produtos + contas) carregado SOB DEMANDA %>
+              <%# via AJAX ao clicar no "i" (ver MudarEstado). Nao renderiza no   %>
+              <%# load para nao gerar dezenas de queries por venda nao aberta.    %>
+              <tr id="vendaDiv<%= sale.cod_venda %>" class="detalhe-venda-row" style="display: none;"
+                  data-detalhe-url="<%= collaborators_backoffice_report_sales_venda_detalhe_path(sale.cod_venda) %>"
+                  data-carregado="false">
                 <td colspan="7">
-                  <%= render partial: "collaborators_backoffice/report/rep_sales/venda_detalhe",
-                             locals: { sale: sale } %>
+                  <div class="detalhe-conteudo text-center text-muted py-3">
+                    <i class="fa fa-spinner fa-spin me-1"></i> Carregando...
+                  </div>
                 </td>
               </tr>
             <% end %>
@@ -247,7 +248,22 @@
       });
 
       // Abre a clicada (se nao estava aberta); se estava, fica fechada (toggle).
-      if (vaiAbrir) { row.style.display = "table-row"; }
+      if (vaiAbrir) {
+        row.style.display = "table-row";
+        // Carrega o detalhe via AJAX apenas na PRIMEIRA abertura (cache no DOM).
+        if (row.dataset.carregado === "false") {
+          var alvo = row.querySelector(".detalhe-conteudo");
+          fetch(row.dataset.detalheUrl, { headers: { "Accept": "text/html" } })
+            .then(function (r) { return r.ok ? r.text() : Promise.reject("Falha ao carregar"); })
+            .then(function (html) {
+              alvo.innerHTML = html;
+              row.dataset.carregado = "true";
+            })
+            .catch(function () {
+              alvo.innerHTML = '<div class="text-danger text-center py-2">Não foi possível carregar o detalhe.</div>';
+            });
+        }
+      }
     }
     function formatarReal(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

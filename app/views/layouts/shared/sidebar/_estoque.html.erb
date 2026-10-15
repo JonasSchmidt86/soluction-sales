@@ -1,0 +1,37 @@
+<% if access_control.can_view?('empresa_estoque') || access_control.can_view?('acertosestoque') || access_control.can_view?('report_stock_min') || access_control.can_view?('report_mais_vendidos') %>
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseEstoque" aria-expanded="false" aria-controls="collapseEstoque">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-boxes-stacked"></i>
+    </div>
+    Estoque
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+  </button>
+  <div class="collapse" id="collapseEstoque">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('empresa_estoque') %>
+        <%= link_to collaborators_backoffice_empresa_estoque_index_path, class: "nav-link" do %>
+          <i class="fa-solid fa-boxes-stacked fa-fw me-2" aria-hidden="true"></i>
+          Consulta de Estoque
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('acertosestoque') %>
+        <%= link_to collaborators_backoffice_acertosestoque_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-sliders fa-fw me-2" aria-hidden="true"></i>
+          Acertos de Estoque
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_stock_min') %>
+        <%= link_to collaborators_backoffice_report_stock_min_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-triangle-exclamation fa-fw me-2" aria-hidden="true"></i>
+          Estoque Mínimo
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_mais_vendidos') %>
+        <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
+          <i class="fa-solid fa-ranking-star fa-fw me-2" aria-hidden="true"></i>
+          Produtos Mais Vendidos
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

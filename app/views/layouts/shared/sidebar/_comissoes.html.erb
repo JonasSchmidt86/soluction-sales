@@ -1,0 +1,34 @@
+<!-- Colapso: Comissões -->
+<% if access_control.can_view?('commission_periods') || access_control.can_view?('commission_rules') || access_control.can_view?('commission_assignments') || access_control.can_view?('commission_adjustments') %>
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseComissoes" aria-expanded="false" aria-controls="collapseComissoes">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-percent"></i>
+    </div>
+    Comissões
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+  </button>
+  <div class="collapse" id="collapseComissoes">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('commission_periods') %>
+        <%= link_to collaborators_backoffice_commission_periods_path, class: "nav-link" do %>
+          <i class="fa fa-calculator me-1"></i> Apurações
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('commission_rules') %>
+        <%= link_to collaborators_backoffice_commission_rules_path, class: "nav-link" do %>
+          <i class="fa fa-percent me-1"></i> Regras
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('commission_assignments') %>
+        <%= link_to collaborators_backoffice_commission_assignments_path, class: "nav-link" do %>
+          <i class="fa fa-link me-1"></i> Atribuições
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('commission_adjustments') %>
+        <%= link_to collaborators_backoffice_commission_adjustments_path, class: "nav-link" do %>
+          <i class="fa fa-adjust me-1"></i> Ajustes
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

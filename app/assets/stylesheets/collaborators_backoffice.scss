@@ -11,4 +11,240 @@
  *= require jquery-ui/themes/base/theme
  */
 
+.collaborators-backoffice-layout {
+  --sidebar-width: 225px;
+  --sidebar-background: #f8fafc;
+  --sidebar-foreground: #334155;
+  --sidebar-muted: #64748b;
+  --sidebar-accent: #2563eb;
+}
+
+.collaborators-backoffice-layout #layoutSidenav #layoutSidenav_nav {
+  flex-basis: var(--sidebar-width);
+  width: var(--sidebar-width);
+  transition: transform 0.2s ease-in-out;
+}
+
+.collaborators-backoffice-layout #layoutSidenav #layoutSidenav_content {
+  margin-left: calc(-1 * var(--sidebar-width));
+  padding-left: var(--sidebar-width);
+}
+
+.collaborators-backoffice-layout .sb-sidenav {
+  background: var(--sidebar-background);
+  color: var(--sidebar-foreground);
+  box-shadow: 4px 0 18px rgba(15, 23, 42, 0.06);
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu {
+  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: thin;
+}
+
+.collaborators-backoffice-layout .sidebar-menu {
+  padding: 0 0.20rem 1rem;
+}
+
+.collaborators-backoffice-layout .sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.25rem 0.25rem 0.25rem;
+  padding: 0.0rem;
+  // border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.collaborators-backoffice-layout .sidebar-avatar {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  height: 180px;
+  flex: 0 0 auto;
+  border-radius: 1rem;
+  object-fit: cover;
+  box-shadow: 0 0 0 3px #eff6ff;
+}
+
+.collaborators-backoffice-layout .sidebar-profile-info,
+.collaborators-backoffice-layout .sidebar-footer > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.collaborators-backoffice-layout .sidebar-profile-info strong,
+.collaborators-backoffice-layout .sidebar-footer strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collaborators-backoffice-layout .sidebar-profile-info {
+  max-width: 100%;
+}
+
+.collaborators-backoffice-layout .sidebar-profile-label {
+  color: var(--sidebar-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .sb-sidenav-menu-heading {
+  padding: 1.25rem 0.75rem 0.45rem;
+  color: var(--sidebar-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+}
+
+.collaborators-backoffice-layout .sidebar-section-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--sidebar-foreground);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link {
+  min-height: 44px;
+  margin: 0.12rem 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.65rem;
+  color: var(--sidebar-foreground);
+  font-size: 0.9rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link:hover,
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link:focus-visible {
+  background: #eaf1fb;
+  color: #1d4ed8;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .sidebar-section-toggle[aria-expanded="true"],
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link.active {
+  background: #e8f0ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+  display: inline-flex;
+  width: 1.35rem;
+  justify-content: center;
+  margin-right: 0.65rem;
+  color: var(--sidebar-muted);
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link > i:first-child {
+  width: 1.35rem;
+  margin-right: 0.65rem;
+  color: var(--sidebar-muted);
+  text-align: center;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link.active .sb-nav-link-icon,
+.collaborators-backoffice-layout .sb-sidenav-menu .sidebar-section-toggle[aria-expanded="true"] .sb-nav-link-icon {
+  color: var(--sidebar-accent);
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .nav-link.active > i:first-child {
+  color: var(--sidebar-accent);
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .sb-sidenav-menu-nested {
+  margin: 0.1rem 0 0.45rem 1.25rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid #dbe3ef;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-menu .sb-sidenav-menu-nested .nav-link {
+  min-height: 38px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.84rem;
+}
+
+.collaborators-backoffice-layout .sb-sidenav-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.collaborators-backoffice-layout .sidebar-footer-indicator {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px #dcfce7;
+}
+
+.collaborators-backoffice-layout #sidebarToggle {
+  color: #fff;
+}
+
+.collaborators-backoffice-layout #sidebarToggle:focus-visible,
+.collaborators-backoffice-layout .sidebar-profile a:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+@media (min-width: 992px) {
+  .collaborators-backoffice-layout #layoutSidenav #layoutSidenav_nav {
+    transform: translateX(0);
+  }
+
+  .collaborators-backoffice-layout #layoutSidenav #layoutSidenav_content {
+    margin-left: 0;
+  }
+
+  .collaborators-backoffice-layout.sb-sidenav-toggled #layoutSidenav #layoutSidenav_nav {
+    transform: translateX(calc(-1 * var(--sidebar-width)));
+  }
+
+  .collaborators-backoffice-layout.sb-sidenav-toggled #layoutSidenav #layoutSidenav_content {
+    margin-left: calc(-1 * var(--sidebar-width));
+  }
+}
+
+@media (max-width: 991.98px) {
+  .collaborators-backoffice-layout #layoutSidenav #layoutSidenav_nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(calc(-1 * var(--sidebar-width)));
+  }
+
+  .collaborators-backoffice-layout.sb-sidenav-toggled #layoutSidenav #layoutSidenav_nav {
+    transform: translateX(0);
+  }
+
+  .collaborators-backoffice-layout #layoutSidenav #layoutSidenav_content {
+    margin-left: 0;
+    padding-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collaborators-backoffice-layout #layoutSidenav #layoutSidenav_nav,
+  .collaborators-backoffice-layout .sb-sidenav-menu .nav-link {
+    transition: none;
+  }
+}
+
  

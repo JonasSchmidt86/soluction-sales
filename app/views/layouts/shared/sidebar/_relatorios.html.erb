@@ -1,0 +1,62 @@
+<!-- Colapso: Relatórios -->
+<% if access_control.can_view?('report_sales') || access_control.can_view?('report_put_box') || access_control.can_view?('report_buy') || access_control.can_view?('report_mais_vendidos') || access_control.can_view?('atendimentos') || access_control.can_view?('report_aniversariantes') || access_control.can_view?('report_rep_dre') || access_control.can_view?('report_custom_reports') %>
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseRels" aria-expanded="false" aria-controls="collapseRels">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-chart-column"></i>
+    </div>
+    Relatórios
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+  </button>
+  <div class="collapse" id="collapseRels">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('report_sales') %>
+        <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-line fa-fw me-2" aria-hidden="true"></i>
+          Relatório de Vendas
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_buy') %>
+        <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-column fa-fw me-2" aria-hidden="true"></i>
+          Relatório de Compras
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_put_box') %>
+        <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-cash-register fa-fw me-2" aria-hidden="true"></i>
+          Lançamentos de Caixa
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_rep_dre') %>
+        <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-pie fa-fw me-2" aria-hidden="true"></i>
+          DRE
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_mais_vendidos') %>
+        <%= link_to collaborators_backoffice_report_mais_vendidos_path, class:"nav-link" do %>
+          <i class="fa-solid fa-ranking-star fa-fw me-2" aria-hidden="true"></i>
+          Produtos Mais Vendidos
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('atendimentos') %>
+        <%= link_to collaborators_backoffice_report_atendimentos_path, class:"nav-link" do %>
+          <i class="fa-solid fa-headset fa-fw me-2" aria-hidden="true"></i>
+          Atendimentos
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_aniversariantes') %>
+        <%= link_to collaborators_backoffice_report_aniversariantes_path, class:"nav-link" do %>
+          <i class="fa-solid fa-cake-candles fa-fw me-2" aria-hidden="true"></i>
+          Aniversariantes
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_custom_reports') %>
+        <%= link_to collaborators_backoffice_report_custom_reports_path, class:"nav-link" do %>
+          <i class="fa-solid fa-file-lines fa-fw me-2" aria-hidden="true"></i>
+          Relatórios Personalizados
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

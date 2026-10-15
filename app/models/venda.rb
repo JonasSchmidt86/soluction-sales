@@ -73,16 +73,20 @@ class Venda < ApplicationRecord
 
     paginates_per 30
 
+    # Usa a associacao ja carregada (includes) em vez de uma nova query por
+    # venda. No relatorio de vendas isso elimina 3 queries por linha (N+1):
+    # funcionario/empresa/pessoa ja vem pre-carregados. O &. protege quando
+    # a associacao e nil.
     def nome_funcionario
-        Funcionario.where(id: self.cod_funcionario).pluck(:usuario).first
+        funcionario&.usuario
     end
 
     def nome_empresa
-        Empresa.where(cod_empresa: self.cod_empresa).pluck(:nome).first
+        empresa&.nome
     end
 
     def nome_pessoa 
-        Pessoa.where(cod_pessoa: self.cod_pessoa).pluck(:nome).first
+        pessoa&.nome
     end
 
     def venda_nfe

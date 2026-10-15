@@ -1,0 +1,46 @@
+<!-- Colapso: Compras -->
+<% if access_control.can_view?('compras') || access_control.can_view?('xml_files') || access_control.can_view?('pedidos_compras') || access_control.can_view?('report_buy') || access_control.can_view?('report_sugestao_compra') %>
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseCompra" aria-expanded="false" aria-controls="collapseCompra">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-bag-shopping"></i>
+    </div>
+    Compras
+    <div class="sb-sidenav-collapse-arrow">
+      <i class="fas fa-angle-down"></i>
+    </div>
+  </button>
+  <div id="collapseCompra" class="collapse">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('compras') %>
+        <%= link_to new_collaborators_backoffice_compra_path, class: "nav-link" do %>
+          <i class="fa-solid fa-basket-shopping fa-fw me-2" aria-hidden="true"></i>
+          Nova Compra
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('xml_files') %>
+        <%= link_to collaborators_backoffice_xml_files_path, class: "nav-link" do %>
+          <i class="fa-solid fa-file-code fa-fw me-2" aria-hidden="true"></i>
+          Importação de XML
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('pedidos_compras') %>
+        <%= link_to collaborators_backoffice_pedidos_compras_path, class: "nav-link" do %>
+          <i class="fa-solid fa-clipboard-list fa-fw me-2" aria-hidden="true"></i>
+          Pedidos de Compra
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_sugestao_compra') %>
+        <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
+          <i class="fa-solid fa-lightbulb fa-fw me-2" aria-hidden="true"></i>
+          Sugestão de Compra
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_buy') %>
+        <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-column fa-fw me-2" aria-hidden="true"></i>
+          Relatório de Compras
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

@@ -1,0 +1,6 @@
+<% if access_control.can_view?('welcome') %>
+  <%= link_to collaborators_backoffice_welcome_index_path, class: "nav-link" do %>
+    <i class="fa-solid fa-gauge-high fa-fw me-2" aria-hidden="true"></i>
+    Dashboard
+  <% end %>
+<% end %>

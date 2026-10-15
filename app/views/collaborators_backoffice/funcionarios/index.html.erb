@@ -44,9 +44,9 @@
           <tbody>
             <% @funcionarios.each do |funcionario| %>
               <tr>
-                <td class= "align-middle"><%= l(funcionario.datacontrato) %> </td>
-                <td class= "align-middle"><%= funcionario.usuario %> </td>
-                <td class= "align-middle"><%= funcionario.pessoa.nome %> </td>
+                <td class= "align-middle"><%= funcionario.datacontrato&.strftime("%d/%m/%Y") || "Não informado" %></td>
+                <td class= "align-middle"><%= funcionario&.usuario || "Não informado"%> </td>
+                <td class= "align-middle"><%= funcionario&.pessoa&.nome  || "Não informado"%> </td>
                 <td class= "align-middle">
                   <%= link_to collaborators_backoffice_funcionario_path(funcionario), method: :delete, 
                                       class:"btn btn-danger btn-circle", data: {confirm: "Deseja remover Colaborador?"} do %>

@@ -38,7 +38,8 @@
           </tr>
         </thead>
         <tbody>
-          <% sale.itensvenda.order(:cod_item).each do |item| %>
+          <% # sort_by em memoria (itens ja vem do includes); .order faria nova query %>
+          <% sale.itensvenda.sort_by(&:cod_item).each do |item| %>
             <tr>
               <td><%= item.full_codigo %></td>
               <td><%= item.produto&.nome %></td>
@@ -70,7 +71,8 @@
           </tr>
         </thead>
         <tbody>
-          <% sale.contas.order(:numeroparcela).each do |bill| %>
+          <% # sort_by em memoria (contas ja vem do includes); .order faria nova query %>
+          <% sale.contas.sort_by { |c| c.numeroparcela.to_i }.each do |bill| %>
             <%
               status_label = ''
               row_class = ''
@@ -78,8 +80,8 @@
                 status_label = 'Cancelada'; row_class = 'text-danger'
               elsif bill.dtvencimento && bill.dtvencimento < DateTime.now && !bill.quitada
                 status_label = 'Vencida'; row_class = 'text-warning'
-              elsif bill.lancamentos.exists?
-                datapagto = bill.lancamentos.maximum(:datapagto)
+              elsif bill.lancamentos.any?
+                datapagto = bill.lancamentos.map(&:datapagto).compact.max
                 if datapagto && (datapagto.to_date - bill.dtvencimento.to_date).to_i >= 15
                   status_label = 'Atrasada'; row_class = 'text-warning'
                 else
@@ -95,7 +97,7 @@
               <td><%= bill.nmParcela %></td>
               <td><%= bill.nmPessoa %></td>
               <td><%= post_date(bill.dtvencimento) if bill.dtvencimento.present? %></td>
-              <td><%= post_date(bill.lancamentos.maximum(:datapagto)) if bill.lancamentos.exists? %></td>
+              <td><% ult = bill.lancamentos.map(&:datapagto).compact.max %><%= post_date(ult) if ult %></td>
               <td class="text-end"><%= number_to_currency(bill.valorparcela, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
               <td class="text-end"><%= number_to_currency(bill.valorPago, precision: 2, separator: ",", delimiter: "", unit: "") %></td>
             </tr>

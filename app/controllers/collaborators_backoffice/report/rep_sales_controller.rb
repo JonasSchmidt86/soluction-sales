@@ -65,8 +65,55 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
             else
             vendas.order(datavenda: :desc).page(params[:page]).per(per_page)
             end
+
+        # Pre-carrega o ULTIMO DocumentoFiscal (modelo 55) de cada venda da pagina
+        # num unico SELECT, em vez de 1 query por linha no partial fiscal_acoes
+        # (N+1). A view consulta @docs_por_venda[cod_venda] em memoria.
+        carregar_documentos_fiscais
         end
 
+
+    private
+
+    # Carrega, em UMA query, o ultimo DocumentoFiscal (modelo 55) de cada venda
+    # exibida, com os eventos pre-carregados (usados no caso cancelada). Guarda
+    # em @docs_por_venda (cod_venda => documento) para o partial fiscal_acoes
+    # consultar sem disparar query por linha. So faz sentido quando o bloco
+    # fiscal e exibido (modulo fiscal + super_admin); fora disso fica vazio.
+    def carregar_documentos_fiscais
+        @docs_por_venda = {}
+        return unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+
+        cod_vendas = Array(@sales).map(&:cod_venda).compact.uniq
+        return if cod_vendas.empty?
+
+        # Mais recente primeiro; o first por cod_venda no each_with_object abaixo
+        # mantem apenas o de maior cod_documento_fiscal (o ultimo).
+        DocumentoFiscal
+            .includes(:eventos)
+            .where(cod_venda: cod_vendas, modelo: 55)
+            .order(cod_documento_fiscal: :desc)
+            .each do |doc|
+                @docs_por_venda[doc.cod_venda] ||= doc
+            end
+    end
+
+    public
+
+    # Carrega o detalhe (produtos + contas) de UMA venda sob demanda, chamado
+    # via AJAX quando o usuario clica em "Informacoes". Antes o detalhe de TODAS
+    # as vendas era renderizado no load (escondido), gerando dezenas de queries
+    # por venda mesmo sem ninguem abrir. Agora so a venda aberta e carregada.
+    def venda_detalhe
+        sale = Venda.includes(itensvenda: [:produto, :cor],
+                              contas: [:lancamentos])
+                    .where(cod_empresa: current_collaborator.cod_empresa)
+                    .find(params[:id])
+        render partial: "collaborators_backoffice/report/rep_sales/venda_detalhe",
+               locals: { sale: sale }
+    rescue ActiveRecord::RecordNotFound
+        render plain: "Venda não encontrada.", status: :not_found
+    end
 
     def hist_client
 

@@ -1,0 +1,34 @@
+<!-- Colapso: Vendas -->
+<% if access_control.can_view?('vendas') || access_control.can_view?('orcamentos') || access_control.can_view?('report_sales') %>
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseVenda" aria-expanded="false" aria-controls="collapseVenda">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-cart-shopping"></i>
+    </div>
+    Vendas
+    <div class="sb-sidenav-collapse-arrow">
+      <i class="fas fa-angle-down"></i>
+    </div>
+  </button>
+  <div id="collapseVenda" class="collapse">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('vendas') %>
+        <%= link_to new_collaborators_backoffice_venda_path, class: "nav-link" do %>
+          <i class="fa-solid fa-cart-plus fa-fw me-2" aria-hidden="true"></i>
+          Nova Venda
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('orcamentos') %>
+        <%= link_to collaborators_backoffice_orcamentos_path, class: "nav-link" do %>
+          <i class="fa-solid fa-file-invoice-dollar fa-fw me-2" aria-hidden="true"></i>
+          Orçamentos
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_sales') %>
+        <%= link_to collaborators_backoffice_report_sales_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-line fa-fw me-2" aria-hidden="true"></i>
+          Relatório de Vendas
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

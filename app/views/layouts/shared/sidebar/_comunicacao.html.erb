@@ -1,0 +1,32 @@
+<!-- Colapso: Comunicação -->
+<button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseComunicacao" aria-expanded="false" aria-controls="collapseComunicacao">
+  <div class="sb-nav-link-icon">
+    <i class="fa-solid fa-comments"></i>
+  </div>
+  Comunicação
+  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+</button>
+<div class="collapse" id="collapseComunicacao">
+  <nav class="sb-sidenav-menu-nested nav">
+    <% if access_control.can_view?('whatsapp_contacts') %>
+      <%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
+        <i class="fa-brands fa-whatsapp fa-fw me-2" aria-hidden="true"></i>
+        Contatos de WhatsApp
+      <% end %>
+    <% end %>
+    <% if current_collaborator.funcionario.permissao.nivel == 1 %>
+      <%= link_to collaborators_backoffice_whatsapp_messages_path, class: "nav-link" do %>
+        <i class="fa-brands fa-whatsapp fa-fw me-2" aria-hidden="true"></i>
+        Mensagens de WhatsApp
+      <% end %>
+      <%= link_to collaborators_backoffice_company_link_pages_path, class: "nav-link" do %>
+        <i class="fa-solid fa-share-nodes fa-fw me-2" aria-hidden="true"></i>
+        Páginas de Links
+      <% end %>
+    <% end %>
+    <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
+      <i class="fa-solid fa-bell fa-fw me-2" aria-hidden="true"></i>
+      Lembretes
+    <% end %>
+  </nav>
+</div>

@@ -1,0 +1,48 @@
+<% if access_control.can_view?('caixa') || access_control.can_view?('lancamentosdiversos') || access_control.can_view?('contas_pag_rec') || access_control.can_view?('report_rep_dre') || access_control.can_view?('report_put_box') %>
+  <!-- Colapso: Financeiro -->
+  <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseFinanceiro" aria-expanded="false" aria-controls="collapseFinanceiro">
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-coins"></i>
+    </div>
+    Financeiro
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+  </button>
+  <div class="collapse" id="collapseFinanceiro">
+    <nav class="sb-sidenav-menu-nested nav">
+      <% if access_control.can_view?('caixa') %>
+        <%= link_to collaborators_backoffice_caixa_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-cash-register fa-fw me-2" aria-hidden="true"></i>
+          Caixa
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('contas_pag_rec') %>
+        <%= link_to collaborators_backoffice_contas_pag_rec_index_path, class: "nav-link" do %>
+          <i class="fa-solid fa-money-bill-transfer fa-fw me-2" aria-hidden="true"></i>
+          Contas a Pagar/Receber
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_put_box') %>
+        <%= link_to collaborators_backoffice_report_put_box_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-cash-register fa-fw me-2" aria-hidden="true"></i>
+          Lançamentos de Caixa
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('provisionados') %>
+        <%= link_to pagamentos_collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+          <i class="fa-solid fa-money-check-dollar fa-fw me-2" aria-hidden="true"></i>
+          Pagamentos Provisionados
+        <% end %>
+        <%= link_to collaborators_backoffice_lancamentosdiversos_path, class: "nav-link" do %>
+          <i class="fa-solid fa-file-circle-plus fa-fw me-2" aria-hidden="true"></i>
+          Cadastro de Provisionados
+        <% end %>
+      <% end %>
+      <% if access_control.can_view?('report_rep_dre') %>
+        <%= link_to collaborators_backoffice_report_rep_dre_index_path, class:"nav-link" do %>
+          <i class="fa-solid fa-chart-pie fa-fw me-2" aria-hidden="true"></i>
+          DRE
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

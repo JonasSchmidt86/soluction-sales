@@ -1,44 +1,12 @@
-<%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
-  Pessoas
-<% end %>
-<%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
-  Produtos
-<% end %>
-<%= link_to collaborators_backoffice_marcas_path, class: "nav-link" do %>
-  Marcas
-<% end %>
-<%= link_to collaborators_backoffice_grupos_index_path, class: "nav-link" do %>
-  Grupos
-<% end %>
-<%= link_to collaborators_backoffice_cores_path, class: "nav-link" do %>
-  Cores
-<% end %>
-<% if access_control.can_view?('produto_imagens') %>
-  <%= link_to cadastro_rapido_collaborators_backoffice_produto_imagens_path, class: "nav-link" do %>
-    Cadastro Rápido de Imagens
-  <% end %>
-<% end %>
-<%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
-  Lembretes
-<% end %>
-<% if access_control.can_view?('whatsapp_contacts') %>
-  <%= link_to collaborators_backoffice_whatsapp_contacts_path, class: "nav-link" do %>
-    whatsapp Contact
-  <% end %>
-<% end %>
-<% if current_collaborator.funcionario.permissao.nivel == 1 %>
-  <%= link_to collaborators_backoffice_funcionarios_path, class: "nav-link" do %>
-    Funcionário
-  <% end %>
-  <%= link_to collaborators_backoffice_company_link_pages_path, class: "nav-link" do %>
-    <i class="fa fa-share-nodes fa-fw"></i> Páginas de Links
-  <% end %>
-  <%= link_to collaborators_backoffice_whatsapp_messages_path, class: "nav-link" do %>
-    <i class="fab fa-whatsapp fa-fw"></i> Mensagens de WhatsApp
-  <% end %>
-  <% if current_collaborator.id == 1 %>
-    <%= link_to collaborators_backoffice_cadinternalframes_path, class: "nav-link" do %>
-      Cadastro de Layouts
-    <% end %>
-  <% end %>
-<% end %>
+<%= render 'layouts/shared/sidebar/dashboard' %>
+<%= render 'layouts/shared/sidebar/cadastros' %>
+<%= render 'layouts/shared/sidebar/vendas' %>
+<%= render 'layouts/shared/sidebar/compras' %>
+<%= render 'layouts/shared/sidebar/estoque' %>
+<%= render 'layouts/shared/sidebar/financeiro' %>
+<%= render 'layouts/shared/sidebar/fiscal' %>
+<%= render 'layouts/shared/sidebar/comissoes' %>
+<%= render 'layouts/shared/sidebar/relatorios' %>
+<%= render 'layouts/shared/sidebar/comunicacao' %>
+<%= render 'layouts/shared/sidebar/administracao' %>
+<%= render 'layouts/shared/sidebar/melhorias' %>

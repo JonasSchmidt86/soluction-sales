@@ -13,15 +13,14 @@
               <th data-sortable="" style=""><a href="#" class="dataTable-sorter">Pessoa</a></th>
               <th data-sortable="" style=""><a href="#" class="dataTable-sorter">CPF</a></th>
               <th data-sortable="" style="width: 55px;">
-            </tr>
-          </thead>
-          
-          <tbody>
+              </tr>
+            </thead>
+            <tbody>
               <% Funcionario.where("ativo = ? ", true).each do |fun| %>
                 <tr>
-                  <td class= "align-middle"><%= l(fun.datacontrato) %> </td>
-                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa.nome) : "") %></td>
-                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa.cpf_cnpj) : "") %></td>
+                  <td class= "align-middle"><%= l(fun.datacontrato) if fun.datacontrato.present? %> </td>
+                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa&.nome) : "") %></td>
+                  <td class= "align-middle"><%= (!fun.pessoa.blank? ? (fun.pessoa&.cpf_cnpj) : "") %></td>
                   <td class= "align-middle">
                     <%= link_to edit_collaborators_backoffice_collaborator_path(fun), class:"btn btn-success btn-circle" do %>
                       <i class="fa fa-plus"></i>
@@ -29,11 +28,9 @@
                   </td>
                 </tr>
               <% end %>
-          </tbody>
-
-        </table>
-
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>

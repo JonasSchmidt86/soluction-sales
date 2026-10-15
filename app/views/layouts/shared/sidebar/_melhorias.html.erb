@@ -1,0 +1,9 @@
+<!-- Link: Melhorias / Sugestões -->
+<% if access_control.can_view?('melhorias') %>
+  <%= link_to collaborators_backoffice_melhorias_path, class: "nav-link" do %>
+    <div class="sb-nav-link-icon">
+      <i class="fa-solid fa-lightbulb"></i>
+    </div>
+    Melhorias e Sugestões
+  <% end %>
+<% end %>

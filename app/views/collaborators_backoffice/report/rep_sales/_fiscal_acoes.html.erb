@@ -3,8 +3,13 @@
 <%# Mostra DANFE / cancelar / reemitir conforme o status da ultima NF-e. %>
 <%# Requer local :sale.                                                  %>
 <%# =================================================================== %>
-<% doc = DocumentoFiscal.where(cod_venda: sale.cod_venda, modelo: 55)
-                        .order(cod_documento_fiscal: :desc).first %>
+<%# Usa o documento pre-carregado pelo controller (@docs_por_venda) para nao %>
+<%# disparar uma query por venda (N+1). Fallback para a consulta direta caso %>
+<%# o hash nao esteja disponivel (ex. renderizacao fora do index).            %>
+<% doc = (defined?(@docs_por_venda) && @docs_por_venda) ?
+           @docs_por_venda[sale.cod_venda] :
+           DocumentoFiscal.where(cod_venda: sale.cod_venda, modelo: 55)
+                          .order(cod_documento_fiscal: :desc).first %>
 
 <% if doc&.autorizada? %>
   <li><h6 class="dropdown-header">NF-e autorizada</h6></li>
@@ -86,7 +91,7 @@
 
 <% elsif doc && %w[rascunho enviada].include?(doc.status) %>
   <li><h6 class="dropdown-header">NF-e em processamento</h6></li>
-  <%# Reconciliar: confirma se a SEFAZ ja autorizou (resposta pode ter se perdido). %>
+  <%# Reconciliar: confirma se a SEFAZ ja autorizou (resposta pode ter se perdido). # %>
   <li>
     <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
                   method: :post, class: "dropdown-item btn btn-secondary btn-circle",

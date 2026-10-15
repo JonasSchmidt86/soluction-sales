@@ -142,7 +142,6 @@ Rails.application.routes.draw do
       # mesmo documento numa reemissao (ver Fiscal::EmissorFiscal).
       resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do
         post :emitir, on: :collection
-        get :espelho, on: :collection
         get :previsualizar, on: :collection # DANFE de pre-visualizacao (provedor)
         post :cancelar, on: :member
         get :danfe, on: :member
@@ -311,6 +310,7 @@ Rails.application.routes.draw do
     get 'vendas/check_cpf_cnpj_venda', to: 'vendas#check_cpf_cnpj_venda'
 
     get 'report_sales', to: 'report/rep_sales#index'
+    get 'report_sales/venda_detalhe/:id', to: 'report/rep_sales#venda_detalhe', as: 'report_sales_venda_detalhe'
     get 'report_buy', to: 'report/rep_buy#index'
     get 'report/report_sales/hist_client/:id', to: 'report/rep_sales#hist_client', as: 'report_sales_client'
     get 'sales/index'
