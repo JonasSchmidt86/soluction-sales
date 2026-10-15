@@ -163,7 +163,7 @@
                           <i class="fa fa-truck" style="width: 35px;"></i> Imprimir Recibo Entrega
                         <% end %>
                       </li>
-                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada && @docs_por_venda.blank?   %>
+                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada && @docs_por_venda&.dig(sale.cod_venda).blank?   %>
                         <li>
                           <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
                             <i class="fa fa-edit", style="width: 35px;"></i> Editar Venda
@@ -171,7 +171,7 @@
                         </li>
                       <% end %>
                       <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
-                        <% unless @docs_por_venda %>
+                        <% unless @docs_por_venda[sale.cod_venda] %>
                             <li>
                               <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
                                           target: "_blank", class: "dropdown-item btn btn-info btn-circle" do %>
