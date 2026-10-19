@@ -212,7 +212,28 @@
     <% if @social_links.any? %>
       <div class="section-label">Redes e links</div>
       <% @social_links.each do |link| %>
-        <a class="link-btn" href="<%= link.url %>" target="_blank" rel="noopener">
+        <%
+          original_url = link.url.to_s.strip
+          normalized_url = if original_url.present? && original_url.match?(/\Ahttps?:\/\//i)
+            original_url
+          elsif original_url.present?
+            "https://#{original_url}"
+          end
+
+          instagram_match = normalized_url.to_s.match(%r{\Ahttps?://(?:www\.)?instagram\.com/([A-Za-z0-9._]+)/?}i)
+          instagram_username = instagram_match&.captures&.first
+          instagram_deep_link = "instagram://user?username=#{ERB::Util.url_encode(instagram_username)}" if instagram_username.present?
+        %>
+
+        <a class="link-btn"
+           href="<%= normalized_url %>"
+           <% if instagram_username.present? %>
+             data-instagram-url="<%= normalized_url %>"
+             data-instagram-deep-link="<%= instagram_deep_link %>"
+             data-instagram-link="true"
+           <% end %>
+           target="_blank"
+           rel="noopener noreferrer">
           <span class="icon" style="background: <%= link.cor %>;">
             <i class="<%= link.icon %>"></i>
           </span>
@@ -224,5 +245,35 @@
 
     <footer>&copy; <%= Time.now.year %> <%= @link_page.titulo_exibido %></footer>
   </main>
-</body>
+  <script>
+    // No computador, mantém o link HTTPS e abre em nova aba.
+    // Em celulares, tenta abrir o app do Instagram e usa HTTPS como alternativa.
+    document.addEventListener("DOMContentLoaded", function () {
+      var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (!isMobile) return;
+
+      document.querySelectorAll("[data-instagram-link='true']").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          var appUrl = link.dataset.instagramDeepLink;
+          var fallbackUrl = link.dataset.instagramUrl;
+          if (!appUrl || !fallbackUrl) return;
+
+          event.preventDefault();
+          var fallbackTimer = window.setTimeout(function () {
+            window.location.href = fallbackUrl;
+          }, 1200);
+
+          document.addEventListener("visibilitychange", function onVisibilityChange() {
+            if (document.hidden) {
+              window.clearTimeout(fallbackTimer);
+              document.removeEventListener("visibilitychange", onVisibilityChange);
+            }
+          });
+
+          window.location.href = appUrl;
+        });
+      });
+    });
+  </script>
+\n</body>
 </html>
