@@ -29,12 +29,6 @@
           Pedidos de Compra
         <% end %>
       <% end %>
-      <% if access_control.can_view?('report_sugestao_compra') %>
-        <%= link_to collaborators_backoffice_report_sugestao_compra_path, class:"nav-link" do %>
-          <i class="fa-solid fa-lightbulb fa-fw me-2" aria-hidden="true"></i>
-          Sugestão de Compra
-        <% end %>
-      <% end %>
       <% if access_control.can_view?('report_buy') %>
         <%= link_to collaborators_backoffice_report_buy_path, class:"nav-link" do %>
           <i class="fa-solid fa-chart-column fa-fw me-2" aria-hidden="true"></i>

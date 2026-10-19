@@ -13,9 +13,6 @@
     </button>
     <div class="collapse" id="collapseFiscal">
       <nav class="sb-sidenav-menu-nested nav">
-        <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
-          <i class="fa fa-gear me-1"></i> Configuração
-        <% end %>
         <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
           <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
             <i class="fa fa-gauge-high me-1"></i> Dashboard
@@ -30,12 +27,15 @@
             <i class="fa fa-box-archive me-1"></i> Pacotes XML
           <% end %>
         <% end %>
+        <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
+          <i class="fa fa-gear me-1"></i> Configuração
+        <% end %>
         <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_config') %>
-          <%= link_to collaborators_backoffice_importacao_estoque_fiscal_path, class: "nav-link" do %>
-            <i class="fa fa-file-import me-1"></i> Importar Estoque
-          <% end %>
           <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
             <i class="fa fa-tags me-1"></i> Perfis Tributários
+          <% end %>
+          <%= link_to collaborators_backoffice_importacao_estoque_fiscal_path, class: "nav-link" do %>
+            <i class="fa fa-file-import me-1"></i> Importar Estoque
           <% end %>
           <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
             <i class="fa fa-triangle-exclamation me-1"></i> Pendências
