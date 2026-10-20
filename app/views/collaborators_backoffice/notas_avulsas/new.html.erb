@@ -5,12 +5,14 @@
     <div class="card mt-3">
       <div class="card-header bg-primary text-white d-flex align-items-center">
         <i class="fa fa-file-invoice me-2"></i>
-        <h4 class="mb-0">Emissão avulsa — <%= modelo_nome %></h4>
+        <h4 class="mb-0">Emissão avulsa — <span id="modeloNomeLabel"><%= modelo_nome %></span></h4>
         <div class="ms-auto btn-group">
-          <%= link_to "NF-e 55", new_collaborators_backoffice_notas_avulsa_path(modelo: 55),
-                      class: "btn btn-sm #{@modelo == 55 ? 'btn-light' : 'btn-outline-light'}" %>
-          <%= link_to "NFC-e 65", new_collaborators_backoffice_notas_avulsa_path(modelo: 65),
-                      class: "btn btn-sm #{@modelo == 65 ? 'btn-light' : 'btn-outline-light'}" %>
+          <%# Troca de modelo via JS (sem recarregar), para NAO perder os dados %>
+          <%# ja preenchidos (itens, destinatario, perfis). %>
+          <button type="button" id="btnModelo55" data-modelo="55"
+                  class="btn btn-sm <%= @modelo == 55 ? 'btn-light' : 'btn-outline-light' %>">NF-e 55</button>
+          <button type="button" id="btnModelo65" data-modelo="65"
+                  class="btn btn-sm <%= @modelo == 65 ? 'btn-light' : 'btn-outline-light' %>">NFC-e 65</button>
         </div>
       </div>
 
@@ -46,7 +48,8 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">
               Destinatário
-              <% if @modelo == 55 %><span class="text-danger">*</span><% else %><span class="text-muted">(opcional)</span><% end %>
+              <span id="destObrigatorio" class="text-danger" style="<%= 'display:none;' unless @modelo == 55 %>">*</span>
+              <span id="destOpcional" class="text-muted" style="<%= 'display:none;' if @modelo == 55 %>">(opcional)</span>
             </label>
             <div class="position-relative">
               <input type="text" id="clienteBusca" class="form-control"
@@ -97,7 +100,7 @@
                   um segundo confirm; o nosso JS de submit cuida da confirmacao. %>
               <button type="submit" class="btn btn-success" id="emitirBtn"
                       data-confirm-msg="Emitir a <%= modelo_nome %> agora?">
-                <i class="fa fa-check-double me-1"></i> Emitir <%= modelo_nome %>
+                <i class="fa fa-check-double me-1"></i> Emitir <span id="emitirBtnLabel"><%= modelo_nome %></span>
               </button>
             </div>
           </div>
@@ -151,6 +154,42 @@
   var RESOLVER_URL = "<%= resolver_cfop_collaborators_backoffice_notas_avulsas_path %>";
   var opTopo = document.getElementById('operacaoGeral');
   var codPessoaHidden = document.getElementById('codPessoa');
+
+  // ---------- Troca de modelo (55/65) SEM recarregar a pagina ----------
+  // Antes os botoes eram links que recarregavam o /new, apagando tudo que o
+  // usuario ja tinha digitado. Agora so atualizamos o hidden :modelo, os textos
+  // e o estado do destinatario (obrigatorio no 55 / opcional no 65), mantendo
+  // itens, destinatario e perfis preenchidos. O backend decide o resto na emissao.
+  (function () {
+    var hiddenModelo = document.querySelector('#formAvulsa input[name="modelo"]');
+    var btn55 = document.getElementById('btnModelo55');
+    var btn65 = document.getElementById('btnModelo65');
+
+    function aplicarModelo(modelo) {
+      if (hiddenModelo) hiddenModelo.value = modelo;
+      var nome = modelo === '65' ? 'NFC-e (modelo 65)' : 'NF-e (modelo 55)';
+
+      var nomeLabel = document.getElementById('modeloNomeLabel');
+      if (nomeLabel) nomeLabel.textContent = nome;
+      var emitirLabel = document.getElementById('emitirBtnLabel');
+      if (emitirLabel) emitirLabel.textContent = nome;
+      var emitirBtn = document.getElementById('emitirBtn');
+      if (emitirBtn) emitirBtn.setAttribute('data-confirm-msg', 'Emitir a ' + nome + ' agora?');
+
+      // Destinatario: obrigatorio no 55, opcional no 65.
+      var obrig = document.getElementById('destObrigatorio');
+      var opc   = document.getElementById('destOpcional');
+      if (obrig) obrig.style.display = (modelo === '55') ? '' : 'none';
+      if (opc)   opc.style.display   = (modelo === '55') ? 'none' : '';
+
+      // Estado visual dos botoes (claro = selecionado).
+      if (btn55) { btn55.className = 'btn btn-sm ' + (modelo === '55' ? 'btn-light' : 'btn-outline-light'); }
+      if (btn65) { btn65.className = 'btn btn-sm ' + (modelo === '65' ? 'btn-light' : 'btn-outline-light'); }
+    }
+
+    if (btn55) btn55.addEventListener('click', function () { aplicarModelo('55'); });
+    if (btn65) btn65.addEventListener('click', function () { aplicarModelo('65'); });
+  })();
 
   // ---------- Destinatario (autocomplete) ----------
   var cliInput = document.getElementById('clienteBusca');

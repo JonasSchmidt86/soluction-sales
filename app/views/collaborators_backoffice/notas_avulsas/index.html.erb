@@ -45,6 +45,14 @@
                     <% if d.autorizada? && d.danfe_base64.present? %>
                       <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
                     <% end %>
+                    <%# Excluir so para notas NAO autorizadas/canceladas (sem valor %>
+                    <%# fiscal) — tentativas que falharam (erro/rejeitada/rascunho). %>
+                    <% unless d.autorizada? || d.cancelada? %>
+                      <%= button_to "Excluir", collaborators_backoffice_notas_avulsa_path(d),
+                                    method: :delete, class: "btn btn-sm btn-outline-danger",
+                                    form: { class: "d-inline", data: { turbo: false } },
+                                    data: { confirm: "Excluir esta nota (#{d.status})? Ela não foi autorizada, então não tem valor fiscal." } %>
+                    <% end %>
                   </td>
                 </tr>
               <% end %>
