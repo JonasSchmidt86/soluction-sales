@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_27_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -47,7 +47,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
     t.decimal "quantidade", precision: 18, scale: 2, default: "0.0"
     t.datetime "datacadastro", precision: nil
     t.bigint "cod_empresa", null: false
-    t.bigint "cod_funcionario", default: 1
+    t.bigint "cod_funcionario"
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -549,6 +549,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
     t.index ["cod_empresa"], name: "idx_fiscal_config_empresa", unique: true
   end
 
+  create_table "fiscal_produto", primary_key: "cod_fiscal_produto", force: :cascade do |t|
+    t.bigint "cod_empresa", null: false
+    t.bigint "cod_produto", null: false
+    t.string "ncm", limit: 8, comment: "NCM (8 digitos)"
+    t.bigint "cfop", comment: "CFOP de ENTRADA (cadastro/referencia; saida usa a regra)"
+    t.string "cest", limit: 7, comment: "CEST (7 digitos)"
+    t.string "origem", limit: 1, comment: "origem da mercadoria (0..8)"
+    t.string "gtin", limit: 14, comment: "codigo de barras (EAN/GTIN)"
+    t.string "csosn", limit: 4, comment: "CSOSN de cadastro/referencia (saida usa a regra)"
+    t.bigint "cod_perfil_tributario", comment: "FK logica para perfil_tributario"
+    t.decimal "qtd_fiscal", precision: 18, scale: 2, default: "0.0", null: false, comment: "estoque fiscal total do produto (consolida todas as cores)"
+    t.boolean "ativo", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "cod_produto"], name: "idx_fiscal_produto_empresa_produto", unique: true
+    t.index ["cod_perfil_tributario"], name: "idx_fiscal_produto_perfil"
+  end
+
   create_table "formaspagamento", primary_key: "cod_formaspagamento", id: :bigint, default: -> { "nextval('formaspagamento_codigo_seq'::regclass)" }, force: :cascade do |t|
     t.decimal "acrescimo", precision: 18, scale: 2, default: "0.0"
     t.boolean "ativo"
@@ -849,16 +867,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_000012) do
     t.string "cor_primaria", default: "#2c2c2c", null: false
     t.string "cor_secundaria", default: "#666666", null: false
     t.string "cor_destaque", default: "#8b7355", null: false
-    t.integer "views_count", default: 0, null: false
-    t.datetime "first_viewed_at"
-    t.datetime "last_viewed_at"
-    t.integer "total_view_seconds", default: 0, null: false
-    t.string "share_token"
-    t.integer "share_failed_attempts", default: 0, null: false
-    t.datetime "share_blocked_until"
     t.boolean "link_protegido", default: false, null: false
     t.string "senha_publica_customizada", limit: 4
     t.datetime "link_expira_em"
+    t.integer "views_count", default: 0, null: false
+    t.integer "total_view_seconds", default: 0, null: false
+    t.datetime "first_viewed_at"
+    t.datetime "last_viewed_at"
+    t.string "share_token"
+    t.integer "share_failed_attempts", default: 0, null: false
+    t.datetime "share_blocked_until"
     t.index ["share_token"], name: "index_orcamentos_on_share_token", unique: true
   end
 

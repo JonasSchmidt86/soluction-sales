@@ -28,7 +28,9 @@ module Fiscal
     # Regra do perfil que casa com a operacao + UF destino + tipo cliente.
     # Especifico vence curinga (mesma pontuacao do DocumentoFiscalBuilder).
     def regra_para(produto, operacao, perfil: nil)
-      perfil ||= produto&.perfil_tributario
+      # Perfil informado (escolhido na tela) tem prioridade; senao, o perfil do
+      # fiscal_produto da empresa, com fallback no perfil do produto global.
+      perfil ||= FiscalProduto.para(@empresa&.cod_empresa, produto&.cod_produto).perfil_tributario
       return nil if perfil.nil? || operacao.nil?
 
       candidatas = perfil.regras.select do |r|

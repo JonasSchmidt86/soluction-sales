@@ -57,7 +57,15 @@ module Fiscal
       # emitir nota invalida e deixa claro o que corrigir.
       pendencias = validar_dados_fiscais(doc_payload)
       if pendencias.any?
-        documento.update(status: "erro", mensagem_sefaz: "Dados fiscais incompletos: #{pendencias.join('; ')}"[0, 255])
+        # Falha de validacao local (nao chegou a transmitir). Na AVULSA (sem
+        # venda) nao deixamos lixo: apaga o rascunho recem-criado, pois nao ha
+        # venda para reaproveitar o documento depois. Na VENDA, mantem o doc com
+        # status "erro" (fica atrelado a venda e e reaproveitado na reemissao).
+        if @venda.cod_venda.blank?
+          documento.destroy
+        else
+          documento.update(status: "erro", mensagem_sefaz: "Dados fiscais incompletos: #{pendencias.join('; ')}"[0, 255])
+        end
         raise DadosFiscaisIncompletos, "Não é possível emitir. #{pendencias.join('; ')}"
       end
 

@@ -17,7 +17,8 @@ module Fiscal
     def initialize(empresa:, itens:, cliente: nil)
       @empresa = empresa
       @pessoa  = cliente
-      @itens   = Array(itens).map { |h| ItemAvulso.new(h) }
+      # Passa o cod_empresa para cada item resolver o perfil via fiscal_produto.
+      @itens   = Array(itens).map { |h| ItemAvulso.new(h, cod_empresa: empresa&.cod_empresa) }
     end
 
     # Interface compatível com Venda:
@@ -43,7 +44,7 @@ module Fiscal
     attr_reader :cod_produto, :cod_cor, :quantidade, :valorunitario,
                 :cod_perfil_tributario, :cfop
 
-    def initialize(attrs)
+    def initialize(attrs, cod_empresa: nil)
       a = attrs.symbolize_keys
       @cod_produto   = a[:cod_produto]
       @cod_cor       = a[:cod_cor]
@@ -51,6 +52,7 @@ module Fiscal
       @valorunitario = a[:valorunitario].to_d
       @cod_perfil_tributario = a[:cod_perfil_tributario].presence
       @cfop                  = a[:cfop].presence
+      @cod_empresa           = cod_empresa
     end
 
     def produto
@@ -71,12 +73,13 @@ module Fiscal
       (@quantidade.to_d * @valorunitario.to_d)
     end
 
-    # Perfil escolhido na tela (prioridade) ou o perfil do proprio produto.
+    # Perfil escolhido na tela (prioridade) ou o da fiscal_produto da empresa
+    # (com fallback no produto global via FiscalProduto.para).
     def perfil_tributario_escolhido
       if @cod_perfil_tributario
         PerfilTributario.find_by(cod_perfil_tributario: @cod_perfil_tributario)
       else
-        produto&.perfil_tributario
+        FiscalProduto.para(@cod_empresa, @cod_produto).perfil_tributario
       end
     end
 

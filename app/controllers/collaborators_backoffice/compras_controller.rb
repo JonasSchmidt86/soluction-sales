@@ -33,6 +33,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       end
 
       if @produto.save
+        # Fiscal por empresa: grava os dados fiscais informados na fiscal_produto
+        # da empresa logada (nao so no produto global). Nao derruba o cadastro.
+        upsert_fiscal_produto_compra(@produto)
         render json: @produto
       else
         render json: { errors: @produto.errors.full_messages }, status: :unprocessable_entity
@@ -514,6 +517,29 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
     end    
 
     private 
+
+    # Cria/atualiza a fiscal_produto da empresa logada com os dados fiscais do
+    # produto recem-cadastrado na compra. So atua com modulo fiscal ativo; nao
+    # derruba o cadastro em caso de erro (loga). NCM/CEST so se tamanho valido.
+    def upsert_fiscal_produto_compra(produto)
+      return unless produto&.persisted?
+      return unless respond_to?(:empresa_tem_modulo_fiscal?) && empresa_tem_modulo_fiscal?
+
+      registro = FiscalProduto.find_or_initialize_by(
+        cod_empresa: current_collaborator.cod_empresa,
+        cod_produto: produto.cod_produto
+      )
+      ncm  = produto.ncm.to_s.gsub(/\D/, "")
+      cest = produto.cest.to_s.gsub(/\D/, "")
+      registro.ncm    = ncm  if ncm.length == 8
+      registro.cest   = cest if cest.length == 7
+      registro.origem = produto.origem if produto.origem.present?
+      registro.gtin   = produto.gtin   if produto.gtin.present?
+      registro.cod_perfil_tributario = produto.cod_perfil_tributario if produto.cod_perfil_tributario.present?
+      registro.save! if registro.changed?
+    rescue => e
+      Rails.logger.error("[Compras#upsert_fiscal_produto_compra] produto #{produto&.cod_produto}: #{e.class} - #{e.message}")
+    end
 
     def set_compra
       @compra = Compra.find(params[:id])

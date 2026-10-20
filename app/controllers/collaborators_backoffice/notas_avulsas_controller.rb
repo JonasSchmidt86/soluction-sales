@@ -1,6 +1,6 @@
 class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_documento, only: [:show, :danfe, :cancelar]
+  before_action :set_documento, only: [:show, :danfe, :cancelar, :destroy]
 
   MODELOS = [55, 65].freeze
 
@@ -16,7 +16,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def new
     @modelo = modelo_param
     @operacoes = OperacaoFiscal.ativos.order(:nome)
-    @operacao_padrao = OperacaoFiscal.find_by(nome: "NF avulsa") || OperacaoFiscal.find_by(nome: "Venda (NF-e)")
+    @operacao_padrao = OperacaoFiscal.find_by(nome: "Venda (NF-e)") || OperacaoFiscal.find_by(nome: "Venda (NF-c)")
     @perfis = PerfilTributario.ativos.de_saida.order(:nome)
     @finalidades = DocumentoFiscal::FINALIDADES
     # Itens re-exibidos quando o create falha (preserva o que o usuario digitou).
@@ -30,9 +30,11 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     empresa  = current_collaborator.empresa
     operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: params[:cod_operacao_fiscal])
     produto  = Produto.find_by(cod_produto: params[:cod_produto])
-    # Perfil explicito (escolhido na tela) tem prioridade; senao, o do produto.
+    # Fiscal do produto POR EMPRESA (com fallback no produto global).
+    fiscal   = FiscalProduto.para(current_collaborator.cod_empresa, params[:cod_produto])
+    # Perfil explicito (escolhido na tela) tem prioridade; senao, o da fiscal_produto.
     perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario]) ||
-               produto&.perfil_tributario
+               fiscal.perfil_tributario
     destinatario = Pessoa.find_by(cod_pessoa: params[:cod_pessoa])
 
     # tipo_cliente segue a mesma logica da venda: sem destinatario (ou PF) =
@@ -49,8 +51,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     render json: {
       cfop:   cfop,
       origem: cfop.present? ? "regra" : "sem_regra",
-      # Devolve o perfil do produto para o front pre-selecionar o select.
-      cod_perfil_tributario: produto&.cod_perfil_tributario
+      # Devolve o perfil da fiscal_produto (empresa) p/ o front pre-selecionar.
+      cod_perfil_tributario: fiscal.cod_perfil_tributario
     }
   rescue => e
     Rails.logger.error("[NotasAvulsas#resolver_cfop] #{e.class} - #{e.message}")
@@ -172,6 +174,24 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   rescue => e
     Rails.logger.error("[NotasAvulsas#cancelar] doc #{@documento.cod_documento_fiscal}: #{e.class} - #{e.message}")
     redirect_to collaborators_backoffice_notas_avulsas_path, alert: "Falha ao cancelar: #{e.message}"
+  end
+
+  # Exclui uma nota avulsa que NAO foi autorizada (erro/rejeitada/rascunho/
+  # enviada). Documento autorizado ou cancelado tem valor fiscal e NAO pode ser
+  # apagado (precisa ser cancelado na SEFAZ, nao excluido). Serve para limpar
+  # tentativas que falharam (ex. dados fiscais incompletos), que nao viraram NF.
+  def destroy
+    if @documento.autorizada? || @documento.cancelada?
+      redirect_to collaborators_backoffice_notas_avulsas_path,
+                  alert: "Não é possível excluir uma nota #{@documento.status}. Documentos com valor fiscal devem ser cancelados, não excluídos."
+      return
+    end
+
+    @documento.destroy
+    redirect_to collaborators_backoffice_notas_avulsas_path, notice: "Nota (#{@documento.status}) excluída."
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#destroy] doc #{@documento&.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_notas_avulsas_path, alert: "Falha ao excluir: #{e.message}"
   end
 
   # Cores de um produto (JSON) para o select de cor no form. Traz tambem a

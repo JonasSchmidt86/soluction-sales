@@ -259,7 +259,7 @@ Rails.application.routes.draw do
 
     # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);
     # create=emite; show=detalhe; danfe/espelho/cancelar.
-    resources :notas_avulsas, only: [:index, :new, :create, :show] do
+    resources :notas_avulsas, only: [:index, :new, :create, :show, :destroy] do
       member do
         get  :danfe
         post :cancelar

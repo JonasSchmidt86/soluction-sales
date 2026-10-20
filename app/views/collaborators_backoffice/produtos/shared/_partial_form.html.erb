@@ -48,55 +48,85 @@
       </div>
     </div>
 
-    <%# ===== Dados Fiscais ===== %>
-    <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
-      <i class="fa fa-file-invoice me-1"></i> Dados Fiscais
-    </h6>
+    <%# cadastro_rapido (modal do dashboard): mostra SO o perfil tributario, e %>
+    <%# apenas quando a empresa tem modulo fiscal. Os demais dados fiscais %>
+    <%# (NCM/CEST/origem/GTIN) ficam para o cadastro completo de produto. %>
+    <% cadastro_rapido = local_assigns[:cadastro_rapido] == true %>
+    <% tem_modulo_fiscal = (respond_to?(:empresa_tem_modulo_fiscal?) && empresa_tem_modulo_fiscal?) %>
 
-    <%# Perfil Tributario: define CFOP/CSOSN/tributos por operacao na emissao.
-        Visivel apenas quando o modulo fiscal esta liberado (super_admin). %>
-    <% if access_control.can_view?("fiscal_perfis") %>
-      <div class="row mb-3">
-        <div class="col-md-12">
+    <% if cadastro_rapido %>
+      <% if tem_modulo_fiscal && access_control.can_view?("fiscal_perfis") %>
+        <%# ===== Fiscal (cadastro rapido): so perfil tributario ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
+          <i class="fa fa-file-invoice me-1"></i> Perfil Tributário
+        </h6>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="form-floating">
+              <%= form.select :cod_perfil_tributario,
+                    options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome, @produto&.cod_perfil_tributario),
+                    { include_blank: "Selecione o perfil tributário" },
+                    class: "form-control", id: "modal_perfil_tributario" %>
+              <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
+            </div>
+            <small class="text-muted">Demais dados fiscais (NCM, CEST, origem, GTIN) no cadastro completo do produto.</small>
+          </div>
+        </div>
+      <% end %>
+    <% elsif tem_modulo_fiscal %>
+      <%# ===== Dados Fiscais (cadastro completo) — POR EMPRESA ===== %>
+      <%# Os valores vem da fiscal_produto da empresa logada (com fallback no %>
+      <%# produto global durante a transicao). O salvamento grava na            %>
+      <%# fiscal_produto (controller#upsert_fiscal_produto). Objetivo: os campos %>
+      <%# fiscais sairao do produto global na limpeza (Etapa 7).                 %>
+      <% fiscal = FiscalProduto.para(current_collaborator.cod_empresa, @produto&.cod_produto) %>
+      <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-2 mt-4">
+        <i class="fa fa-file-invoice me-1"></i> Dados Fiscais
+      </h6>
+
+      <% if access_control.can_view?("fiscal_perfis") %>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="form-floating">
+              <%= form.select :cod_perfil_tributario,
+                    options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome, fiscal.cod_perfil_tributario),
+                    { include_blank: "Selecione o perfil tributário" },
+                    class: "form-control", id: "modal_perfil_tributario" %>
+              <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="row mb-2">
+        <div class="col-md-3">
+          <div class="form-floating mb-md-0">
+            <%= form.text_field :ncm, value: fiscal.ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
+            <%= form.label :ncm, "NCM", class:"" %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-floating mb-3 mb-md-0">
+            <%= form.text_field :cest, value: fiscal.cest, class: "text form-control", placeholder:"CEST", id:"modal_cest" %>
+            <%= form.label :cest, "CEST", class:"" %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-floating mb-3 mb-md-0">
+            <%= form.select :origem, options_for_select(origens_para_select, fiscal.origem),
+                  { include_blank: "Origem" },
+                  class: "form-control", id: "modal_origem" %>
+            <%= form.label :origem, "Origem" %>
+          </div>
+        </div>
+        <div class="col-md-3">
           <div class="form-floating">
-            <%= form.select :cod_perfil_tributario,
-                  options_from_collection_for_select(PerfilTributario.ativos.order(:nome), :cod_perfil_tributario, :nome, @produto&.cod_perfil_tributario),
-                  { include_blank: "Selecione o perfil tributário" },
-                  class: "form-control", id: "modal_perfil_tributario" %>
-            <%= form.label :cod_perfil_tributario, "Perfil Tributário" %>
+            <%= form.text_field :gtin, value: fiscal.gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
+            <%= form.label :gtin, "GTIN" %>
           </div>
         </div>
       </div>
     <% end %>
-
-    <div class="row mb-2">
-      <div class="col-md-3">
-        <div class="form-floating mb-md-0">
-          <%= form.text_field :ncm, class: "text form-control", placeholder:"NCM", id: "modal_ncm" %>
-          <%= form.label :ncm, "NCM", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-floating mb-3 mb-md-0">
-          <%= form.text_field :cest, class: "text form-control", placeholder:"CEST", id:"modal_cest" %>
-          <%= form.label :cest, "CEST", class:"" %>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-floating mb-3 mb-md-0">
-          <%= form.select :origem, options_for_select(origens_para_select, @produto&.origem),
-                { include_blank: "Origem" },
-                class: "form-control", id: "modal_origem" %>
-          <%= form.label :origem, "Origem" %>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-floating">
-          <%= form.text_field :gtin, maxlength: 14, class: "text form-control", placeholder:"GTIN/EAN", id:"modal_gtin" %>
-          <%= form.label :gtin, "GTIN" %>
-        </div>
-      </div>
-    </div>
 
     <div class="mt-4 mb-3 text-end">
       <button onclick="salvarProduto()" class="btn btn-success">

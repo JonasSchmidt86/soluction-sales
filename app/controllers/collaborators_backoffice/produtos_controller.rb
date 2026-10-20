@@ -10,6 +10,8 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
     
     def update
         if @produto.update(params_produto.except(:imagens))
+          # Reflete os dados fiscais na fiscal_produto da empresa logada.
+          upsert_fiscal_produto(@produto)
           redirect_to collaborators_backoffice_produtos_path, notice: "Produto atualizado com sucesso!"
         else
           render :edit
@@ -35,6 +37,12 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
         end
 
         if @produto.save
+            # Fiscal por empresa: alem do cadastro global, grava os dados fiscais
+            # informados na fiscal_produto da EMPRESA logada (quem cadastrou).
+            # Outras empresas criam o seu quando precisarem (importacao/edicao);
+            # ate la o fallback le do produto global.
+            upsert_fiscal_produto(@produto)
+
             if action_message == 'Welcome/index'
                 redirect_to collaborators_backoffice_welcome_index_path, notice: "Produto Cadastrado com sucesso!"
             else
@@ -150,6 +158,32 @@ class CollaboratorsBackoffice::ProdutosController < CollaboratorsBackofficeContr
 
     def params_produto
         params.require(:produto).permit(:cod_produto, :nome, :ncm, :ucom, :cfop, :ativo, :cest, :cod_margem, :grupo, :marca, :origem, :gtin, :csosn, :cod_perfil_tributario, imagens: [] )
+    end
+
+    # Cria/atualiza a fiscal_produto da EMPRESA logada com os dados fiscais do
+    # produto. Chamado no create/update do produto para que o cadastro ja grave
+    # o fiscal por empresa (nao so no produto global). So grava os campos que
+    # vieram preenchidos no form; os demais ficam como estao (nil -> fallback).
+    # So atua quando a empresa logada tem modulo fiscal ativo.
+    def upsert_fiscal_produto(produto)
+        return unless produto&.persisted?
+        return unless respond_to?(:empresa_tem_modulo_fiscal?) && empresa_tem_modulo_fiscal?
+
+        registro = FiscalProduto.find_or_initialize_by(
+            cod_empresa: current_collaborator.cod_empresa,
+            cod_produto: produto.cod_produto
+        )
+        registro.ncm    = produto.ncm    if produto.ncm.present?
+        registro.cfop   = produto.cfop   if produto.cfop.present?
+        registro.cest   = produto.cest   if produto.cest.present?
+        registro.origem = produto.origem if produto.origem.present?
+        registro.gtin   = produto.gtin   if produto.gtin.present?
+        registro.csosn  = produto.csosn  if produto.csosn.present?
+        registro.cod_perfil_tributario = produto.cod_perfil_tributario if produto.cod_perfil_tributario.present?
+        registro.save! if registro.changed?
+    rescue => e
+        # Nao derruba o cadastro do produto se a fiscal_produto falhar; loga.
+        Rails.logger.error("[Produtos#upsert_fiscal_produto] produto #{produto&.cod_produto}: #{e.class} - #{e.message}")
     end
 
     def set_produto

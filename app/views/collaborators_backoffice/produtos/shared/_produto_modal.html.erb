@@ -13,7 +13,9 @@
             <i class="fa fa-box me-1"></i> Dados do Produto
           </h6>
           
-          <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto, action_message: action_message } %>
+          <%# cadastro_rapido: true -> so perfil tributario (se a empresa tem %>
+          <%# modulo fiscal); NCM/CEST/origem/GTIN ficam para o cadastro completo. %>
+          <%= render partial: 'collaborators_backoffice/produtos/shared/partial_form', locals: { produto: @produto, action_message: action_message, cadastro_rapido: true } %>
         </div>
       </div>
     </div>

@@ -199,12 +199,27 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     return if produto.blank?
 
     empresa_id = @xml_file&.empresa_id
+    return if empresa_id.blank? # sem empresa nao da pra gravar o fiscal por empresa
+
+    # Fiscal POR EMPRESA (fiscal_produto). Os dados do XML passam a gravar aqui,
+    # nao mais no produto global. Cria o registro se ainda nao existir.
+    registro = FiscalProduto.find_or_initialize_by(cod_empresa: empresa_id, cod_produto: produto.cod_produto)
     mudancas = {}
 
     valores.each do |campo, novo_valor|
       novo = novo_valor.to_s.strip
+      # NCM/CEST: mantem so digitos (XML pode vir com mascara). Se nao ficar no
+      # tamanho valido (NCM 8, CEST 7), ignora o campo — nao grava dado invalido
+      # que a validacao do FiscalProduto rejeitaria (e a nota rejeitaria depois).
+      if campo.to_sym == :ncm
+        novo = novo.gsub(/\D/, "")
+        next unless novo.length == 8
+      elsif campo.to_sym == :cest
+        novo = novo.gsub(/\D/, "")
+        next unless novo.length == 7
+      end
       next if novo.blank?
-      atual = produto.public_send(campo).to_s.strip
+      atual = registro.public_send(campo).to_s.strip
       next if novo == atual
 
       # registra a divergencia antes de sobrescrever
@@ -217,9 +232,10 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
 
     return if mudancas.empty?
 
-    produto.update_columns(mudancas)
+    mudancas.each { |campo, valor| registro.public_send("#{campo}=", valor) }
+    registro.save!
   rescue => e
-    Rails.logger.error "Falha ao atualizar campos fiscais do produto #{produto&.cod_produto}: #{e.message}"
+    Rails.logger.error "Falha ao atualizar campos fiscais (fiscal_produto) do produto #{produto&.cod_produto}: #{e.message}"
   end
 
   def det_itens(products)

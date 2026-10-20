@@ -26,10 +26,17 @@ class Produto < ApplicationRecord
     # Validações
     validates :cod_produto, presence: true, uniqueness: true
     validates :nome, presence: true
-    validates :ncm, presence: false
-    validates :cest, presence: false
-    validates :cfop, presence: false
     validates :ucom, presence: false
+
+    # Formato fiscal (NCM 8 digitos, CEST 7, origem 0..8). Valida SO quando o
+    # campo e ALTERADO, para nao travar a edicao de produtos legados que ja
+    # estao no banco com valor invalido (so exige corrigir quando mexer no campo).
+    validates :ncm,    format: { with: /\A\d{8}\z/, message: "deve ter 8 dígitos" },
+              allow_blank: true, if: -> { will_save_change_to_ncm? }
+    validates :cest,   format: { with: /\A\d{7}\z/, message: "deve ter 7 dígitos" },
+              allow_blank: true, if: -> { will_save_change_to_cest? }
+    validates :origem, format: { with: /\A[0-8]\z/, message: "deve ser de 0 a 8" },
+              allow_blank: true, if: -> { will_save_change_to_origem? }
   
     def valor_site_por_cor(cod_cor)
       registros = empresaprodutos.select { |ep| ep.cod_cor.to_i == cod_cor.to_i && ep.valor_site.to_f > 0 }

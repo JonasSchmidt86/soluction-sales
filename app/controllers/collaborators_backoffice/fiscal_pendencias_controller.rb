@@ -2,8 +2,18 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
   before_action :autorizar_fiscal!
 
   def index
-    # Produtos ativos com alguma pendencia fiscal que impede emissao.
+    cod_empresa = current_collaborator.cod_empresa
+
+    # Produtos ativos com alguma pendencia fiscal que impede emissao. As
+    # pendencias sao avaliadas pelo fiscal da EMPRESA (fiscal_produto) com
+    # fallback no produto global via COALESCE: usa o valor da fiscal_produto
+    # quando existe, senao o do produto. Assim a lista reflete o que cada
+    # empresa tem (Etapa 5 do fiscal_produto).
     base = Produto.where(ativo: true)
+      .joins(sanitize_sql_array([
+        "LEFT JOIN fiscal_produto fp ON fp.cod_produto = produto.cod_produto AND fp.cod_empresa = ?",
+        cod_empresa
+      ]))
 
     # Filtro de estoque (padrao: so com estoque FISCAL na empresa logada).
     # Emissao usa empresaproduto.qtdfiscal (nao a quantidade fisica).
@@ -13,7 +23,7 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
     if @estoque != "todos"
       com_estoque_ids = Empresaproduto
         .joins(:cor)
-        .where(cod_empresa: current_collaborator.cod_empresa, ativo: true)
+        .where(cod_empresa: cod_empresa, ativo: true)
         .where(cores: { ativo: true })
         .where("empresaproduto.qtdfiscal > 0")
         .distinct
@@ -21,9 +31,14 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
       base = base.where(cod_produto: com_estoque_ids)
     end
 
-    @sem_ncm    = base.where("ncm IS NULL OR ncm = '' OR ncm = '00000000'")
-    @sem_perfil = base.where(cod_perfil_tributario: nil)
-    @sem_origem = base.where("origem IS NULL OR origem = ''")
+    # COALESCE(fiscal_produto, produto): a fiscal_produto manda; fallback global.
+    ncm_expr    = "COALESCE(NULLIF(fp.ncm, ''), produto.ncm)"
+    perfil_expr = "COALESCE(fp.cod_perfil_tributario, produto.cod_perfil_tributario)"
+    origem_expr = "COALESCE(NULLIF(fp.origem, ''), produto.origem)"
+
+    @sem_ncm    = base.where("#{ncm_expr} IS NULL OR #{ncm_expr} = '' OR #{ncm_expr} = '00000000'")
+    @sem_perfil = base.where("#{perfil_expr} IS NULL")
+    @sem_origem = base.where("#{origem_expr} IS NULL OR #{origem_expr} = ''")
 
     @qtd_sem_ncm    = @sem_ncm.count
     @qtd_sem_perfil = @sem_perfil.count

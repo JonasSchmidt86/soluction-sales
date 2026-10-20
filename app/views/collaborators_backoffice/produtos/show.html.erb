@@ -24,17 +24,19 @@
                 <strong>Marca:</strong>
                 <%= @produto.cod_marca&.nome %>
               </p>
+              <%# Fiscal POR EMPRESA (fiscal_produto, com fallback no global). %>
+              <% fiscal = FiscalProduto.para(current_collaborator.cod_empresa, @produto.cod_produto) %>
               <p>
                 <strong>NCM:</strong>
-                <%= @produto.ncm %>
+                <%= fiscal.ncm %>
               </p>
               <p>
                 <strong>CEST:</strong>
-                <%= @produto.cest %>
+                <%= fiscal.cest %>
               </p>
               <p>
                 <strong>CFOP:</strong>
-                <%= @produto.cfop %>
+                <%= fiscal.cfop %>
               </p>
               <p>
                 <strong>Unidade:</strong>

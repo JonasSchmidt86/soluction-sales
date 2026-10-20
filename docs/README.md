@@ -18,6 +18,7 @@ manter tudo num só lugar.
 | [PAGINAS_LINK_INSTAGRAM.md](PAGINAS_LINK_INSTAGRAM.md) | Páginas "link na bio" por empresa (Linktree) para Instagram. |
 | [MENSAGENS_WHATSAPP.md](MENSAGENS_WHATSAPP.md) | Mensagens de WhatsApp por empresa (placeholders, menu no widget/relatório de aniversariantes, encoding de emoji). |
 | [IMPORTACAO_ESTOQUE_FISCAL.md](IMPORTACAO_ESTOQUE_FISCAL.md) | Importação CSV/XLSX para revisar dados fiscais e definir saldo fiscal por produto/cor. |
+| [FISCAL_PRODUTO.md](FISCAL_PRODUTO.md) | Dados fiscais do produto por empresa (tabela fiscal_produto): leitura/escrita, validações, qtd_fiscal e trigger de compra, backfill. |
 
 ## Convenção
 

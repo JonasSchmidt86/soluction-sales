@@ -85,19 +85,25 @@
             </thead>
             <tbody>
               <% @produtos.each do |produto| %>
+                <% # Fiscal POR EMPRESA (fiscal_produto, com fallback no global). %>
+                <% fiscal = FiscalProduto.para(current_collaborator.cod_empresa, produto.cod_produto) %>
+                <% pendencias = [] %>
+                <% pendencias << "NCM ausente/zerado" if fiscal.ncm.blank? || fiscal.ncm == "00000000" %>
+                <% pendencias << "Sem perfil tributário" if fiscal.cod_perfil_tributario.blank? %>
+                <% pendencias << "Sem origem" if fiscal.origem.blank? %>
                 <tr>
                   <td><%= produto.cod_produto %></td>
                   <td><%= produto.nome %></td>
                   <td>
-                    <% if produto.ncm.blank? || produto.ncm == '00000000' %>
-                      <span class="badge bg-danger"><%= produto.ncm.presence || '—' %></span>
+                    <% if fiscal.ncm.blank? || fiscal.ncm == '00000000' %>
+                      <span class="badge bg-danger"><%= fiscal.ncm.presence || '—' %></span>
                     <% else %>
-                      <%= produto.ncm %>
+                      <%= fiscal.ncm %>
                     <% end %>
                   </td>
-                  <td><%= produto.perfil_tributario&.nome || content_tag(:span, "—", class: "text-danger") %></td>
+                  <td><%= fiscal.perfil_tributario&.nome || content_tag(:span, "—", class: "text-danger") %></td>
                   <td>
-                    <% produto.pendencias_fiscais.each do |m| %>
+                    <% pendencias.each do |m| %>
                       <span class="badge bg-warning text-dark me-1"><%= m %></span>
                     <% end %>
                   </td>

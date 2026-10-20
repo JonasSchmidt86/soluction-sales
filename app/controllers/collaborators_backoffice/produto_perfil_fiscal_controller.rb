@@ -10,21 +10,23 @@ class CollaboratorsBackoffice::ProdutoPerfilFiscalController < CollaboratorsBack
   end
 
   # GET .../produto_perfil_fiscal/:cod_produto -> status fiscal do produto (JSON).
-  # Informa o perfil atual (se houver) e as pendencias (NCM/origem/perfil).
+  # Informa o perfil atual (POR EMPRESA, via fiscal_produto) e as pendencias.
   def show
     produto = Produto.find_by(cod_produto: params[:cod_produto])
     return render json: { erro: "Produto não encontrado" }, status: :not_found if produto.nil?
 
+    fiscal = FiscalProduto.para(current_collaborator.cod_empresa, produto.cod_produto)
     render json: {
       cod_produto: produto.cod_produto,
       nome: produto.nome,
-      cod_perfil_tributario: produto.cod_perfil_tributario,
-      perfil_nome: produto.perfil_tributario&.nome,
-      pendencias: produto.pendencias_fiscais
+      cod_perfil_tributario: fiscal.cod_perfil_tributario,
+      perfil_nome: fiscal.perfil_tributario&.nome,
+      pendencias: pendencias_fiscais(fiscal)
     }
   end
 
-  # PATCH .../produto_perfil_fiscal/:cod_produto -> grava o perfil no produto.
+  # PATCH .../produto_perfil_fiscal/:cod_produto -> grava o perfil na
+  # fiscal_produto da EMPRESA (cria o registro se ainda nao existir).
   def update
     produto = Produto.find_by(cod_produto: params[:cod_produto])
     return render json: { erro: "Produto não encontrado" }, status: :not_found if produto.nil?
@@ -34,19 +36,34 @@ class CollaboratorsBackoffice::ProdutoPerfilFiscalController < CollaboratorsBack
       return render json: { erro: "Perfil inválido" }, status: :unprocessable_entity
     end
 
-    if produto.update(cod_perfil_tributario: cod_perfil)
+    registro = FiscalProduto.find_or_initialize_by(
+      cod_empresa: current_collaborator.cod_empresa,
+      cod_produto: produto.cod_produto
+    )
+    if registro.update(cod_perfil_tributario: cod_perfil)
+      fiscal = FiscalProduto.para(current_collaborator.cod_empresa, produto.cod_produto)
       render json: {
         cod_produto: produto.cod_produto,
-        cod_perfil_tributario: produto.cod_perfil_tributario,
-        perfil_nome: produto.perfil_tributario&.nome,
-        pendencias: produto.pendencias_fiscais
+        cod_perfil_tributario: fiscal.cod_perfil_tributario,
+        perfil_nome: fiscal.perfil_tributario&.nome,
+        pendencias: pendencias_fiscais(fiscal)
       }
     else
-      render json: { erro: produto.errors.full_messages.join(", ") }, status: :unprocessable_entity
+      render json: { erro: registro.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
   end
 
   private
+
+  # Pendencias fiscais a partir do fiscal da EMPRESA (fiscal_produto/fallback),
+  # espelhando a logica do Produto#pendencias_fiscais mas por empresa.
+  def pendencias_fiscais(fiscal)
+    motivos = []
+    motivos << "NCM ausente/zerado" if fiscal.ncm.blank? || fiscal.ncm == "00000000"
+    motivos << "Sem perfil tributário" if fiscal.cod_perfil_tributario.blank?
+    motivos << "Sem origem" if fiscal.origem.blank?
+    motivos
+  end
 
   # Mesmo gate do modulo fiscal usado na emissao: por ora so super_admin em
   # empresa com modulo fiscal ativo.

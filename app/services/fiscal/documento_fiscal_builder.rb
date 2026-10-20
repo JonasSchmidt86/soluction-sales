@@ -113,7 +113,10 @@ module Fiscal
 
       itens.each_with_index.map do |item, idx|
         produto = item.produto
-        regra   = regra_para(produto, item)
+        # Fiscal do produto POR EMPRESA (ncm/cest/origem/gtin/perfil). Com
+        # fallback no produto global quando ainda nao ha fiscal_produto.
+        fiscal  = FiscalProduto.para(@empresa&.cod_empresa, produto&.cod_produto)
+        regra   = regra_para(produto, item, fiscal)
 
         # CFOP: override do item (escolhido na tela, ex. avulsa) vence; senao,
         # resolve pela regra por UF. Itens de venda nao tem override -> regra.
@@ -134,15 +137,15 @@ module Fiscal
         {
           "NmProduto"        => produto&.nome,
           "CodProdutoServico"=> produto&.cod_produto.to_s,
-          "EAN"              => produto&.gtin.presence,
-          "NCM"              => produto&.ncm,
-          "CEST"             => produto&.cest.presence,
+          "EAN"              => fiscal.gtin.presence,
+          "NCM"              => fiscal.ncm,
+          "CEST"             => fiscal.cest.presence,
           "UnidadeComercial" => produto&.ucom.presence || "UN",
           "Quantidade"       => quantidade.to_f,
           "ValorUnitario"    => valor_unit.to_f,
           "ValorTotal"       => valor_total.to_f,
           "CFOP"             => cfop&.to_i,
-          "OrigemProduto"    => (produto&.origem.presence || "0").to_i,
+          "OrigemProduto"    => (fiscal.origem.presence || "0").to_i,
           "Imposto"          => montar_imposto(regra)
         }.compact
       end
@@ -233,15 +236,16 @@ module Fiscal
     # a prioridade da regra desempata. Assim "especifico vence generico".
     #   Ex.: regra (uf=PR, cliente=consumidor_final) vence regra (uf=*, cliente=*)
     #   para um consumidor final do PR; para um cliente de SC, cai na (uf=*).
-    def regra_para(produto, item = nil)
+    def regra_para(produto, item = nil, fiscal = nil)
       # Perfil escolhido no item (tela avulsa) tem prioridade; senao, o perfil do
-      # proprio produto (comportamento da venda). Retrocompativel: itens de venda
-      # nao respondem a perfil_tributario_escolhido -> cai no perfil do produto.
+      # fiscal_produto da empresa (com fallback no perfil do produto global).
+      # Retrocompativel: itens de venda nao respondem a perfil_tributario_escolhido.
+      fiscal ||= FiscalProduto.para(@empresa&.cod_empresa, produto&.cod_produto)
       perfil =
         if item.respond_to?(:perfil_tributario_escolhido)
           item.perfil_tributario_escolhido
         else
-          produto&.perfil_tributario
+          fiscal.perfil_tributario
         end
       return nil if perfil.nil? || @operacao.nil?
 

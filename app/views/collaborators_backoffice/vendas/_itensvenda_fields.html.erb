@@ -9,9 +9,10 @@
     <%# So aparece quando a linha tem produto selecionado. Atualizado por JS. %>
     <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
       <%
-        prod_fiscal   = f.object.produto
         tem_produto   = f.object.cod_produto.present?
-        tem_perfil    = prod_fiscal&.cod_perfil_tributario.present?
+        # Fiscal do produto POR EMPRESA (com fallback no produto global).
+        prod_fiscal   = FiscalProduto.para(current_collaborator.cod_empresa, f.object.cod_produto)
+        tem_perfil    = prod_fiscal.cod_perfil_tributario.present?
         badge_classe  = tem_perfil ? "text-bg-success" : "text-bg-danger"
         badge_texto   = tem_perfil ? prod_fiscal.perfil_tributario&.nome : "Sem perfil fiscal"
         badge_icone   = tem_perfil ? "fa-receipt" : "fa-triangle-exclamation"

@@ -207,18 +207,44 @@ class CollaboratorsBackoffice::ImportacaoEstoqueFiscalController < Collaborators
       return { erro: "Quantidade inválida na planilha.", status: :unprocessable_entity }
     end
 
-    campos = campos_fiscais_permitidos(produto, dados)
+    # Fiscal da empresa (fiscal_produto). Se ainda nao existir, cria o registro
+    # a partir do fallback. A partir da Etapa 5, os campos fiscais (ncm/cest/
+    # origem/perfil) sao gravados AQUI (por empresa), nao mais no produto global.
+    fiscal_atual = FiscalProduto.para(current_collaborator.cod_empresa, produto.cod_produto)
+
+    campos = campos_fiscais_permitidos(fiscal_atual, dados)
     return { erro: campos[:erro], status: :unprocessable_entity } if campos[:erro]
 
     nome_produto = dados[:nome_produto].to_s.strip
     return { erro: "Nome do produto não pode ficar vazio.", status: :unprocessable_entity } if nome_produto.blank?
     return { erro: "Nome do produto deve ter no máximo 100 caracteres.", status: :unprocessable_entity } if nome_produto.length > 100
-    campos[:alteracoes][:nome] = nome_produto if nome_produto != produto.nome.to_s.strip
 
     atualizados = []
-    produto.with_lock do
+
+    # 1) NOME continua no cadastro GLOBAL do produto (nao e por empresa).
+    if nome_produto != produto.nome.to_s.strip
+      produto.with_lock do
+        ProdutoFiscalLog.create!(
+          cod_produto: produto.cod_produto,
+          cod_empresa: current_collaborator.cod_empresa,
+          campo: "nome",
+          valor_antigo: produto.nome.to_s.strip.presence,
+          valor_novo: nome_produto,
+          created_at: Time.current
+        )
+        produto.update_columns(nome: nome_produto)
+      end
+      atualizados << :nome
+    end
+
+    # 2) Campos FISCAIS vao para a fiscal_produto da EMPRESA (upsert do registro).
+    if campos[:alteracoes].any?
+      registro = FiscalProduto.find_or_initialize_by(
+        cod_empresa: current_collaborator.cod_empresa,
+        cod_produto: produto.cod_produto
+      )
       campos[:alteracoes].each do |campo, valor|
-        atual = produto.public_send(campo).to_s.strip
+        atual = registro.public_send(campo).to_s.strip
         next if atual == valor.to_s
 
         ProdutoFiscalLog.create!(
@@ -229,9 +255,10 @@ class CollaboratorsBackoffice::ImportacaoEstoqueFiscalController < Collaborators
           valor_novo: valor.to_s,
           created_at: Time.current
         )
+        registro.public_send("#{campo}=", valor)
         atualizados << campo
       end
-      produto.update_columns(campos[:alteracoes]) if atualizados.any?
+      registro.save! if registro.changed?
     end
 
     empresa_produto.with_lock do
@@ -345,16 +372,19 @@ class CollaboratorsBackoffice::ImportacaoEstoqueFiscalController < Collaborators
     nome.to_s.unicode_normalize(:nfkd).encode("ASCII", replace: "").downcase.strip
   end
 
-  def campos_fiscais_permitidos(produto, dados = {})
+  # Monta as alteracoes fiscais (ncm/cest/origem/perfil) comparando com o fiscal
+  # ATUAL da empresa (fiscal_produto, com fallback no produto global). Essas
+  # alteracoes vao para fiscal_produto (Etapa 5), nao mais para o produto global.
+  def campos_fiscais_permitidos(fiscal, dados = {})
     alteracoes = {}
     ncm = dados[:ncm].to_s.strip
     cest = dados[:cest].to_s.strip
     origem = dados[:origem].to_s.strip
     perfil = dados[:cod_perfil_tributario].to_s.strip
 
-    alteracoes[:ncm] = ncm if ncm.present? && ncm != produto.ncm.to_s.strip
-    alteracoes[:cest] = cest if cest.present? && cest != produto.cest.to_s.strip
-    alteracoes[:origem] = origem if origem.present? && origem != produto.origem.to_s.strip
+    alteracoes[:ncm] = ncm if ncm.present? && ncm != fiscal.ncm.to_s.strip
+    alteracoes[:cest] = cest if cest.present? && cest != fiscal.cest.to_s.strip
+    alteracoes[:origem] = origem if origem.present? && origem != fiscal.origem.to_s.strip
 
     return { erro: "NCM deve conter 8 dígitos." } if alteracoes[:ncm] && !alteracoes[:ncm].match?(/\A\d{8}\z/)
     return { erro: "CEST deve conter 7 dígitos." } if alteracoes[:cest] && !alteracoes[:cest].match?(/\A\d{7}\z/)
@@ -365,7 +395,7 @@ class CollaboratorsBackoffice::ImportacaoEstoqueFiscalController < Collaborators
       return { erro: "Perfil tributário inválido." }
     end
 
-    alteracoes[:cod_perfil_tributario] = perfil.to_i if perfil.present? && perfil.to_i != produto.cod_perfil_tributario.to_i
+    alteracoes[:cod_perfil_tributario] = perfil.to_i if perfil.present? && perfil.to_i != fiscal.cod_perfil_tributario.to_i
     { alteracoes: alteracoes }
   end
 
