@@ -58,8 +58,8 @@ Consumidores que usam a fonte única (leitura): `DocumentoFiscalBuilder`,
 
 ## Escrita (quem grava na `fiscal_produto`)
 
-- **Importação de estoque fiscal** (`ImportacaoEstoqueFiscalController`): grava
-  ncm/cest/origem/perfil por empresa (o nome continua no produto global).
+- **Importação de inventário fiscal** (`ImportacaoInventarioController`): grava
+  ncm/origem e `qtd_fiscal` por empresa (o nome continua no produto global).
 - **Cadastro/edição de produto** (`ProdutosController#create/#update`): além do
   produto global, faz upsert na `fiscal_produto` da empresa logada.
 - **Modal "perfil fiscal" da venda** (`ProdutoPerfilFiscalController#update`).
