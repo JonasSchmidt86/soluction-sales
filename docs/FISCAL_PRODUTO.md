@@ -173,3 +173,10 @@ físico (`quantidade_*`). Cada linha registra também `cod_funcionario`,
   `params_produto` quando houver certeza de que tudo migrou. Reversível.
 - Durante a transição, o cadastro de produto grava os fiscais **nos dois**
   lugares (produto global + fiscal_produto), mantendo o fallback funcionando.
+
+
+RAILS_ENV=production EMPRESA=2 rails fiscal:backfill_fiscal_produto
+RAILS_ENV=production APPLY=1 EMPRESA=2 rails fiscal:backfill_fiscal_produto
+
+RAILS_ENV=production EMPRESA=2 rails fiscal:ratear_qtdfiscal          # dry-run
+RAILS_ENV=production APPLY=1 EMPRESA=2 rails fiscal:ratear_qtdfiscal  # aplica
