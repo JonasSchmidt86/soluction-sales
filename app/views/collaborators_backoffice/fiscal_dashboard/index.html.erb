@@ -173,17 +173,22 @@
         <thead class="table-light">
           <tr>
             <th>Modelo</th><th>Número</th><th>Natureza</th><th>Origem</th>
-            <th class="text-end">Valor</th><th>Status</th><th>Emitido</th>
+            <th class="text-end">Valor</th><th>Status</th><th>Emitido</th><th></th>
           </tr>
         </thead>
         <tbody>
           <% @ultimos.each do |d| %>
-            <tr>
+            <%# Linha clicavel: em elaboracao (rascunho/erro) abre o editor; %>
+            <%# demais abrem a visualizacao. %>
+            <% abrir_url = %w[rascunho erro].include?(d.status) ?
+                 edit_collaborators_backoffice_notas_avulsa_path(d) :
+                 collaborators_backoffice_notas_avulsa_path(d) %>
+            <tr class="doc-row" style="cursor:pointer;" data-href="<%= abrir_url %>">
               <td><%= d.modelo_nome %></td>
               <td><%= d.numero %></td>
               <td><%= d.natureza_operacao %></td>
               <td>
-                <% if d.cod_venda.present? %>Venda #<%= d.cod_venda %>
+                <% if d.cod_venda.present? %>Venda #<%= d.venda&.cod_vendaempresa || d.cod_venda %>
                 <% elsif d.cod_compra.present? %>Devol. compra #<%= d.cod_compra %>
                 <% else %>Avulsa<% end %>
               </td>
@@ -194,10 +199,35 @@
                 <span class="badge bg-<%= cls %>"><%= d.status %></span>
               </td>
               <td><%= (l(d.emitido_em || d.created_at, format: :short) rescue (d.emitido_em || d.created_at)) %></td>
+              <%# Dropdown de acoes (nao propaga o clique da linha). %>
+              <td class="text-end" onclick="event.stopPropagation();">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                          data-bs-toggle="dropdown" aria-expanded="false">Ações</button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <%= link_to "Visualizar NF", collaborators_backoffice_notas_avulsa_path(d),
+                                  class: "dropdown-item" %>
+                    </li>
+                    <% if %w[rascunho erro].include?(d.status) %>
+                      <li>
+                        <%= link_to "Editar", edit_collaborators_backoffice_notas_avulsa_path(d),
+                                    class: "dropdown-item" %>
+                      </li>
+                    <% end %>
+                    <% if d.autorizada? && d.danfe_base64.present? %>
+                      <li>
+                        <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d),
+                                    target: "_blank", class: "dropdown-item" %>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              </td>
             </tr>
           <% end %>
           <% if @ultimos.empty? %>
-            <tr><td colspan="7" class="text-center text-muted py-3">Nenhum documento fiscal ainda.</td></tr>
+            <tr><td colspan="8" class="text-center text-muted py-3">Nenhum documento fiscal ainda.</td></tr>
           <% end %>
         </tbody>
       </table>
@@ -255,5 +285,13 @@
           .finally(function () { btn.disabled = false; });
       });
     }
+
+    // ---- Linha de documento clicavel: abre o editor (rascunho) ou a NF ----
+    document.querySelectorAll('.doc-row').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
   })();
 </script>

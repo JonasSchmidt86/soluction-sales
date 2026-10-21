@@ -27,6 +27,23 @@ module MoedaBr
     end
   end
 
+  # Formata um valor numerico no padrao brasileiro ("1.234,56"): ponto de
+  # milhar e virgula decimal, com `casas` decimais. Inverso de parse — usado
+  # para pre-preencher campos de formulario que esperam valor em BR.
+  #   MoedaBr.format(1200)      # => "1.200,00"
+  #   MoedaBr.format(1234.5, 2) # => "1.234,50"
+  #   MoedaBr.format(nil)       # => "0,00"
+  def self.format(valor, casas = 2)
+    numero = valor.is_a?(Numeric) ? valor : parse(valor)
+    numero = 0 unless numero.is_a?(Numeric)
+    inteiro, decimal = Kernel.format("%.#{casas}f", numero).split(".")
+    sinal = inteiro.start_with?("-") ? "-" : ""
+    inteiro = inteiro.delete("-")
+    # Agrupa o inteiro em milhares com ponto.
+    com_milhar = inteiro.reverse.gsub(/(\d{3})(?=\d)/, '\1.').reverse
+    "#{sinal}#{com_milhar},#{decimal}"
+  end
+
   # Converte um valor BR em BigDecimal. Retorna o proprio valor quando nao
   # da pra converter (nil, "", ou formato inesperado), deixando o Rails tratar.
   def self.parse(valor)

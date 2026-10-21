@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_27_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_27_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -431,6 +431,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_27_000002) do
     t.datetime "updated_at", null: false
     t.bigint "cod_compra", comment: "compra de origem (NF de devolução de compra)"
     t.decimal "valor_total", precision: 15, scale: 2, comment: "valor total da nota (preenchido na emissao)"
+    t.bigint "cod_pessoa_rascunho", comment: "destinatario escolhido (rascunho da nota em elaboracao)"
+    t.bigint "cod_operacao_fiscal_rascunho", comment: "operacao fiscal escolhida (rascunho da nota em elaboracao)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
     t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"
@@ -450,6 +452,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_27_000002) do
     t.datetime "updated_at", null: false
     t.bigint "cod_funcionario", comment: "quem registrou o evento"
     t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_evento_documento"
+  end
+
+  create_table "documento_fiscal_item", primary_key: "cod_documento_fiscal_item", force: :cascade do |t|
+    t.bigint "cod_documento_fiscal", null: false, comment: "FK cabecalho (documento_fiscal)"
+    t.bigint "cod_produto", null: false, comment: "produto cadastrado"
+    t.bigint "cod_cor", comment: "cor (empresaproduto)"
+    t.string "nome_produto", limit: 120, comment: "snapshot do nome na edicao"
+    t.decimal "quantidade", precision: 18, scale: 2, default: "0.0", null: false
+    t.decimal "valorunitario", precision: 18, scale: 2, default: "0.0", null: false
+    t.decimal "valor_total", precision: 18, scale: 2, default: "0.0", null: false
+    t.bigint "cod_perfil_tributario", comment: "perfil override (opcional)"
+    t.bigint "cfop", comment: "CFOP override (opcional)"
+    t.integer "ordem", default: 0, comment: "ordem na nota"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_item_documento"
   end
 
   create_table "empresa", primary_key: "cod_empresa", id: :bigint, default: -> { "nextval('empresa_codigo_seq'::regclass)" }, force: :cascade do |t|
@@ -506,7 +524,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_27_000002) do
   create_table "estoque_logs", force: :cascade do |t|
     t.bigint "cod_empresa", null: false
     t.bigint "cod_produto", null: false
-    t.bigint "cod_cor", null: false
+    t.bigint "cod_cor"
     t.string "operacao", limit: 15, null: false
     t.string "origem", limit: 15, null: false
     t.decimal "quantidade_antes", precision: 15, scale: 2

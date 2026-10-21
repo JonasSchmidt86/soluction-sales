@@ -259,15 +259,19 @@ Rails.application.routes.draw do
 
     # Emissao AVULSA de NF (sem venda). index=lista; new=form (modelo 55/65);
     # create=emite; show=detalhe; danfe/espelho/cancelar.
-    resources :notas_avulsas, only: [:index, :new, :create, :show, :destroy] do
+    resources :notas_avulsas, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
       member do
         get  :danfe
         post :cancelar
+        post :emitir # emite uma nota em elaboracao (rascunho) ja salva
       end
       collection do
         get :cores_produto # cores de um produto (p/ o select de cor)
         post :previsualizar # DANFE/DANFCE de pre-visualizacao (sem SEFAZ)
         get :resolver_cfop # resolve CFOP de um item pela regra (perfil + operacao)
+        post :salvar_rascunho # salva a nota como rascunho editavel (sem emitir)
+        post :gerar_de_venda # cria/reaproveita rascunho a partir de uma venda e abre o editor
+        post :validar # valida o form e devolve as pendencias (JSON) para o painel
       end
     end
 

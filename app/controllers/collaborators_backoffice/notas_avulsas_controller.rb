@@ -1,13 +1,16 @@
 class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_documento, only: [:show, :danfe, :cancelar, :destroy]
+  before_action :set_documento, only: [:show, :danfe, :cancelar, :destroy, :edit, :update, :emitir]
 
   MODELOS = [55, 65].freeze
 
-  # Lista as notas avulsas (documentos sem venda) da empresa logada.
+  # Lista TODAS as notas fiscais da empresa (avulsas, de venda e de devolucao
+  # de compra). Antes filtrava cod_venda: nil (so avulsas puras), o que escondia
+  # os rascunhos/notas gerados a partir de venda. A coluna "Origem" distingue.
   def index
     @documentos = DocumentoFiscal
-                  .where(cod_empresa: current_collaborator.cod_empresa, cod_venda: nil)
+                  .where(cod_empresa: current_collaborator.cod_empresa)
+                  .includes(:venda) # evita N+1 ao exibir cod_vendaempresa
                   .order(cod_documento_fiscal: :desc)
                   .limit(100)
   end
@@ -32,9 +35,19 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     produto  = Produto.find_by(cod_produto: params[:cod_produto])
     # Fiscal do produto POR EMPRESA (com fallback no produto global).
     fiscal   = FiscalProduto.para(current_collaborator.cod_empresa, params[:cod_produto])
+    perfil_escolhido = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario])
+
+    # "Aprendizado" do perfil: se o produto AINDA NAO tem perfil (nem na
+    # fiscal_produto nem no fallback) e o usuario escolheu um na tela, grava
+    # esse perfil na fiscal_produto da empresa — so quando esta vazio (nao
+    # sobrescreve perfil ja definido). Facilita nao ter que reescolher depois.
+    if perfil_escolhido && fiscal.cod_perfil_tributario.blank? && produto
+      aprender_perfil_fiscal_produto(produto.cod_produto, perfil_escolhido.cod_perfil_tributario)
+      fiscal = FiscalProduto.para(current_collaborator.cod_empresa, params[:cod_produto]) # recarrega
+    end
+
     # Perfil explicito (escolhido na tela) tem prioridade; senao, o da fiscal_produto.
-    perfil   = PerfilTributario.find_by(cod_perfil_tributario: params[:cod_perfil_tributario]) ||
-               fiscal.perfil_tributario
+    perfil   = perfil_escolhido || fiscal.perfil_tributario
     destinatario = Pessoa.find_by(cod_pessoa: params[:cod_pessoa])
 
     # tipo_cliente segue a mesma logica da venda: sem destinatario (ou PF) =
@@ -99,9 +112,196 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   end
 
   def show
-    # A NF avulsa NAO persiste itens no nosso banco; eles vivem no XML autorizado
-    # que a SEFAZ devolveu. Extraimos o resumo (geral + itens) para exibir na tela.
+    # Notas autorizadas: itens vivem no XML (resumo_do_xml). Rascunhos: itens
+    # persistidos em documento_fiscal_item (mostramos esses se existirem).
     @resumo = resumo_do_xml(@documento)
+  end
+
+  # POST .../notas_avulsas/salvar_rascunho
+  # Salva a nota como RASCUNHO editavel (sem emitir, sem SEFAZ). Cria o
+  # DocumentoFiscal com status rascunho (cod_venda nil = avulsa) e grava os
+  # itens em documento_fiscal_item. Permite montar a nota, conferir e emitir depois.
+  def salvar_rascunho
+    @modelo = modelo_param
+    cliente = resolver_cliente
+    itens   = itens_param
+
+    return reexibir_form("Informe ao menos um produto para salvar.") if itens.empty?
+
+    operacao = operacao_escolhida
+    documento = nil
+    ActiveRecord::Base.transaction do
+      documento = DocumentoFiscal.create!(
+        cod_empresa:       current_collaborator.cod_empresa,
+        cod_venda:         nil,
+        modelo:            @modelo,
+        natureza_operacao: operacao&.natureza_operacao,
+        finalidade:        (params[:finalidade].presence || 1).to_i,
+        ambiente:          FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)&.ambiente || "homologacao",
+        status:            "rascunho",
+        cod_funcionario:   current_collaborator.cod_funcionario,
+        cod_pessoa_rascunho: cliente&.cod_pessoa,
+        cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+      )
+      gravar_itens_rascunho(documento, itens)
+    end
+
+    redirect_to collaborators_backoffice_notas_avulsas_path,
+                notice: "Nota salva como rascunho (##{documento.cod_documento_fiscal}). Edite e emita quando quiser."
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#salvar_rascunho] #{e.class} - #{e.message}")
+    reexibir_form("Falha ao salvar o rascunho: #{e.message}")
+  end
+
+  # POST .../notas_avulsas/gerar_de_venda?cod_venda=
+  # Cria (ou REAPROVEITA, enquanto for rascunho) um rascunho de NF a partir de
+  # uma VENDA: copia itens e destinatario da venda para o editor de nota, com
+  # cod_venda preenchido (NF de venda, nao avulsa). Abre o editor (edit).
+  def gerar_de_venda
+    venda = Venda.where(cod_empresa: current_collaborator.cod_empresa)
+                 .find_by(cod_venda: params[:cod_venda])
+    if venda.nil?
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "Venda não encontrada." and return
+    end
+
+    # Se a venda ja tem NF autorizada (55 ou 65), nao gera outro rascunho:
+    # abre a NF ja emitida para visualizacao.
+    nf = venda.nfe_autorizada
+    if nf
+      redirect_to collaborators_backoffice_notas_avulsa_path(nf),
+                  notice: "Esta venda já tem NF autorizada (##{nf.cod_documento_fiscal})." and return
+    end
+
+    # Ja existe rascunho desta venda? Entao APENAS ABRE o rascunho salvo, sem
+    # sobrescrever — preserva as edicoes feitas no editor (modelo, destinatario,
+    # itens, CFOP). So montamos a partir da venda quando criamos um rascunho novo.
+    existente = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa,
+                                      cod_venda: venda.cod_venda, status: "rascunho")
+                               .order(cod_documento_fiscal: :desc).first
+    if existente
+      redirect_to edit_collaborators_backoffice_notas_avulsa_path(existente),
+                  notice: "Rascunho da NF da venda ##{venda.cod_vendaempresa || venda.cod_venda} reaberto. Confira e emita." and return
+    end
+
+    @modelo = 55 # NF de venda = NF-e modelo 55
+    operacao = OperacaoFiscal.find_by(nome: "Venda (NF-e)") || operacao_escolhida
+    itens = itens_da_venda(venda)
+    if itens.empty?
+      redirect_to collaborators_backoffice_report_sales_path,
+                  alert: "A venda não tem itens para gerar a NF." and return
+    end
+
+    documento = nil
+    ActiveRecord::Base.transaction do
+      documento = DocumentoFiscal.create!(
+        cod_empresa:       current_collaborator.cod_empresa,
+        cod_venda:         venda.cod_venda,
+        modelo:            @modelo,
+        natureza_operacao: operacao&.natureza_operacao,
+        finalidade:        1,
+        ambiente:          FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)&.ambiente || "homologacao",
+        status:            "rascunho",
+        cod_funcionario:   current_collaborator.cod_funcionario,
+        cod_pessoa_rascunho: venda.cod_pessoa,
+        cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+      )
+      gravar_itens_rascunho(documento, itens)
+    end
+
+    redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento),
+                notice: "Rascunho da NF gerado a partir da venda ##{venda.cod_vendaempresa || venda.cod_venda}. Confira e emita."
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#gerar_de_venda] venda #{params[:cod_venda]}: #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_report_sales_path,
+                alert: "Falha ao gerar a NF da venda: #{e.message}"
+  end
+
+  # POST .../notas_avulsas/:id/emitir
+  # Emite uma NOTA EM ELABORACAO (rascunho ja salvo): monta o avulso a partir
+  # dos itens PERSISTIDOS e reaproveita o cabecalho rascunho (nao cria outro).
+  def emitir
+    unless em_elaboracao?(@documento)
+      redirect_to collaborators_backoffice_notas_avulsas_path,
+                  alert: "Só é possível emitir notas em elaboração." and return
+    end
+    emitir_documento_persistido(@documento)
+  end
+
+  # Edita um rascunho: reexibe o form preenchido a partir dos itens persistidos.
+  def edit
+    unless em_elaboracao?(@documento)
+      redirect_to collaborators_backoffice_notas_avulsas_path,
+                  alert: "Só é possível editar notas em elaboração." and return
+    end
+    @modelo = @documento.modelo
+    @operacoes = OperacaoFiscal.ativos.order(:nome)
+    @operacao_padrao = OperacaoFiscal.find_by(cod_operacao_fiscal: @documento.cod_operacao_fiscal_rascunho) ||
+                       OperacaoFiscal.find_by(nome: "Venda (NF-e)")
+    @perfis = PerfilTributario.ativos.de_saida.order(:nome)
+    @finalidades = DocumentoFiscal::FINALIDADES
+    @finalidade_sel = @documento.finalidade
+    @cod_pessoa_sel = @documento.cod_pessoa_rascunho
+    # Nome do destinatario para o form reexibir o campo visivel (nao so o hidden).
+    @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
+    @itens_preenchidos = itens_do_rascunho(@documento)
+    render :new
+  end
+
+  # Atualiza um rascunho (regrava itens e cabecalho).
+  def update
+    unless em_elaboracao?(@documento)
+      redirect_to collaborators_backoffice_notas_avulsas_path,
+                  alert: "Só é possível editar notas em elaboração." and return
+    end
+    @modelo = modelo_param
+    cliente = resolver_cliente
+    itens   = itens_param
+    operacao = operacao_escolhida
+
+    return reexibir_form("Informe ao menos um produto.") if itens.empty?
+
+    ActiveRecord::Base.transaction do
+      @documento.update!(
+        modelo:            @modelo,
+        natureza_operacao: operacao&.natureza_operacao,
+        finalidade:        (params[:finalidade].presence || 1).to_i,
+        cod_pessoa_rascunho: cliente&.cod_pessoa,
+        cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+      )
+      @documento.itens.delete_all
+      gravar_itens_rascunho(@documento, itens)
+    end
+
+    # "Salvar e emitir" num clique: quando o form pede emitir_apos, segue direto
+    # para a emissao usando o que acabou de ser salvo (sem exigir 2 botoes).
+    if params[:emitir_apos].present?
+      @documento.reload
+      return emitir_documento_persistido(@documento)
+    end
+
+    redirect_to collaborators_backoffice_notas_avulsas_path,
+                notice: "Rascunho ##{@documento.cod_documento_fiscal} atualizado."
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#update] #{e.class} - #{e.message}")
+    reexibir_form("Falha ao atualizar o rascunho: #{e.message}")
+  end
+
+  # POST /collaborators_backoffice/notas_avulsas/validar
+  # Valida o estado atual do formulario (itens + destinatario + modelo) e
+  # devolve a lista COMPLETA de pendencias (dados basicos, CFOP, CPF/CNPJ,
+  # estoque fiscal consolidado). O front chama este endpoint e exibe tudo no
+  # painel, mantendo o backend como fonte unica de verdade.
+  def validar
+    modelo = modelo_param
+    cliente = resolver_cliente
+    itens   = itens_param
+    res = validar_detalhado(modelo: modelo, cod_pessoa: cliente&.cod_pessoa, itens: itens)
+    render json: { pendencias: res[:mensagens], marcadores: res[:marcadores],
+                   ok: res[:mensagens].empty? }
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#validar] #{e.class} - #{e.message}")
+    render json: { pendencias: ["Falha ao validar: #{e.message}"], marcadores: {}, ok: false }
   end
 
   # POST /collaborators_backoffice/notas_avulsas/previsualizar
@@ -156,6 +356,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     # real pelos primeiros bytes e serve com o Content-Type certo (senao o
     # navegador tenta abrir HTML como PDF e falha).
     tipo, ext = danfe_tipo_extensao(conteudo)
+    # no-store: o navegador nao reusa resposta antiga quando o Content-Type
+    # muda (NFC-e 65 = HTML, NF-e 55 = PDF), evitando aba em branco por cache.
+    response.headers["Cache-Control"] = "no-store"
     send_data conteudo,
               filename: "danfe-avulsa-#{@documento.cod_documento_fiscal}.#{ext}",
               type: tipo, disposition: "inline"
@@ -218,8 +421,173 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   private
 
   def set_documento
-    @documento = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa, cod_venda: nil)
+    # Atende tanto notas avulsas puras (cod_venda nil) quanto RASCUNHOS de NF
+    # de venda (cod_venda preenchido) — ambos usam o mesmo editor. Filtra so
+    # pela empresa logada (isolamento), o status e validado em cada action.
+    @documento = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa)
                                 .find(params[:id])
+  end
+
+  # Nota em elaboracao = ainda editavel/emissivel pelo editor. Inclui "erro"
+  # (falha de validacao local antes de transmitir): o usuario corrige e reemite,
+  # sem perder o documento. "rascunho" = nunca transmitida. Nao inclui enviada/
+  # autorizada/cancelada (ja tem andamento/valor fiscal).
+  EM_ELABORACAO = %w[rascunho erro].freeze
+  def em_elaboracao?(documento)
+    EM_ELABORACAO.include?(documento.status)
+  end
+
+  # Compat: retorna so a LISTA DE MENSAGENS (usado na emissao). Internamente
+  # delega para validar_detalhado, que tambem devolve os marcadores de campo.
+  def validar_pendencias(modelo:, cod_pessoa:, itens:)
+    validar_detalhado(modelo: modelo, cod_pessoa: cod_pessoa, itens: itens)[:mensagens]
+  end
+
+  # Valida pendencias de EMISSAO no backend (fonte de verdade; o front chama via
+  # endpoint validar). Por item exige cor, quantidade>0, valor>0, CFOP; checa
+  # CPF/CNPJ do destinatario; e o estoque fiscal CONSOLIDADO por produto
+  # (fiscal_produto.qtd_fiscal), somando as cores do mesmo produto na nota.
+  #
+  # Retorna { mensagens: [...], marcadores: { itens: { idx => [campos] },
+  # destinatario: bool } } — os marcadores permitem ao front pintar de vermelho
+  # os campos exatos com problema. campos: "cor","quantidade","valor","cfop".
+  # NAO valida NCM/CSOSN (o EmissorFiscal cuida e lanca DadosFiscaisIncompletos).
+  def validar_detalhado(modelo:, cod_pessoa:, itens:)
+    mensagens = []
+    marc_itens = Hash.new { |h, k| h[k] = [] }
+    marc_dest = false
+
+    # CPF/CNPJ do destinatario (quando informado): bloqueia documento invalido.
+    if cod_pessoa.present?
+      pessoa = Pessoa.find_by(cod_pessoa: cod_pessoa)
+      doc = pessoa&.cpf_cnpj.to_s.gsub(/\D/, "")
+      if doc.blank?
+        mensagens << "Destinatário (#{pessoa&.nome}) sem CPF/CNPJ cadastrado."
+        marc_dest = true
+      elsif !(CPF.valid?(doc) || CNPJ.valid?(doc))
+        mensagens << "Destinatário (#{pessoa&.nome}): CPF/CNPJ inválido (#{pessoa&.cpf_cnpj})."
+        marc_dest = true
+      end
+    end
+
+    # NF-e 55 exige destinatario.
+    if modelo.to_i == 55 && cod_pessoa.blank?
+      mensagens << "NF-e (55) exige um destinatário."
+      marc_dest = true
+    end
+
+    com_produto = 0
+    qtd_por_produto = Hash.new { |h, k| h[k] = BigDecimal("0") }
+    # idx (posicao na lista) de cada linha por produto, p/ marcar o campo qtd
+    # das linhas envolvidas quando o estoque consolidado estourar.
+    idxs_por_produto = Hash.new { |h, k| h[k] = [] }
+
+    itens.each_with_index do |it, idx|
+      next if it[:cod_produto].blank?
+      com_produto += 1
+      prod = Produto.find_by(cod_produto: it[:cod_produto])
+      nome = prod&.nome.presence || "produto #{it[:cod_produto]}"
+      qtd  = it[:quantidade].to_d
+      vl   = it[:valorunitario].to_d
+      cfop = it[:cfop].to_s.gsub(/\D/, "")
+
+      if it[:cod_cor].blank?
+        mensagens << "#{nome}: selecione a cor."
+        marc_itens[idx] << "cor"
+      end
+      unless qtd > 0
+        mensagens << "#{nome}: quantidade deve ser maior que zero."
+        marc_itens[idx] << "quantidade"
+      end
+      unless vl > 0
+        mensagens << "#{nome}: valor unitário deve ser maior que zero."
+        marc_itens[idx] << "valor"
+      end
+      if cfop.blank?
+        mensagens << "#{nome}: CFOP não resolvido (verifique perfil/operação/regra)."
+        marc_itens[idx] << "cfop"
+      end
+
+      if qtd > 0
+        qtd_por_produto[it[:cod_produto]] += qtd
+        idxs_por_produto[it[:cod_produto]] << idx
+      end
+    end
+
+    mensagens << "Adicione ao menos um produto." if com_produto.zero?
+
+    # Estoque fiscal CONSOLIDADO por produto (fiscal_produto.qtd_fiscal).
+    qtd_por_produto.each do |cod_produto, qtd_total|
+      fp = FiscalProduto.para(current_collaborator.cod_empresa, cod_produto)
+      saldo = fp.qtd_fiscal.to_d
+      next if qtd_total <= saldo
+
+      prod = Produto.find_by(cod_produto: cod_produto)
+      nome = prod&.nome.presence || "produto #{cod_produto}"
+      mensagens << "#{nome}: estoque fiscal insuficiente (disponível #{MoedaBr.format(saldo)}, pedido #{MoedaBr.format(qtd_total)})."
+      idxs_por_produto[cod_produto].each { |i| marc_itens[i] << "quantidade" }
+    end
+
+    {
+      mensagens: mensagens,
+      marcadores: {
+        itens: marc_itens.transform_values(&:uniq),
+        destinatario: marc_dest
+      }
+    }
+  end
+
+  # Emite um documento JA PERSISTIDO (rascunho/erro): monta o avulso a partir
+  # dos itens/destinatario salvos e reaproveita o cabecalho (nao cria outro).
+  # Usado por emitir (botao) e por update quando o form pede "salvar e emitir".
+  def emitir_documento_persistido(documento)
+    empresa  = current_collaborator.empresa
+    cliente  = documento.cod_pessoa_rascunho.present? ? Pessoa.find_by(cod_pessoa: documento.cod_pessoa_rascunho) : nil
+    operacao = OperacaoFiscal.find_by(cod_operacao_fiscal: documento.cod_operacao_fiscal_rascunho) ||
+               OperacaoFiscal.find_by(nome: "Venda (NF-e)")
+    itens    = itens_para_avulso(documento)
+
+    if documento.modelo == 55 && cliente.nil?
+      redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento),
+                  alert: "NF-e (55) exige um destinatário." and return
+    end
+    if itens.empty?
+      redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento),
+                  alert: "A nota não tem itens." and return
+    end
+
+    # Revalidacao no BACKEND (nao depende so do JS): dados basicos + CPF/CNPJ +
+    # estoque fiscal consolidado. Se houver pendencia, NAO emite; mantem o
+    # rascunho para corrigir.
+    pendencias = validar_pendencias(modelo: documento.modelo,
+                                    cod_pessoa: documento.cod_pessoa_rascunho, itens: itens)
+    if pendencias.any?
+      redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento),
+                  alert: "Não é possível emitir. #{pendencias.join(' | ')}" and return
+    end
+
+    avulso = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
+    emitido = Fiscal::EmissorFiscal.new(avulso, modelo: documento.modelo,
+                                        operacao: operacao,
+                                        finalidade: documento.finalidade,
+                                        cod_funcionario: current_collaborator.cod_funcionario,
+                                        documento: documento).emitir
+
+    if emitido.autorizada?
+      redirect_to collaborators_backoffice_notas_avulsa_path(emitido),
+                  notice: "NF autorizada. Chave: #{emitido.chave_acesso}"
+    else
+      redirect_to edit_collaborators_backoffice_notas_avulsa_path(emitido),
+                  alert: "NF #{emitido.status}: #{emitido.mensagem_sefaz}"
+    end
+  rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos,
+         Fiscal::EmissorFiscal::SemConfig,
+         Fiscal::EmissorFiscal::SemOperacao,
+         Fiscal::EmissorFiscal::JaAutorizada => e
+    redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento), alert: e.message
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#emitir_documento_persistido] doc #{documento&.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento), alert: "Falha ao emitir: #{e.message}"
   end
 
   # Le o XML autorizado (xml_base64) e devolve um Hash com os dados gerais e os
@@ -303,6 +671,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @finalidades = DocumentoFiscal::FINALIDADES
     @finalidade_sel = params[:finalidade]
     @cod_pessoa_sel = params[:cod_pessoa]
+    @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
     @itens_preenchidos = itens_raw
     flash.now[:alert] = mensagem
     render :new, status: :unprocessable_entity
@@ -330,6 +699,98 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         cfop:                  i["cfop"].presence
       }
     end
+  end
+
+  # Grava (aprende) o perfil tributario escolhido na fiscal_produto da empresa,
+  # SOMENTE quando o produto ainda nao tem perfil. Nao sobrescreve um perfil
+  # ja definido. Nao derruba o fluxo em caso de erro (loga).
+  def aprender_perfil_fiscal_produto(cod_produto, cod_perfil_tributario)
+    registro = FiscalProduto.find_or_initialize_by(
+      cod_empresa: current_collaborator.cod_empresa,
+      cod_produto: cod_produto
+    )
+    return if registro.cod_perfil_tributario.present? # ja tem — nao sobrescreve
+    registro.cod_perfil_tributario = cod_perfil_tributario
+    registro.save!
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#aprender_perfil_fiscal_produto] produto #{cod_produto}: #{e.class} - #{e.message}")
+  end
+
+  # Converte os itens de uma VENDA para o formato que gravar_itens_rascunho
+  # espera (mesmo shape de itens_param). O perfil tributario vem da fiscal_produto
+  # da empresa (com fallback); o CFOP fica em branco (resolvido na tela/emissao
+  # pela regra do perfil). Agrupa nada: 1 itemvenda = 1 item da nota.
+  def itens_da_venda(venda)
+    venda.itensvenda.map do |iv|
+      fiscal = FiscalProduto.para(current_collaborator.cod_empresa, iv.cod_produto)
+      {
+        cod_produto:           iv.cod_produto,
+        cod_cor:               iv.cod_cor,
+        quantidade:            iv.quantidade.to_d,
+        valorunitario:         iv.valorunitario.to_d,
+        cod_perfil_tributario: fiscal.cod_perfil_tributario.presence,
+        cfop:                  nil
+      }
+    end
+  end
+
+  # Grava os itens (parseados por itens_param) como documento_fiscal_item do
+  # rascunho. nome_produto e um snapshot (do proprio produto).
+  def gravar_itens_rascunho(documento, itens)
+    itens.each_with_index do |it, idx|
+      prod = Produto.find_by(cod_produto: it[:cod_produto])
+      documento.itens.create!(
+        cod_produto:           it[:cod_produto],
+        cod_cor:               it[:cod_cor].presence,
+        nome_produto:          prod&.nome,
+        quantidade:            it[:quantidade],
+        valorunitario:         it[:valorunitario],
+        cod_perfil_tributario: it[:cod_perfil_tributario].presence,
+        cfop:                  it[:cfop].presence&.to_s&.gsub(/\D/, "").presence,
+        ordem:                 idx
+      )
+    end
+  end
+
+  # Itens persistidos de um rascunho no formato que DocumentoAvulso/ItemAvulso
+  # espera (para emitir). Mesmo shape de itens_param.
+  def itens_para_avulso(documento)
+    documento.itens.order(:ordem, :cod_documento_fiscal_item).map do |item|
+      {
+        cod_produto:           item.cod_produto,
+        cod_cor:               item.cod_cor,
+        quantidade:            item.quantidade.to_d,
+        valorunitario:         item.valorunitario.to_d,
+        cod_perfil_tributario: item.cod_perfil_tributario.presence,
+        cfop:                  item.cfop.presence
+      }
+    end
+  end
+
+  # Itens persistidos de um rascunho, no MESMO formato cru que itens_raw produz,
+  # para a view (new) reexibir o form preenchido na edicao.
+  def itens_do_rascunho(documento)
+    documento.itens.order(:ordem, :cod_documento_fiscal_item).map do |item|
+      {
+        "cod_produto"           => item.cod_produto.to_s,
+        "cod_cor"               => item.cod_cor.to_s,
+        # Quantidade: campo HTML type=number (nao aceita virgula) — usa ponto,
+        # sem casas desnecessarias (inteiro vira "1", nao "1.0").
+        "quantidade"            => formata_quantidade(item.quantidade),
+        # Valor unitario: campo de texto em padrao BR ("1.200,00").
+        "valorunitario"         => MoedaBr.format(item.valorunitario),
+        "cod_perfil_tributario" => item.cod_perfil_tributario.to_s,
+        "cfop"                  => item.cfop.to_s,
+        "nome_produto"          => item.nome_produto.to_s
+      }
+    end
+  end
+
+  # Quantidade para o campo type=number: inteiro sem ".0" (ex. "2"); fracionado
+  # mantem o ponto decimal (ex. "2.5"), que e o que o input numerico aceita.
+  def formata_quantidade(valor)
+    bd = valor.to_d
+    bd.frac.zero? ? bd.to_i.to_s : bd.to_s("F")
   end
 
   def autorizar_fiscal!

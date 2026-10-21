@@ -55,10 +55,11 @@ class Venda < ApplicationRecord
         tipo == 'T'
     end
 
-    # NF-e (modelo 55) autorizada para esta venda? Enquanto houver NF autorizada
-    # a venda nao pode ser editada (os itens divergiriam da nota na SEFAZ).
+    # NF autorizada (modelo 55 NF-e OU 65 NFC-e) para esta venda? Enquanto
+    # houver NF autorizada a venda nao pode ser editada (os itens divergiriam da
+    # nota na SEFAZ) e nao se deve gerar outro rascunho pela venda.
     def nfe_autorizada
-        DocumentoFiscal.where(cod_venda: cod_venda, modelo: 55, status: "autorizada")
+        DocumentoFiscal.where(cod_venda: cod_venda, modelo: [55, 65], status: "autorizada")
                        .order(cod_documento_fiscal: :desc).first
     end
 

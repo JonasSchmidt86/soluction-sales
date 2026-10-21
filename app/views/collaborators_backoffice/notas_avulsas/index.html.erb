@@ -23,6 +23,7 @@
               <tr>
                 <th>#</th>
                 <th>Modelo</th>
+                <th>Origem</th>
                 <th>Status</th>
                 <th>Chave</th>
                 <th>Emitida em</th>
@@ -35,6 +36,15 @@
                   <td><%= d.cod_documento_fiscal %></td>
                   <td><%= d.modelo_nome %></td>
                   <td>
+                    <% if d.cod_venda.present? %>
+                      <span class="badge text-bg-light">Venda #<%= d.venda&.cod_vendaempresa || d.cod_venda %></span>
+                    <% elsif d.cod_compra.present? %>
+                      <span class="badge text-bg-light">Devol. compra #<%= d.cod_compra %></span>
+                    <% else %>
+                      <span class="badge text-bg-light">Avulsa</span>
+                    <% end %>
+                  </td>
+                  <td>
                     <% cor = d.autorizada? ? "success" : (d.cancelada? ? "secondary" : "danger") %>
                     <span class="badge text-bg-<%= cor %>"><%= d.status %></span>
                   </td>
@@ -44,6 +54,14 @@
                     <%= link_to "Ver", collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-primary" %>
                     <% if d.autorizada? && d.danfe_base64.present? %>
                       <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
+                    <% end %>
+                    <%# Em elaboracao (rascunho ou erro de validacao): editar e emitir. %>
+                    <% if %w[rascunho erro].include?(d.status) %>
+                      <%= link_to "Editar", edit_collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-warning" %>
+                      <%= button_to "Emitir", emitir_collaborators_backoffice_notas_avulsa_path(d),
+                                    method: :post, class: "btn btn-sm btn-success",
+                                    form: { class: "d-inline", data: { turbo: false } },
+                                    data: { confirm: "Emitir esta nota em elaboração agora? Após emitir não poderá mais editar." } %>
                     <% end %>
                     <%# Excluir so para notas NAO autorizadas/canceladas (sem valor %>
                     <%# fiscal) — tentativas que falharam (erro/rejeitada/rascunho). %>

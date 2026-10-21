@@ -127,16 +127,13 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   # (ObterArquivoNotaFiscal). Assim o DANFE fica sempre disponível.
   def danfe
     if @documento.danfe_base64.present?
-      send_data Base64.decode64(@documento.danfe_base64),
-                filename: "danfe-#{nome_arquivo(@documento)}.pdf",
-                type: "application/pdf", disposition: "inline"
+      enviar_danfe(Base64.decode64(@documento.danfe_base64), @documento)
       return
     end
 
     arquivo = buscar_arquivo_no_provedor(@documento, file_type: 2)
     if arquivo&.sucesso?
-      send_data arquivo.conteudo, filename: "danfe-#{nome_arquivo(@documento)}.pdf",
-                type: "application/pdf", disposition: "inline"
+      enviar_danfe(arquivo.conteudo, @documento)
     else
       redirect_to edit_collaborators_backoffice_venda_path(@venda),
                   alert: "DANFE indisponível: #{arquivo&.erro || 'documento sem chave ou não encontrado'}."
@@ -237,6 +234,30 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   def enviar_xml(conteudo, documento)
     send_data conteudo, filename: "nfe-#{nome_arquivo(documento)}.xml",
               type: "application/xml", disposition: "attachment"
+  end
+
+  # Serve o DANFE/DANFCE detectando o formato real pelos primeiros bytes:
+  # NF-e 55 vem em PDF ("%PDF"); NFC-e 65 (DANFCE) vem em HTML. Sem isso o
+  # navegador tenta abrir o HTML da NFC-e como PDF e a aba fica em branco.
+  def enviar_danfe(conteudo, documento)
+    tipo, ext = danfe_tipo_extensao(conteudo)
+    # no-store: evita o navegador reusar uma resposta antiga quando o
+    # Content-Type muda (ex.: NFC-e 65 e HTML, nao PDF). Sem isso, um cache de
+    # PDF deixava a aba em branco ao abrir um DANFCE HTML.
+    response.headers["Cache-Control"] = "no-store"
+    send_data conteudo, filename: "danfe-#{nome_arquivo(documento)}.#{ext}",
+              type: tipo, disposition: "inline"
+  end
+
+  def danfe_tipo_extensao(conteudo)
+    amostra = conteudo.to_s[0, 64].to_s
+    if amostra.start_with?("%PDF")
+      ["application/pdf", "pdf"]
+    elsif amostra.lstrip.downcase.start_with?("<html", "<!doctype")
+      ["text/html", "html"]
+    else
+      ["application/pdf", "pdf"] # fallback
+    end
   end
 
   def nome_arquivo(documento)

@@ -44,7 +44,8 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
     @serie = serie_diaria(@docs_periodo)
 
     # ---- Ultimos documentos ----
-    @ultimos = docs.order(cod_documento_fiscal: :desc).limit(12)
+    # includes(:venda): exibimos cod_vendaempresa na coluna Origem (evita N+1).
+    @ultimos = docs.includes(:venda).order(cod_documento_fiscal: :desc).limit(12)
   end
 
   private

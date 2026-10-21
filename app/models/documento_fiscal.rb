@@ -32,6 +32,12 @@ class DocumentoFiscal < ApplicationRecord
            foreign_key: "cod_documento_fiscal", primary_key: "cod_documento_fiscal",
            dependent: :destroy, inverse_of: :documento_fiscal
 
+  # Itens persistidos da nota em elaboracao (rascunho editavel). Vazio nas notas
+  # antigas (que nao passaram pelo editor); nesses casos os itens vivem no XML.
+  has_many :itens, class_name: "DocumentoFiscalItem",
+           foreign_key: "cod_documento_fiscal", primary_key: "cod_documento_fiscal",
+           dependent: :destroy, inverse_of: :documento_fiscal
+
   validates :modelo, presence: true
   validates :status, inclusion: { in: STATUSES }
 

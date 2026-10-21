@@ -292,33 +292,12 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     # So emite para super_admin logado em empresa com modulo fiscal (mesmo gate
     # do botao). Caso contrario, ignora o param silenciosamente (retorna false).
     def emitir_nfe_apos_salvar?(sale)
-      return false unless params[:emitir_nfe].present?
-      return false unless empresa_tem_modulo_fiscal? && access_control.super_admin?
-
-      documento = Fiscal::EmissorFiscal.new(
-        sale, modelo: 55, cod_funcionario: current_collaborator.cod_funcionario
-      ).emitir
-
-      if documento.autorizada?
-        redirect_to collaborators_backoffice_report_sales_path,
-                    notice: "Venda salva e NF-e autorizada. Chave: #{documento.chave_acesso}"
-      else
-        redirect_to edit_collaborators_backoffice_venda_path(sale),
-                    alert: "Venda salva, mas a NF-e #{documento.status}: #{documento.mensagem_sefaz}"
-      end
-      true
-    rescue Fiscal::EmissorFiscal::JaAutorizada => e
-      redirect_to collaborators_backoffice_report_sales_path, alert: e.message
-      true
-    rescue Fiscal::EmissorFiscal::DadosFiscaisIncompletos => e
-      redirect_to edit_collaborators_backoffice_venda_path(sale),
-                  alert: "Venda salva. NF-e NÃO emitida — #{e.message}"
-      true
-    rescue => e
-      Rails.logger.error("[Vendas#emitir_nfe_apos_salvar] venda #{sale.cod_venda}: #{e.class} - #{e.message}")
-      redirect_to edit_collaborators_backoffice_venda_path(sale),
-                  alert: "Venda salva, mas falhou ao emitir NF-e: #{e.message}"
-      true
+      # DESATIVADO (Projeto 2, Etapa 6): a emissao direta da venda foi removida.
+      # A NF agora passa SEMPRE pelo editor de nota: no relatorio de vendas, o
+      # botao "Gerar NF" cria um rascunho a partir da venda (itens + destinatario)
+      # e abre a tela para conferir, ajustar e emitir. Mantido aqui (sem emitir)
+      # para reativacao futura, se necessario.
+      false
     end
 
     def params_venda

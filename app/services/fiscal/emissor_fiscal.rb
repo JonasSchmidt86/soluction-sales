@@ -23,7 +23,7 @@ module Fiscal
     # Brasil NFe (docs/brasilnfe). Fora desta lista a SEFAZ rejeita com 725.
     CFOPS_NFCE = %w[5101 5102 5103 5104 5115 5405 5656 5667 5933 6108 6109 6110].freeze
 
-    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil, finalidade: nil)
+    def initialize(venda, modelo: 65, operacao: nil, cod_funcionario: nil, builder: nil, cod_compra: nil, finalidade: nil, documento: nil)
       @venda   = venda
       @modelo  = modelo
       @empresa = venda.empresa
@@ -32,6 +32,7 @@ module Fiscal
       @cod_funcionario = cod_funcionario
       @builder_injetado = builder    # devolucao passa um builder proprio
       @cod_compra = cod_compra       # NF de devolucao de compra
+      @documento_existente = documento # rascunho ja salvo a reaproveitar (nota em elaboracao)
       # Finalidade (finNFe): se nao informada, infere pelo contexto (devolucao
       # de compra = 4, demais = 1). Quando informada, respeita a escolha.
       @finalidade = (finalidade.presence && finalidade.to_i) || (@cod_compra.present? ? 4 : 1)
@@ -57,11 +58,14 @@ module Fiscal
       # emitir nota invalida e deixa claro o que corrigir.
       pendencias = validar_dados_fiscais(doc_payload)
       if pendencias.any?
-        # Falha de validacao local (nao chegou a transmitir). Na AVULSA (sem
-        # venda) nao deixamos lixo: apaga o rascunho recem-criado, pois nao ha
-        # venda para reaproveitar o documento depois. Na VENDA, mantem o doc com
-        # status "erro" (fica atrelado a venda e e reaproveitado na reemissao).
-        if @venda.cod_venda.blank?
+        # Falha de validacao local (nao chegou a transmitir).
+        #  - RASCUNHO em elaboracao (documento: passado — editor de nota): NUNCA
+        #    destroi. O usuario esta editando um rascunho salvo e quer corrigir
+        #    e reemitir; so marca "erro" (volta a rascunho ao reabrir o editor).
+        #  - AVULSA EFEMERA legada (sem documento existente e sem venda): apaga
+        #    o doc recem-criado para nao deixar lixo.
+        #  - VENDA: mantem o doc com status "erro" (atrelado a venda, reaproveita).
+        if @documento_existente.nil? && @venda.cod_venda.blank?
           documento.destroy
         else
           documento.update(status: "erro", mensagem_sefaz: "Dados fiscais incompletos: #{pendencias.join('; ')}"[0, 255])
@@ -176,6 +180,26 @@ module Fiscal
     # Se ja esta autorizado, nao deixa reemitir (precisa cancelar). Se nao existe,
     # cria um rascunho novo.
     def documento_para_emissao
+      # Emissao de uma NOTA EM ELABORACAO (rascunho ja salvo): reaproveita o
+      # documento existente em vez de criar outro. Bloqueia se ja autorizado.
+      if @documento_existente
+        if @documento_existente.autorizada?
+          raise JaAutorizada, "Esta nota já foi autorizada (chave #{@documento_existente.chave_acesso})."
+        end
+        @documento_existente.update!(
+          modelo:            @modelo,
+          natureza_operacao: @operacao.natureza_operacao,
+          finalidade:        @finalidade,
+          ambiente:          @config.ambiente,
+          provedor:          @config.provedor,
+          cod_funcionario:   @cod_funcionario || @documento_existente.cod_funcionario,
+          status:            "rascunho",
+          mensagem_sefaz:    nil,
+          cod_status_sefaz:  nil
+        )
+        return @documento_existente
+      end
+
       # Avulsa (sem venda) sempre cria um documento novo — nao ha venda para
       # reaproveitar/atrelar o reaproveitamento por cod_venda.
       return criar_documento_rascunho if @venda.cod_venda.blank?

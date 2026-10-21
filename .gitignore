@@ -53,6 +53,12 @@
 /storage/*
 !/storage/.keep
 
+# Backups de producao baixados por bin/backup_producao.sh (dump + storage).
+/backups/
+
+# Segredos do script de backup (senha do postgres). O .example pode ir ao git.
+/bin/.env.backup
+
 # Ignore uploaded files at runtime (dados de upload, não código)
 /public/uploads
 

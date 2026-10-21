@@ -88,10 +88,12 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         return if cod_vendas.empty?
 
         # Mais recente primeiro; o first por cod_venda no each_with_object abaixo
-        # mantem apenas o de maior cod_documento_fiscal (o ultimo).
+        # mantem apenas o de maior cod_documento_fiscal (o ultimo). Considera
+        # QUALQUER modelo (55 NF-e e 65 NFC-e): a NF da venda pode ter sido
+        # emitida como cupom (65) pelo editor, e precisamos reconhece-la aqui.
         DocumentoFiscal
             .includes(:eventos)
-            .where(cod_venda: cod_vendas, modelo: 55)
+            .where(cod_venda: cod_vendas, modelo: [55, 65])
             .order(cod_documento_fiscal: :desc)
             .each do |doc|
                 @docs_por_venda[doc.cod_venda] ||= doc

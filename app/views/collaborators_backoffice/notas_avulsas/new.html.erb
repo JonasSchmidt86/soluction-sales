@@ -1,5 +1,16 @@
 <% modelo_nome = @modelo == 65 ? "NFC-e (modelo 65)" : "NF-e (modelo 55)" %>
 <% itens_preenchidos = @itens_preenchidos || [] %>
+
+<style>
+  /* A .table-responsive do Bootstrap aplica overflow (corta o dropdown de busca
+     de produto, que e position:absolute). Deixamos o overflow visivel para o
+     autocomplete "escapar" da tabela. As colunas sao poucas e cabem; em telas
+     estreitas a pagina rola normalmente. */
+  .tabela-itens-nf { overflow: visible !important; }
+  /* Dropdown de busca de produto por cima de tudo (botoes, painel pendencias). */
+  .produto-lista { z-index: 1080; max-height: 260px; overflow-y: auto; }
+</style>
+
 <div id="layoutAuthentication_content">
   <main>
     <div class="card mt-3">
@@ -21,8 +32,16 @@
           <div class="alert alert-danger"><%= flash[:alert] %></div>
         <% end %>
 
-        <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :post, local: true, id: "formAvulsa" do %>
+        <%# Edicao de rascunho (PATCH update) vs novo (POST create). O botao de %>
+        <%# emitir usa a URL de create/update; "Salvar rascunho" aponta via JS. %>
+        <%# "Em elaboracao" = rascunho ou erro (falha de validacao local): ambos %>
+        <%# editaveis pelo editor. Mantem o nome editando_rascunho no resto da view. %>
+        <% editando_rascunho = @documento&.persisted? && %w[rascunho erro].include?(@documento&.status) %>
+        <% form_url = editando_rascunho ? collaborators_backoffice_notas_avulsa_path(@documento) : collaborators_backoffice_notas_avulsas_path %>
+        <% form_method = editando_rascunho ? :patch : :post %>
+        <%= form_with url: form_url, method: form_method, local: true, id: "formAvulsa" do %>
           <%= hidden_field_tag :modelo, @modelo %>
+          <% if editando_rascunho %><%= hidden_field_tag :rascunho_id, @documento.cod_documento_fiscal %><% end %>
 
           <%# ---- Operacao (natureza) e Finalidade ---- %>
           <div class="row mb-3">
@@ -52,17 +71,26 @@
               <span id="destOpcional" class="text-muted" style="<%= 'display:none;' if @modelo == 55 %>">(opcional)</span>
             </label>
             <div class="position-relative">
-              <input type="text" id="clienteBusca" class="form-control"
-                     placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off">
+              <div class="input-group">
+                <%# Na edicao/reexibicao, preenche o campo visivel com o nome do %>
+                <%# destinatario ja escolhido (o hidden sozinho nao aparece na tela). %>
+                <input type="text" id="clienteBusca" class="form-control"
+                       placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off"
+                       value="<%= @nome_pessoa_sel %>">
+                <%# Limpa o destinatario manualmente (util na NFC-e sem destinatario). %>
+                <button type="button" class="btn btn-outline-secondary" id="btnLimparDestinatario" title="Limpar destinatário">
+                  <i class="fa fa-xmark"></i> Limpar
+                </button>
+              </div>
               <%= hidden_field_tag :cod_pessoa, @cod_pessoa_sel, id: "codPessoa" %>
               <div id="clienteLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
             </div>
-            <small id="clienteSelecionado" class="text-success"></small>
+            <small id="clienteSelecionado" class="text-success"><%= "Selecionado: #{@nome_pessoa_sel}" if @nome_pessoa_sel.present? %></small>
           </div>
 
           <%# ---- Itens (planilha estilo devolucao) ---- %>
           <h5 class="mt-4">Produtos</h5>
-          <div class="table-responsive">
+          <div class="table-responsive tabela-itens-nf">
             <table class="table table-sm table-bordered align-top">
               <thead class="table-light">
                 <tr>
@@ -87,6 +115,13 @@
             <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
           </div>
 
+          <%# Painel de pendencias: lista o que impede a emissao (CFOP, estoque, %>
+          <%# dados basicos). Preenchido pelo JS validarNota(). Oculto quando OK. %>
+          <div id="painelPendencias" class="alert alert-warning py-2 px-3 mt-3" style="display:none;">
+            <strong><i class="fa fa-triangle-exclamation me-1"></i> Pendências para emitir:</strong>
+            <ul id="listaPendencias" class="mb-0 mt-1 small"></ul>
+          </div>
+
           <div class="d-flex justify-content-between mt-4">
             <%= link_to "Voltar", collaborators_backoffice_notas_avulsas_path, class: "btn btn-secondary" %>
             <div class="d-flex align-items-center gap-2">
@@ -96,15 +131,38 @@
                       data-url="<%= previsualizar_collaborators_backoffice_notas_avulsas_path %>">
                 <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
               </button>
-              <%# data-confirm-msg (nao data-confirm) para o Rails UJS NAO disparar
-                  um segundo confirm; o nosso JS de submit cuida da confirmacao. %>
-              <button type="submit" class="btn btn-success" id="emitirBtn"
-                      data-confirm-msg="Emitir a <%= modelo_nome %> agora?">
-                <i class="fa fa-check-double me-1"></i> Emitir <span id="emitirBtnLabel"><%= modelo_nome %></span>
-              </button>
+              <%# Salvar rascunho: nao emite. No NOVO, formaction aponta para %>
+              <%# salvar_rascunho; na EDICAO, o form ja posta para update (salva). %>
+              <% unless editando_rascunho %>
+                <button type="submit" class="btn btn-outline-primary"
+                        formaction="<%= salvar_rascunho_collaborators_backoffice_notas_avulsas_path %>"
+                        formmethod="post" formnovalidate>
+                  <i class="fa fa-floppy-disk me-1"></i> Salvar rascunho
+                </button>
+              <% end %>
+              <% if editando_rascunho %>
+                <%# Submit normal: salva as alteracoes (update). %>
+                <button type="submit" class="btn btn-outline-success">
+                  <i class="fa fa-floppy-disk me-1"></i> Salvar alterações
+                </button>
+                <%# Emitir num clique: submete o MESMO form com emitir_apos=1, %>
+                <%# entao o update salva e emite em sequencia (sem 2 botoes). %>
+                <button type="submit" name="emitir_apos" value="1" class="btn btn-success btn-emitir"
+                        data-confirm-msg="Salvar e emitir esta nota agora?">
+                  <i class="fa fa-check-double me-1"></i> Emitir
+                </button>
+              <% else %>
+                <%# data-confirm-msg (nao data-confirm) para o Rails UJS NAO disparar
+                    um segundo confirm; o nosso JS de submit cuida da confirmacao. %>
+                <button type="submit" class="btn btn-success btn-emitir" id="emitirBtn"
+                        data-confirm-msg="Emitir a <%= modelo_nome %> agora?">
+                  <i class="fa fa-check-double me-1"></i> Emitir <span id="emitirBtnLabel"><%= modelo_nome %></span>
+                </button>
+              <% end %>
             </div>
           </div>
         <% end %>
+
       </div>
     </div>
   </main>
@@ -176,7 +234,8 @@
       var emitirBtn = document.getElementById('emitirBtn');
       if (emitirBtn) emitirBtn.setAttribute('data-confirm-msg', 'Emitir a ' + nome + ' agora?');
 
-      // Destinatario: obrigatorio no 55, opcional no 65.
+      // Destinatario: obrigatorio no 55, opcional no 65. (Nao limpa nem oculta
+      // o campo ao trocar de modelo — a limpeza e manual, pelo botao Limpar.)
       var obrig = document.getElementById('destObrigatorio');
       var opc   = document.getElementById('destOpcional');
       if (obrig) obrig.style.display = (modelo === '55') ? '' : 'none';
@@ -185,6 +244,35 @@
       // Estado visual dos botoes (claro = selecionado).
       if (btn55) { btn55.className = 'btn btn-sm ' + (modelo === '55' ? 'btn-light' : 'btn-outline-light'); }
       if (btn65) { btn65.className = 'btn btn-sm ' + (modelo === '65' ? 'btn-light' : 'btn-outline-light'); }
+
+      // Operacao automatica pelo modelo: 65 (cupom) = "Venda (NF-c)"; 55 = "Venda
+      // (NF-e)". Casa pelo TEXTO da option (o value e o codigo, que varia).
+      selecionarOperacaoDoModelo(modelo);
+      // Recarrega perfil tributario + CFOP de todos os produtos com a nova
+      // operacao (reavalia o fiscal de cada linha ao trocar o modelo).
+      recarregarTodasLinhas();
+      validarNota(); // destinatario deixa de ser obrigatorio no 65, etc.
+    }
+
+    var opSelect = document.getElementById('operacaoGeral');
+    function selecionarOperacaoDoModelo(modelo) {
+      if (!opSelect) return;
+      var alvo = modelo === '65' ? /nf-?c/i : /nf-?e/i; // 65 => NF-c; 55 => NF-e
+      var escolhida = null;
+      Array.prototype.forEach.call(opSelect.options, function (opt) {
+        var txt = (opt.textContent || '').trim();
+        // No 55 evita casar "NF-c" (que tambem contem "nf"); exige NAO ser NF-c.
+        if (modelo === '55') {
+          if (/nf-?e/i.test(txt) && !/nf-?c/i.test(txt)) escolhida = escolhida || opt;
+        } else {
+          if (/nf-?c/i.test(txt)) escolhida = escolhida || opt;
+        }
+      });
+      if (escolhida && opSelect.value !== escolhida.value) {
+        opSelect.value = escolhida.value;
+        // Nao dispara 'change' aqui: aplicarModelo chama recarregarTodasLinhas()
+        // logo em seguida (recalcula perfil+CFOP), evitando dupla chamada.
+      }
     }
 
     if (btn55) btn55.addEventListener('click', function () { aplicarModelo('55'); });
@@ -197,9 +285,23 @@
   var cliHidden = document.getElementById('codPessoa');
   var cliSel = document.getElementById('clienteSelecionado');
 
+  // Botao Limpar: zera o destinatario (campo visivel, hidden e o texto).
+  var btnLimparDest = document.getElementById('btnLimparDestinatario');
+  if (btnLimparDest) {
+    btnLimparDest.addEventListener('click', function () {
+      if (cliInput)  cliInput.value = '';
+      if (cliHidden) cliHidden.value = '';
+      if (cliSel)    cliSel.textContent = '';
+      if (cliLista)  cliLista.style.display = 'none';
+      if (cliInput)  cliInput.focus();
+      validarNota(); // destinatario removido -> revalida (55 exige)
+    });
+  }
+
   cliInput.addEventListener('input', function () {
     var q = this.value.trim();
     cliHidden.value = ''; cliSel.textContent = '';
+    validarNota(); // limpou/alterou o destinatario -> revalida
     if (q.length < 2) { cliLista.style.display = 'none'; return; }
     fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
       .then(function (r) { return r.json(); })
@@ -215,7 +317,8 @@
             cliSel.textContent = 'Selecionado: ' + p.nome;
             cliLista.style.display = 'none';
             // UF do destinatario muda o CFOP (5/6/7) -> recalcula tudo.
-            document.querySelectorAll('.item-row').forEach(resolverLinha);
+            // (forcarPerfil=false: preserva o perfil escolhido em cada linha.)
+            document.querySelectorAll('.item-row').forEach(function (row) { resolverLinha(row); });
           });
           cliLista.appendChild(it);
         });
@@ -239,8 +342,12 @@
     document.getElementById('totalNota').textContent = fmtBR(total);
   }
 
-  // ---------- Resolucao de CFOP pela regra (perfil + operacao do topo + UF) ----------
-  function resolverLinha(row) {
+  // ---------- Resolucao de perfil + CFOP pela regra (perfil + operacao + UF) ----------
+  // forcarPerfil=true: reaplica o perfil da fiscal_produto mesmo que a linha ja
+  // tenha um valor (usado ao trocar de modelo/operacao, para "recarregar" o
+  // perfil dos produtos). Por padrao (false) so pre-seleciona quando esta vazio,
+  // preservando a escolha manual do usuario.
+  function resolverLinha(row, forcarPerfil) {
     var pHidden = row.querySelector('.cod-produto');
     var perfil  = row.querySelector('.item-perfil');
     var cfop    = row.querySelector('.item-cfop');
@@ -255,13 +362,127 @@
       .then(function (r) { return r.json().catch(function () { return null; }); })
       .then(function (d) {
         if (!d) { cfop.value = ''; return; }
-        // Pre-seleciona o perfil do produto quando o usuario ainda nao escolheu.
-        if (perfil && !perfil.value && d.cod_perfil_tributario) {
+        // Aplica o perfil da fiscal_produto: sempre quando forcarPerfil, ou
+        // quando a linha ainda nao tem perfil escolhido.
+        if (perfil && d.cod_perfil_tributario && (forcarPerfil || !perfil.value)) {
           perfil.value = String(d.cod_perfil_tributario);
         }
         cfop.value = d.cfop ? d.cfop : '';
+        validarNota(); // CFOP mudou -> revalida pendencias
       })
       .catch(function (e) { console.error('resolver_cfop:', e); });
+  }
+
+  // Le o estoque fiscal (qtdfiscal) da cor atualmente selecionada e guarda na
+  // linha (data-qtdfiscal). Usado para validar se a quantidade cabe no saldo.
+  function atualizarEstoqueLinha(row) {
+    var corSel = row.querySelector('.cod-cor');
+    var opt = corSel && corSel.selectedOptions ? corSel.selectedOptions[0] : null;
+    if (opt && opt.dataset && opt.dataset.qtdfiscal !== undefined && corSel.value) {
+      row.dataset.qtdfiscal = opt.dataset.qtdfiscal;
+      row.dataset.temCor = '1';
+    } else {
+      row.dataset.qtdfiscal = '';
+      row.dataset.temCor = corSel && corSel.value ? '1' : '';
+    }
+  }
+
+  // ---------- Validacao de pendencias (bloqueia o botao Emitir) ----------
+  // Fonte de verdade: endpoint /validar no backend (mesma logica da emissao).
+  // O front envia o estado do form e exibe TODAS as pendencias (dados basicos,
+  // CFOP, CPF/CNPJ, estoque fiscal consolidado). Enquanto houver pendencia (ou
+  // enquanto valida), "Emitir" fica desabilitado; "Salvar" permanece ativo.
+  var VALIDAR_URL = "<%= validar_collaborators_backoffice_notas_avulsas_path %>";
+  var _validarTimer = null;
+
+  // Mapeia o nome do campo (vindo do backend) para o seletor do input na linha.
+  var CAMPO_SELETOR = {
+    cor:        '.cod-cor',
+    quantidade: '.qtd',
+    valor:      '.vlunit',
+    cfop:       '.item-cfop'
+  };
+
+  // Limpa o destaque vermelho de todos os campos (antes de repintar).
+  function limparDestaques() {
+    document.querySelectorAll('.item-row .is-invalid').forEach(function (el) {
+      el.classList.remove('is-invalid');
+    });
+    var cli = document.getElementById('clienteBusca');
+    if (cli) cli.classList.remove('is-invalid');
+  }
+
+  // Pinta de vermelho (is-invalid) os campos apontados pelos marcadores.
+  function aplicarDestaques(marc) {
+    limparDestaques();
+    if (!marc) return;
+    var linhas = document.querySelectorAll('#itensBody .item-row');
+    var itens = marc.itens || {};
+    Object.keys(itens).forEach(function (idx) {
+      var row = linhas[parseInt(idx, 10)];
+      if (!row) return;
+      (itens[idx] || []).forEach(function (campo) {
+        var sel = CAMPO_SELETOR[campo];
+        if (!sel) return;
+        var el = row.querySelector(sel);
+        if (el) el.classList.add('is-invalid');
+      });
+    });
+    if (marc.destinatario) {
+      var cli = document.getElementById('clienteBusca');
+      if (cli) cli.classList.add('is-invalid');
+    }
+  }
+
+  function renderPendencias(pend, marc) {
+    var painel = document.getElementById('painelPendencias');
+    var lista  = document.getElementById('listaPendencias');
+    if (lista) {
+      lista.innerHTML = '';
+      pend.forEach(function (p) {
+        var li = document.createElement('li'); li.textContent = p; lista.appendChild(li);
+      });
+    }
+    if (painel) painel.style.display = pend.length ? '' : 'none';
+    aplicarDestaques(marc);
+    document.querySelectorAll('.btn-emitir').forEach(function (btn) {
+      btn.disabled = pend.length > 0;
+      btn.title = pend.length ? 'Resolva as pendências para emitir' : '';
+    });
+  }
+
+  // Dispara a validacao no backend (debounce). Enquanto a resposta nao volta,
+  // desabilita o Emitir por seguranca (evita emitir antes de validar).
+  function validarNota() {
+    document.querySelectorAll('.btn-emitir').forEach(function (btn) { btn.disabled = true; });
+    if (_validarTimer) clearTimeout(_validarTimer);
+    _validarTimer = setTimeout(function () {
+      var form = document.getElementById('formAvulsa');
+      if (!form) return;
+      var fd = new FormData(form);
+      fd.delete('_method'); // sempre POST para a rota de collection
+      fetch(VALIDAR_URL, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/json' },
+        body: fd
+      })
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (d) {
+          if (!d) { renderPendencias(['Falha ao validar. Tente novamente.'], null); return; }
+          renderPendencias(d.pendencias || [], d.marcadores || null);
+        })
+        .catch(function () { renderPendencias(['Falha de conexão ao validar.'], null); });
+    }, 300);
+  }
+
+  // Recarrega perfil tributario + CFOP de TODAS as linhas que tem produto.
+  // Usado ao trocar o modelo/operacao (reavalia o fiscal de cada produto).
+  function recarregarTodasLinhas() {
+    document.querySelectorAll('.item-row').forEach(function (row) {
+      if (row.querySelector('.cod-produto') && row.querySelector('.cod-produto').value) {
+        resolverLinha(row, true);
+      }
+    });
   }
 
   // ---------- Itens ----------
@@ -340,14 +561,17 @@
         var vl = row.querySelector('.vlunit');
         if (parseBR(vl.value) === 0) { vl.value = fmtBR(parseFloat(opt.dataset.valorvenda) || 0); recalc(); }
       }
+      // Guarda o estoque fiscal da cor escolhida na linha, para validar a qtd.
+      atualizarEstoqueLinha(row);
+      validarNota();
     });
 
     // Trocar o perfil recalcula o CFOP so desta linha.
     if (perfil) perfil.addEventListener('change', function () { resolverLinha(row); });
 
-    row.querySelector('.qtd').addEventListener('input', recalc);
-    row.querySelector('.vlunit').addEventListener('input', recalc);
-    row.querySelector('.rm-item').addEventListener('click', function () { row.remove(); reindex(); recalc(); });
+    row.querySelector('.qtd').addEventListener('input', function () { recalc(); validarNota(); });
+    row.querySelector('.vlunit').addEventListener('input', function () { recalc(); validarNota(); });
+    row.querySelector('.rm-item').addEventListener('click', function () { row.remove(); reindex(); recalc(); validarNota(); });
 
     // Pre-popular (re-exibicao apos erro no create).
     if (dados.cod_produto) {
@@ -359,7 +583,8 @@
       if (dados.valorunitario) row.querySelector('.vlunit').value = dados.valorunitario;
       if (dados.cfop) row.querySelector('.item-cfop').value = dados.cfop;
       carregarCores(dados.cod_produto, corSel, dados.cod_cor, row).then(function () {
-        if (!dados.cfop) resolverLinha(row);
+        atualizarEstoqueLinha(row); // estoque fiscal da cor pre-selecionada
+        if (!dados.cfop) { resolverLinha(row); } else { validarNota(); }
       });
     }
     return row;
@@ -378,12 +603,13 @@
     });
   }
 
-  document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); });
+  document.getElementById('addItem').addEventListener('click', function () { addItem(); reindex(); validarNota(); });
 
   // Operacao do topo recalcula CFOP de TODAS as linhas.
   if (opTopo) {
     opTopo.addEventListener('change', function () {
-      document.querySelectorAll('.item-row').forEach(resolverLinha);
+      // So recalcula CFOP; preserva perfil escolhido (forcarPerfil=false).
+      document.querySelectorAll('.item-row').forEach(function (row) { resolverLinha(row); });
     });
   }
 
@@ -398,7 +624,7 @@
   } else {
     addItem();
   }
-  reindex(); recalc();
+  reindex(); recalc(); validarNota(); // estado inicial do botao Emitir
 
   // ---------- Enter NAO submete o form ----------
   // Nos campos de texto (busca de produto/destinatario, qtd, valor) o Enter
@@ -429,6 +655,11 @@
       var original = btnPrev.innerHTML;
       btnPrev.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Gerando...';
       var fd = new FormData(form);
+      // Na EDICAO de rascunho o form usa method PATCH (campo oculto _method),
+      // que o Rails aplica como method override. A pre-visualizacao e SEMPRE um
+      // POST para a rota de collection; sem remover _method, o POST viraria
+      // PATCH /notas_avulsas/previsualizar e casaria com update (:id=previsualizar).
+      fd.delete('_method');
       fetch(btnPrev.dataset.url, {
         method: 'POST',
         headers: { 'X-CSRF-Token': csrf || '', 'Accept': 'application/pdf, text/html' },

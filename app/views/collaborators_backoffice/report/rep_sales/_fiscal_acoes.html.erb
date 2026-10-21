@@ -80,17 +80,18 @@
       <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
     <% end %>
   </li>
+  <%# A emissao passa pelo editor de nota (gerar rascunho a partir da venda). %>
   <li>
-    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+    <%= button_to gerar_de_venda_collaborators_backoffice_notas_avulsas_path(cod_venda: sale.cod_venda),
                   method: :post, class: "dropdown-item btn btn-warning btn-circle",
                   form: { class: "d-inline" },
-                  data: { confirm: "Reemitir a NF-e desta venda?" } do %>
-      <i class="fa fa-rotate-right" style="width: 35px;"></i> Reemitir NF-e
+                  data: { confirm: "Gerar a NF desta venda no editor?" } do %>
+      <i class="fa fa-rotate-right" style="width: 35px;"></i> Gerar NF (editor)
     <% end %>
   </li>
 
 <% elsif doc && %w[rascunho enviada].include?(doc.status) %>
-  <li><h6 class="dropdown-header">NF-e em processamento</h6></li>
+  <li><h6 class="dropdown-header">NF-e em elaboração</h6></li>
   <%# Reconciliar: confirma se a SEFAZ ja autorizou (resposta pode ter se perdido). # %>
   <li>
     <%= button_to reconciliar_collaborators_backoffice_venda_documento_fiscal_path(sale, doc),
@@ -100,21 +101,23 @@
       <i class="fa fa-magnifying-glass" style="width: 35px;"></i> Atualizar status (SEFAZ)
     <% end %>
   </li>
+  <%# Abre o editor: reaproveita o rascunho existente desta venda (nao duplica). %>
   <li>
-    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+    <%= button_to gerar_de_venda_collaborators_backoffice_notas_avulsas_path(cod_venda: sale.cod_venda),
                   method: :post, class: "dropdown-item btn btn-primary btn-circle",
                   form: { class: "d-inline" } do %>
-      <i class="fa fa-paper-plane" style="width: 35px;"></i> Emitir NF-e novamente
+      <i class="fa fa-pen-to-square" style="width: 35px;"></i> Abrir no editor de NF
     <% end %>
   </li>
 
 <% elsif !sale.cancelada %>
+  <%# Emissao agora passa SEMPRE pelo editor: gera um rascunho a partir da venda %>
+  <%# (itens + destinatario) e abre a tela para conferir/ajustar e emitir. %>
   <li>
-    <%= button_to emitir_collaborators_backoffice_venda_documentos_fiscais_path(sale),
+    <%= button_to gerar_de_venda_collaborators_backoffice_notas_avulsas_path(cod_venda: sale.cod_venda),
                   method: :post, class: "dropdown-item btn btn-primary btn-circle",
-                  form: { class: "d-inline" },
-                  data: { confirm: "Emitir a NF-e modelo 55 desta venda?" } do %>
-      <i class="fa fa-file-invoice" style="width: 35px;"></i> Emitir NF-e
+                  form: { class: "d-inline" } do %>
+      <i class="fa fa-file-invoice" style="width: 35px;"></i> Gerar NF (editor)
     <% end %>
   </li>
 <% end %>
