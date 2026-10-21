@@ -153,9 +153,12 @@ class CollaboratorsBackoffice::ImportacaoInventarioController < CollaboratorsBac
 
       # grupo 1 / marca 1 = padroes de referencia (o model Produto exige marca
       # e grupo). Ajustaveis depois no cadastro normal do produto.
+      # NAO grava o NCM no produto global aqui: quem grava o NCM e o aplicador,
+      # na fiscal_produto (fonte da verdade por empresa). Se gravassemos no
+      # produto, o aplicador veria "atual == planilha" (via fallback) e pularia
+      # a fiscal_produto, deixando-a sem NCM.
       Produto.create!(
         cod_produto: cod_final, nome: nome, grupo: 1, marca: 1, ativo: true,
-        ncm: (ncm if ncm.match?(/\A\d{8}\z/)),
         ucom: linha["unidade_medida"].to_s.strip.first(8).presence
       )
       r = Fiscal::AplicadorInventario.new(
