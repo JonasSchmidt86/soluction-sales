@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_27_000005) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -433,6 +433,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_27_000005) do
     t.decimal "valor_total", precision: 15, scale: 2, comment: "valor total da nota (preenchido na emissao)"
     t.bigint "cod_pessoa_rascunho", comment: "destinatario escolhido (rascunho da nota em elaboracao)"
     t.bigint "cod_operacao_fiscal_rascunho", comment: "operacao fiscal escolhida (rascunho da nota em elaboracao)"
+    t.text "info_adicional", comment: "Observacao da NF (infCpl, aparece no DANFE)"
+    t.text "info_adicional_fisco", comment: "Observacao ao fisco da NF (infAdFisco)"
+    t.string "forma_pagamento", limit: 2, comment: "Forma de pagamento (tPag SEFAZ): 01,03,04,15,17,90,99..."
+    t.string "descricao_pagamento", limit: 60, comment: "Descricao do pagamento (xPag), obrigatoria quando tPag=99"
+    t.string "chave_referenciada", limit: 44, comment: "Chave de acesso da NF referenciada (NFReferencia)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
     t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"

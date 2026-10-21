@@ -12,6 +12,31 @@ class DocumentoFiscal < ApplicationRecord
     4 => "Devolução"
   }.freeze
 
+  # Formas de pagamento (tPag do layout SEFAZ / NF-e 4.0). Subconjunto usado no
+  # dia a dia; "99 - Outros" exige descricao (xPag), senao rejeicao 441.
+  FORMAS_PAGAMENTO = {
+    "01" => "Dinheiro",
+    "02" => "Cheque",
+    "03" => "Cartão de Crédito",
+    "04" => "Cartão de Débito",
+    "05" => "Crédito Loja",
+    "10" => "Vale Alimentação",
+    "11" => "Vale Refeição",
+    "13" => "Vale Combustível",
+    "15" => "Boleto Bancário",
+    "16" => "Depósito Bancário",
+    "17" => "PIX (dinâmico)",
+    "18" => "Transferência (carteira digital)",
+    "19" => "Programa de fidelidade/cashback",
+    "20" => "PIX (estático)",
+    "90" => "Sem pagamento",
+    "99" => "Outros"
+  }.freeze
+
+  def self.forma_pagamento_label(cod)
+    FORMAS_PAGAMENTO[cod.to_s] || cod.to_s
+  end
+
   # Rotulo legivel da finalidade de um codigo (ou do proprio documento).
   def self.finalidade_label(cod)
     FINALIDADES[cod.to_i] || cod.to_s

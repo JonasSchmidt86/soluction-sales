@@ -88,6 +88,42 @@
             <small id="clienteSelecionado" class="text-success"><%= "Selecionado: #{@nome_pessoa_sel}" if @nome_pessoa_sel.present? %></small>
           </div>
 
+          <%# ---- Pagamento + NF referenciada ---- %>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="form-floating">
+                <%= select_tag :forma_pagamento,
+                      options_for_select(
+                        DocumentoFiscal::FORMAS_PAGAMENTO.map { |cod, nome| ["#{cod} - #{nome}", cod] },
+                        (@forma_pagamento_sel.presence || "01")),
+                      id: "formaPagamento", class: "form-select" %>
+                <label>Forma de pagamento</label>
+              </div>
+            </div>
+            <%# Descricao do pagamento: so aparece/exige quando "99 - Outros". %>
+            <div class="col-md-8" id="descricaoPagamentoWrap"
+                 style="<%= 'display:none;' unless @forma_pagamento_sel == '99' %>">
+              <div class="form-floating">
+                <%= text_field_tag :descricao_pagamento, @descricao_pagamento_sel,
+                      id: "descricaoPagamento", maxlength: 60, class: "form-control",
+                      placeholder: "Descreva a forma de pagamento" %>
+                <label>Descrição do pagamento (obrigatória p/ "Outros")</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Nota fiscal referenciada
+              <span class="text-muted small">(chave de 44 dígitos — devolução / outra saída)</span>
+            </label>
+            <%= text_field_tag :chave_referenciada, @chave_referenciada_sel,
+                  id: "chaveReferenciada", maxlength: 44, class: "form-control font-monospace",
+                  placeholder: "Cole a chave de acesso da NF de compra (44 dígitos)",
+                  inputmode: "numeric", autocomplete: "off" %>
+            <small id="chaveReferenciadaHint" class="text-muted"></small>
+          </div>
+
           <%# ---- Itens (planilha estilo devolucao) ---- %>
           <h5 class="mt-4">Produtos</h5>
           <div class="table-responsive tabela-itens-nf">
@@ -113,6 +149,24 @@
 
           <div class="text-end mt-3">
             <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
+          </div>
+
+          <%# ---- Informacoes adicionais ---- %>
+          <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Informações complementares</label>
+              <%= text_area_tag :info_adicional, @info_adicional_sel,
+                    id: "infoAdicional", rows: 3, maxlength: 2000, class: "form-control",
+                    placeholder: "Observações que aparecem no DANFE (ex.: pedido, condições, garantia)" %>
+              <small class="text-muted">Impresso no DANFE (campo infCpl).</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Observações ao fisco</label>
+              <%= text_area_tag :info_adicional_fisco, @info_adicional_fisco_sel,
+                    id: "infoAdicionalFisco", rows: 3, maxlength: 2000, class: "form-control",
+                    placeholder: "Observações de interesse do fisco (opcional)" %>
+              <small class="text-muted">Campo infAdFisco (não aparece para o cliente).</small>
+            </div>
           </div>
 
           <%# Painel de pendencias: lista o que impede a emissao (CFOP, estoque, %>
@@ -683,5 +737,45 @@
       .finally(function () { btnPrev.disabled = false; btnPrev.innerHTML = original; });
     });
   }
+
+  // ---------- Cabecalho fiscal: pagamento + NF referenciada ----------
+  // Descricao do pagamento so aparece/faz sentido quando "99 - Outros" (xPag).
+  (function () {
+    var forma = document.getElementById('formaPagamento');
+    var wrap  = document.getElementById('descricaoPagamentoWrap');
+    var desc  = document.getElementById('descricaoPagamento');
+    if (!forma || !wrap) return;
+    function toggle() {
+      var outros = forma.value === '99';
+      wrap.style.display = outros ? '' : 'none';
+      if (!outros && desc) desc.value = '';
+    }
+    forma.addEventListener('change', toggle);
+    toggle();
+  })();
+
+  // Chave referenciada: aceita so digitos; dica visual do tamanho (precisa 44).
+  (function () {
+    var chave = document.getElementById('chaveReferenciada');
+    var hint  = document.getElementById('chaveReferenciadaHint');
+    if (!chave) return;
+    function check() {
+      var v = (chave.value || '').replace(/\D/g, '').slice(0, 44);
+      if (chave.value !== v) chave.value = v; // mantem so digitos
+      if (!hint) return;
+      if (v.length === 0) { hint.textContent = ''; chave.classList.remove('is-invalid'); return; }
+      if (v.length === 44) {
+        hint.textContent = 'Chave válida (44 dígitos).';
+        hint.className = 'text-success';
+        chave.classList.remove('is-invalid');
+      } else {
+        hint.textContent = v.length + '/44 dígitos.';
+        hint.className = 'text-muted';
+        chave.classList.add('is-invalid');
+      }
+    }
+    chave.addEventListener('input', check);
+    check();
+  })();
 })();
 </script>

@@ -12,13 +12,24 @@ module Fiscal
   #
   # NF avulsa é 100% fiscal: não gera Venda nem itemvenda; cod_venda = nil.
   class DocumentoAvulso
-    attr_reader :empresa, :pessoa
+    attr_reader :empresa, :pessoa,
+                :info_adicional, :info_adicional_fisco,
+                :forma_pagamento, :descricao_pagamento, :chave_referenciada
 
-    def initialize(empresa:, itens:, cliente: nil)
+    def initialize(empresa:, itens:, cliente: nil,
+                   info_adicional: nil, info_adicional_fisco: nil,
+                   forma_pagamento: nil, descricao_pagamento: nil,
+                   chave_referenciada: nil)
       @empresa = empresa
       @pessoa  = cliente
       # Passa o cod_empresa para cada item resolver o perfil via fiscal_produto.
       @itens   = Array(itens).map { |h| ItemAvulso.new(h, cod_empresa: empresa&.cod_empresa) }
+      # Cabecalho fiscal opcional (lido pelo DocumentoFiscalBuilder via duck typing).
+      @info_adicional       = info_adicional.presence
+      @info_adicional_fisco = info_adicional_fisco.presence
+      @forma_pagamento      = forma_pagamento.presence
+      @descricao_pagamento  = descricao_pagamento.presence
+      @chave_referenciada   = chave_referenciada.to_s.gsub(/\D/, "").presence
     end
 
     # Interface compatível com Venda:

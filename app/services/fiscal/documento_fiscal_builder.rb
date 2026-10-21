@@ -50,6 +50,11 @@ module Fiscal
         cliente:              montar_cliente,
         produtos:             montar_produtos,
         pagamentos:           montar_pagamentos,
+        # Cabecalho fiscal opcional (nota avulsa): observacoes e NF referenciada.
+        # Venda comum nao responde a esses metodos (try => nil) e nada muda.
+        info_adicional:       @venda.try(:info_adicional).presence,
+        info_adicional_fisco: @venda.try(:info_adicional_fisco).presence,
+        nf_referencia:        Array(@venda.try(:chave_referenciada)).reject(&:blank?).presence,
         enviar_email:         false
       }.compact
     end
@@ -207,17 +212,34 @@ module Fiscal
       imposto.reject { |_, v| v.blank? }
     end
 
-    # Pagamento simples (a vista). Detalhe de parcelas/formas fica para depois.
+    # Pagamento simples (a vista), uma forma. A forma vem do documento quando
+    # informada (nota avulsa: @venda.forma_pagamento); senao "01 - Dinheiro".
+    # Default "01" (nao "99"): "99 - Outros" exige descricao (xPag) para nao
+    # cair na rejeicao 441, e o nome do campo de descricao no payload Brasil NFe
+    # ainda nao esta confirmado na doc — por isso 99 nao e o padrao. Multiplas
+    # parcelas/formas ficam para depois.
+    #
     # VlPago = total LIQUIDO da nota = soma dos ValorTotal dos itens (ja com
     # acrescimo/desconto do item e o rateio do ajuste de cabecalho). Usar a
     # mesma base dos itens garante VlPago == total da nota e evita a rejeicao
     # "ausencia de troco" (pagamento maior que o total da nota).
+    #
+    # tPag 90 (sem pagamento): VlPago = 0 (ex.: remessa, devolucao, brinde).
     def montar_pagamentos
-      [{
+      forma = @venda.try(:forma_pagamento).presence || "01"
+      pagamento = {
         "IndicadorPagamento" => 0,   # a vista
-        "FormaPagamento"     => "99", # outros (ajustar quando mapear formas reais)
-        "VlPago"             => total_liquido_itens.to_f
-      }]
+        "FormaPagamento"     => forma,
+        "VlPago"             => (forma == "90" ? 0.0 : total_liquido_itens.to_f)
+      }
+      # Descricao do meio de pagamento (xPag), obrigatoria p/ tPag=99
+      # (rejeicao 441). Nome do campo repassado cru ao provedor; confirmar em
+      # teste de homologacao antes de liberar "99" na UI.
+      if forma == "99"
+        pagamento["DescricaoPagamento"] =
+          @venda.try(:descricao_pagamento).presence || "Outros"
+      end
+      [pagamento]
     end
 
     # Soma dos ValorTotal liquidos dos itens (base unica para VlPago e para o

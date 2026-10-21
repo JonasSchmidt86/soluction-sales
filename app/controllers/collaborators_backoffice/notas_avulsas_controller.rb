@@ -90,7 +90,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
 
     operacao = operacao_escolhida
 
-    avulso = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
+    avulso = montar_avulso(empresa: empresa, cliente: cliente, itens: itens, cab: cabecalho_param)
     documento = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo,
                                           operacao: operacao,
                                           finalidade: params[:finalidade],
@@ -131,7 +131,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     operacao = operacao_escolhida
     documento = nil
     ActiveRecord::Base.transaction do
-      documento = DocumentoFiscal.create!(
+      documento = DocumentoFiscal.create!({
         cod_empresa:       current_collaborator.cod_empresa,
         cod_venda:         nil,
         modelo:            @modelo,
@@ -142,7 +142,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         cod_funcionario:   current_collaborator.cod_funcionario,
         cod_pessoa_rascunho: cliente&.cod_pessoa,
         cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
-      )
+      }.merge(atributos_cabecalho_documento))
       gravar_itens_rascunho(documento, itens)
     end
 
@@ -244,6 +244,12 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @cod_pessoa_sel = @documento.cod_pessoa_rascunho
     # Nome do destinatario para o form reexibir o campo visivel (nao so o hidden).
     @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
+    # Cabecalho fiscal (observacoes, pagamento, NF referenciada) para reexibir.
+    @info_adicional_sel       = @documento.info_adicional
+    @info_adicional_fisco_sel = @documento.info_adicional_fisco
+    @forma_pagamento_sel      = @documento.forma_pagamento
+    @descricao_pagamento_sel  = @documento.descricao_pagamento
+    @chave_referenciada_sel   = @documento.chave_referenciada
     @itens_preenchidos = itens_do_rascunho(@documento)
     render :new
   end
@@ -262,13 +268,13 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     return reexibir_form("Informe ao menos um produto.") if itens.empty?
 
     ActiveRecord::Base.transaction do
-      @documento.update!(
+      @documento.update!({
         modelo:            @modelo,
         natureza_operacao: operacao&.natureza_operacao,
         finalidade:        (params[:finalidade].presence || 1).to_i,
         cod_pessoa_rascunho: cliente&.cod_pessoa,
         cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
-      )
+      }.merge(atributos_cabecalho_documento))
       @documento.itens.delete_all
       gravar_itens_rascunho(@documento, itens)
     end
@@ -320,7 +326,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     end
 
     operacao = operacao_escolhida
-    avulso  = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
+    avulso  = montar_avulso(empresa: empresa, cliente: cliente, itens: itens, cab: cabecalho_param)
     preview = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo, operacao: operacao,
                                         finalidade: params[:finalidade],
                                         cod_funcionario: current_collaborator.cod_funcionario)
@@ -566,7 +572,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
                   alert: "Não é possível emitir. #{pendencias.join(' | ')}" and return
     end
 
-    avulso = Fiscal::DocumentoAvulso.new(empresa: empresa, cliente: cliente, itens: itens)
+    avulso = montar_avulso(empresa: empresa, cliente: cliente, itens: itens,
+                           cab: cabecalho_do_documento(documento))
     emitido = Fiscal::EmissorFiscal.new(avulso, modelo: documento.modelo,
                                         operacao: operacao,
                                         finalidade: documento.finalidade,
@@ -672,6 +679,12 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @finalidade_sel = params[:finalidade]
     @cod_pessoa_sel = params[:cod_pessoa]
     @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
+    # Cabecalho fiscal digitado (observacoes, pagamento, NF referenciada).
+    @info_adicional_sel       = params[:info_adicional]
+    @info_adicional_fisco_sel = params[:info_adicional_fisco]
+    @forma_pagamento_sel      = params[:forma_pagamento]
+    @descricao_pagamento_sel  = params[:descricao_pagamento]
+    @chave_referenciada_sel   = params[:chave_referenciada]
     @itens_preenchidos = itens_raw
     flash.now[:alert] = mensagem
     render :new, status: :unprocessable_entity
@@ -699,6 +712,58 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         cfop:                  i["cfop"].presence
       }
     end
+  end
+
+  # Cabecalho fiscal do form (observacoes, forma de pagamento e NF referenciada),
+  # ja limpo/normalizado. Usado para persistir no rascunho e montar o avulso.
+  # Vazio quando o form nao enviou nada (retrocompativel).
+  def cabecalho_param
+    forma = params[:forma_pagamento].to_s.strip.presence
+    chave = params[:chave_referenciada].to_s.gsub(/\D/, "").presence
+    {
+      info_adicional:       params[:info_adicional].to_s.strip.first(2000).presence,
+      info_adicional_fisco: params[:info_adicional_fisco].to_s.strip.first(2000).presence,
+      forma_pagamento:      (forma if DocumentoFiscal::FORMAS_PAGAMENTO.key?(forma)),
+      descricao_pagamento:  params[:descricao_pagamento].to_s.strip.first(60).presence,
+      chave_referenciada:   ((chave if chave&.length == 44)) # so grava chave de 44 digitos
+    }
+  end
+
+  # Monta o DocumentoAvulso (fonte neutra p/ o builder) com itens + cabecalho.
+  # cab: hash de cabecalho_param (params do form) OU do documento persistido.
+  def montar_avulso(empresa:, cliente:, itens:, cab:)
+    Fiscal::DocumentoAvulso.new(
+      empresa: empresa, cliente: cliente, itens: itens,
+      info_adicional:       cab[:info_adicional],
+      info_adicional_fisco: cab[:info_adicional_fisco],
+      forma_pagamento:      cab[:forma_pagamento],
+      descricao_pagamento:  cab[:descricao_pagamento],
+      chave_referenciada:   cab[:chave_referenciada]
+    )
+  end
+
+  # Cabecalho fiscal a partir de um DocumentoFiscal persistido (rascunho), para
+  # reconstruir o avulso na emissao de nota ja salva.
+  def cabecalho_do_documento(documento)
+    {
+      info_adicional:       documento.info_adicional,
+      info_adicional_fisco: documento.info_adicional_fisco,
+      forma_pagamento:      documento.forma_pagamento,
+      descricao_pagamento:  documento.descricao_pagamento,
+      chave_referenciada:   documento.chave_referenciada
+    }
+  end
+
+  # Atributos de cabecalho fiscal para gravar no DocumentoFiscal (rascunho).
+  def atributos_cabecalho_documento
+    cab = cabecalho_param
+    {
+      info_adicional:       cab[:info_adicional],
+      info_adicional_fisco: cab[:info_adicional_fisco],
+      forma_pagamento:      cab[:forma_pagamento],
+      descricao_pagamento:  cab[:descricao_pagamento],
+      chave_referenciada:   cab[:chave_referenciada]
+    }
   end
 
   # Grava (aprende) o perfil tributario escolhido na fiscal_produto da empresa,

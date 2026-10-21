@@ -351,6 +351,9 @@ module Fiscal
         "IndicadorPresenca" => doc[:indicador_presenca] || 1,
         "IdentificadorInterno" => doc[:identificador_interno],
         "NFReferencia"      => Array(doc[:nf_referencia]).presence,
+        # Observacoes: infCpl (aparece no DANFE) e infAdFisco (observacao fisco).
+        "Observacao"        => doc[:info_adicional].presence,
+        "ObservacaoFisco"   => doc[:info_adicional_fisco].presence,
         # Serie/Numero: só enviados se o builder fornecer; senão o Brasil NFe
         # controla automaticamente (recomendado em producao).
         "Serie"             => doc[:serie],

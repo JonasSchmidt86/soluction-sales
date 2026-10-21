@@ -78,6 +78,31 @@ Pendências verificadas:
 NCM/CSOSN **não** entram aqui — o `EmissorFiscal` cuida e lança
 `DadosFiscaisIncompletos` se faltar.
 
+## Cabeçalho fiscal (pagamento, observações, NF referenciada)
+
+Além dos itens e do destinatário, o editor grava no cabeçalho da nota (colunas
+em `documento_fiscal`, migration `20260928000001`; persistem no rascunho):
+
+- **Forma de pagamento** (`forma_pagamento` → tPag): select com a tabela SEFAZ
+  (01 Dinheiro, 03 Crédito, 04 Débito, 15 Boleto, 17 PIX, 90 Sem pagamento,
+  99 Outros...). Default **01** quando nada é escolhido. Uma forma à vista por
+  nota; parcelas/múltiplas formas ficam para depois. `90` envia `VlPago` 0.
+  `99` exige **descrição** (`descricao_pagamento` → xPag), senão rejeição 441 —
+  o campo de descrição só aparece ao escolher "Outros".
+- **Informações complementares** (`info_adicional` → Observacao/infCpl): texto
+  que **aparece no DANFE**.
+- **Observações ao fisco** (`info_adicional_fisco` → ObservacaoFisco/infAdFisco):
+  não aparece para o cliente.
+- **NF referenciada** (`chave_referenciada` → NFReferencia): chave de acesso de
+  44 dígitos de uma NF-e de compra, para devolução ou outra saída que precise
+  referenciar a nota original. Entrada manual (cole a chave); o campo aceita só
+  dígitos e sinaliza quando chega a 44.
+
+O caminho é: form → controller (`cabecalho_param`) → `DocumentoAvulso` →
+`DocumentoFiscalBuilder#montar` → `BrasilNfeAdapter#montar_payload`. Uma Venda
+comum não responde a esses campos (lidos via `try`), então o fluxo de NF de
+venda não muda.
+
 ## CFOP automático por item
 
 `resolver_cfop` resolve o CFOP de cada item pela regra do perfil + operação do
