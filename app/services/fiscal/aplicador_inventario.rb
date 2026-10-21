@@ -45,6 +45,9 @@ module Fiscal
     private
 
     # fiscal_produto.qtd_fiscal (consolidado por produto) = qtd, com log.
+    # Origem: quando ainda nao definida (nem na fiscal_produto nem no produto),
+    # grava "0" (Nacional) como padrao — o caso mais comum. Nao sobrescreve uma
+    # origem ja existente.
     def gravar_qtd_fiscal_produto(produto, qtd)
       registro = FiscalProduto.find_or_initialize_by(
         cod_empresa: @cod_empresa, cod_produto: produto.cod_produto
@@ -52,6 +55,12 @@ module Fiscal
       antes = registro.qtd_fiscal.to_d
       registro.ativo = true if registro.ativo.nil?
       registro.qtd_fiscal = qtd
+      # Materializa a origem na fiscal_produto quando ainda nao tem: usa a do
+      # produto (se houver) senao "0" (Nacional). Assim a tela de edicao, que le
+      # o registro real, nao fica vazia por depender do fallback.
+      if registro.origem.blank?
+        registro.origem = produto.origem.presence || "0"
+      end
       registro.save!(validate: false)
 
       logar_estoque(produto.cod_produto, cod_cor: nil, antes: antes, depois: qtd)

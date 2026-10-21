@@ -113,7 +113,9 @@
         </div>
         <div class="col-md-3">
           <div class="form-floating mb-3 mb-md-0">
-            <%= form.select :origem, options_for_select(origens_para_select, fiscal.origem),
+            <%# Origem padrao "0" (Nacional) quando ainda nao definida; o %>
+            <%# colaborador altera se for diferente. %>
+            <%= form.select :origem, options_for_select(origens_para_select, fiscal.origem.presence || "0"),
                   { include_blank: "Origem" },
                   class: "form-control", id: "modal_origem" %>
             <%= form.label :origem, "Origem" %>
