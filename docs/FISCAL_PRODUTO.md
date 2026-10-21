@@ -108,6 +108,65 @@ EMPRESA=2 rails fiscal:backfill_fiscal_produto           # só confere (dry-run)
 APPLY=1 EMPRESA=2 rails fiscal:backfill_fiscal_produto   # aplica
 ```
 
+## Rake `fiscal:ratear_qtdfiscal`
+
+Rake task em `lib/tasks/ratear_qtdfiscal.rake`. Reescreve
+`empresaproduto.qtdfiscal` (por cor) para que a **soma por produto** bata com
+`fiscal_produto.qtd_fiscal`, distribuindo conforme o **estoque físico**
+(`quantidade`) de cada cor.
+
+Motivo: a `empresaproduto.qtdfiscal` só crescia (entradas de compra com NF, sem
+saídas por este sistema), ficando inflada e divergente do inventário real. O
+rateio põe o fiscal por cor em linha com onde o produto realmente está.
+
+Regras:
+
+- `fiscal_produto.qtd_fiscal` é a **fonte da verdade** (não é alterada).
+- Rateio em **inteiros**: cada cor recebe `floor(total × físico / soma_físico)`;
+  a sobra (para fechar o total exato) vai para a cor de maior físico.
+- Físico negativo (estoque furado) conta como 0 no peso (não rouba saldo).
+- Produto com físico 0 em todas as cores: tudo na cor 1 (ou na única cor).
+- **Não** altera `empresaproduto.quantidade` (estoque físico).
+- Loga cada ajuste em `estoque_logs` (operação `RATEIO_FISC`, origem
+  `EMPRESA_PRODUTO`, `origem_sistema=RAKE`).
+- **DRY-RUN por padrão**, grava com `APPLY=1`; `EMPRESA=n` obrigatório.
+
+Uso:
+```
+EMPRESA=2 rails fiscal:ratear_qtdfiscal           # só confere (dry-run)
+APPLY=1 EMPRESA=2 rails fiscal:ratear_qtdfiscal   # aplica
+```
+
+## Log de estoque fiscal (`estoque_logs`)
+
+As movimentações do estoque **fiscal** (`qtdfiscal`) são auditadas na tabela
+`estoque_logs`, nas colunas `qtdfiscal_antes/movida/depois` (migration
+`20260926000006_add_qtdfiscal_to_estoque_logs`), ao lado das colunas de estoque
+físico (`quantidade_*`). Cada linha registra também `cod_funcionario`,
+`origem_sistema` (`WEB`/`RAKE`) e `observacao`.
+
+- `origem` = **tabela afetada**: `EMPRESA_PRODUTO` (saldo por cor) ou
+  `FISCAL_PRODUTO` (consolidado por produto, `cod_cor` nil).
+- `operacao` = o que aconteceu. Principais: `ENTRADA_FISCAL` (compra com NF, na
+  trigger `tgrf_qtdfiscal_produto`), `SAIDA_FISCAL`/`ESTORNO_FISCAL`
+  (emissão/cancelamento de NF, via `Fiscal::EstoqueFiscalService`), `IMPORT_INV`
+  (importação de inventário) e `RATEIO_FISC` (rake de rateio). A coluna
+  `operacao` tem limite de 15 caracteres.
+
+> Nomes `EMPRESA_PRODUTO`/`FISCAL_PRODUTO` foram padronizados (antes
+> `NFE_FISCAL`/`FISCAL_PROD`) na migration `20260927000005`, que também ajustou
+> o histórico existente.
+
+**Quem grava:**
+
+- Trigger `tgrf_qtdfiscal_produto` (entrada de compra com NF) — grava o log
+  consolidado e captura quem fez (`app.current_funcionario`, fallback na compra)
+  e de onde veio (`app.origem_sistema`, fallback `TRIGGER`).
+- `Fiscal::EstoqueFiscalService` (saída na emissão de NF; estorno no
+  cancelamento) — só mexe no fiscal, nunca no físico.
+- `Fiscal::AplicadorInventario` (importação de inventário).
+- `fiscal:ratear_qtdfiscal` (rateio por físico).
+
 ## Pendências
 
 - **Limpeza (futuro):** remover os campos fiscais do produto global e do

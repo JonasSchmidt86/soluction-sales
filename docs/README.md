@@ -17,7 +17,9 @@ manter tudo num só lugar.
 | [EDITAR_ITENS_VENDA.md](EDITAR_ITENS_VENDA.md) | Edição de itens de venda. |
 | [PAGINAS_LINK_INSTAGRAM.md](PAGINAS_LINK_INSTAGRAM.md) | Páginas "link na bio" por empresa (Linktree) para Instagram. |
 | [MENSAGENS_WHATSAPP.md](MENSAGENS_WHATSAPP.md) | Mensagens de WhatsApp por empresa (placeholders, menu no widget/relatório de aniversariantes, encoding de emoji). |
-| [FISCAL_PRODUTO.md](FISCAL_PRODUTO.md) | Dados fiscais do produto por empresa (tabela fiscal_produto): leitura/escrita, validações, qtd_fiscal e trigger de compra, backfill. |
+| [FISCAL_PRODUTO.md](FISCAL_PRODUTO.md) | Dados fiscais do produto por empresa (tabela fiscal_produto): leitura/escrita, validações, qtd_fiscal e trigger de compra, backfill, rateio e log de estoque fiscal. |
+| [IMPORTACAO_INVENTARIO.md](IMPORTACAO_INVENTARIO.md) | Importação de inventário fiscal (CSV/XLSX): define o saldo fiscal por produto, classifica e importa em lote, com cadastro rápido. |
+| [NOTAS_AVULSAS.md](NOTAS_AVULSAS.md) | Editor de NF (55/65): emissão avulsa, rascunho editável, NF a partir da venda, validação de emissão e CFOP automático. |
 
 ## Convenção
 
