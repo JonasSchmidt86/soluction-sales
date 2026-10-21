@@ -10,7 +10,7 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
     # quando existe, senao o do produto. Assim a lista reflete o que cada
     # empresa tem (Etapa 5 do fiscal_produto).
     base = Produto.where(ativo: true)
-      .joins(sanitize_sql_array([
+      .joins(Produto.sanitize_sql_array([
         "LEFT JOIN fiscal_produto fp ON fp.cod_produto = produto.cod_produto AND fp.cod_empresa = ?",
         cod_empresa
       ]))

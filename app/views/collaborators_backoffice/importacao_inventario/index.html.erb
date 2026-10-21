@@ -1,0 +1,273 @@
+<div class="container-fluid px-3 px-lg-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 py-3 border-bottom">
+    <div>
+      <h1 class="h4 mb-1">Importação de inventário fiscal</h1>
+      <p class="text-muted mb-0">
+        Define o saldo fiscal por produto (não altera o estoque físico).
+        Planilha: <strong>Codigo</strong>, <strong>Nome</strong>, <strong>NCM</strong>,
+        <strong>Quantidade</strong> (obrigatórias) ·
+        <strong>Valor Unitario</strong> e <strong>Valor Venda</strong> (opcionais).
+      </p>
+    </div>
+    <% if @resumo[:total].to_i.positive? %>
+      <%= button_to "Descartar prévia", collaborators_backoffice_limpar_importacao_inventario_path,
+          method: :delete, class: "btn btn-outline-secondary", data: { confirm: "Remover a prévia atual?" } %>
+    <% end %>
+  </div>
+
+  <%# ---- Upload ---- %>
+  <div class="py-3 border-bottom">
+    <%= form_with url: collaborators_backoffice_analisar_importacao_inventario_path,
+                  method: :post, multipart: true, local: true,
+                  html: { class: "row g-2 align-items-end" } do |form| %>
+      <div class="col-md-8 col-xl-6">
+        <%= form.label :arquivo, "Planilha CSV ou XLSX", class: "form-label" %>
+        <%= form.file_field :arquivo, accept: ".csv,.xlsx,.xlsm", required: true, class: "form-control" %>
+        <div class="form-text">
+          Cabeçalho obrigatório: <strong>Codigo | Nome | NCM | Quantidade</strong>.
+          Opcionais: <strong>Valor Unitario</strong> (custo) e <strong>Valor Venda</strong>.
+          Outras colunas são ignoradas.
+        </div>
+      </div>
+      <div class="col-auto">
+        <%= form.submit "Analisar planilha", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @resumo[:total].to_i.positive? %>
+    <%# ---- Resumo ---- %>
+    <div class="row g-3 py-3" data-resumo
+         data-url-importar="<%= collaborators_backoffice_importar_importacao_inventario_path %>">
+      <div class="col-6 col-md-3">
+        <div class="card text-bg-success-subtle border-success">
+          <div class="card-body py-2">
+            <div class="h4 mb-0" data-c-prontos><%= @resumo[:prontos] %></div>
+            <div class="small">Prontos para importar</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-bg-warning-subtle border-warning">
+          <div class="card-body py-2">
+            <div class="h4 mb-0"><%= @resumo[:divergentes] %></div>
+            <div class="small">NCM divergente</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-bg-primary-subtle border-primary">
+          <div class="card-body py-2">
+            <div class="h4 mb-0"><%= @resumo[:novos] %></div>
+            <div class="small">Não cadastrados</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-bg-danger-subtle border-danger">
+          <div class="card-body py-2">
+            <div class="h4 mb-0"><%= @resumo[:erros] %></div>
+            <div class="small">Com erro</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Botao de importar PRONTOS em lote (pre-selecionados). %>
+    <% prontos = @resultados.select { |r| r.status == :pronto } %>
+    <% if prontos.any? %>
+      <div class="d-flex align-items-center gap-3 pb-3">
+        <button type="button" class="btn btn-success" data-importar-prontos
+                data-codigos="<%= prontos.map(&:codigo).join(',') %>">
+          Importar <%= prontos.size %> produto(s) pronto(s)
+        </button>
+        <span class="small text-muted" data-feedback-prontos role="status"></span>
+      </div>
+    <% end %>
+
+    <%# ---- Tabela dos PENDENTES (divergente / novo / erro) ---- %>
+    <%# Ordena: NCM divergente primeiro (so atualizam NCM, mais rapidos de %>
+    <%# confirmar), depois nao cadastrados e por fim os erros. %>
+    <% ordem_status = { ncm_divergente: 0, nao_cadastrado: 1, erro: 2 } %>
+    <% pendentes = @resultados.reject { |r| r.status == :pronto }
+                              .sort_by { |r| [ordem_status[r.status] || 9, r.linha_planilha.to_i] } %>
+    <% if pendentes.any? %>
+      <h2 class="h6 mt-2">Itens que precisam de atenção</h2>
+      <div class="table-responsive border rounded">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Linha</th><th>Código</th><th>Produto</th>
+              <th>NCM atual</th><th>NCM planilha</th><th class="text-end">Qtd</th>
+              <th class="text-end">Custo / Venda</th>
+              <th>Situação</th><th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pendentes.each do |r| %>
+              <tr data-row data-codigo="<%= r.codigo %>" data-linha="<%= r.linha_planilha %>"
+                  data-url-importar="<%= collaborators_backoffice_importar_importacao_inventario_path %>"
+                  data-url-cadastrar="<%= collaborators_backoffice_cadastrar_importacao_inventario_path %>"
+                  data-url-excluir="<%= collaborators_backoffice_excluir_linha_importacao_inventario_path %>">
+                <td><%= r.linha_planilha %></td>
+                <td class="text-nowrap">
+                  <% if r.status == :nao_cadastrado %>
+                    <input name="codigo" class="form-control form-control-sm <%= 'is-invalid' if r.codigo_invalido %>"
+                           style="max-width:120px" value="<%= r.codigo.presence %>" placeholder="auto">
+                    <% if r.codigo_invalido %>
+                      <div class="small text-danger">Código inválido (letras). Apague para gerar ou digite um numérico.</div>
+                    <% else %>
+                      <div class="small text-muted">vazio = gera</div>
+                    <% end %>
+                  <% else %>
+                    <%= r.codigo.presence || "—" %>
+                  <% end %>
+                </td>
+                <td>
+                  <% if r.status == :nao_cadastrado %>
+                    <input name="nome" class="form-control form-control-sm"
+                           value="<%= r.nome_planilha.presence %>" maxlength="100"
+                           placeholder="Nome do novo produto" required>
+                  <% else %>
+                    <%= r.nome_cadastro.presence || r.nome_planilha.presence || "—" %>
+                  <% end %>
+                </td>
+                <td class="text-nowrap"><%= r.ncm_atual.presence || "—" %></td>
+                <td class="text-nowrap"><%= r.ncm_planilha.presence || "—" %></td>
+                <td class="text-end text-nowrap"><%= r.quantidade&.to_s("F") %></td>
+                <td class="text-end text-nowrap small">
+                  <%= r.valor_unitario ? "R$ #{r.valor_unitario.to_s('F')}" : "—" %>
+                  <% if r.valor_venda %><br>venda R$ <%= r.valor_venda.to_s("F") %><% end %>
+                  <% if r.unidade_medida.present? %><br><span class="text-muted">un: <%= r.unidade_medida %></span><% end %>
+                </td>
+                <td>
+                  <% case r.status
+                     when :ncm_divergente %>
+                    <span class="badge text-bg-warning">NCM será atualizado</span>
+                  <% when :nao_cadastrado %>
+                    <span class="badge text-bg-primary">Cadastro rápido</span>
+                  <% when :erro %>
+                    <span class="badge text-bg-danger"><%= r.erros.join("; ") %></span>
+                  <% end %>
+                </td>
+                <td class="text-nowrap">
+                  <% if r.status == :ncm_divergente %>
+                    <button type="button" class="btn btn-sm btn-warning" data-importar-um>Importar</button>
+                  <% elsif r.status == :nao_cadastrado %>
+                    <button type="button" class="btn btn-sm btn-primary" data-cadastrar>Cadastrar + importar</button>
+                  <% end %>
+                  <%# Excluir da previa (visual): util para itens que nao serao importados. %>
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-excluir title="Remover da prévia">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                  <div class="small mt-1" data-feedback role="status"></div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% elsif prontos.any? %>
+      <p class="text-muted">Todos os itens estão prontos. Clique no botão acima para importar.</p>
+    <% else %>
+      <div class="alert alert-success">Nada pendente: tudo desta planilha já foi importado.</div>
+    <% end %>
+  <% end %>
+</div>
+
+<script>
+  (function () {
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function post(url, body) {
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrf, 'Accept': 'application/json' },
+        body: body
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); });
+    }
+
+    // ---- Importar PRONTOS em lote ----
+    var btnProntos = document.querySelector('[data-importar-prontos]');
+    if (btnProntos) {
+      btnProntos.addEventListener('click', function () {
+        var codigos = (btnProntos.dataset.codigos || '').split(',').filter(Boolean);
+        if (!codigos.length) return;
+        if (!confirm('Importar ' + codigos.length + ' produto(s) pronto(s)?')) return;
+        var fb = document.querySelector('[data-feedback-prontos]');
+        var url = document.querySelector('[data-resumo]').dataset.urlImportar;
+        var fd = new FormData();
+        codigos.forEach(function (c) { fd.append('codigos[]', c); });
+        btnProntos.disabled = true; fb.textContent = 'Importando...';
+        post(url, fd).then(function (res) {
+          if (!res.ok) { fb.textContent = res.body.erro || 'Falha.'; btnProntos.disabled = false; return; }
+          fb.textContent = 'Importados ' + res.body.aplicados + ' de ' + res.body.total + '.';
+          btnProntos.remove();
+        }).catch(function () { fb.textContent = 'Falha de conexão.'; btnProntos.disabled = false; });
+      });
+    }
+
+    // ---- Importar UM (NCM divergente) ----
+    document.querySelectorAll('[data-importar-um]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('[data-row]');
+        var fb = row.querySelector('[data-feedback]');
+        var fd = new FormData();
+        fd.append('codigos[]', row.dataset.codigo);
+        btn.disabled = true; fb.className = 'small mt-1 text-muted'; fb.textContent = 'Importando...';
+        post(row.dataset.urlImportar, fd).then(function (res) {
+          var r = res.body.resultados && res.body.resultados[0];
+          if (res.ok && r && r.ok) {
+            row.classList.add('table-success'); fb.className = 'small mt-1 text-success';
+            fb.textContent = 'Importado (saldo ' + r.saldo + ').'; row.remove();
+          } else {
+            fb.className = 'small mt-1 text-danger';
+            fb.textContent = (r && r.erro) || res.body.erro || 'Falha.'; btn.disabled = false;
+          }
+        }).catch(function () { fb.className = 'small mt-1 text-danger'; fb.textContent = 'Falha de conexão.'; btn.disabled = false; });
+      });
+    });
+
+    // ---- Excluir linha da prévia (visual) ----
+    document.querySelectorAll('[data-excluir]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('[data-row]');
+        var fb = row.querySelector('[data-feedback]');
+        if (!confirm('Remover esta linha da prévia? (não será importada)')) return;
+        var fd = new FormData();
+        fd.append('linha_planilha', row.dataset.linha);
+        btn.disabled = true;
+        post(row.dataset.urlExcluir, fd).then(function (res) {
+          if (res.ok && res.body.ok) { row.remove(); }
+          else { fb.className = 'small mt-1 text-danger'; fb.textContent = res.body.erro || 'Falha.'; btn.disabled = false; }
+        }).catch(function () { fb.className = 'small mt-1 text-danger'; fb.textContent = 'Falha de conexão.'; btn.disabled = false; });
+      });
+    });
+
+    // ---- Cadastrar produto novo + importar ----
+    document.querySelectorAll('[data-cadastrar]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('[data-row]');
+        var fb = row.querySelector('[data-feedback]');
+        var nome = row.querySelector('[name="nome"]');
+        if (!nome || !nome.value.trim()) {
+          fb.className = 'small mt-1 text-danger'; fb.textContent = 'Informe o nome.'; return;
+        }
+        var codigoInput = row.querySelector('[name="codigo"]');
+        var fd = new FormData();
+        fd.append('linha_planilha', row.dataset.linha);
+        fd.append('codigo', codigoInput ? codigoInput.value.trim() : '');
+        fd.append('nome', nome.value.trim());
+        btn.disabled = true; fb.className = 'small mt-1 text-muted'; fb.textContent = 'Cadastrando...';
+        post(row.dataset.urlCadastrar, fd).then(function (res) {
+          if (res.ok && res.body.ok) {
+            row.classList.add('table-success'); fb.className = 'small mt-1 text-success';
+            fb.textContent = 'Cadastrado e importado (saldo ' + res.body.saldo + ').'; row.remove();
+          } else {
+            fb.className = 'small mt-1 text-danger'; fb.textContent = res.body.erro || 'Falha.'; btn.disabled = false;
+          }
+        }).catch(function () { fb.className = 'small mt-1 text-danger'; fb.textContent = 'Falha de conexão.'; btn.disabled = false; });
+      });
+    });
+  })();
+</script>

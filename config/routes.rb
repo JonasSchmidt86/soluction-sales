@@ -248,6 +248,17 @@ Rails.application.routes.draw do
     patch 'importacao_estoque_fiscal/salvar_lote', to: 'importacao_estoque_fiscal#salvar_lote', as: :salvar_lote_importacao_estoque_fiscal
     delete 'importacao_estoque_fiscal/limpar', to: 'importacao_estoque_fiscal#limpar', as: :limpar_importacao_estoque_fiscal
 
+    # Importacao de INVENTARIO fiscal (fluxo novo, simplificado): le a planilha
+    # padrao (Codigo/Quantidade/NCM/Produto), classifica (prontos/divergentes/
+    # novos/erro) e grava fiscal_produto.qtd_fiscal + empresaproduto.qtdfiscal
+    # (cor 1). Prontos vao em lote; pendentes sao tratados na tela.
+    get    'importacao_inventario', to: 'importacao_inventario#index',           as: :importacao_inventario
+    post   'importacao_inventario/analisar',  to: 'importacao_inventario#analisar',  as: :analisar_importacao_inventario
+    post   'importacao_inventario/importar',  to: 'importacao_inventario#importar',  as: :importar_importacao_inventario
+    post   'importacao_inventario/cadastrar', to: 'importacao_inventario#cadastrar', as: :cadastrar_importacao_inventario
+    post   'importacao_inventario/excluir_linha', to: 'importacao_inventario#excluir_linha', as: :excluir_linha_importacao_inventario
+    delete 'importacao_inventario/limpar',    to: 'importacao_inventario#limpar',    as: :limpar_importacao_inventario
+
     # Historico de pacotes fiscais gerados (zip de XML salvo p/ baixar/reenviar).
     resources :pacotes_fiscais, only: [:index, :destroy] do
       collection { post :gerar }
