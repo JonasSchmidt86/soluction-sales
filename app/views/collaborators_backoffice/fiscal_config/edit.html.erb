@@ -73,22 +73,72 @@
           </div>
         </div>
 
-        <%# ===== NFC-e (CSC) ===== %>
+        <%# ===== Brasil NFe — Credenciais ===== %>
         <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
-          <i class="fa fa-key me-1"></i> NFC-e — CSC
+          <i class="fa fa-plug me-1"></i> Brasil NFe — Tokens de acesso
         </h6>
+        <p class="text-muted small mb-3">
+          Tokens guardados de forma <strong>criptografada</strong>. Deixe em branco para
+          <strong>manter</strong> o já salvo; preencha apenas para trocar.
+          O ambiente (produção/homologação) é definido no campo <em>Ambiente</em> acima — o token da empresa é o mesmo para os dois.
+        </p>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-floating">
+              <%= f.password_field :brasilnfe_token, class: "form-control", autocomplete: "off",
+                    placeholder: "Token da empresa (transmissão)", value: nil %>
+              <%= f.label :brasilnfe_token, "Token da empresa (transmissão de documentos)" %>
+            </div>
+            <small class="text-muted"><%= @config.brasilnfe_token.present? ? "✔ token da empresa salvo" : "nenhum token da empresa salvo" %></small>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              <%= f.password_field :brasilnfe_user_token, class: "form-control", autocomplete: "off",
+                    placeholder: "Token pessoal (usuário)", value: nil %>
+              <%= f.label :brasilnfe_user_token, "Token pessoal / UserToken (numeração, certificado)" %>
+            </div>
+            <small class="text-muted"><%= @config.brasilnfe_user_token.present? ? "✔ token pessoal salvo" : "nenhum token pessoal salvo" %></small>
+          </div>
+        </div>
+
+        <%# ===== NFC-e (CSC) por ambiente ===== %>
+        <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
+          <i class="fa fa-key me-1"></i> NFC-e — CSC (por ambiente)
+        </h6>
+        <p class="text-muted small mb-3">
+          CSC usado na NFC-e (modelo 65). O <strong>token</strong> é guardado criptografado —
+          deixe em branco para manter o já salvo.
+        </p>
         <div class="row mb-3">
           <div class="col-md-3">
             <div class="form-floating">
-              <%= f.text_field :csc_id, class: "form-control" %>
-              <%= f.label :csc_id, "ID do CSC (idToken)" %>
+              <%= f.text_field :csc_id_producao, class: "form-control", autocomplete: "off" %>
+              <%= f.label :csc_id_producao, "Ident. CSC Produção" %>
             </div>
           </div>
           <div class="col-md-9">
             <div class="form-floating">
-              <%= f.text_field :csc_token, class: "form-control" %>
-              <%= f.label :csc_token, "CSC (token)" %>
+              <%= f.password_field :csc_token_producao, class: "form-control", autocomplete: "off",
+                    placeholder: "Código CSC de produção", value: nil %>
+              <%= f.label :csc_token_producao, "Código CSC Produção" %>
             </div>
+            <small class="text-muted"><%= @config.csc_token_producao.present? ? "✔ CSC de produção salvo" : "nenhum CSC de produção salvo" %></small>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= f.text_field :csc_id_homologacao, class: "form-control", autocomplete: "off" %>
+              <%= f.label :csc_id_homologacao, "Ident. CSC Homologação" %>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <div class="form-floating">
+              <%= f.password_field :csc_token_homologacao, class: "form-control", autocomplete: "off",
+                    placeholder: "Código CSC de homologação", value: nil %>
+              <%= f.label :csc_token_homologacao, "Código CSC Homologação" %>
+            </div>
+            <small class="text-muted"><%= @config.csc_token_homologacao.present? ? "✔ CSC de homologação salvo" : "nenhum CSC de homologação salvo" %></small>
           </div>
         </div>
 
@@ -134,7 +184,8 @@
 
         <div class="alert alert-warning small">
           <i class="fa fa-triangle-exclamation me-1"></i>
-          O arquivo do certificado (.pfx) e credenciais do provedor não ficam aqui — serão configurados de forma segura na integração (Parte B).
+          O arquivo do certificado (.pfx) ainda é enviado pelo painel do provedor — o upload pela tela está em avaliação.
+          Os tokens acima são guardados criptografados neste sistema (não dependem mais de arquivo de configuração).
         </div>
 
         <div class="d-flex justify-content-end gap-2 border-top pt-3">

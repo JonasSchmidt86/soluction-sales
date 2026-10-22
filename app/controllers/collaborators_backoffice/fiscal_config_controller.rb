@@ -117,12 +117,23 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
   end
 
   def config_params
-    params.require(:fiscal_config).permit(
+    permitidos = params.require(:fiscal_config).permit(
       :ambiente, :regime_tributario, :crt,
       :serie_nfe, :serie_nfce, :proximo_numero_nfe, :proximo_numero_nfce,
-      :csc_id, :csc_token, :certificado_nome, :certificado_validade,
-      :provedor, :ativo, :email_xml
-    ).merge(cod_empresa: current_collaborator.cod_empresa)
+      :certificado_nome, :certificado_validade,
+      :provedor, :ativo, :email_xml,
+      # Credenciais Brasil NFe (token da empresa + UserToken) + CSC por ambiente.
+      :brasilnfe_token, :brasilnfe_user_token,
+      :csc_id_producao, :csc_token_producao, :csc_id_homologacao, :csc_token_homologacao
+    )
+    # Campos de credencial: em branco NAO apaga o valor ja salvo (o usuario deixa
+    # vazio quando nao quer trocar). So atualiza quando vem preenchido. Assim a
+    # tela pode exibir o campo vazio (nao reexpor o segredo) sem zerar o guardado.
+    %i[brasilnfe_token brasilnfe_user_token
+       csc_token_producao csc_token_homologacao].each do |campo|
+      permitidos.delete(campo) if permitidos[campo].blank?
+    end
+    permitidos.merge(cod_empresa: current_collaborator.cod_empresa)
   end
 
   # A tela de Configuracao e o que ATIVA o modulo fiscal de uma empresa, entao

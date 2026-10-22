@@ -21,14 +21,19 @@ module Fiscal
 
     attr_reader :ambiente, :token
 
-    # config: FiscalConfig (opcional nesta fase). token: sobrescreve o das credentials.
+    # config: FiscalConfig. token/user_token: sobrescrevem o do config (uso em testes).
+    #
+    # Token POR EMPRESA (unico): vem do FiscalConfig (criptografado no banco). O
+    # ambiente vai no TipoAmbiente de cada requisicao (nao e token por ambiente).
+    # Fallback nas credentials globais fica no proprio FiscalConfig (migracao
+    # suave da empresa que ja emitia com o token global).
     def initialize(config: nil, token: nil, user_token: nil)
       @config = config
       @ambiente = (config&.producao? ? "1" : "2") # default homologacao
-      @token = token || credentials_token
+      @token = token || config&.brasilnfe_token_efetivo || credentials_token
       # UserToken (token da CONTA, nao da empresa). So e preciso nos endpoints de
-      # /services/empresa (numeracao, certificado...). Vem das credentials.
-      @user_token = user_token || credentials_user_token
+      # /services/empresa (numeracao, certificado...).
+      @user_token = user_token || config&.brasilnfe_user_token_efetivo || credentials_user_token
     end
 
     # Base de /services/empresa (gestao da empresa: numeracao, certificado...).

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_29_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_30_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -574,6 +574,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_000002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "email_xml", limit: 120, comment: "e-mail do contador para envio do pacote de XMLs"
+    t.text "brasilnfe_token", comment: "Token Brasil NFe da empresa (transmissao) — criptografado"
+    t.text "brasilnfe_user_token", comment: "UserToken Brasil NFe da conta — criptografado"
+    t.string "csc_id_producao", limit: 20, comment: "Ident. CSC producao (idToken)"
+    t.text "csc_token_producao", comment: "CSC producao — criptografado"
+    t.string "csc_id_homologacao", limit: 20, comment: "Ident. CSC homologacao (idToken)"
+    t.text "csc_token_homologacao", comment: "CSC homologacao — criptografado"
     t.index ["cod_empresa"], name: "idx_fiscal_config_empresa", unique: true
   end
 

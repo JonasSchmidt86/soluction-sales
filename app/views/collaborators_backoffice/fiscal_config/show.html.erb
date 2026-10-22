@@ -30,7 +30,19 @@
           <div class="col-md-6">
             <p><strong>NF-e:</strong> série <%= @config.serie_nfe %>, próximo nº <%= @config.proximo_numero_nfe %></p>
             <p><strong>NFC-e:</strong> série <%= @config.serie_nfce %>, próximo nº <%= @config.proximo_numero_nfce %></p>
-            <p><strong>CSC:</strong> <%= @config.csc_id.present? ? "configurado (ID #{@config.csc_id})" : "—" %></p>
+            <p><strong>Token Brasil NFe:</strong>
+              <% if @config.credenciais_proprias? %>
+                <span class="badge bg-success">configurado</span>
+              <% elsif @config.brasilnfe_token_efetivo.present? %>
+                <span class="badge bg-secondary">herdado (global)</span>
+              <% else %>
+                <span class="badge bg-danger">ausente</span>
+              <% end %>
+            </p>
+            <p><strong>CSC (<%= @config.producao? ? "produção" : "homologação" %>):</strong>
+              <%= @config.csc_id_ambiente.present? ? "ID #{@config.csc_id_ambiente}" : "—" %>
+              <%= "· token salvo" if @config.csc_token_ambiente.present? %>
+            </p>
             <p><strong>Certificado:</strong>
               <%= @config.certificado_nome.presence || "—" %>
               <% if @config.certificado_validade %>
