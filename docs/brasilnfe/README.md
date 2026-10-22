@@ -19,12 +19,21 @@ o agente NÃO lê PDF binário, só os `.md`):
 
 | Tema | PDF | Markdown (ler este) |
 |------|-----|---------------------|
-| Emissão NF-e/NFC-e | `NF-e e NFC-e - ...pdf` | **`nf-e-nfce.md`** |
+| Emissão NF-e/NFC-e (resumo curado) | `NF-e e NFC-e - ...pdf` | **`nf-e-nfce.md`** |
+| **Emissão — referência COMPLETA de campos** | (mesmo PDF, abas expandidas) | **`EnviarNotaFiscal-referencia.md`** |
 | Consultas/preview/arquivos | `Consultas - ...pdf` | **`consultas.md`** |
 | Eventos (cancel/CC-e/inutilização/manifestação/reforma) | `Eventos NF-e _ NFC-e - ...pdf` | **`eventos.md`** |
 | Empresas/certificado/**numeração** | `Empresas - ...pdf` | **`empresas.md`** |
 
 Ao precisar de detalhes de um endpoint, LEIA o `.md` correspondente.
+
+> **`EnviarNotaFiscal-referencia.md`** é a transcrição completa (pdftotext) de
+> TODOS os campos de cada objeto do corpo de EnviarNotaFiscal — Cliente
+> (`IndicadorIe`/`Ie`), Produtos, Imposto (ICMS/PIS/COFINS/IPI/IBSCBS),
+> Transporte (`Veiculo`/`Reboque`/`Volumes`), Pagamentos, Cobrança, Entrega,
+> Exporta, Retenções. Use quando precisar do **nome exato** de um campo que o
+> resumo `nf-e-nfce.md` não detalha. Gerado a partir do PDF com todas as abas
+> expandidas (21/10/2026).
 
 ## EnviarNotaFiscal — fatos-chave (NF-e 55 / NFC-e 65)
 

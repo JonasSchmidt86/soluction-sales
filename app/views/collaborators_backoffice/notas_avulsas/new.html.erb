@@ -36,7 +36,7 @@
         <%# emitir usa a URL de create/update; "Salvar rascunho" aponta via JS. %>
         <%# "Em elaboracao" = rascunho ou erro (falha de validacao local): ambos %>
         <%# editaveis pelo editor. Mantem o nome editando_rascunho no resto da view. %>
-        <% editando_rascunho = @documento&.persisted? && %w[rascunho erro].include?(@documento&.status) %>
+        <% editando_rascunho = @documento&.persisted? && %w[rascunho erro rejeitada].include?(@documento&.status) %>
         <% form_url = editando_rascunho ? collaborators_backoffice_notas_avulsa_path(@documento) : collaborators_backoffice_notas_avulsas_path %>
         <% form_method = editando_rascunho ? :patch : :post %>
         <%= form_with url: form_url, method: form_method, local: true, id: "formAvulsa" do %>
@@ -57,9 +57,27 @@
               <div class="form-floating">
                 <%= select_tag :finalidade,
                       options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, (@finalidade_sel.presence || 1).to_i),
-                      class: "form-select" %>
+                      id: "finalidade", class: "form-select" %>
                 <label>Finalidade</label>
               </div>
+            </div>
+          </div>
+
+          <%# ---- Operacao com consumidor final? (indFinal) ---- %>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <%= select_tag :consumidor_final,
+                      options_for_select([["Automático (pelo destinatário)", ""],
+                                          ["Sim", "sim"], ["Não", "nao"]],
+                                         @consumidor_final_sel.to_s),
+                      id: "consumidorFinal", class: "form-select" %>
+                <label>Operação com consumidor final?</label>
+              </div>
+              <small class="text-muted">
+                Consumidor final = quem compra para uso próprio (não para revenda).
+                Destinatário pessoa física ou PJ não contribuinte → "Sim".
+              </small>
             </div>
           </div>
 
@@ -88,70 +106,263 @@
             <small id="clienteSelecionado" class="text-success"><%= "Selecionado: #{@nome_pessoa_sel}" if @nome_pessoa_sel.present? %></small>
           </div>
 
-          <%# ---- Pagamento + NF referenciada ---- %>
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <div class="form-floating">
-                <%= select_tag :forma_pagamento,
-                      options_for_select(
-                        DocumentoFiscal::FORMAS_PAGAMENTO.map { |cod, nome| ["#{cod} - #{nome}", cod] },
-                        (@forma_pagamento_sel.presence || "01")),
-                      id: "formaPagamento", class: "form-select" %>
-                <label>Forma de pagamento</label>
+          <%# ---- Abas: Produtos / Pagamento / Transporte ---- %>
+          <ul class="nav nav-tabs mt-4" id="abasNf" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tab-produtos-btn" data-bs-toggle="tab"
+                      data-bs-target="#tab-produtos" type="button" role="tab">
+                <i class="fa fa-box me-1"></i> Produtos
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-pagamento-btn" data-bs-toggle="tab"
+                      data-bs-target="#tab-pagamento" type="button" role="tab">
+                <i class="fa fa-money-bill-wave me-1"></i> Pagamento
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-transporte-btn" data-bs-toggle="tab"
+                      data-bs-target="#tab-transporte" type="button" role="tab">
+                <i class="fa fa-truck me-1"></i> Transporte
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content border border-top-0 p-3" id="abasNfContent">
+
+            <%# ===== ABA PRODUTOS ===== %>
+            <div class="tab-pane fade show active" id="tab-produtos" role="tabpanel">
+              <div class="table-responsive tabela-itens-nf">
+                <table class="table table-sm table-bordered align-top">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:28%;">Produto</th>
+                      <th>Cor</th>
+                      <th style="width:16%;">Perfil tributário</th>
+                      <th style="width:9%;">CFOP</th>
+                      <th style="width:9%;">Qtd</th>
+                      <th style="width:12%;">Vl Unitário</th>
+                      <th style="width:12%;">Total</th>
+                      <th style="width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="itensBody"></tbody>
+                </table>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="addItem">
+                <i class="fa fa-plus me-1"></i> Adicionar produto
+              </button>
+
+              <div class="text-end mt-3">
+                <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
               </div>
             </div>
-            <%# Descricao do pagamento: so aparece/exige quando "99 - Outros". %>
-            <div class="col-md-8" id="descricaoPagamentoWrap"
-                 style="<%= 'display:none;' unless @forma_pagamento_sel == '99' %>">
-              <div class="form-floating">
-                <%= text_field_tag :descricao_pagamento, @descricao_pagamento_sel,
-                      id: "descricaoPagamento", maxlength: 60, class: "form-control",
-                      placeholder: "Descreva a forma de pagamento" %>
-                <label>Descrição do pagamento (obrigatória p/ "Outros")</label>
+
+            <%# ===== ABA PAGAMENTO ===== %>
+            <div class="tab-pane fade" id="tab-pagamento" role="tabpanel">
+              <% pag_sel = Array(@pagamentos_sel).first || {} %>
+              <% forma_sel = (pag_sel["forma"] || pag_sel[:forma]).presence || "99" %>
+              <% valor_sel = (pag_sel["valor"] || pag_sel[:valor]) %>
+              <% desc_sel  = (pag_sel["descricao"] || pag_sel[:descricao]) %>
+              <p class="text-muted small mb-3">
+                <strong>Uma forma de pagamento</strong> por nota. Default
+                <strong>"99 - Outros"</strong> (não mostra duplicatas ao cliente).
+                Para parcelar e aparecer no DANFE como duplicatas, escolha uma
+                <strong>forma a prazo</strong> (ex.: Boleto, Duplicata) e gere as
+                parcelas abaixo.
+              </p>
+              <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                  <label class="form-label small mb-1">Forma de pagamento</label>
+                  <%= select_tag "pagamentos[0][forma]",
+                        options_for_select(DocumentoFiscal::FORMAS_PAGAMENTO.map { |cod, nome| ["#{cod} - #{nome}", cod] }, forma_sel),
+                        id: "pagForma", class: "form-select" %>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">Valor pago (R$)</label>
+                  <input type="text" name="pagamentos[0][valor]" id="pagValor" class="form-control"
+                         value="<%= valor_sel.present? ? MoedaBr.format(valor_sel) : '' %>"
+                         placeholder="total da nota">
+                </div>
+                <div class="col-md-4" id="pagDescWrap" style="<%= 'display:none;' unless forma_sel.to_s == '99' %>">
+                  <label class="form-label small mb-1">Descrição (p/ "Outros")</label>
+                  <input type="text" name="pagamentos[0][descricao]" id="pagDesc" class="form-control"
+                         maxlength="60" placeholder="Ex.: permuta" value="<%= desc_sel %>">
+                </div>
+              </div>
+              <small class="text-muted">
+                Deixe o valor em branco para usar o total da nota automaticamente.
+              </small>
+
+              <%# ---- Cobranca / Duplicatas (a prazo) ---- %>
+              <%# So aparece para forma a prazo (≠ 99 "Outros" e ≠ 90 "Sem pagamento"). %>
+              <% forma_a_prazo = forma_sel.to_s != "99" && forma_sel.to_s != "90" %>
+              <div id="cobrancaWrap" style="<%= 'display:none;' unless forma_a_prazo %>">
+              <hr class="my-3">
+              <h6 class="mb-1"><i class="fa fa-file-invoice-dollar me-1"></i> Duplicatas (cobrança a prazo)</h6>
+              <p class="text-muted small mb-2">
+                Gere as parcelas para aparecerem no DANFE como duplicatas. Só são
+                enviadas quando a forma de pagamento for a prazo (diferente de
+                "99 - Outros" e "90 - Sem pagamento"). Número da fatura:
+                <code><%= @fatura_numero_base.presence || "—" %></code>.
+              </p>
+              <%= hidden_field_tag :fatura_numero, @fatura_numero_base, id: "faturaNumero" %>
+              <div class="row g-2 align-items-end mb-2">
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">Nº de parcelas</label>
+                  <input type="number" min="1" step="1" id="parcNum" class="form-control" value="1">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">1º vencimento</label>
+                  <input type="date" id="parcPrimeiroVenc" class="form-control">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">Intervalo (dias)</label>
+                  <input type="number" min="1" step="1" id="parcIntervalo" class="form-control" value="30">
+                </div>
+                <div class="col-md-3">
+                  <button type="button" class="btn btn-warning btn-sm w-100" id="gerarParcelas">
+                    <i class="fa fa-calculator me-1"></i> Gerar parcelas
+                  </button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:50px;"></th>
+                      <th>Parcela</th>
+                      <th>Vencimento</th>
+                      <th style="width:28%;">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody id="parcelasBody">
+                    <tr id="parcelasVazio"><td colspan="4" class="text-muted text-center">Nenhuma duplicata (nota à vista / sem duplicata).</td></tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colspan="3" class="text-end">Soma das parcelas</th>
+                      <th>R$ <span id="somaParcelas">0,00</span></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="limparParcelas">
+                <i class="fa fa-trash-can me-1"></i> Limpar duplicatas
+              </button>
+              </div><%# /#cobrancaWrap %>
+            </div>
+
+            <%# ===== ABA TRANSPORTE (estilo "Forma de envio"; envio ao provedor virá depois) ===== %>
+            <div class="tab-pane fade" id="tab-transporte" role="tabpanel">
+              <p class="text-muted small mb-3">
+                <i class="fa fa-circle-info me-1"></i> Forma de envio. O
+                preenchimento já é salvo no rascunho; o envio ao provedor será
+                habilitado na próxima etapa.
+              </p>
+
+              <%# Modalidade do frete + busca de transportadora (Pessoa), lado a lado. %>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold mb-1">Frete por conta</label>
+                  <% modalidades = { "9" => "9 - Sem transporte / Sem ocorrência", "0" => "0 - Frete por conta do emitente (CIF)", "1" => "1 - Frete por conta do destinatário (FOB)", "2" => "2 - Por conta de terceiros", "3" => "3 - Transporte próprio (remetente)", "4" => "4 - Transporte próprio (destinatário)" } %>
+                  <%= select_tag "transporte[modalidade_frete]",
+                        options_for_select(modalidades.map { |c, n| [n, c] }, (@transporte_sel["modalidade_frete"].presence || "9")),
+                        id: "modalidadeFrete", class: "form-select" %>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold mb-1">Transportadora
+                    <span class="text-muted small">(opcional)</span>
+                  </label>
+                  <div class="position-relative">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="fa fa-magnifying-glass"></i></span>
+                      <input type="text" id="transpBusca" class="form-control"
+                             placeholder="Pesquise pelo transportador" autocomplete="off"
+                             value="<%= @transporte_sel["transportadora_nome"] %>">
+                      <button type="button" class="btn btn-outline-secondary" id="btnLimparTransp" title="Limpar">
+                        <i class="fa fa-xmark"></i>
+                      </button>
+                    </div>
+                    <input type="hidden" name="transporte[transportadora_cod_pessoa]"
+                           id="transpCodPessoa" value="<%= @transporte_sel["transportadora_cod_pessoa"] %>">
+                    <%# snapshot do nome, p/ reexibir sem refazer a busca %>
+                    <input type="hidden" name="transporte[transportadora_nome]"
+                           id="transpNome" value="<%= @transporte_sel["transportadora_nome"] %>">
+                    <div id="transpLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <%# Veiculo: so aparece quando ha transportadora selecionada. %>
+              <div id="veiculoWrap" style="<%= 'display:none;' if @transporte_sel["transportadora_cod_pessoa"].blank? %>">
+                <h6 class="text-muted">Veículo (opcional)</h6>
+                <div class="row">
+                  <div class="col-md-4 mb-2">
+                    <input type="text" name="transporte[placa]" class="form-control"
+                           placeholder="Placa" value="<%= @transporte_sel["placa"] %>">
+                  </div>
+                  <div class="col-md-2 mb-2">
+                    <input type="text" name="transporte[placa_uf]" class="form-control" maxlength="2"
+                           placeholder="UF placa" value="<%= @transporte_sel["placa_uf"] %>">
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <input type="text" name="transporte[rntc]" class="form-control"
+                           placeholder="RNTC (registro ANTT)" value="<%= @transporte_sel["rntc"] %>">
+                  </div>
+                </div>
+              </div>
+
+              <%# Toggle "Possui volumes?" revela os campos de volume. %>
+              <div class="form-check form-switch mt-3 mb-2">
+                <% tem_volumes = @transporte_sel["possui_volumes"].to_s == "1" || @transporte_sel["volume_qtd"].present? %>
+                <input class="form-check-input" type="checkbox" role="switch"
+                       id="possuiVolumes" name="transporte[possui_volumes]" value="1"
+                       <%= "checked" if tem_volumes %>>
+                <label class="form-check-label fw-semibold" for="possuiVolumes">Possui volumes?</label>
+              </div>
+
+              <div id="volumesWrap" style="<%= 'display:none;' unless tem_volumes %>">
+                <div class="row">
+                  <div class="col-md-3 mb-2">
+                    <label class="form-label small mb-1">Quantidade de volumes</label>
+                    <input type="text" name="transporte[volume_qtd]" class="form-control"
+                           placeholder="Ex.: 2" value="<%= @transporte_sel["volume_qtd"] %>">
+                  </div>
+                  <div class="col-md-5 mb-2">
+                    <label class="form-label small mb-1">Espécie</label>
+                    <input type="text" name="transporte[volume_especie]" class="form-control"
+                           placeholder="Ex.: caixas, pacotes" value="<%= @transporte_sel["volume_especie"] %>">
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label small mb-1">Marca</label>
+                    <input type="text" name="transporte[volume_marca]" class="form-control"
+                           value="<%= @transporte_sel["volume_marca"] %>">
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label small mb-1">Número do volume</label>
+                    <input type="text" name="transporte[volume_numero]" class="form-control"
+                           placeholder="Ex.: VOL001" value="<%= @transporte_sel["volume_numero"] %>">
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label small mb-1">Peso líquido (kg)</label>
+                    <input type="text" name="transporte[peso_liquido]" class="form-control"
+                           value="<%= @transporte_sel["peso_liquido"] %>">
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label class="form-label small mb-1">Peso bruto (kg)</label>
+                    <input type="text" name="transporte[peso_bruto]" class="form-control"
+                           value="<%= @transporte_sel["peso_bruto"] %>">
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">
-              Nota fiscal referenciada
-              <span class="text-muted small">(chave de 44 dígitos — devolução / outra saída)</span>
-            </label>
-            <%= text_field_tag :chave_referenciada, @chave_referenciada_sel,
-                  id: "chaveReferenciada", maxlength: 44, class: "form-control font-monospace",
-                  placeholder: "Cole a chave de acesso da NF de compra (44 dígitos)",
-                  inputmode: "numeric", autocomplete: "off" %>
-            <small id="chaveReferenciadaHint" class="text-muted"></small>
-          </div>
+          <%# ===== Fora das abas: sempre visiveis ===== %>
 
-          <%# ---- Itens (planilha estilo devolucao) ---- %>
-          <h5 class="mt-4">Produtos</h5>
-          <div class="table-responsive tabela-itens-nf">
-            <table class="table table-sm table-bordered align-top">
-              <thead class="table-light">
-                <tr>
-                  <th style="width:28%;">Produto</th>
-                  <th>Cor</th>
-                  <th style="width:16%;">Perfil tributário</th>
-                  <th style="width:9%;">CFOP</th>
-                  <th style="width:9%;">Qtd</th>
-                  <th style="width:12%;">Vl Unitário</th>
-                  <th style="width:12%;">Total</th>
-                  <th style="width:40px;"></th>
-                </tr>
-              </thead>
-              <tbody id="itensBody"></tbody>
-            </table>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" id="addItem">
-            <i class="fa fa-plus me-1"></i> Adicionar produto
-          </button>
-
-          <div class="text-end mt-3">
-            <strong>Total da nota: R$ <span id="totalNota">0,00</span></strong>
-          </div>
-
-          <%# ---- Informacoes adicionais ---- %>
+          <%# Informacoes complementares + observacoes ao fisco. %>
           <div class="row mt-4">
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold">Informações complementares</label>
@@ -168,6 +379,24 @@
               <small class="text-muted">Campo infAdFisco (não aparece para o cliente).</small>
             </div>
           </div>
+
+          <%# NF de compra referenciada — so em devolucao/outra saida (finalidade %>
+          <%# diferente de 1 "Normal"). Escondido para nota Normal. %>
+          <% fin_ref = (@finalidade_sel.presence || 1).to_i != 1 %>
+          <div class="mb-3" id="nfRefWrap" style="<%= 'display:none;' unless fin_ref %>">
+            <label class="form-label fw-semibold">
+              Nota fiscal referenciada
+              <span class="text-muted small">(chave de 44 dígitos — devolução / outra saída)</span>
+            </label>
+            <%= text_field_tag :chave_referenciada, @chave_referenciada_sel,
+                  id: "chaveReferenciada", maxlength: 44, class: "form-control font-monospace",
+                  placeholder: "Cole a chave de acesso da NF de compra (44 dígitos)",
+                  inputmode: "numeric", autocomplete: "off" %>
+            <small id="chaveReferenciadaHint" class="text-muted"></small>
+          </div>
+
+          <%# Cobranca (duplicatas) salva, para o JS repopular as parcelas. %>
+          <script type="application/json" id="cobrancaPreenchida"><%== (@cobranca_sel.presence || nil).to_json %></script>
 
           <%# Painel de pendencias: lista o que impede a emissao (CFOP, estoque, %>
           <%# dados basicos). Preenchido pelo JS validarNota(). Oculto quando OK. %>
@@ -738,20 +967,167 @@
     });
   }
 
-  // ---------- Cabecalho fiscal: pagamento + NF referenciada ----------
-  // Descricao do pagamento so aparece/faz sentido quando "99 - Outros" (xPag).
+  // ---------- Pagamento (forma unica: forma + valor + descricao p/ 99) ----------
   (function () {
-    var forma = document.getElementById('formaPagamento');
-    var wrap  = document.getElementById('descricaoPagamentoWrap');
-    var desc  = document.getElementById('descricaoPagamento');
-    if (!forma || !wrap) return;
-    function toggle() {
+    var forma = document.getElementById('pagForma');
+    var descWrap = document.getElementById('pagDescWrap');
+    var desc  = document.getElementById('pagDesc');
+    var valor = document.getElementById('pagValor');
+    var cobrWrap = document.getElementById('cobrancaWrap');
+    if (!forma) return;
+
+    // Descricao so aparece/faz sentido para "99 - Outros".
+    function toggleDesc() {
       var outros = forma.value === '99';
-      wrap.style.display = outros ? '' : 'none';
+      if (descWrap) descWrap.style.display = outros ? '' : 'none';
       if (!outros && desc) desc.value = '';
     }
-    forma.addEventListener('change', toggle);
-    toggle();
+
+    // Duplicatas so aparecem para forma a prazo (≠ 99 e ≠ 90). Ao aparecer,
+    // carrega as parcelas salvas (ex.: vindas da venda) se ainda nao houver.
+    // Ao esconder, limpa as parcelas (senao ficariam "fantasma", gerando
+    // pendencia de soma sem aparecer na tela).
+    function toggleCobranca() {
+      var aPrazo = forma.value !== '99' && forma.value !== '90';
+      if (!cobrWrap) return;
+      cobrWrap.style.display = aPrazo ? '' : 'none';
+      if (aPrazo) {
+        if (window.__carregarParcelasSalvas) window.__carregarParcelasSalvas();
+      } else if (window.__limparParcelas) {
+        window.__limparParcelas();
+      }
+    }
+
+    forma.addEventListener('change', function () {
+      toggleDesc(); toggleCobranca(); validarNota();
+    });
+    if (valor) valor.addEventListener('input', validarNota);
+    toggleDesc(); toggleCobranca();
+  })();
+
+  // ---------- Cobranca / Duplicatas (parcelas a prazo, estilo venda) ----------
+  (function () {
+    var body   = document.getElementById('parcelasBody');
+    var vazio  = document.getElementById('parcelasVazio');
+    var somaEl = document.getElementById('somaParcelas');
+    var btnGerar = document.getElementById('gerarParcelas');
+    var btnLimpar = document.getElementById('limparParcelas');
+    if (!body || !btnGerar) return;
+
+    function totalNotaNum() { return parseBR(document.getElementById('totalNota').textContent); }
+
+    function somaParc() {
+      var s = 0;
+      body.querySelectorAll('tr.parc-row').forEach(function (tr) {
+        s += parseBR(tr.querySelector('.parc-valor').value);
+      });
+      return s;
+    }
+
+    // Numero-base da fatura: vem do hidden (cod_vendaempresa da venda, ou o
+    // numero da cobranca salva). Vazio em nota avulsa pura — nesse caso as
+    // duplicatas ficam so com o numero sequencial (sem prefixo inventado).
+    function faturaBase() {
+      var f = document.getElementById('faturaNumero');
+      return (f && f.value) ? f.value : '';
+    }
+
+    function reindexParc() {
+      var linhas = body.querySelectorAll('tr.parc-row');
+      if (vazio) vazio.style.display = linhas.length ? 'none' : '';
+      linhas.forEach(function (tr, i) {
+        tr.querySelector('.parc-numero').name = 'parcelas[' + i + '][numero]';
+        tr.querySelector('.parc-venc').name   = 'parcelas[' + i + '][vencimento]';
+        tr.querySelector('.parc-valor').name  = 'parcelas[' + i + '][valor]';
+      });
+      if (somaEl) somaEl.textContent = fmtBR(somaParc());
+    }
+
+    // Adiciona uma linha de parcela. numero/venc(ISO yyyy-mm-dd)/valor.
+    function addParcela(numero, vencISO, valor) {
+      var tr = document.createElement('tr');
+      tr.className = 'parc-row';
+      tr.innerHTML =
+        '<td><button type="button" class="btn btn-outline-danger btn-sm parc-rm"><i class="fa fa-trash-can"></i></button></td>' +
+        '<td><input type="text" class="form-control form-control-sm parc-numero" value="' + (numero || '').replace(/"/g, '&quot;') + '"></td>' +
+        '<td><input type="date" class="form-control form-control-sm parc-venc" value="' + (vencISO || '') + '"></td>' +
+        '<td><input type="text" class="form-control form-control-sm parc-valor" value="' + fmtBR(parseFloat(valor) || 0) + '"></td>';
+      body.appendChild(tr);
+      tr.querySelector('.parc-rm').addEventListener('click', function () { tr.remove(); reindexParc(); validarNota(); });
+      tr.querySelector('.parc-valor').addEventListener('input', function () { reindexParc(); validarNota(); });
+      tr.querySelector('.parc-venc').addEventListener('input', function () { validarNota(); });
+      tr.querySelector('.parc-numero').addEventListener('input', function () { reindexParc(); });
+    }
+
+    // Gera N parcelas: divisao igual, resto de centavos na ULTIMA; datas a cada
+    // "intervalo" dias a partir do 1o vencimento (mesma logica da venda).
+    btnGerar.addEventListener('click', function () {
+      var n = parseInt(document.getElementById('parcNum').value, 10) || 0;
+      var primeiro = document.getElementById('parcPrimeiroVenc').value; // yyyy-mm-dd (input date)
+      var intervalo = parseInt(document.getElementById('parcIntervalo').value, 10) || 30;
+      var total = totalNotaNum();
+      if (n < 1) { alert('Informe o número de parcelas.'); return; }
+      if (!primeiro) { alert('Informe o 1º vencimento.'); return; }
+      if (total <= 0) { alert('Adicione produtos (o total da nota é zero).'); return; }
+
+      // Limpa as parcelas atuais antes de gerar.
+      body.querySelectorAll('tr.parc-row').forEach(function (tr) { tr.remove(); });
+
+      var base = faturaBase();
+      var parcela = Math.floor((total / n) * 100) / 100; // 2 casas, floor
+      var acumulado = 0;
+      var d = new Date(primeiro + 'T00:00:00'); // local, sem fuso
+      for (var i = 0; i < n; i++) {
+        var valor = (i === n - 1) ? Math.round((total - acumulado) * 100) / 100 : parcela;
+        acumulado += parcela;
+        var iso = d.toISOString().slice(0, 10);
+        // Numero da duplicata: "<base>-N" quando ha base (venda); senao so "N".
+        var numero = base ? (base + '-' + (i + 1)) : String(i + 1);
+        addParcela(numero, iso, valor);
+        d.setDate(d.getDate() + intervalo);
+      }
+      reindexParc();
+      validarNota();
+    });
+
+    function limparTodas() {
+      body.querySelectorAll('tr.parc-row').forEach(function (tr) { tr.remove(); });
+      reindexParc();
+      validarNota();
+    }
+    // Botao "Limpar duplicatas": limpa E impede o recarregamento automatico das
+    // salvas (o usuario quer a tabela vazia de proposito).
+    btnLimpar.addEventListener('click', function () { limparTodas(); jaCarregou = true; });
+    // Exposto para o bloco de pagamento ESCONDER (forma 99/90): limpa a tabela
+    // mas LIBERA o recarregamento (jaCarregou=false), para que, ao voltar a uma
+    // forma a prazo, as parcelas salvas sejam recarregadas automaticamente.
+    window.__limparParcelas = function () { limparTodas(); jaCarregou = false; };
+
+    // Parcelas salvas (edicao/reexibicao, ex.: vindas da venda) no JSON.
+    var salvas = [];
+    try { salvas = JSON.parse(document.getElementById('cobrancaPreenchida').textContent || 'null'); } catch (e) {}
+
+    // Carrega as parcelas salvas na tabela (uma vez). Usado na init quando a
+    // secao ja esta visivel, e tambem quando o usuario muda a forma para a
+    // prazo e a secao aparece (traz as parcelas da venda sem reclicar "Gerar").
+    var jaCarregou = false;
+    function carregarSalvas() {
+      if (jaCarregou) return;
+      if (!salvas || !salvas.parcelas || !salvas.parcelas.length) return;
+      if (body.querySelectorAll('tr.parc-row').length) { jaCarregou = true; return; }
+      salvas.parcelas.forEach(function (p) {
+        addParcela(p.numero, (p.vencimento || '').slice(0, 10), p.valor);
+      });
+      reindexParc();
+      jaCarregou = true;
+    }
+    window.__carregarParcelasSalvas = carregarSalvas;
+
+    // Na init, so carrega se a secao ja estiver visivel (forma a prazo salva).
+    // Com forma 99/90 a secao comeca escondida; as parcelas entram quando o
+    // usuario trocar para uma forma a prazo (via __carregarParcelasSalvas).
+    var wrap = document.getElementById('cobrancaWrap');
+    if (wrap && wrap.style.display !== 'none') carregarSalvas();
   })();
 
   // Chave referenciada: aceita so digitos; dica visual do tamanho (precisa 44).
@@ -776,6 +1152,89 @@
     }
     chave.addEventListener('input', check);
     check();
+
+    // NF referenciada so em devolucao/outra saida (finalidade != 1 "Normal").
+    // Em nota Normal esconde o campo E limpa a chave (nao referencia nada).
+    var finalidade = document.getElementById('finalidade');
+    var wrap = document.getElementById('nfRefWrap');
+    function toggleNfRef() {
+      if (!wrap) return;
+      var mostra = finalidade && finalidade.value.toString() !== '1';
+      wrap.style.display = mostra ? '' : 'none';
+      if (!mostra) { chave.value = ''; check(); }
+    }
+    if (finalidade) finalidade.addEventListener('change', toggleNfRef);
+    toggleNfRef();
+  })();
+
+  // ---------- Transporte: busca de transportadora + veiculo + volumes ----------
+  (function () {
+    var busca   = document.getElementById('transpBusca');
+    var lista   = document.getElementById('transpLista');
+    var codHid  = document.getElementById('transpCodPessoa');
+    var nomeHid = document.getElementById('transpNome');
+    var btnLimpar = document.getElementById('btnLimparTransp');
+    var veiculo = document.getElementById('veiculoWrap');
+    var possui  = document.getElementById('possuiVolumes');
+    var volumes = document.getElementById('volumesWrap');
+
+    // Veiculo so faz sentido com transportadora selecionada.
+    function mostrarVeiculo() {
+      if (veiculo) veiculo.style.display = (codHid && codHid.value) ? '' : 'none';
+    }
+    // Volumes aparecem conforme o toggle "Possui volumes?".
+    function mostrarVolumes() {
+      if (volumes) volumes.style.display = (possui && possui.checked) ? '' : 'none';
+    }
+
+    if (possui) possui.addEventListener('change', function () { mostrarVolumes(); validarNota(); });
+    mostrarVeiculo(); mostrarVolumes();
+
+    // Trocar a modalidade do frete revalida (ex.: sair/entrar em "9 - Sem
+    // transporte" com transportadora/volumes informados -> pendencia).
+    var modalidade = document.getElementById('modalidadeFrete');
+    if (modalidade) modalidade.addEventListener('change', validarNota);
+
+    if (busca) {
+      busca.addEventListener('input', function () {
+        var q = this.value.trim();
+        if (codHid)  codHid.value = '';
+        if (nomeHid) nomeHid.value = '';
+        mostrarVeiculo();
+        if (q.length < 2) { lista.style.display = 'none'; return; }
+        fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
+          .then(function (r) { return r.json(); })
+          .then(function (ps) {
+            lista.innerHTML = '';
+            ps.forEach(function (p) {
+              var it = document.createElement('button');
+              it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+              it.textContent = p.nome + (p.cpf_cnpj ? ' — ' + p.cpf_cnpj : '');
+              it.addEventListener('click', function () {
+                if (codHid)  codHid.value = p.cod_pessoa;
+                if (nomeHid) nomeHid.value = p.nome;
+                busca.value = p.nome;
+                lista.style.display = 'none';
+                mostrarVeiculo();
+                validarNota(); // transportadora informada -> revalida transporte
+              });
+              lista.appendChild(it);
+            });
+            lista.style.display = ps.length ? 'block' : 'none';
+          });
+      });
+    }
+
+    if (btnLimpar) {
+      btnLimpar.addEventListener('click', function () {
+        if (busca)   busca.value = '';
+        if (codHid)  codHid.value = '';
+        if (nomeHid) nomeHid.value = '';
+        if (lista)   lista.style.display = 'none';
+        mostrarVeiculo();
+        validarNota(); // transportadora removida -> revalida transporte
+      });
+    }
   })();
 })();
 </script>

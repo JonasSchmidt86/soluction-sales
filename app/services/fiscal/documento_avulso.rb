@@ -14,23 +14,52 @@ module Fiscal
   class DocumentoAvulso
     attr_reader :empresa, :pessoa,
                 :info_adicional, :info_adicional_fisco,
-                :forma_pagamento, :descricao_pagamento, :chave_referenciada
+                :pagamentos, :transporte, :cobranca, :chave_referenciada,
+                :consumidor_final_override
 
+    # pagamentos: lista opcional de { forma:, valor:, descricao: } (uma ou mais
+    # formas, como no painel Brasil NFe). Vazia = o builder usa o padrao (1
+    # pagamento = total da nota).
+    # transporte: hash opcional (modalidade/transportadora/volumes).
+    # cobranca: hash opcional { fatura: {...}, parcelas: [{numero,vencimento,valor}] }
+    # (duplicatas a prazo; so vai ao provedor quando a forma e a prazo).
+    # consumidor_final: "sim"/"nao"/nil. nil = automatico (inferido pelo builder).
     def initialize(empresa:, itens:, cliente: nil,
                    info_adicional: nil, info_adicional_fisco: nil,
-                   forma_pagamento: nil, descricao_pagamento: nil,
-                   chave_referenciada: nil)
+                   pagamentos: nil, transporte: nil, cobranca: nil,
+                   chave_referenciada: nil, consumidor_final: nil)
       @empresa = empresa
       @pessoa  = cliente
+      cf = consumidor_final.to_s.strip.downcase
+      @consumidor_final_override = (cf if %w[sim nao].include?(cf))
       # Passa o cod_empresa para cada item resolver o perfil via fiscal_produto.
       @itens   = Array(itens).map { |h| ItemAvulso.new(h, cod_empresa: empresa&.cod_empresa) }
       # Cabecalho fiscal opcional (lido pelo DocumentoFiscalBuilder via duck typing).
       @info_adicional       = info_adicional.presence
       @info_adicional_fisco = info_adicional_fisco.presence
-      @forma_pagamento      = forma_pagamento.presence
-      @descricao_pagamento  = descricao_pagamento.presence
+      @pagamentos           = normalizar_pagamentos(pagamentos)
+      @transporte           = transporte.presence
+      @cobranca             = cobranca.presence
       @chave_referenciada   = chave_referenciada.to_s.gsub(/\D/, "").presence
     end
+
+    private
+
+    # Normaliza a lista de pagamentos vinda do form/documento para
+    # [{ forma:, valor:, descricao: }], descartando linhas sem forma ou valor<=0.
+    # Retorna nil quando nao ha nenhum pagamento valido (builder usa o padrao).
+    def normalizar_pagamentos(lista)
+      itens = Array(lista).filter_map do |p|
+        h = p.respond_to?(:symbolize_keys) ? p.symbolize_keys : p
+        forma = h[:forma].to_s.strip
+        valor = h[:valor].to_d
+        next if forma.blank? || valor <= 0
+        { forma: forma, valor: valor, descricao: h[:descricao].to_s.strip.presence }
+      end
+      itens.presence
+    end
+
+    public
 
     # Interface compatível com Venda:
     def cod_venda

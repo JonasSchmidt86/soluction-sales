@@ -55,8 +55,10 @@
                     <% if d.autorizada? && d.danfe_base64.present? %>
                       <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
                     <% end %>
-                    <%# Em elaboracao (rascunho ou erro de validacao): editar e emitir. %>
-                    <% if %w[rascunho erro].include?(d.status) %>
+                    <%# Em elaboracao (rascunho, erro de validacao ou rejeitada %>
+                    <%# pela SEFAZ): editar e reenviar. Rejeitada = sem valor %>
+                    <%# fiscal, corrige o dado e reemite o mesmo documento. %>
+                    <% if %w[rascunho erro rejeitada].include?(d.status) %>
                       <%= link_to "Editar", edit_collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-warning" %>
                       <%= button_to "Emitir", emitir_collaborators_backoffice_notas_avulsa_path(d),
                                     method: :post, class: "btn btn-sm btn-success",

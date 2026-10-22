@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_28_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -438,6 +438,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000001) do
     t.string "forma_pagamento", limit: 2, comment: "Forma de pagamento (tPag SEFAZ): 01,03,04,15,17,90,99..."
     t.string "descricao_pagamento", limit: 60, comment: "Descricao do pagamento (xPag), obrigatoria quando tPag=99"
     t.string "chave_referenciada", limit: 44, comment: "Chave de acesso da NF referenciada (NFReferencia)"
+    t.jsonb "pagamentos", comment: "Lista de pagamentos da nota [{forma,valor,descricao}] (tPag/VlPago)"
+    t.jsonb "transporte", comment: "Dados de transporte/frete (modalidade, transportadora, volumes)"
+    t.jsonb "cobranca", comment: "Cobranca da NF (fatura + duplicatas/parcelas com vencimento)"
+    t.string "consumidor_final", limit: 3, comment: "Operacao com consumidor final (indFinal): sim/nao/nil(auto)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
     t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"

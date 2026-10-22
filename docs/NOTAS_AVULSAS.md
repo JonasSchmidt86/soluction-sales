@@ -74,29 +74,40 @@ Pendências verificadas:
 - **Estoque fiscal consolidado:** soma as quantidades do mesmo produto na nota e
   compara com `fiscal_produto.qtd_fiscal` (saldo fiscal por produto). Estoque
   insuficiente vira pendência e marca as linhas envolvidas.
+- **Pagamentos:** se houver pagamentos lançados, a soma deve bater com o total.
+- **Duplicatas:** se houver parcelas, a soma deve bater com o total.
+- **Transporte:** se informou transportadora/volumes mas a modalidade está
+  "9 - Sem transporte", exige escolher a modalidade (0-4) ou remover os dados.
 
 NCM/CSOSN **não** entram aqui — o `EmissorFiscal` cuida e lança
 `DadosFiscaisIncompletos` se faltar.
 
 ## Cabeçalho fiscal (pagamento, observações, NF referenciada)
 
-Além dos itens e do destinatário, o editor grava no cabeçalho da nota (colunas
-em `documento_fiscal`, migration `20260928000001`; persistem no rascunho):
+Além dos itens e do destinatário, o editor tem abas **Produtos / Pagamento /
+Transporte** e grava no cabeçalho da nota (colunas em `documento_fiscal`,
+migrations `20260928000001/02/03`; tudo persiste no rascunho):
 
-- **Forma de pagamento** (`forma_pagamento` → tPag): select com a tabela SEFAZ
-  (01 Dinheiro, 03 Crédito, 04 Débito, 15 Boleto, 17 PIX, 90 Sem pagamento,
-  99 Outros...). Default **01** quando nada é escolhido. Uma forma à vista por
-  nota; parcelas/múltiplas formas ficam para depois. `90` envia `VlPago` 0.
-  `99` exige **descrição** (`descricao_pagamento` → xPag), senão rejeição 441 —
-  o campo de descrição só aparece ao escolher "Outros".
-- **Informações complementares** (`info_adicional` → Observacao/infCpl): texto
-  que **aparece no DANFE**.
-- **Observações ao fisco** (`info_adicional_fisco` → ObservacaoFisco/infAdFisco):
-  não aparece para o cliente.
-- **NF referenciada** (`chave_referenciada` → NFReferencia): chave de acesso de
-  44 dígitos de uma NF-e de compra, para devolução ou outra saída que precise
-  referenciar a nota original. Entrada manual (cole a chave); o campo aceita só
-  dígitos e sinaliza quando chega a 44.
+- **Pagamentos** (`pagamentos`, jsonb → bloco `pag`/tPag): lista de formas
+  (forma + valor), como no painel Brasil NFe. **Default: "99 - Outros"** (1
+  pagamento = total da nota, com `Descricao` "Outros"). Com o default, a nota
+  **não mostra duplicatas ao cliente**. A soma dos pagamentos lançados deve
+  bater com o total (validado no painel).
+- **Duplicatas / Cobrança** (`cobranca`, jsonb → bloco `cobr`): parcelas com
+  vencimento (gerador estilo venda: nº de parcelas + 1º vencimento + intervalo →
+  divisão igual, resto na última, datas a cada N dias). **É o que imprime as
+  parcelas no DANFE.** Só é enviada quando há parcelas **e** a forma de pagamento
+  é a prazo (≠ 99 e ≠ 90); nesse caso o `pag` vai com `IndicadorPagamento=1`.
+  Número da fatura: `cod_vendaempresa`; parcelas `cod_vendaempresa-1..n`.
+  Ao gerar a NF de uma venda, as parcelas são pré-carregadas de `venda.contas`,
+  mas **só vão ao cliente se a forma na NF for a prazo** — no default (99) ficam
+  salvas e não são enviadas.
+- **Transporte** (`transporte`, jsonb → bloco `transp`): modalidade do frete +
+  transportadora (busca de Pessoa) + veículo + volumes. Ver seção Transporte.
+- **Informações complementares** (`info_adicional` → Observacao/infCpl): aparece
+  no DANFE. **Observações ao fisco** (`info_adicional_fisco` → ObservacaoFisco).
+- **NF referenciada** (`chave_referenciada` → NFReferencia): chave de 44 dígitos
+  de uma NF-e de compra, para devolução/outra saída. Entrada manual.
 
 O caminho é: form → controller (`cabecalho_param`) → `DocumentoAvulso` →
 `DocumentoFiscalBuilder#montar` → `BrasilNfeAdapter#montar_payload`. Uma Venda

@@ -24,6 +24,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @finalidades = DocumentoFiscal::FINALIDADES
     # Itens re-exibidos quando o create falha (preserva o que o usuario digitou).
     @itens_preenchidos = @itens_preenchidos || []
+    @pagamentos_sel = @pagamentos_sel || []
+    @transporte_sel = @transporte_sel || {}
+    @cobranca_sel = @cobranca_sel || {}
+    @fatura_numero_base = @fatura_numero_base # nil no new puro (avulsa)
   end
 
   # GET .../notas_avulsas/resolver_cfop?cod_produto=&cod_operacao_fiscal=&cod_perfil_tributario=
@@ -204,7 +208,11 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         status:            "rascunho",
         cod_funcionario:   current_collaborator.cod_funcionario,
         cod_pessoa_rascunho: venda.cod_pessoa,
-        cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+        cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal,
+        # Pre-preenche as parcelas (duplicatas) a partir das contas da venda.
+        # Fica salvo, mas so VAI ao cliente se a forma de pagamento na NF for a
+        # prazo (≠ 99/90). No default (99) a duplicata nao e enviada.
+        cobranca:          cobranca_da_venda(venda)
       )
       gravar_itens_rascunho(documento, itens)
     end
@@ -244,12 +252,19 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @cod_pessoa_sel = @documento.cod_pessoa_rascunho
     # Nome do destinatario para o form reexibir o campo visivel (nao so o hidden).
     @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
-    # Cabecalho fiscal (observacoes, pagamento, NF referenciada) para reexibir.
+    # Cabecalho fiscal (observacoes, pagamentos, transporte, NF ref) p/ reexibir.
     @info_adicional_sel       = @documento.info_adicional
     @info_adicional_fisco_sel = @documento.info_adicional_fisco
-    @forma_pagamento_sel      = @documento.forma_pagamento
-    @descricao_pagamento_sel  = @documento.descricao_pagamento
+    @pagamentos_sel           = Array(@documento.pagamentos)
+    @transporte_sel           = @documento.transporte || {}
+    @cobranca_sel             = @documento.cobranca || {}
+    @consumidor_final_sel     = @documento.consumidor_final
     @chave_referenciada_sel   = @documento.chave_referenciada
+    # Numero-base da fatura: da cobranca salva; senao o cod_vendaempresa da venda
+    # vinculada (NF de venda). Usado pelo JS ao (re)gerar parcelas, para numerar
+    # as duplicatas como <base>-1..n em vez de um numero generico.
+    @fatura_numero_base = @cobranca_sel.dig("fatura", "numero").presence ||
+                          numero_base_da_venda(@documento.cod_venda)
     @itens_preenchidos = itens_do_rascunho(@documento)
     render :new
   end
@@ -302,7 +317,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     modelo = modelo_param
     cliente = resolver_cliente
     itens   = itens_param
-    res = validar_detalhado(modelo: modelo, cod_pessoa: cliente&.cod_pessoa, itens: itens)
+    res = validar_detalhado(modelo: modelo, cod_pessoa: cliente&.cod_pessoa, itens: itens,
+                            pagamentos: pagamentos_param, transporte: transporte_param,
+                            cobranca: cobranca_param)
     render json: { pendencias: res[:mensagens], marcadores: res[:marcadores],
                    ok: res[:mensagens].empty? }
   rescue => e
@@ -434,19 +451,22 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
                                 .find(params[:id])
   end
 
-  # Nota em elaboracao = ainda editavel/emissivel pelo editor. Inclui "erro"
-  # (falha de validacao local antes de transmitir): o usuario corrige e reemite,
-  # sem perder o documento. "rascunho" = nunca transmitida. Nao inclui enviada/
-  # autorizada/cancelada (ja tem andamento/valor fiscal).
-  EM_ELABORACAO = %w[rascunho erro].freeze
+  # Nota em elaboracao = ainda editavel/emissivel pelo editor:
+  #  - "rascunho": nunca transmitida.
+  #  - "erro": falha de validacao local antes de transmitir.
+  #  - "rejeitada": a SEFAZ recusou (ex.: IE invalida, dado errado) — NAO tem
+  #    valor fiscal; o usuario corrige o cadastro/dados e reenvia o MESMO doc.
+  # Nao inclui enviada/autorizada/cancelada (ja tem andamento/valor fiscal).
+  EM_ELABORACAO = %w[rascunho erro rejeitada].freeze
   def em_elaboracao?(documento)
     EM_ELABORACAO.include?(documento.status)
   end
 
   # Compat: retorna so a LISTA DE MENSAGENS (usado na emissao). Internamente
   # delega para validar_detalhado, que tambem devolve os marcadores de campo.
-  def validar_pendencias(modelo:, cod_pessoa:, itens:)
-    validar_detalhado(modelo: modelo, cod_pessoa: cod_pessoa, itens: itens)[:mensagens]
+  def validar_pendencias(modelo:, cod_pessoa:, itens:, pagamentos: nil, transporte: nil, cobranca: nil)
+    validar_detalhado(modelo: modelo, cod_pessoa: cod_pessoa, itens: itens,
+                      pagamentos: pagamentos, transporte: transporte, cobranca: cobranca)[:mensagens]
   end
 
   # Valida pendencias de EMISSAO no backend (fonte de verdade; o front chama via
@@ -458,7 +478,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   # destinatario: bool } } — os marcadores permitem ao front pintar de vermelho
   # os campos exatos com problema. campos: "cor","quantidade","valor","cfop".
   # NAO valida NCM/CSOSN (o EmissorFiscal cuida e lanca DadosFiscaisIncompletos).
-  def validar_detalhado(modelo:, cod_pessoa:, itens:)
+  def validar_detalhado(modelo:, cod_pessoa:, itens:, pagamentos: nil, transporte: nil, cobranca: nil)
     mensagens = []
     marc_itens = Hash.new { |h, k| h[k] = [] }
     marc_dest = false
@@ -522,6 +542,45 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
 
     mensagens << "Adicione ao menos um produto." if com_produto.zero?
 
+    # Pagamentos (opcional): quando o usuario lanca pagamentos, a SOMA precisa
+    # bater com o total da nota (senao a SEFAZ rejeita). Sem pagamentos lancados,
+    # o builder usa o padrao (1 pagamento = total) e nada e validado aqui.
+    pags = Array(pagamentos)
+    if pags.any?
+      total_nota = itens.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+      soma_pag = pags.sum { |p| (p["valor"] || p[:valor]).to_d }
+      if (soma_pag - total_nota).abs >= BigDecimal("0.01")
+        mensagens << "Pagamentos (#{MoedaBr.format(soma_pag)}) não batem com o total da nota (#{MoedaBr.format(total_nota)})."
+      end
+    end
+
+    # Duplicatas (cobranca): quando ha parcelas, a SOMA delas deve bater com o
+    # total da nota (a SEFAZ valida). So checa quando ha parcelas informadas.
+    parcelas = cobranca.is_a?(Hash) ? Array(cobranca["parcelas"]) : []
+    if parcelas.any?
+      total_nota = itens.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+      soma_parc = parcelas.sum { |p| (p["valor"] || p[:valor]).to_d }
+      if (soma_parc - total_nota).abs >= BigDecimal("0.01")
+        mensagens << "Duplicatas (#{MoedaBr.format(soma_parc)}) não batem com o total da nota (#{MoedaBr.format(total_nota)})."
+      end
+    end
+
+    # Transporte: modalidade "9" (sem transporte) e INCOMPATIVEL com informar
+    # transportadora/volumes (a SEFAZ nao aceita e esses dados sao descartados).
+    # Se o colaborador preencheu transporte mas deixou a modalidade em 9, obriga
+    # a resolver: trocar a modalidade (0-4) OU remover os dados do transporte.
+    t = transporte.is_a?(Hash) ? transporte : {}
+    if t.present?
+      modalidade = t["modalidade_frete"].to_s
+      tem_transportadora = t["transportadora_cod_pessoa"].to_s.strip.present?
+      tem_volumes = t["possui_volumes"].to_s == "1" ||
+                    %w[volume_qtd volume_especie volume_marca volume_numero
+                       peso_liquido peso_bruto].any? { |k| t[k].to_s.strip.present? }
+      if (tem_transportadora || tem_volumes) && (modalidade.blank? || modalidade == "9")
+        mensagens << "Transporte: você informou transportadora/volumes, mas o frete está como \"Sem transporte (9)\". Selecione a modalidade do frete (0 a 4) ou remova os dados do transporte."
+      end
+    end
+
     # Estoque fiscal CONSOLIDADO por produto (fiscal_produto.qtd_fiscal).
     qtd_por_produto.each do |cod_produto, qtd_total|
       fp = FiscalProduto.para(current_collaborator.cod_empresa, cod_produto)
@@ -566,7 +625,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     # estoque fiscal consolidado. Se houver pendencia, NAO emite; mantem o
     # rascunho para corrigir.
     pendencias = validar_pendencias(modelo: documento.modelo,
-                                    cod_pessoa: documento.cod_pessoa_rascunho, itens: itens)
+                                    cod_pessoa: documento.cod_pessoa_rascunho, itens: itens,
+                                    pagamentos: documento.pagamentos,
+                                    transporte: documento.transporte,
+                                    cobranca: documento.cobranca)
     if pendencias.any?
       redirect_to edit_collaborators_backoffice_notas_avulsa_path(documento),
                   alert: "Não é possível emitir. #{pendencias.join(' | ')}" and return
@@ -679,12 +741,16 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @finalidade_sel = params[:finalidade]
     @cod_pessoa_sel = params[:cod_pessoa]
     @nome_pessoa_sel = Pessoa.find_by(cod_pessoa: @cod_pessoa_sel)&.nome if @cod_pessoa_sel.present?
-    # Cabecalho fiscal digitado (observacoes, pagamento, NF referenciada).
+    # Cabecalho fiscal digitado (observacoes, pagamentos, transporte, NF ref).
     @info_adicional_sel       = params[:info_adicional]
     @info_adicional_fisco_sel = params[:info_adicional_fisco]
-    @forma_pagamento_sel      = params[:forma_pagamento]
-    @descricao_pagamento_sel  = params[:descricao_pagamento]
+    @pagamentos_sel           = pagamentos_param || []
+    @transporte_sel           = transporte_param || {}
+    @cobranca_sel             = cobranca_param || {}
+    @consumidor_final_sel     = params[:consumidor_final]
     @chave_referenciada_sel   = params[:chave_referenciada]
+    @fatura_numero_base       = params[:fatura_numero].presence ||
+                                @cobranca_sel.dig("fatura", "numero")
     @itens_preenchidos = itens_raw
     flash.now[:alert] = mensagem
     render :new, status: :unprocessable_entity
@@ -714,19 +780,128 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     end
   end
 
-  # Cabecalho fiscal do form (observacoes, forma de pagamento e NF referenciada),
-  # ja limpo/normalizado. Usado para persistir no rascunho e montar o avulso.
-  # Vazio quando o form nao enviou nada (retrocompativel).
+  # Cabecalho fiscal do form (observacoes, pagamentos, transporte e NF
+  # referenciada), ja limpo/normalizado. Usado para persistir no rascunho e
+  # montar o avulso. Vazio quando o form nao enviou nada (retrocompativel).
   def cabecalho_param
-    forma = params[:forma_pagamento].to_s.strip.presence
     chave = params[:chave_referenciada].to_s.gsub(/\D/, "").presence
+    cf = params[:consumidor_final].to_s.strip.downcase
     {
       info_adicional:       params[:info_adicional].to_s.strip.first(2000).presence,
       info_adicional_fisco: params[:info_adicional_fisco].to_s.strip.first(2000).presence,
-      forma_pagamento:      (forma if DocumentoFiscal::FORMAS_PAGAMENTO.key?(forma)),
-      descricao_pagamento:  params[:descricao_pagamento].to_s.strip.first(60).presence,
+      pagamentos:           pagamentos_param,
+      transporte:           transporte_param,
+      cobranca:             cobranca_param,
+      consumidor_final:     (cf if %w[sim nao].include?(cf)),
       chave_referenciada:   ((chave if chave&.length == 44)) # so grava chave de 44 digitos
     }
+  end
+
+  # Cobranca (duplicatas a prazo) do form: params[:parcelas] = [{numero,
+  # vencimento, valor}]. Descarta linhas sem vencimento ou valor <= 0. Monta a
+  # fatura (numero do cod_vendaempresa quando houver) com a soma. Retorna nil
+  # quando nao ha parcelas (builder nao envia cobr).
+  def cobranca_param
+    brutos = params[:parcelas]
+    brutos = brutos.values if brutos.is_a?(ActionController::Parameters)
+    parcelas = Array(brutos).filter_map do |p|
+      h = p.respond_to?(:permit) ? p.permit(:numero, :vencimento, :valor).to_h : p.to_h
+      venc = normalizar_data(h["vencimento"])
+      valor = MoedaBr.parse(h["valor"])
+      next if venc.blank? || valor.to_d <= 0
+      { "numero" => h["numero"].to_s.strip.first(60).presence,
+        "vencimento" => venc, "valor" => valor.to_d.to_f }
+    end
+    return nil if parcelas.empty?
+
+    total = parcelas.sum { |x| x["valor"].to_d }
+    { "fatura" => { "numero" => params[:fatura_numero].to_s.strip.first(60).presence,
+                    "valor" => total.to_f, "valor_liquido" => total.to_f },
+      "parcelas" => parcelas }
+  end
+
+  # Numero-base da fatura a partir da venda vinculada: cod_vendaempresa (ou
+  # cod_venda como fallback). nil quando a NF nao vem de venda (avulsa pura).
+  def numero_base_da_venda(cod_venda)
+    return nil if cod_venda.blank?
+    venda = Venda.where(cod_empresa: current_collaborator.cod_empresa).find_by(cod_venda: cod_venda)
+    return nil if venda.nil?
+    (venda.cod_vendaempresa.presence || venda.cod_venda).to_s
+  end
+
+  # Converte data do form (dd/mm/aaaa ou aaaa-mm-dd) para ISO aaaa-mm-dd. nil se invalida.
+  def normalizar_data(v)
+    s = v.to_s.strip
+    return nil if s.blank?
+    if s =~ %r{\A(\d{2})/(\d{2})/(\d{4})\z}
+      "#{$3}-#{$2}-#{$1}"
+    elsif s =~ /\A\d{4}-\d{2}-\d{2}\z/
+      s
+    else
+      (Date.parse(s).strftime("%Y-%m-%d") rescue nil)
+    end
+  end
+
+  # Pagamento do form: params[:pagamentos] = [{forma, valor, descricao}] (forma
+  # UNICA por nota). Valor em branco => usa o total da nota (default). Descarta
+  # quando a forma nao e valida. Retorna nil quando nao ha forma informada
+  # (builder usa o padrao: 99 = total da nota).
+  def pagamentos_param
+    brutos = params[:pagamentos]
+    brutos = brutos.values if brutos.is_a?(ActionController::Parameters)
+    total = total_itens_param
+    lista = Array(brutos).filter_map do |p|
+      h = p.respond_to?(:permit) ? p.permit(:forma, :valor, :descricao).to_h : p.to_h
+      forma = h["forma"].to_s.strip
+      next unless DocumentoFiscal::FORMAS_PAGAMENTO.key?(forma)
+      valor = MoedaBr.parse(h["valor"]).to_d
+      # Valor em branco/0: usa o total da nota (exceto forma 90 = sem pagamento).
+      valor = total if valor <= 0 && forma != "90"
+      { "forma" => forma, "valor" => valor.to_f,
+        "descricao" => h["descricao"].to_s.strip.first(60).presence }
+    end
+    lista.presence
+  end
+
+  # Total dos itens do form (base para o valor do pagamento quando em branco).
+  def total_itens_param
+    itens_param.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+  end
+
+  # Dados de transporte do form (jsonb). A transportadora e uma Pessoa do
+  # cadastro (busca igual ao destinatario): guardamos cod_pessoa + um snapshot
+  # do nome. Veiculo so faz sentido com transportadora; volumes so quando o
+  # toggle "possui_volumes" esta ligado. Por ora apenas captura/persiste; o
+  # envio ao provedor sera ligado na etapa de transporte.
+  #
+  # Retorna nil quando so ha a modalidade "9 - sem transporte" e nada mais
+  # (nada relevante a guardar).
+  def transporte_param
+    t = params[:transporte]
+    return nil if t.blank?
+    t = t.permit(:modalidade_frete, :transportadora_cod_pessoa, :transportadora_nome,
+                 :placa, :placa_uf, :rntc,
+                 :possui_volumes, :volume_qtd, :volume_especie, :volume_marca,
+                 :volume_numero, :peso_liquido, :peso_bruto).to_h
+
+    # Sem transportadora selecionada: descarta os dados de veiculo (so fazem
+    # sentido com transportadora).
+    if t["transportadora_cod_pessoa"].to_s.strip.blank?
+      t.delete("transportadora_cod_pessoa")
+      t.delete("transportadora_nome")
+      %w[placa placa_uf rntc].each { |k| t.delete(k) }
+    end
+
+    # Volumes so quando o toggle esta ligado; senao descarta os campos.
+    if t["possui_volumes"].to_s != "1"
+      %w[possui_volumes volume_qtd volume_especie volume_marca volume_numero
+         peso_liquido peso_bruto].each { |k| t.delete(k) }
+    end
+
+    t = t.reject { |_, v| v.to_s.strip.blank? }
+    # So "modalidade_frete=9" (sem transporte) e nada mais = nada a guardar.
+    return nil if t.empty? || (t.keys == ["modalidade_frete"] && t["modalidade_frete"].to_s == "9")
+    t
   end
 
   # Monta o DocumentoAvulso (fonte neutra p/ o builder) com itens + cabecalho.
@@ -736,8 +911,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       empresa: empresa, cliente: cliente, itens: itens,
       info_adicional:       cab[:info_adicional],
       info_adicional_fisco: cab[:info_adicional_fisco],
-      forma_pagamento:      cab[:forma_pagamento],
-      descricao_pagamento:  cab[:descricao_pagamento],
+      pagamentos:           cab[:pagamentos],
+      transporte:           cab[:transporte],
+      cobranca:             cab[:cobranca],
+      consumidor_final:     cab[:consumidor_final],
       chave_referenciada:   cab[:chave_referenciada]
     )
   end
@@ -748,8 +925,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     {
       info_adicional:       documento.info_adicional,
       info_adicional_fisco: documento.info_adicional_fisco,
-      forma_pagamento:      documento.forma_pagamento,
-      descricao_pagamento:  documento.descricao_pagamento,
+      pagamentos:           documento.pagamentos,
+      transporte:           documento.transporte,
+      cobranca:             documento.cobranca,
+      consumidor_final:     documento.consumidor_final,
       chave_referenciada:   documento.chave_referenciada
     }
   end
@@ -760,8 +939,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     {
       info_adicional:       cab[:info_adicional],
       info_adicional_fisco: cab[:info_adicional_fisco],
-      forma_pagamento:      cab[:forma_pagamento],
-      descricao_pagamento:  cab[:descricao_pagamento],
+      pagamentos:           cab[:pagamentos],
+      transporte:           cab[:transporte],
+      cobranca:             cab[:cobranca],
+      consumidor_final:     cab[:consumidor_final],
       chave_referenciada:   cab[:chave_referenciada]
     }
   end
@@ -797,6 +978,34 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         cfop:                  nil
       }
     end
+  end
+
+  # Monta a cobranca (duplicatas) a partir das contas a receber da venda
+  # (contaspagrec). Numero da parcela = "<cod_vendaempresa>-<n>". Retorna nil
+  # quando a venda nao tem contas. So vira duplicata NA NF se a forma de
+  # pagamento escolhida for a prazo (≠ 99/90) — senao fica salvo mas nao e enviado.
+  def cobranca_da_venda(venda)
+    contas = venda.contas.to_a
+    return nil if contas.empty?
+
+    base = venda.cod_vendaempresa.presence || venda.cod_venda
+    parcelas = contas.each_with_index.filter_map do |c, i|
+      venc = c.dtvencimento
+      valor = c.valorparcela.to_d
+      next if venc.blank? || valor <= 0
+      numero = c.numeroparcela.presence || (i + 1)
+      { "numero" => "#{base}-#{numero}",
+        "vencimento" => venc.strftime("%Y-%m-%d"),
+        "valor" => valor.to_f }
+    end
+    return nil if parcelas.empty?
+
+    total = parcelas.sum { |x| x["valor"].to_d }
+    { "fatura" => { "numero" => base.to_s, "valor" => total.to_f, "valor_liquido" => total.to_f },
+      "parcelas" => parcelas }
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#cobranca_da_venda] venda #{venda&.cod_venda}: #{e.class} - #{e.message}")
+    nil
   end
 
   # Grava os itens (parseados por itens_param) como documento_fiscal_item do

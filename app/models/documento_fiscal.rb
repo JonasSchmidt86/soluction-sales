@@ -19,17 +19,24 @@ class DocumentoFiscal < ApplicationRecord
     "02" => "Cheque",
     "03" => "Cartão de Crédito",
     "04" => "Cartão de Débito",
-    "05" => "Crédito Loja",
+    "05" => "Crédito Loja (Private Label)/Crediário",
     "10" => "Vale Alimentação",
     "11" => "Vale Refeição",
+    "12" => "Vale Presente",
     "13" => "Vale Combustível",
+    "14" => "Duplicata Mercantil",
     "15" => "Boleto Bancário",
     "16" => "Depósito Bancário",
     "17" => "PIX (dinâmico)",
     "18" => "Transferência (carteira digital)",
     "19" => "Programa de fidelidade/cashback",
     "20" => "PIX (estático)",
+    "21" => "Crédito em Loja",
+    "22" => "Pagamento eletrônico não informado (falha de hardware)",
+    "23" => "PIX (automático)",
+    "24" => "TEF Book Transfer",
     "90" => "Sem pagamento",
+    "91" => "Pagamento Posterior",
     "99" => "Outros"
   }.freeze
 
@@ -167,8 +174,12 @@ class DocumentoFiscal < ApplicationRecord
   # documento, lendo os estoque_logs de SAIDA_FISCAL. Soma por produto+cor (caso
   # haja mais de um log). Quantidade = total baixado (movida negativa -> positiva).
   def itens_estoque_fiscal_do_log
+    # origem: EMPRESA_PRODUTO e o nome atual (padronizado na migration
+    # 20260927000005). NFE_FISCAL e o nome LEGADO — mantido no filtro para
+    # cobrir bancos com historico ainda nao migrado (ex.: producao).
     logs = EstoqueLog.where(cod_referencia: cod_documento_fiscal,
-                            operacao: "SAIDA_FISCAL", origem: "NFE_FISCAL")
+                            operacao: "SAIDA_FISCAL",
+                            origem: %w[EMPRESA_PRODUTO NFE_FISCAL])
     agrupado = Hash.new(0.to_d)
     logs.each do |l|
       chave = [l.cod_produto, l.cod_cor]

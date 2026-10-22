@@ -354,6 +354,10 @@ module Fiscal
         # Observacoes: infCpl (aparece no DANFE) e infAdFisco (observacao fisco).
         "Observacao"        => doc[:info_adicional].presence,
         "ObservacaoFisco"   => doc[:info_adicional_fisco].presence,
+        # Transporte/frete (ModalidadeFrete + transportadora + veiculo + volumes).
+        "Transporte"        => doc[:transporte].presence,
+        # Cobranca (fatura + duplicatas): imprime as parcelas/vencimentos no DANFE.
+        "Cobranca"          => doc[:cobranca].presence,
         # Serie/Numero: só enviados se o builder fornecer; senão o Brasil NFe
         # controla automaticamente (recomendado em producao).
         "Serie"             => doc[:serie],

@@ -65,6 +65,19 @@
   <% else %>
     <li><span class="dropdown-item-text small text-muted">Sem protocolo de cancelamento registrado.</span></li>
   <% end %>
+  <%# NF cancelada: permite GERAR UMA NOVA NF da venda (novo rascunho no editor). %>
+  <%# So quando a venda nao esta cancelada — venda cancelada nao emite nota. %>
+  <% unless sale.cancelada %>
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <%= button_to gerar_de_venda_collaborators_backoffice_notas_avulsas_path(cod_venda: sale.cod_venda),
+                    method: :post, class: "dropdown-item btn btn-primary btn-circle",
+                    form: { class: "d-inline" },
+                    data: { confirm: "A NF anterior foi cancelada. Gerar uma nova NF desta venda no editor?" } do %>
+        <i class="fa fa-file-invoice" style="width: 35px;"></i> Gerar nova NF (editor)
+      <% end %>
+    </li>
+  <% end %>
 
 <% elsif doc && %w[rejeitada erro].include?(doc.status) %>
   <li><h6 class="dropdown-header text-danger">NF-e <%= doc.status %></h6></li>
