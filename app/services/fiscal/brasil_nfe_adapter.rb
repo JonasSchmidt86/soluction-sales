@@ -165,12 +165,14 @@ module Fiscal
     end
 
     # Verifica a situacao do CERTIFICADO DIGITAL ja cadastrado da empresa
-    # (/services/empresa). Doc 2.0: POST /VerificarCertificado. Basta o header
-    # Token (identifica a empresa); nao precisa reenviar o .pfx. Resposta:
+    # (/services/empresa). Doc 2.0: POST /VerificarCertificado.
+    # IMPORTANTE: enviar "Interno": true para verificar o certificado JA
+    # CADASTRADO (sem reenviar o .pfx). Sem Interno=true a API espera o arquivo
+    # no corpo e responde "Arquivo do certificado vazio.". Resposta:
     # { Expirado (bool), DtExpiracao (date), status (bool), Error, Avisos }.
     # Retorna FiscalCertificado (valido?/expirado?/data_expiracao).
     def verificar_certificado
-      resposta = post_empresa("/VerificarCertificado", {})
+      resposta = post_empresa("/VerificarCertificado", { "Interno" => true })
       to_certificado(resposta)
     end
 
