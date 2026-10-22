@@ -250,11 +250,14 @@
           const bairroInput = escopo.querySelector('[name*="bairro"]');
           const citySelect = escopo.querySelector('[name*="cod_cidade"]');
           if (!data.erro) {
-            if (enderecoInput) {
-              enderecoInput.value = removerAcentos((data.logradouro || "").toUpperCase());
+            // So sobrescreve quando o ViaCEP realmente retornou o campo. Para CEPs
+            // "gerais" (cobrem a cidade toda) o logradouro/bairro vem vazio; nesse
+            // caso preservamos o que ja estava preenchido (banco/SEFAZ) em vez de apagar.
+            if (enderecoInput && data.logradouro) {
+              enderecoInput.value = removerAcentos(data.logradouro.toUpperCase());
             }
-            if (bairroInput) {
-              bairroInput.value = removerAcentos((data.bairro || "").toUpperCase());
+            if (bairroInput && data.bairro) {
+              bairroInput.value = removerAcentos(data.bairro.toUpperCase());
             }
             if (citySelect) {
               // Casa a cidade por NOME + UF. Antes comparava so o nome e pegava a
@@ -275,19 +278,16 @@
                   break;
                 }
               }
-              // Sem match exato de nome+UF: nao chuta cidade de outro estado.
-              if (!achou) citySelect.value = "";
+              // Sem match exato de nome+UF: nao chuta cidade de outro estado,
+              // mas tambem NAO limpa uma cidade que ja estava preenchida (ex.:
+              // dados vindos do banco na edicao ou da SEFAZ/BrasilAPI).
+              if (!achou && !citySelect.value) citySelect.value = "";
             }
           } else {
-            if (enderecoInput) {
-              enderecoInput.value = "";
-            }
-            if (bairroInput) {
-              bairroInput.value = "";
-            }
-            if (citySelect) {
-              citySelect.value = 0;
-            }
+            // CEP nao encontrado no ViaCEP: NAO apaga o que ja estava preenchido.
+            // Antes este ramo zerava endereco/bairro/cidade, o que apagava os
+            // dados carregados do banco ao abrir um cliente (PJ) cujo CEP o
+            // ViaCEP nao resolve. Mantemos os valores atuais do formulario.
           }
         })
         . catch(error => console.error('Ocorreu um erro:', error));
