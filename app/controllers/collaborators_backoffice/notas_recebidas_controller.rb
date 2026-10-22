@@ -43,6 +43,78 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
                 notice: "Status atualizado: #{res.mensagem}"
   end
 
+  # GET .../notas_recebidas/consultar_chave?chave=... — CONSULTA (só ver) uma NF
+  # pela chave na SEFAZ, SEM gravar nada (não cria NotaRecebida/XmlFile/compra).
+  # Uso: rodar em paralelo com outro sistema sem risco de duplicar escrituração.
+  def consultar_chave
+    chave = params[:chave].to_s.gsub(/\D/, "")
+    unless chave.length == 44
+      render json: { sucesso: false, mensagem: "Informe uma chave de acesso com 44 dígitos." }
+      return
+    end
+    config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
+    unless config&.ativo?
+      render json: { sucesso: false, mensagem: "Configuração fiscal ausente ou inativa." }
+      return
+    end
+
+    consulta = FiscalService.new(config).consultar(chave: chave, modelo: 0)
+    unless consulta&.encontrada?
+      render json: { sucesso: false, mensagem: consulta&.mensagem.presence || "Nota não encontrada na SEFAZ." }
+      return
+    end
+
+    render json: {
+      sucesso:   true,
+      chave:     chave,
+      numero:    consulta.numero,
+      serie:     consulta.serie,
+      situacao:  consulta.situacao,
+      protocolo: consulta.protocolo,
+      mensagem:  consulta.mensagem
+    }
+  rescue FiscalService::NaoConfigurado => e
+    render json: { sucesso: false, mensagem: e.message }
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#consultar_chave] #{e.class} - #{e.message}")
+    render json: { sucesso: false, mensagem: "Falha ao consultar: #{e.message}" }
+  end
+
+  # GET .../notas_recebidas/baixar_chave?chave=...&tipo=xml|pdf — DOWNLOAD manual
+  # do arquivo (XML ou DANFE) da NF de ENTRADA pela chave. NÃO salva no ERP: só
+  # entrega o arquivo para o navegador. tipo_documento=0 (entrada/compra).
+  def baixar_chave
+    chave = params[:chave].to_s.gsub(/\D/, "")
+    tipo  = params[:tipo].to_s == "pdf" ? :pdf : :xml
+    if chave.length != 44
+      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Chave inválida (44 dígitos)." and return
+    end
+    config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
+    unless config&.ativo?
+      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Empresa sem configuração fiscal ativa." and return
+    end
+
+    file_type = (tipo == :pdf ? 2 : 1)
+    arquivo = FiscalService.new(config).obter_arquivo(chave: chave, file_type: file_type, tipo_documento: 0)
+    if arquivo.sucesso?
+      if tipo == :pdf
+        send_data arquivo.conteudo, filename: "danfe-#{chave}.pdf",
+                  type: "application/pdf", disposition: "attachment"
+      else
+        send_data arquivo.conteudo, filename: "nfe-#{chave}.xml",
+                  type: "application/xml", disposition: "attachment"
+      end
+    else
+      redirect_to collaborators_backoffice_notas_recebidas_path,
+                  alert: "Não foi possível baixar o arquivo: #{arquivo.erro}"
+    end
+  rescue FiscalService::NaoConfigurado => e
+    redirect_to collaborators_backoffice_notas_recebidas_path, alert: e.message
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#baixar_chave] #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Falha ao baixar: #{e.message}"
+  end
+
   # Importar = levar ao fluxo de compra existente (produtoxmls#new monta a compra
   # a partir do XmlFile). Reusa toda a tela de conferencia atual.
   def importar

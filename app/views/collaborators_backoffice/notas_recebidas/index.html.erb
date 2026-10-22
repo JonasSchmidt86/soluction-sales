@@ -4,14 +4,23 @@
       <div class="card-header bg-primary text-white d-flex align-items-center">
         <i class="fa fa-inbox me-2"></i>
         <h4 class="mb-0">Notas Recebidas (fornecedores)</h4>
-        <div class="ms-auto">
-          <%= button_to "Buscar na SEFAZ",
-                sincronizar_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
-                method: :post, class: "btn btn-light btn-sm" %>
-          <%= button_to "Atualizar status",
-                sincronizar_status_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
-                method: :post, class: "btn btn-outline-light btn-sm" %>
-        </div>
+        <%# Sincronizacao automatica (Buscar na SEFAZ / Atualizar status) OCULTA
+            durante o teste em paralelo com o sistema atual (MYRP): ela baixaria
+            TODAS as notas do periodo e gravaria NotaRecebida, o que nao queremos
+            agora. As rotas sincronizar/sincronizar_status continuam existindo —
+            basta re-adicionar os button_to aqui para religar. A consulta e o
+            download por chave (manual, sem salvar nada) ficam na secao abaixo. %>
+        <% mostrar_sincronizacao = false %>
+        <% if mostrar_sincronizacao %>
+          <div class="ms-auto">
+            <%= button_to "Buscar na SEFAZ",
+                  sincronizar_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
+                  method: :post, class: "btn btn-light btn-sm" %>
+            <%= button_to "Atualizar status",
+                  sincronizar_status_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
+                  method: :post, class: "btn btn-outline-light btn-sm" %>
+          </div>
+        <% end %>
       </div>
 
       <div class="card-body">
@@ -27,6 +36,102 @@
             <%= @alertas_canceladas.map { |n| "NF #{n.numero}" }.join(", ") %>.
           </div>
         <% end %>
+
+        <%# ===== Consultar NF por chave (manual, sem salvar nada no ERP) ===== %>
+        <div class="card border-info mb-3">
+          <div class="card-header bg-info-subtle d-flex align-items-center">
+            <strong><i class="fa fa-magnifying-glass me-2"></i>Consultar NF por chave</strong>
+            <span class="ms-2 small text-muted">consulta e download manual — não importa nem salva no sistema</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-7">
+                <label class="form-label small mb-1">Chave de acesso (44 dígitos)</label>
+                <input id="nfChave" class="form-control" maxlength="54" inputmode="numeric"
+                       placeholder="Cole a chave da NF-e / NFC-e" autocomplete="off">
+              </div>
+              <div class="col-md-5 d-flex gap-2">
+                <button id="btnConsultarChave" type="button" class="btn btn-primary">
+                  <i class="fa fa-eye me-1"></i> Consultar
+                </button>
+                <a id="btnBaixarXml" class="btn btn-outline-secondary disabled" aria-disabled="true">
+                  <i class="fa fa-file-code me-1"></i> Baixar XML
+                </a>
+                <a id="btnBaixarPdf" class="btn btn-outline-secondary disabled" aria-disabled="true">
+                  <i class="fa fa-file-pdf me-1"></i> Baixar DANFE
+                </a>
+              </div>
+            </div>
+            <div id="nfChaveResultado" class="mt-3 text-muted small">
+              Informe a chave para ver a situação da nota na SEFAZ (não grava nada).
+            </div>
+          </div>
+        </div>
+
+        <script>
+          (function () {
+            var inp = document.getElementById('nfChave');
+            var btn = document.getElementById('btnConsultarChave');
+            var out = document.getElementById('nfChaveResultado');
+            var bx  = document.getElementById('btnBaixarXml');
+            var bp  = document.getElementById('btnBaixarPdf');
+            if (!inp || !btn) return;
+            var urlConsulta = "<%= consultar_chave_collaborators_backoffice_notas_recebidas_path %>";
+            var urlBaixar   = "<%= baixar_chave_collaborators_backoffice_notas_recebidas_path %>";
+
+            function soDigitos(v) { return (v || '').replace(/\D/g, ''); }
+            function desabilitarDownloads() {
+              [bx, bp].forEach(function (a) { a.classList.add('disabled'); a.removeAttribute('href'); });
+            }
+            function habilitarDownloads(chave) {
+              bx.href = urlBaixar + '?tipo=xml&chave=' + encodeURIComponent(chave);
+              bp.href = urlBaixar + '?tipo=pdf&chave=' + encodeURIComponent(chave);
+              [bx, bp].forEach(function (a) { a.classList.remove('disabled'); });
+            }
+
+            inp.addEventListener('input', desabilitarDownloads);
+
+            btn.addEventListener('click', function () {
+              var chave = soDigitos(inp.value);
+              if (chave.length !== 44) {
+                out.className = 'mt-3 text-danger small';
+                out.textContent = 'A chave precisa ter 44 dígitos.';
+                desabilitarDownloads();
+                return;
+              }
+              btn.disabled = true;
+              out.className = 'mt-3 text-muted small';
+              out.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando na SEFAZ...';
+              desabilitarDownloads();
+
+              fetch(urlConsulta + '?chave=' + encodeURIComponent(chave), { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                  if (!d.sucesso) {
+                    out.className = 'mt-3 text-danger small';
+                    out.textContent = d.mensagem || 'Não foi possível consultar.';
+                    return;
+                  }
+                  var mapa = { autorizada: 'success', cancelada: 'danger', denegada: 'dark', rejeitada: 'warning', enviada: 'secondary' };
+                  var cor = mapa[d.situacao] || 'secondary';
+                  var linhas = [
+                    '<span class="badge text-bg-' + cor + '">' + (d.situacao || 'situação indefinida') + '</span>',
+                    d.numero ? ('NF <strong>' + d.numero + '</strong>' + (d.serie ? ' série ' + d.serie : '')) : null,
+                    d.protocolo ? ('Protocolo: ' + d.protocolo) : null,
+                    d.mensagem
+                  ].filter(Boolean);
+                  out.className = 'mt-3';
+                  out.innerHTML = linhas.join(' · ');
+                  habilitarDownloads(chave);
+                })
+                .catch(function () {
+                  out.className = 'mt-3 text-danger small';
+                  out.textContent = 'Falha ao consultar a nota.';
+                })
+                .finally(function () { btn.disabled = false; });
+            });
+          })();
+        </script>
 
         <%# Filtros %>
         <%= form_with url: collaborators_backoffice_notas_recebidas_path, method: :get, local: true, class: "row g-2 mb-3 align-items-end" do %>
@@ -72,7 +177,8 @@
             <tbody>
               <% if @notas.empty? %>
                 <tr><td colspan="12" class="text-center text-muted py-3">
-                  Nenhuma nota recebida no período. Clique em <strong>Buscar na SEFAZ</strong> para sincronizar.
+                  Nenhuma nota recebida gravada no período. Use <strong>Consultar NF por chave</strong> acima
+                  para ver ou baixar uma nota pela chave (sem salvar no sistema).
                 </td></tr>
               <% end %>
               <% @notas.each do |n| %>
