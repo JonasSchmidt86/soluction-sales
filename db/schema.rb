@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_28_000004) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_29_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -476,6 +476,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000004) do
     t.integer "ordem", default: 0, comment: "ordem na nota"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "dados_devolucao", comment: "Snapshot fiscal do item de devolucao (imposto espelho + override + dados do XML)"
     t.index ["cod_documento_fiscal"], name: "idx_doc_fiscal_item_documento"
   end
 
@@ -1207,8 +1208,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000004) do
     t.bigint "pessoa_id"
     t.bigint "empresa_id"
     t.bigint "compra_id"
+    t.string "numeronf", limit: 20, comment: "Numero da NF (nNF) do XML, para busca na listagem"
+    t.string "chave", limit: 44, comment: "Chave de acesso (44 digitos) da NF-e do XML"
+    t.index ["chave"], name: "index_xml_files_on_chave"
     t.index ["compra_id"], name: "index_xml_files_on_compra_id"
     t.index ["empresa_id"], name: "index_xml_files_on_empresa_id"
+    t.index ["numeronf"], name: "index_xml_files_on_numeronf"
     t.index ["pessoa_id"], name: "index_xml_files_on_pessoa_id"
   end
 

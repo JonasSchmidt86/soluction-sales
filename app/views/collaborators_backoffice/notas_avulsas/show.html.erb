@@ -3,7 +3,13 @@
     <div class="card mt-3">
       <div class="card-header bg-primary text-white d-flex align-items-center">
         <i class="fa fa-file-invoice me-2"></i>
-        <h4 class="mb-0">Nota avulsa #<%= @documento.cod_documento_fiscal %> — <%= @documento.modelo_nome %></h4>
+        <h4 class="mb-0">
+          <% if @documento.devolucao_compra? %>
+            Devolução de compra #<%= @documento.cod_compra %> — <%= @documento.modelo_nome %> #<%= @documento.cod_documento_fiscal %>
+          <% else %>
+            Nota avulsa #<%= @documento.cod_documento_fiscal %> — <%= @documento.modelo_nome %>
+          <% end %>
+        </h4>
       </div>
       <div class="card-body">
         <% cor = @documento.autorizada? ? "success" : (@documento.cancelada? ? "secondary" : "danger") %>

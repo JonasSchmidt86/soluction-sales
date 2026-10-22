@@ -412,6 +412,45 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
       puts "PARAMETROS ---------- #{params}"
       unless @compra.blank?
 
+        # === TRAVA FISCAL: NF de devolucao/remessa ===
+        # Nao deixa cancelar/apagar a compra enquanto houver documento fiscal
+        # (devolucao/remessa) ligado a ela, seja NF autorizada ou rascunho:
+        #  - AUTORIZADA: cancelar a NF-e e ato fiscal consciente (justificativa na
+        #    SEFAZ) e deve ser feito ANTES, pela tela da nota; senao a NF ficaria
+        #    valida na SEFAZ sem a compra de origem.
+        #  - RASCUNHO/erro/rejeitada: o usuario deve apagar o rascunho da devolucao
+        #    antes (pela lista de notas), para nao cancelar a compra por baixo de
+        #    uma devolucao em elaboracao.
+        doc_dev = DocumentoFiscal
+                  .where(cod_empresa: @compra.cod_empresa, cod_compra: @compra.cod_compra)
+                  .where.not(status: "cancelada")
+                  .order(cod_documento_fiscal: :desc).first
+        if doc_dev&.autorizada?
+          redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                      notice: "Esta compra tem NF-e de devolução/remessa autorizada (##{doc_dev.cod_documento_fiscal}). Cancele a NF-e na SEFAZ (pela tela da nota) antes de cancelar/apagar a compra."
+          return
+        elsif doc_dev.present?
+          redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                      notice: "Esta compra tem um rascunho de devolução (##{doc_dev.cod_documento_fiscal}). Apague o rascunho da devolução (na tela de notas) antes de cancelar/apagar a compra."
+          return
+        end
+
+        # === TRAVA FINANCEIRA: conta ja paga (com lancamento no caixa) ===
+        # So vale enquanto a compra NAO esta cancelada (FASE 1). Se alguma conta
+        # da compra (ou do frete) ja teve pagamento lancado no caixa, NAO cancela
+        # automaticamente estornando: bloqueia e avisa, para o usuario desfazer o
+        # pagamento conscientemente antes. (Compra ja cancelada segue para a
+        # FASE 2 de exclusao, que tem o proprio tratamento de auditoria.)
+        if !@compra.cancelada
+          conta_paga = @compra.contas.joins(:lancamentos).exists? ||
+                       (@compra.frete.present? && @compra.frete.contas.joins(:lancamentos).exists?)
+          if conta_paga
+            redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),
+                        notice: "Não é possível cancelar: esta compra tem parcela(s) já paga(s) com lançamento no caixa. Desfaça o pagamento no Financeiro antes de cancelar a compra."
+            return
+          end
+        end
+
         # === FASE 1: Compra ainda não cancelada — cancela com estorno ===
         if !@compra.cancelada
           ActiveRecord::Base.transaction do
@@ -489,7 +528,9 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
             return
           end
 
-          # Sem lançamentos — pode destruir de fato
+          # Sem lançamentos — pode destruir de fato.
+          # (A trava fiscal no topo ja garantiu que nao ha devolucao autorizada
+          # nem rascunho ligado a compra — o usuario apaga o rascunho antes.)
           ActiveRecord::Base.transaction do
             xml = @compra.xml_file
             if xml.present?

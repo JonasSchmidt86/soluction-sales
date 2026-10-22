@@ -106,6 +106,33 @@
                             <i class="far fa-money-bill-alt", style="width: 35px;"></i> Financeiro
                           <% end %>
                         </li>
+                        <%# Devolver NF: so para super_admin com modulo fiscal. Se ja ha NF de %>
+                        <%# devolucao, mostra o status; senao, se a compra tem NF+XML, o botao. %>
+                        <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                          <% doc_dev = (@docs_por_compra || {})[buy.cod_compra] %>
+                          <% if doc_dev&.autorizada? %>
+                            <%# Devolucao emitida: abre a NF (tela da nota, com DANFE/cancelar). %>
+                            <li>
+                              <%= link_to collaborators_backoffice_notas_avulsa_path(doc_dev), class: "dropdown-item btn btn-success btn-circle" do %>
+                                <i class="fa fa-rotate-left" style="width: 35px;"></i> NF devolução emitida
+                              <% end %>
+                            </li>
+                          <% elsif doc_dev && %w[rascunho erro rejeitada].include?(doc_dev.status) %>
+                            <%# Devolucao em elaboracao: reabre o editor do rascunho (nao cria outra). %>
+                            <li>
+                              <%= link_to edit_collaborators_backoffice_compra_devolucao_path(buy, documento_id: doc_dev.cod_documento_fiscal), class: "dropdown-item btn btn-warning btn-circle" do %>
+                                <i class="fa fa-rotate-left" style="width: 35px;"></i> Continuar devolução
+                              <% end %>
+                            </li>
+                          <% elsif buy.pode_devolver_nf? %>
+                            <%# Sem devolucao ainda: inicia uma nova. %>
+                            <li>
+                              <%= link_to new_collaborators_backoffice_compra_devolucao_path(buy), class: "dropdown-item btn btn-warning btn-circle" do %>
+                                <i class="fa fa-rotate-left" style="width: 35px;"></i> Devolver NF
+                              <% end %>
+                            </li>
+                          <% end %>
+                        <% end %>
                         <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                           <span class="visually-hidden">Toggle Dropdown</span>
                           <li>

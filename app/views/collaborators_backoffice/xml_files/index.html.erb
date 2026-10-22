@@ -8,9 +8,14 @@
     <%= form_with(url: collaborators_backoffice_xml_files_path, local: true, method: :get, 
                                     class:"col dataTable-search col-md-6") do |form| %>
       <div class="d-flex align-items-center">
-        <div class="col-md-10 me-2">
+        <div class="col-md-6 me-2">
           <div class="mb-2">
             <%= form.text_field :term, class:"dataTable-input text", value: params[:term], placeholder: "Fornecedor...", id: "text" %>
+          </div>
+        </div>
+        <div class="col-md-3 me-2">
+          <div class="mb-2">
+            <%= form.text_field :nf, class:"dataTable-input text", value: params[:nf], placeholder: "Nr NF...", inputmode: "numeric" %>
           </div>
         </div>
         <div class="col-md-3 me-2">

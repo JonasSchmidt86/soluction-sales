@@ -33,6 +33,17 @@ class Compra < ApplicationRecord
       end
   end
 
+  # Compra pode gerar NF de devolucao quando tem NF (numero) e o XML anexado
+  # (de onde sai a chave referenciada). Nao cancelada. A chave em si e extraida
+  # do XML pelo Fiscal::DevolucaoCompraExtractor.
+  def pode_devolver_nf?
+    return false if cancelada?
+    return false if numeronf.blank?
+    xml_file&.file&.attached? ? true : false
+  rescue StandardError
+    false
+  end
+
   def acrescimo_total
     # tudo que for acrescimo do item ou da nota
     0;

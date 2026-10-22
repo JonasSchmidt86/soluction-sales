@@ -83,7 +83,10 @@ module Fiscal
         {
           cod_produto:    ic&.cod_produto,
           cod_cor:        ic&.cod_cor,
-          descricao:      txt(prod, "xProd"),
+          # Nome do produto = o xProd do XML da compra (nome do fornecedor, para
+          # bater com a nota original). Fallback no nome do cadastro so quando o
+          # XML nao trouxe xProd.
+          descricao:      txt(prod, "xProd").presence || ic&.produto&.nome,
           cod_produto_emissor: txt(prod, "cProd"),
           ncm:            txt(prod, "NCM"),
           cfop_original:  txt(prod, "CFOP"),

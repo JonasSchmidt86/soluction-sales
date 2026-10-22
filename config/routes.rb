@@ -165,13 +165,19 @@ Rails.application.routes.draw do
     resources :compras, only: [:index, :edit, :new, :create, :destroy, :show] do
       # Devolucao de compra (NF-e finalidade 4). new = tela de revisao/edicao;
       # create = emite. So super_admin + empresa com modulo fiscal.
-      resource :devolucao, only: [:new, :create], controller: "devolucoes_compra" do
+      resource :devolucao, only: [:new, :create, :edit], controller: "devolucoes_compra" do
         # Pre-visualizacao do DANFE da devolucao (sem transmitir a SEFAZ).
         post :previsualizar
         # Baixa o XML da nota de entrada (compra) pela chave, via provedor.
         get :baixar_xml
         # Resolve o CFOP de um item pela regra fiscal ao trocar a operacao.
         get :resolver_cfop
+        # Valida o form e devolve as pendencias (JSON) para o painel de emissao.
+        post :validar
+        # Salva a devolucao como RASCUNHO editavel (persiste itens + impostos).
+        post :salvar_rascunho
+        # Emite um rascunho de devolucao ja salvo (reaproveita o documento).
+        post :emitir
       end
     end
     resources :pedidos_compras

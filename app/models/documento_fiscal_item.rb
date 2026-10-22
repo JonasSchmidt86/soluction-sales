@@ -2,6 +2,12 @@
 # Persistido para permitir editar a nota antes de emitir — antes os itens da
 # avulsa eram efemeros. Vale para avulsa e para NF de venda editada.
 #
+# dados_devolucao (jsonb): SNAPSHOT fiscal do item de DEVOLUCAO de compra —
+# imposto espelhado do XML (icms/ipi/pis/cofins), overrides manuais da tela e
+# dados do XML sem coluna propria (ncm, ean, unidade, origem,
+# quantidade_original, descricao). Permite reabrir/emitir o rascunho sem reler
+# o XML da compra. Vazio nos itens de nota avulsa/venda.
+#
 # Aceita valores em formato BR ("1.234,56") vindos do form (via MoedaBr).
 class DocumentoFiscalItem < ApplicationRecord
   include MoedaBr

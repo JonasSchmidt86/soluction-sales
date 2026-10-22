@@ -27,7 +27,8 @@ module Fiscal
   class DevolucaoCompraBuilder
     def initialize(compra, config:, itens:, chave_referencia: nil,
                    natureza_operacao: "Devolucao de compra", cfop: nil, modelo: 55,
-                   finalidade: 4, operacao: nil)
+                   finalidade: 4, operacao: nil, transporte: nil,
+                   info_adicional: nil, info_adicional_fisco: nil)
       @compra    = compra
       @config    = config
       @itens     = Array(itens)
@@ -38,6 +39,9 @@ module Fiscal
       @finalidade = (finalidade.presence && finalidade.to_i) || 4
       @empresa   = compra.empresa
       @fornecedor = compra.pessoa
+      @transporte = transporte.presence
+      @info_adicional       = info_adicional.presence
+      @info_adicional_fisco = info_adicional_fisco.presence
       # Operacao da NF escolhida no topo (Devolucao de compra, Remessa p/ conserto...).
       # A tributacao de cada item vem da regra do perfil PARA ESSA operacao.
       @operacao = operacao || OperacaoFiscal.find_by(nome: "Devolucao de compra")
@@ -54,12 +58,74 @@ module Fiscal
         consumidor_final:     !fornecedor_contribuinte?,
         indicador_presenca:   0, # nao se aplica (operacao entre empresas)
         identificador_interno: "DEVCOMPRA-#{@compra.cod_compra}",
-        nf_referencia:        Array(@chave_ref).reject(&:blank?),
+        # Referencia a NF de compra original POR ITEM (ChaveAcessoReferenciada em
+        # montar_produtos), entao o cabecalho NAO leva NFReferencia (os dois nao
+        # coexistem — doc Brasil NFe). Mantido vazio para evitar dupla referencia.
         cliente:              montar_fornecedor,
         produtos:             montar_produtos,
         pagamentos:           montar_pagamentos,
+        transporte:           montar_transporte,
+        info_adicional:       @info_adicional,
+        info_adicional_fisco: @info_adicional_fisco,
         enviar_email:         false
       }.compact
+    end
+
+    # Transporte (mesmo schema/regra do editor de nota avulsa): modalidade +
+    # transportadora (Pessoa) + veiculo + volumes. nil quando sem transporte.
+    def montar_transporte
+      t = @transporte
+      return nil if t.blank?
+      t = t.respond_to?(:symbolize_keys) ? t.symbolize_keys : t
+      modalidade = t[:modalidade_frete].to_s
+      return nil if modalidade.blank? || modalidade == "9"
+
+      bloco = { "ModalidadeFrete" => modalidade.to_i }
+      bloco.merge!(dados_transportadora(t[:transportadora_cod_pessoa]))
+      veiculo = montar_veiculo(t)
+      bloco["Veiculo"] = veiculo if veiculo.present?
+      volumes = montar_volumes(t)
+      bloco["Volumes"] = volumes if volumes.present?
+      bloco
+    end
+
+    def dados_transportadora(cod_pessoa)
+      return {} if cod_pessoa.blank?
+      p = Pessoa.find_by(cod_pessoa: cod_pessoa)
+      return {} if p.nil?
+      {
+        "NmTransportador" => p.nome,
+        "CNPJ"            => digitos(p.cpf_cnpj),
+        "NmMunicipio"     => p.cidade&.nome,
+        "DsEndereco"      => p.endereco,
+        "IE"              => p.rg_ie.presence,
+        "UF"              => p.uf
+      }.compact
+    end
+
+    def montar_veiculo(t)
+      { "Placa" => t[:placa].presence, "UF" => t[:placa_uf].presence,
+        "RNTC" => t[:rntc].presence }.compact.presence
+    end
+
+    def montar_volumes(t)
+      vol = {
+        "Numero"           => t[:volume_numero].presence,
+        "QuantidadeVolume" => (t[:volume_qtd].presence && t[:volume_qtd].to_i),
+        "Especie"          => t[:volume_especie].presence,
+        "Marca"            => t[:volume_marca].presence,
+        "PesoLiquido"      => (t[:peso_liquido].presence && to_decimal_br(t[:peso_liquido])),
+        "PesoBruto"        => (t[:peso_bruto].presence && to_decimal_br(t[:peso_bruto]))
+      }.compact
+      vol.present? ? [vol] : nil
+    end
+
+    def to_decimal_br(v)
+      s = v.to_s.strip.gsub(/\s/, "")
+      s = s.gsub(".", "").sub(",", ".") if s.include?(",")
+      Float(s)
+    rescue ArgumentError
+      nil
     end
 
     # Fornecedor e contribuinte de ICMS quando possui Inscricao Estadual.
@@ -136,9 +202,12 @@ module Fiscal
           "ValorTotal"       => it[:valor_total].to_f,
           "CFOP"             => cfop_do_item(it),
           "OrigemProduto"    => (it[:origem].presence || "0").to_i,
-          # Referencia item a item a NF de compra original (se houver chave).
+          # Referencia a NF de compra original POR ITEM (grupo DFeReferenciado),
+          # em vez do NFReferencia no cabecalho (os dois nao coexistem). NAO
+          # envia NItemReferenciado: a doc diz que e o nItem da NOTA ORIGINAL
+          # (nao desta devolucao) e e opcional; sem saber o item de origem,
+          # omitimos para nao referenciar item errado.
           "ChaveAcessoReferenciada" => @chave_ref.presence,
-          "NItemReferenciado"       => (idx + 1),
           "Imposto"          => imposto_do_item(it)
         }.compact
       end

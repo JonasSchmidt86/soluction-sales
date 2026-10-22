@@ -20,7 +20,14 @@
                 <%# O CFOP de cada item vem da regra (perfil + operacao do topo).
                     Sem regra para a operacao escolhida, o CFOP fica em branco. %>
 
+              <%# editando = reabrindo um rascunho salvo (tem @documento). As acoes
+                  (salvar/emitir) apontam para o rascunho via formaction + documento_id. %>
+              <% editando = @documento.present?
+                 doc_id   = @documento&.cod_documento_fiscal %>
               <%= form_with url: collaborators_backoffice_compra_devolucao_path(@compra), method: :post, local: true do %>
+                <% if editando %>
+                  <%= hidden_field_tag :documento_id, doc_id %>
+                <% end %>
 
                 <%# ---- Cabecalho: fornecedor, NF origem, operacao, finalidade ---- %>
                 <div class="row my-2 mx-1 g-2 align-items-center">
@@ -70,6 +77,32 @@
                 <%# Natureza vai junto da operacao escolhida (sem campo editavel). %>
                 <%# A natureza da NF vem da operacao escolhida no topo (no controller). %>
 
+                <%# ---- Abas: Produtos / Transporte / Totais ---- %>
+                <ul class="nav nav-tabs mt-3" id="abasDev" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-dev-produtos-btn" data-bs-toggle="tab"
+                            data-bs-target="#tab-dev-produtos" type="button" role="tab">
+                      <i class="fa fa-box me-1"></i> Produtos
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-dev-transporte-btn" data-bs-toggle="tab"
+                            data-bs-target="#tab-dev-transporte" type="button" role="tab">
+                      <i class="fa fa-truck me-1"></i> Transporte
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-dev-totais-btn" data-bs-toggle="tab"
+                            data-bs-target="#tab-dev-totais" type="button" role="tab">
+                      <i class="fa fa-calculator me-1"></i> Totais / Conferência
+                    </button>
+                  </li>
+                </ul>
+
+                <div class="tab-content border border-top-0 p-2" id="abasDevContent">
+
+                <%# ===== ABA PRODUTOS ===== %>
+                <div class="tab-pane fade show active" id="tab-dev-produtos" role="tabpanel">
                 <%# ---- Itens (grade estilo planilha; impostos na mesma linha) ---- %>
                 <div class="table-responsive mt-2">
                   <table class="table table-sm table-bordered align-middle mb-0" style="font-size:12px;">
@@ -104,7 +137,13 @@
                            fator  = (q_orig.nonzero? && q_dev.nonzero?) ? (q_dev / q_orig) : 1.to_d
                            rt = ->(v) { v.to_d.nonzero? ? number_with_precision((v.to_d * fator).round(2), precision: 2, separator: ",", delimiter: "") : "" }
                            nome_completo = it[:descricao].to_s
-                           nome_tela = nome_completo.length > 200 ? "#{nome_completo[0, 200]}…" : nome_completo %>
+                           nome_tela = nome_completo.length > 200 ? "#{nome_completo[0, 200]}…" : nome_completo
+                           # Override salvo (edicao de rascunho): quando presente, o campo
+                           # visivel mostra o valor editado; o hidden *_auto guarda o rateio
+                           # do XML (baseline p/ detectar nova alteracao). Sem override, visivel == auto.
+                           ov = (it[:imposto_override] || {})
+                           ov = ov.respond_to?(:symbolize_keys) ? ov.symbolize_keys : ov
+                           eff = ->(chave, auto) { ov.key?(chave) && !ov[chave].nil? ? number_with_precision(ov[chave].to_d, precision: 2, separator: ",", delimiter: "") : auto } %>
                         <tr class="dev-item"
                             data-qtd-orig="<%= q_orig %>"
                             data-icms-base="<%= icms[:base_calculo].to_d %>"
@@ -149,27 +188,27 @@
                           <% fmt = ->(v) { v.to_d.nonzero? ? number_with_precision(v.to_d, precision: 2, separator: ",", delimiter: "") : "" } %>
                           <% icms_aliq_auto = fmt.(icms[:aliquota]) %>
                           <td>
-                            <%= text_field_tag "itens[#{i}][icms_aliquota]", icms_aliq_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_aliquota" }, placeholder: "—" %>
+                            <%= text_field_tag "itens[#{i}][icms_aliquota]", eff.(:icms_aliquota, icms_aliq_auto), class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_aliquota" }, placeholder: "—" %>
                             <%= hidden_field_tag "itens[#{i}][icms_aliquota_auto]", icms_aliq_auto, class: "imp-auto", data: { campo: "icms_aliquota" } %>
                           </td>
                           <% icms_base_auto = rt.(icms[:base_calculo]) %>
                           <td>
-                            <%= text_field_tag "itens[#{i}][icms_base]", icms_base_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_base" }, placeholder: "—" %>
+                            <%= text_field_tag "itens[#{i}][icms_base]", eff.(:icms_base, icms_base_auto), class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_base" }, placeholder: "—" %>
                             <%= hidden_field_tag "itens[#{i}][icms_base_auto]", icms_base_auto, class: "imp-auto", data: { campo: "icms_base" } %>
                           </td>
                           <% icms_valor_auto = rt.(icms[:valor]) %>
                           <td>
-                            <%= text_field_tag "itens[#{i}][icms_valor]", icms_valor_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_valor" }, placeholder: "—" %>
+                            <%= text_field_tag "itens[#{i}][icms_valor]", eff.(:icms_valor, icms_valor_auto), class: "form-control form-control-sm text-end imp-field", data: { campo: "icms_valor" }, placeholder: "—" %>
                             <%= hidden_field_tag "itens[#{i}][icms_valor_auto]", icms_valor_auto, class: "imp-auto", data: { campo: "icms_valor" } %>
                           </td>
                           <% ipi_aliq_auto = fmt.(ipi[:aliquota]) %>
                           <td>
-                            <%= text_field_tag "itens[#{i}][ipi_aliquota]", ipi_aliq_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_aliquota" }, placeholder: "—" %>
+                            <%= text_field_tag "itens[#{i}][ipi_aliquota]", eff.(:ipi_aliquota, ipi_aliq_auto), class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_aliquota" }, placeholder: "—" %>
                             <%= hidden_field_tag "itens[#{i}][ipi_aliquota_auto]", ipi_aliq_auto, class: "imp-auto", data: { campo: "ipi_aliquota" } %>
                           </td>
                           <% ipi_valor_auto = rt.(ipi[:valor]) %>
                           <td>
-                            <%= text_field_tag "itens[#{i}][ipi_valor]", ipi_valor_auto, class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "—" %>
+                            <%= text_field_tag "itens[#{i}][ipi_valor]", eff.(:ipi_valor, ipi_valor_auto), class: "form-control form-control-sm text-end imp-field", data: { campo: "ipi_valor" }, placeholder: "—" %>
                             <%= hidden_field_tag "itens[#{i}][ipi_valor_auto]", ipi_valor_auto, class: "imp-auto", data: { campo: "ipi_valor" } %>
                           </td>
                           <td class="text-end imp-pis"><%= rt.(pis[:base_calculo]) %></td>
@@ -179,7 +218,111 @@
                     </tbody>
                   </table>
                 </div>
-                <small class="text-muted">Impostos espelhados do XML e rateados pela quantidade — edite se precisar. Perfil define o CFOP (regra fiscal).</small>
+                <small class="text-muted">Impostos espelhados do XML e rateados pela quantidade — edite se precisar. Desmarque "Dev" para não devolver o item. Perfil define o CFOP (regra fiscal).</small>
+                </div><%# /aba Produtos %>
+
+                <%# ===== ABA TRANSPORTE (mesmas regras do editor de nota avulsa) ===== %>
+                <div class="tab-pane fade" id="tab-dev-transporte" role="tabpanel">
+                  <p class="text-muted small mb-3 mt-2">
+                    <i class="fa fa-circle-info me-1"></i> Forma de envio da devolução (opcional).
+                  </p>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold mb-1">Frete por conta</label>
+                      <% modalidades = { "9" => "9 - Sem transporte / Sem ocorrência", "0" => "0 - Frete por conta do emitente (CIF)", "1" => "1 - Frete por conta do destinatário (FOB)", "2" => "2 - Por conta de terceiros", "3" => "3 - Transporte próprio (remetente)", "4" => "4 - Transporte próprio (destinatário)" } %>
+                      <%= select_tag "transporte[modalidade_frete]",
+                            options_for_select(modalidades.map { |c, n| [n, c] }, "9"),
+                            id: "devModalidadeFrete", class: "form-select" %>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold mb-1">Transportadora
+                        <span class="text-muted small">(opcional)</span>
+                      </label>
+                      <div class="position-relative">
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fa fa-magnifying-glass"></i></span>
+                          <input type="text" id="devTranspBusca" class="form-control"
+                                 placeholder="Pesquise pelo transportador" autocomplete="off">
+                          <button type="button" class="btn btn-outline-secondary" id="devBtnLimparTransp" title="Limpar">
+                            <i class="fa fa-xmark"></i>
+                          </button>
+                        </div>
+                        <input type="hidden" name="transporte[transportadora_cod_pessoa]" id="devTranspCodPessoa">
+                        <input type="hidden" name="transporte[transportadora_nome]" id="devTranspNome">
+                        <div id="devTranspLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="devVeiculoWrap" style="display:none;">
+                    <h6 class="text-muted">Veículo (opcional)</h6>
+                    <div class="row">
+                      <div class="col-md-4 mb-2"><input type="text" name="transporte[placa]" class="form-control" placeholder="Placa"></div>
+                      <div class="col-md-2 mb-2"><input type="text" name="transporte[placa_uf]" class="form-control" maxlength="2" placeholder="UF placa"></div>
+                      <div class="col-md-4 mb-2"><input type="text" name="transporte[rntc]" class="form-control" placeholder="RNTC (registro ANTT)"></div>
+                    </div>
+                  </div>
+
+                  <div class="form-check form-switch mt-3 mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="devPossuiVolumes" name="transporte[possui_volumes]" value="1">
+                    <label class="form-check-label fw-semibold" for="devPossuiVolumes">Possui volumes?</label>
+                  </div>
+                  <div id="devVolumesWrap" style="display:none;">
+                    <div class="row">
+                      <div class="col-md-3 mb-2"><label class="form-label small mb-1">Quantidade de volumes</label><input type="text" name="transporte[volume_qtd]" class="form-control" placeholder="Ex.: 2"></div>
+                      <div class="col-md-5 mb-2"><label class="form-label small mb-1">Espécie</label><input type="text" name="transporte[volume_especie]" class="form-control" placeholder="Ex.: caixas, pacotes"></div>
+                      <div class="col-md-4 mb-2"><label class="form-label small mb-1">Marca</label><input type="text" name="transporte[volume_marca]" class="form-control"></div>
+                      <div class="col-md-4 mb-2"><label class="form-label small mb-1">Número do volume</label><input type="text" name="transporte[volume_numero]" class="form-control" placeholder="Ex.: VOL001"></div>
+                      <div class="col-md-4 mb-2"><label class="form-label small mb-1">Peso líquido (kg)</label><input type="text" name="transporte[peso_liquido]" class="form-control"></div>
+                      <div class="col-md-4 mb-2"><label class="form-label small mb-1">Peso bruto (kg)</label><input type="text" name="transporte[peso_bruto]" class="form-control"></div>
+                    </div>
+                  </div>
+                </div><%# /aba Transporte %>
+
+                <%# ===== ABA TOTAIS / CONFERENCIA ===== %>
+                <div class="tab-pane fade" id="tab-dev-totais" role="tabpanel">
+                  <p class="text-muted small mb-2 mt-2">
+                    <i class="fa fa-circle-info me-1"></i> Resumo dos itens marcados para devolução.
+                    Recalcula ao marcar/desmarcar itens ou alterar quantidade/valor/impostos.
+                  </p>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered" style="max-width:420px;">
+                      <tbody>
+                        <tr><th class="text-end">Itens a devolver</th><td class="text-end" id="totItens">0</td></tr>
+                        <tr><th class="text-end">Produtos (R$)</th><td class="text-end" id="totProdutos">0,00</td></tr>
+                        <tr><th class="text-end">ICMS (R$)</th><td class="text-end" id="totIcms">0,00</td></tr>
+                        <tr><th class="text-end">IPI (R$)</th><td class="text-end" id="totIpi">0,00</td></tr>
+                        <tr class="table-light"><th class="text-end">Total da nota (R$)</th><td class="text-end fw-bold" id="totNota">0,00</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <small class="text-muted">Total da nota = produtos + IPI (o IPI soma ao total na devolução; ICMS do Simples não soma).</small>
+                </div><%# /aba Totais %>
+
+                </div><%# /tab-content %>
+
+                <%# ---- Observacoes (fora das abas, igual nota avulsa) ---- %>
+                <div class="row mt-3 mx-1">
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label fw-semibold">Informações complementares</label>
+                    <%= text_area_tag :info_adicional, nil, id: "devInfoAdicional", rows: 3, maxlength: 2000,
+                          class: "form-control", placeholder: "Observações que aparecem no DANFE (ex.: devolução ref. NF de compra)" %>
+                    <small class="text-muted">Impresso no DANFE (infCpl).</small>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label fw-semibold">Observações ao fisco</label>
+                    <%= text_area_tag :info_adicional_fisco, nil, id: "devInfoAdicionalFisco", rows: 3, maxlength: 2000,
+                          class: "form-control", placeholder: "Observações de interesse do fisco (opcional)" %>
+                    <small class="text-muted">Campo infAdFisco (não aparece para o cliente).</small>
+                  </div>
+                </div>
+
+                <%# Painel de pendencias (igual nota avulsa): bloqueia o Emitir %>
+                <%# enquanto houver problema. Preenchido pelo JS validarDevolucao(). %>
+                <div id="devPainelPendencias" class="alert alert-warning py-2 px-3 mt-3" style="display:none;">
+                  <strong><i class="fa fa-triangle-exclamation me-1"></i> Pendências para emitir:</strong>
+                  <ul id="devListaPendencias" class="mb-0 mt-1 small"></ul>
+                </div>
 
                 <div class="d-flex justify-content-between mt-3">
                   <%= link_to "Voltar à compra", collaborators_backoffice_compra_path(@compra), class: "btn btn-secondary" %>
@@ -191,8 +334,18 @@
                             data-url="<%= previsualizar_collaborators_backoffice_compra_devolucao_path(@compra) %>">
                       <i class="fa fa-file-pdf me-1"></i> Pré-visualizar
                     </button>
-                    <button type="submit" class="btn btn-success"
-                            onclick="return confirm('Emitir a NF-e de devolução desta compra?');">
+                    <%# Salvar rascunho: persiste itens + impostos editados (sem emitir).
+                        Reaproveita o rascunho atual na edicao (documento_id hidden). %>
+                    <button type="submit" class="btn btn-outline-secondary"
+                            formaction="<%= salvar_rascunho_collaborators_backoffice_compra_devolucao_path(@compra) %>"
+                            formnovalidate>
+                      <i class="fa fa-floppy-disk me-1"></i> Salvar rascunho
+                    </button>
+                    <%# Emitir: na edicao vai para a action emitir (reaproveita o doc);
+                        no cadastro novo vai para create (form action padrao). %>
+                    <button type="submit" class="btn btn-success btn-emitir-dev"
+                            <% if editando %>formaction="<%= emitir_collaborators_backoffice_compra_devolucao_path(@compra) %>"<% end %>
+                            data-confirm-msg="Emitir a NF-e de devolução desta compra?">
                       <i class="fa fa-check-double me-1"></i> Emitir devolução
                     </button>
                   </div>
@@ -341,5 +494,187 @@
       .catch(function () { out.textContent = 'Falha de conexão ao pré-visualizar.'; })
       .finally(function () { btn.disabled = false; btn.innerHTML = original; });
     });
+  })();
+
+  // ---------- Transporte: busca de transportadora + veiculo + volumes ----------
+  (function () {
+    var base    = window.location.origin + '/collaborators_backoffice/';
+    var busca   = document.getElementById('devTranspBusca');
+    var lista   = document.getElementById('devTranspLista');
+    var codHid  = document.getElementById('devTranspCodPessoa');
+    var nomeHid = document.getElementById('devTranspNome');
+    var btnLimpar = document.getElementById('devBtnLimparTransp');
+    var veiculo = document.getElementById('devVeiculoWrap');
+    var possui  = document.getElementById('devPossuiVolumes');
+    var volumes = document.getElementById('devVolumesWrap');
+
+    function mostrarVeiculo() { if (veiculo) veiculo.style.display = (codHid && codHid.value) ? '' : 'none'; }
+    function mostrarVolumes() { if (volumes) volumes.style.display = (possui && possui.checked) ? '' : 'none'; }
+    if (possui) possui.addEventListener('change', mostrarVolumes);
+    mostrarVeiculo(); mostrarVolumes();
+
+    if (busca) {
+      busca.addEventListener('input', function () {
+        var q = this.value.trim();
+        if (codHid)  codHid.value = '';
+        if (nomeHid) nomeHid.value = '';
+        mostrarVeiculo();
+        if (q.length < 2) { lista.style.display = 'none'; return; }
+        fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
+          .then(function (r) { return r.json(); })
+          .then(function (ps) {
+            lista.innerHTML = '';
+            ps.forEach(function (p) {
+              var it = document.createElement('button');
+              it.type = 'button'; it.className = 'list-group-item list-group-item-action';
+              it.textContent = p.nome + (p.cpf_cnpj ? ' — ' + p.cpf_cnpj : '');
+              it.addEventListener('click', function () {
+                if (codHid)  codHid.value = p.cod_pessoa;
+                if (nomeHid) nomeHid.value = p.nome;
+                busca.value = p.nome;
+                lista.style.display = 'none';
+                mostrarVeiculo();
+              });
+              lista.appendChild(it);
+            });
+            lista.style.display = ps.length ? 'block' : 'none';
+          });
+      });
+    }
+    if (btnLimpar) {
+      btnLimpar.addEventListener('click', function () {
+        if (busca) busca.value = ''; if (codHid) codHid.value = ''; if (nomeHid) nomeHid.value = '';
+        if (lista) lista.style.display = 'none';
+        mostrarVeiculo();
+      });
+    }
+  })();
+
+  // ---------- Totais / Conferencia (recalcula ao vivo) ----------
+  (function () {
+    function parseBR(v) { return parseFloat(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')) || 0; }
+    function fmtBR(n) { return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function recalcTotais() {
+      var itens = 0, produtos = 0, icms = 0, ipi = 0;
+      document.querySelectorAll('tr.dev-item').forEach(function (tr) {
+        var chk = tr.querySelector('input[type="checkbox"]');
+        if (!chk || !chk.checked) return; // so itens marcados p/ devolucao
+        itens += 1;
+        var qtd = parseBR(tr.querySelector('.dev-qtd') ? tr.querySelector('.dev-qtd').value : '0');
+        var vlunEl = tr.querySelector('input[name*="[valor_unitario]"]');
+        var v = vlunEl ? parseBR(vlunEl.value) : 0;
+        produtos += qtd * v;
+        var icmsEl = tr.querySelector('input[name*="[icms_valor]"]');
+        var ipiEl  = tr.querySelector('input[name*="[ipi_valor]"]');
+        if (icmsEl) icms += parseBR(icmsEl.value);
+        if (ipiEl)  ipi  += parseBR(ipiEl.value);
+      });
+      var set = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+      set('totItens', String(itens));
+      set('totProdutos', fmtBR(produtos));
+      set('totIcms', fmtBR(icms));
+      set('totIpi', fmtBR(ipi));
+      // Total da nota: produtos + IPI (ICMS do Simples nao soma ao total).
+      set('totNota', fmtBR(produtos + ipi));
+    }
+
+    // Recalcula ao mexer em qualquer campo relevante da grade.
+    document.querySelectorAll('tr.dev-item').forEach(function (tr) {
+      tr.querySelectorAll('input').forEach(function (inp) {
+        inp.addEventListener('input', recalcTotais);
+        inp.addEventListener('change', recalcTotais);
+      });
+    });
+    recalcTotais(); // estado inicial
+  })();
+
+  // ---------- Validacao de pendencias (bloqueia Emitir) — igual nota avulsa ----------
+  (function () {
+    var VALIDAR_URL = "<%= validar_collaborators_backoffice_compra_devolucao_path(@compra) %>";
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    var form = document.querySelector('form');
+    var painel = document.getElementById('devPainelPendencias');
+    var lista = document.getElementById('devListaPendencias');
+    var timer = null;
+
+    function limparDestaques() {
+      document.querySelectorAll('tr.dev-item .is-invalid').forEach(function (el) { el.classList.remove('is-invalid'); });
+      var busca = document.getElementById('devTranspBusca');
+      if (busca) busca.classList.remove('is-invalid');
+    }
+
+    var CAMPO_SEL = { cfop: '.dev-cfop', quantidade: '.dev-qtd',
+                      valor_unitario: 'input[name*="[valor_unitario]"]' };
+
+    function aplicarDestaques(marc) {
+      limparDestaques();
+      if (!marc) return;
+      var linhas = document.querySelectorAll('tr.dev-item');
+      var itens = marc.itens || {};
+      Object.keys(itens).forEach(function (idx) {
+        var tr = linhas[parseInt(idx, 10)];
+        if (!tr) return;
+        (itens[idx] || []).forEach(function (campo) {
+          var sel = CAMPO_SEL[campo];
+          var el = sel ? tr.querySelector(sel) : null;
+          if (el) el.classList.add('is-invalid');
+        });
+      });
+      if (marc.transporte) {
+        var busca = document.getElementById('devTranspBusca');
+        if (busca) busca.classList.add('is-invalid');
+      }
+    }
+
+    function render(pend, marc) {
+      if (lista) {
+        lista.innerHTML = '';
+        pend.forEach(function (p) { var li = document.createElement('li'); li.textContent = p; lista.appendChild(li); });
+      }
+      if (painel) painel.style.display = pend.length ? '' : 'none';
+      aplicarDestaques(marc);
+      document.querySelectorAll('.btn-emitir-dev').forEach(function (b) {
+        b.disabled = pend.length > 0;
+        b.title = pend.length ? 'Resolva as pendências para emitir' : '';
+      });
+    }
+
+    function validarDevolucao() {
+      document.querySelectorAll('.btn-emitir-dev').forEach(function (b) { b.disabled = true; });
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (!form) return;
+        var fd = new FormData(form);
+        fd.delete('_method');
+        fetch(VALIDAR_URL, {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': csrf ? csrf.content : '', 'Accept': 'application/json' },
+          body: fd
+        })
+          .then(function (r) { return r.json().catch(function () { return null; }); })
+          .then(function (d) {
+            if (!d) { render(['Falha ao validar. Tente novamente.'], null); return; }
+            render(d.pendencias || [], d.marcadores || null);
+          })
+          .catch(function () { render(['Falha de conexão ao validar.'], null); });
+      }, 300);
+    }
+
+    // Revalida ao mexer em itens, transporte e campos do topo.
+    if (form) {
+      form.addEventListener('input', validarDevolucao);
+      form.addEventListener('change', validarDevolucao);
+    }
+    validarDevolucao(); // estado inicial (bloqueia ate validar)
+
+    // Confirmacao unica no submit (substitui o onclick antigo).
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        var btn = e.submitter;
+        var msg = btn && btn.dataset ? btn.dataset.confirmMsg : null;
+        if (msg && !confirm(msg)) { e.preventDefault(); }
+      });
+    }
   })();
 </script>

@@ -59,11 +59,22 @@
                     <%# pela SEFAZ): editar e reenviar. Rejeitada = sem valor %>
                     <%# fiscal, corrige o dado e reemite o mesmo documento. %>
                     <% if %w[rascunho erro rejeitada].include?(d.status) %>
-                      <%= link_to "Editar", edit_collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-warning" %>
-                      <%= button_to "Emitir", emitir_collaborators_backoffice_notas_avulsa_path(d),
-                                    method: :post, class: "btn btn-sm btn-success",
-                                    form: { class: "d-inline", data: { turbo: false } },
-                                    data: { confirm: "Emitir esta nota em elaboração agora? Após emitir não poderá mais editar." } %>
+                      <% if d.devolucao_compra? %>
+                        <%# Devolucao de compra: edita/emite na TELA DE DEVOLUCAO
+                            (impostos espelhados do XML), nao no editor avulso. %>
+                        <%= link_to "Editar", edit_collaborators_backoffice_compra_devolucao_path(d.cod_compra, documento_id: d.cod_documento_fiscal),
+                                    class: "btn btn-sm btn-outline-warning" %>
+                        <%= button_to "Emitir", emitir_collaborators_backoffice_compra_devolucao_path(d.cod_compra, documento_id: d.cod_documento_fiscal),
+                                      method: :post, class: "btn btn-sm btn-success",
+                                      form: { class: "d-inline", data: { turbo: false } },
+                                      data: { confirm: "Emitir esta devolução em elaboração agora? Após emitir não poderá mais editar." } %>
+                      <% else %>
+                        <%= link_to "Editar", edit_collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-warning" %>
+                        <%= button_to "Emitir", emitir_collaborators_backoffice_notas_avulsa_path(d),
+                                      method: :post, class: "btn btn-sm btn-success",
+                                      form: { class: "d-inline", data: { turbo: false } },
+                                      data: { confirm: "Emitir esta nota em elaboração agora? Após emitir não poderá mais editar." } %>
+                      <% end %>
                     <% end %>
                     <%# Excluir so para notas NAO autorizadas/canceladas (sem valor %>
                     <%# fiscal) — tentativas que falharam (erro/rejeitada/rascunho). %>

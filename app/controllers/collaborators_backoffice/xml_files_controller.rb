@@ -21,6 +21,12 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           consulta += " and pessoa_id in (select cod_pessoa from pessoa where upper(apelido) ilike upper('%"+ params[:term] +"%')) "
       end
 
+      # Filtro por numero da NF (nNF). So digitos, comparacao exata/prefixo.
+      if params[:nf].present?
+        nf = params[:nf].to_s.gsub(/\D/, "")
+        consulta += " and numeronf like '#{nf}%' " if nf.present?
+      end
+
       begin 
         unless params[:dataInicial].blank?
           dt_inicial = Date.parse(params[:dataInicial]).strftime("%d/%m/%Y")
@@ -167,6 +173,10 @@ class CollaboratorsBackoffice::XmlFilesController < CollaboratorsBackofficeContr
           # @xml_file.attach_file_with_custom_service(arquivo, id_nfe['Id'], current_collaborator.empresa)
 
           numeroNF = xml_doc.xpath('//*[local-name()="ide"]').at("nNF")&.text;
+          @xml_file.numeronf = numeroNF.to_s.strip.presence # p/ busca na listagem
+          # Chave de acesso (44 digitos): do Id de infNFe (ex. "NFe4126...").
+          chave = id_nfe['Id'].to_s.gsub(/\D/, "")
+          @xml_file.chave = chave if chave.length == 44
           compra = Compra.select(:cod_compra).where(numeronf: numeroNF, cod_pessoa: fornecedor.cod_pessoa)
 
           if compra.size > 0
