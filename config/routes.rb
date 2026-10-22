@@ -232,6 +232,8 @@ Rails.application.routes.draw do
       collection do
         post :sincronizar          # busca na SEFAZ as notas de entrada do periodo
         post :sincronizar_status   # atualiza o status SEFAZ das notas (cancelamento)
+        get  :consultar_chave      # CONSULTA (so ver) uma NF pela chave, sem gravar
+        get  :baixar_chave         # DOWNLOAD manual do XML/PDF pela chave (nao salva)
       end
       member do
         post :importar             # leva ao fluxo de compra (produtoxmls#new)
@@ -246,6 +248,14 @@ Rails.application.routes.draw do
       get :status_sefaz
       # Consulta de cadastro de contribuinte na SEFAZ (JSON).
       get :consultar_cadastro
+      # Verifica o certificado digital ja cadastrado (validade/expirado) — JSON.
+      get :verificar_certificado
+      # Upload do certificado A1 (.pfx/.p12) + senha para o provedor.
+      post :enviar_certificado
+      # Testa a comunicacao com o provedor usando os tokens (JSON).
+      get :testar_conexao
+      # Checa pre-requisitos para virar o ambiente para producao (JSON).
+      get :checar_producao
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 

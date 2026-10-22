@@ -14,7 +14,8 @@ BuscarTodasEmpresas). `Content-Type: application/json`.
 - `POST /BuscarEmpresa` — dados de uma empresa (header Token).
 - `POST /BuscarTodasEmpresas` — lista todas (só UserToken).
 - `POST /AlterarCertificado` — troca certificado A1 (.pfx/.p12 em Base64 + Senha).
-- `POST /VerificarCertificado` — valida/expira certificado (Interno=true verifica o atual).
+- `POST /VerificarCertificado` — verifica o certificado JÁ cadastrado (só Token no
+  header basta); retorna Expirado + DtExpiracao (ver abaixo).
 - `POST /ConsultarNumeracao` — **lista numerações atuais** (ver abaixo).
 - `POST /AtualizarNumeracao` — **ajusta o próximo número** de uma série (ver abaixo).
 - `POST /GerarLinkAtivacao`, `AtivarAssinatura`, `CancelarAssinatura`,
@@ -59,8 +60,65 @@ Body:
 - Casos de uso: migração de ERP, abrir nova série, corrigir pós-incidente
   (ex.: pular faixa inutilizada em homologação — nosso caso da NFC-e nº 1..5).
 
-## AlterarCertificado / VerificarCertificado
-- Só A1 ICP-Brasil (.pfx/.p12), CN com o CNPJ da empresa. A3 (token/cartão) NÃO.
-- AlterarCertificado: body `Senha` + `Base64CertificateFile`. Resposta: Expirado,
-  DtExpiracao, status (1 ok / 2 falha).
-- VerificarCertificado: `Interno=true` verifica o certificado já cadastrado.
+## AlterarCertificado / VerificarCertificado  (schema confirmado via OpenAPI)
+
+Só A1 ICP-Brasil (.pfx/.p12), CN com o CNPJ da empresa. A3 (token/cartão) NÃO.
+
+### VerificarCertificado  — EXIBIR validade no painel
+`POST /VerificarCertificado` — headers Token (obrigatório, identifica a empresa
+cujo certificado verificar) + UserToken.
+
+Verifica o certificado **JÁ CADASTRADO** da empresa. Para checar o certificado
+atual, basta o header `Token` — não precisa reenviar o .pfx. (O corpo abaixo é
+todo opcional; serve para validar um .pfx avulso antes de cadastrar.)
+
+Request body (todos opcionais):
+```json
+{ "Senha": "123456",
+  "Base64CertificateFile": "<pfx em base64>",
+  "Interno": false }
+```
+- `Interno` (boolean, default false) — forma de verificação.
+
+Response 200:
+```json
+{ "Expirado": true,
+  "DtExpiracao": "2026-03-31",
+  "status": true,
+  "Error": "Certificado não encontrado na base de dados.",
+  "Avisos": [] }
+```
+- `Expirado` (boolean): true = expirado, false = válido.
+- `DtExpiracao` (string date): data em que o certificado expira. **← é a validade
+  que exibimos no painel (item 3 da config fiscal).**
+- `status` (boolean): true = operação concluída; false = falha (ver `Error`).
+- `Avisos` (string[]): não-fatais (ex.: certificado próximo do vencimento).
+
+> Este NÃO troca o certificado; só verifica. Para trocar, use AlterarCertificado.
+
+### AlterarCertificado  — UPLOAD/troca do certificado pela nossa tela
+`POST /AlterarCertificado` — headers Token (obrigatório) + UserToken.
+
+Request body (ambos required):
+```json
+{ "Senha": "123456",
+  "Base64CertificateFile": "<arquivo .pfx/.p12 em base64>" }
+```
+
+Response 200 (mesma forma do VerificarCertificado):
+```json
+{ "Expirado": false, "DtExpiracao": "2027-05-20",
+  "status": true, "Error": "", "Avisos": [] }
+```
+- Quando usar: certificado perto do vencimento, expirado, ou troca por segurança.
+- Rejeita certificados inválidos/corrompidos ou com senha incorreta.
+- Habilita o item 4 (upload do certificado pela tela, sem abrir o painel da Brasil NFe).
+
+## BuscarEmpresa / BuscarTodasEmpresas  (dados cadastrais)
+- `POST /BuscarEmpresa` (headers Token + UserToken): dados da empresa do Token.
+- `POST /BuscarTodasEmpresas` (só UserToken): array de empresas da conta.
+
+Response (campos principais, PascalCase):
+`CNPJ`, `CodigoInterno` (código livre do integrador; eco em `codigoInterno`),
+`NmFantasia`, `RzSocial`, `IE`, `IM`, `CRT` (ver acima), endereço, `SenhaWebService`.
+> A validade do certificado NÃO vem aqui — use VerificarCertificado para isso.

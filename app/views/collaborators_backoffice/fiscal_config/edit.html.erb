@@ -22,7 +22,7 @@
             <div class="form-floating">
               <%= f.select :ambiente,
                     options_for_select([["Homologação (teste)", "homologacao"], ["Produção", "producao"]], @config.ambiente),
-                    {}, class: "form-select" %>
+                    { id: "selAmbiente" }, class: "form-select" %>
               <%= f.label :ambiente, "Ambiente" %>
             </div>
           </div>
@@ -41,6 +41,11 @@
             </div>
           </div>
         </div>
+
+        <%# Painel de prontidao para PRODUCAO: aparece ao escolher "Produção",
+            lista as pendencias (plano, certificado, CSC, tokens) e so libera
+            salvar quando tudo ok. O backend tambem bloqueia (fonte de verdade). %>
+        <div id="prodCheck" class="alert mb-3" style="display:none;"></div>
 
         <%# ===== Numeração e Série ===== %>
         <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
@@ -155,23 +160,11 @@
           </div>
         </div>
 
-        <%# ===== Certificado e Provedor ===== %>
+        <%# ===== Provedor ===== %>
         <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">
-          <i class="fa fa-certificate me-1"></i> Certificado e Provedor
+          <i class="fa fa-plug me-1"></i> Provedor
         </h6>
         <div class="row mb-3">
-          <div class="col-md-5">
-            <div class="form-floating">
-              <%= f.text_field :certificado_nome, class: "form-control" %>
-              <%= f.label :certificado_nome, "Certificado (nome/ref)" %>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="form-floating">
-              <%= f.date_field :certificado_validade, class: "form-control" %>
-              <%= f.label :certificado_validade, "Validade" %>
-            </div>
-          </div>
           <div class="col-md-4">
             <div class="form-floating">
               <%= f.select :provedor,
@@ -182,10 +175,10 @@
           </div>
         </div>
 
-        <div class="alert alert-warning small">
-          <i class="fa fa-triangle-exclamation me-1"></i>
-          O arquivo do certificado (.pfx) ainda é enviado pelo painel do provedor — o upload pela tela está em avaliação.
-          Os tokens acima são guardados criptografados neste sistema (não dependem mais de arquivo de configuração).
+        <div class="alert alert-info small">
+          <i class="fa fa-circle-info me-1"></i>
+          Os tokens e o CSC são guardados criptografados neste sistema (não dependem mais de arquivo de configuração).
+          O certificado digital é enviado na seção abaixo, após salvar os tokens.
         </div>
 
         <div class="d-flex justify-content-end gap-2 border-top pt-3">
@@ -195,4 +188,158 @@
       <% end %>
     </div>
   </div>
+
+  <%# ===== Certificado digital A1 (upload separado — chama a Brasil NFe) ===== %>
+  <div class="card mt-3">
+    <div class="card-header d-flex align-items-center">
+      <strong><i class="fa fa-certificate me-2"></i> Certificado digital A1</strong>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <% if @config.certificado_nome.present? %>
+          <span class="small text-muted">
+            Atual: <%= @config.certificado_nome %>
+            <% if @config.certificado_validade %>
+              · válido até <%= @config.certificado_validade.strftime("%d/%m/%Y") rescue @config.certificado_validade %>
+            <% end %>
+          </span>
+        <% end %>
+        <% if @config.persisted? && @config.provedor.to_s == "brasilnfe" %>
+          <button id="btnConferirCert" type="button" class="btn btn-sm btn-outline-light border">
+            <i class="fa fa-rotate me-1"></i> Conferir validade
+          </button>
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="conferirCertResultado" class="mb-3" style="display:none;"></div>
+      <p class="text-muted small mb-3">
+        Envie o certificado <strong>A1 (.pfx ou .p12)</strong> com a senha. O arquivo vai
+        direto para a Brasil NFe; a senha <strong>não</strong> é guardada neste sistema.
+        Cadastre e salve os tokens acima antes de enviar o certificado.
+      </p>
+      <%= form_with url: enviar_certificado_collaborators_backoffice_fiscal_config_path,
+            method: :post, local: true, html: { multipart: true } do %>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label mb-1">Arquivo do certificado (.pfx / .p12)</label>
+            <input type="file" name="certificado_arquivo" accept=".pfx,.p12" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mb-1">Senha do certificado</label>
+            <input type="password" name="certificado_senha" class="form-control" autocomplete="off" required>
+          </div>
+          <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary"
+                    data-confirm="Enviar este certificado para a Brasil NFe?">
+              <i class="fa fa-upload me-1"></i> Enviar certificado
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    // ---- Prontidão para PRODUÇÃO (item 5) ----
+    (function () {
+      var sel = document.getElementById('selAmbiente');
+      var box = document.getElementById('prodCheck');
+      if (!sel || !box) return;
+      var url = "<%= @config.persisted? ? checar_producao_collaborators_backoffice_fiscal_config_path : '' %>";
+      // Botão Salvar (submit do form principal).
+      function btnSalvar() { return document.querySelector('form input[type=submit], form button[type=submit]'); }
+
+      function limpar() {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        var b = btnSalvar(); if (b) { b.disabled = false; b.title = ''; }
+      }
+
+      function checar() {
+        if (sel.value !== 'producao') { limpar(); return; }
+        if (!url) {
+          box.style.display = 'block';
+          box.className = 'alert alert-warning mb-3';
+          box.innerHTML = 'Salve a configuração (em homologação) uma vez antes de ativar a Produção.';
+          return;
+        }
+        box.style.display = 'block';
+        box.className = 'alert alert-secondary mb-3';
+        box.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Verificando pré-requisitos para Produção...';
+        var b = btnSalvar(); if (b) b.disabled = true;
+
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.pronto) {
+              box.className = 'alert alert-success mb-3';
+              box.innerHTML = '<i class="fa fa-circle-check me-1"></i> <strong>Pronto para Produção.</strong> ' +
+                'Ao salvar, as próximas notas terão <strong>valor fiscal real</strong>.';
+              var bb = btnSalvar(); if (bb) bb.disabled = false;
+            } else {
+              var itens = (d.pendencias || []).map(function (p) { return '<li>' + p + '</li>'; }).join('');
+              box.className = 'alert alert-danger mb-3';
+              box.innerHTML = '<i class="fa fa-triangle-exclamation me-1"></i> <strong>Ainda não é possível ativar Produção.</strong>' +
+                '<ul class="mb-0 mt-1">' + itens + '</ul>';
+              var bb = btnSalvar(); if (bb) { bb.disabled = true; bb.title = 'Resolva as pendências para ativar produção'; }
+            }
+          })
+          .catch(function () {
+            box.className = 'alert alert-warning mb-3';
+            box.innerHTML = 'Não foi possível verificar os pré-requisitos agora. O salvamento em produção será validado pelo servidor.';
+            var bb = btnSalvar(); if (bb) bb.disabled = false;
+          });
+      }
+
+      sel.addEventListener('change', checar);
+      if (sel.value === 'producao') checar(); // estado inicial
+    })();
+  </script>
+
+  <% if @config.persisted? && @config.provedor.to_s == "brasilnfe" %>
+    <script>
+      (function () {
+        var btn = document.getElementById('btnConferirCert');
+        var out = document.getElementById('conferirCertResultado');
+        if (!btn || !out) return;
+        var url = "<%= verificar_certificado_collaborators_backoffice_fiscal_config_path %>";
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          out.style.display = 'block';
+          out.className = 'mb-3 alert alert-secondary py-2';
+          out.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando a validade na Brasil NFe...';
+          fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d.sucesso) {
+                out.className = 'mb-3 alert alert-danger py-2';
+                out.textContent = d.mensagem || 'Não foi possível verificar o certificado.';
+                return;
+              }
+              var classe, rotulo;
+              if (d.expirado === true) { classe = 'alert-danger'; rotulo = 'Certificado expirado'; }
+              else if (d.proximo_vencimento) { classe = 'alert-warning'; rotulo = 'Certificado vence em breve'; }
+              else if (d.valido) { classe = 'alert-success'; rotulo = 'Certificado válido'; }
+              else { classe = 'alert-secondary'; rotulo = 'Situação indefinida'; }
+              var extra = '';
+              if (d.data_expiracao) {
+                extra = ' — validade ' + d.data_expiracao;
+                if (typeof d.dias_para_expirar === 'number') {
+                  extra += d.dias_para_expirar < 0
+                    ? ' (expirado há ' + Math.abs(d.dias_para_expirar) + ' dia(s))'
+                    : ' (faltam ' + d.dias_para_expirar + ' dia(s))';
+                }
+              }
+              var avisos = (d.avisos && d.avisos.length) ? '<br><small>' + d.avisos.join(' · ') + '</small>' : '';
+              out.className = 'mb-3 alert ' + classe + ' py-2';
+              out.innerHTML = '<strong>' + rotulo + '</strong>' + extra + avisos;
+            })
+            .catch(function () {
+              out.className = 'mb-3 alert alert-danger py-2';
+              out.textContent = 'Falha ao verificar o certificado.';
+            })
+            .finally(function () { btn.disabled = false; });
+        });
+      })();
+    </script>
+  <% end %>
 </div>

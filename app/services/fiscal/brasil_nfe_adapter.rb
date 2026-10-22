@@ -164,6 +164,48 @@ module Fiscal
       post_empresa("/AtualizarNumeracao", payload)
     end
 
+    # Verifica a situacao do CERTIFICADO DIGITAL ja cadastrado da empresa
+    # (/services/empresa). Doc 2.0: POST /VerificarCertificado. Basta o header
+    # Token (identifica a empresa); nao precisa reenviar o .pfx. Resposta:
+    # { Expirado (bool), DtExpiracao (date), status (bool), Error, Avisos }.
+    # Retorna FiscalCertificado (valido?/expirado?/data_expiracao).
+    def verificar_certificado
+      resposta = post_empresa("/VerificarCertificado", {})
+      to_certificado(resposta)
+    end
+
+    # Consulta os servicos contratados/ativos da empresa (/services/empresa).
+    # Doc 2.0: POST /ConsultarServicos (headers Token + UserToken). Usado para
+    # saber se ha PLANO/assinatura ativo antes de liberar producao. Resposta:
+    # { Servicos: [{ Nome, Ativo }], erros: [...], avisos: [...], status }.
+    # Retorna o Hash cru parseado (o controller interpreta).
+    def consultar_servicos
+      post_empresa("/ConsultarServicos", {})
+    end
+
+    # Busca os dados cadastrais da empresa (/services/empresa). Doc 2.0: POST
+    # /BuscarEmpresa (headers Token + UserToken). Serve como TESTE DE CONEXAO:
+    # se retornar os dados, os dois tokens estao validos e comunicando. Nao
+    # emite nada nem consome numeracao. Retorna o Hash cru parseado.
+    def buscar_empresa
+      post_empresa("/BuscarEmpresa", {})
+    end
+
+    # Envia/troca o CERTIFICADO DIGITAL A1 (.pfx/.p12) da empresa. Doc 2.0:
+    # POST /AlterarCertificado com Base64CertificateFile + Senha. Mesma resposta
+    # do VerificarCertificado (Expirado/DtExpiracao/status/Error/Avisos).
+    # Retorna FiscalCertificado.
+    def alterar_certificado(base64:, senha:)
+      raise ConfiguracaoInvalida, "Arquivo do certificado ausente" if base64.to_s.strip.empty?
+      raise ConfiguracaoInvalida, "Senha do certificado ausente" if senha.to_s.empty?
+
+      resposta = post_empresa("/AlterarCertificado", {
+        "Base64CertificateFile" => base64,
+        "Senha"                 => senha
+      })
+      to_certificado(resposta)
+    end
+
     # Consulta a situacao de emissao de um documento ja enviado. Doc 2.0:
     # POST /ConsultarNotaFiscal. Localiza por Chave, IdentificadorInterno ou
     # Numero (+ModeloDocumento). Com retornar_arquivos: true devolve XML/PDF da
@@ -611,6 +653,24 @@ module Fiscal
         uf:        resposta["DsEstadoEmitente"],
         avisos:    resposta["Avisos"],
         bruto:     resposta
+      )
+    end
+
+    # Converte a resposta do VerificarCertificado no FiscalCertificado neutro.
+    # status=true => consulta concluida; Expirado/DtExpiracao descrevem o
+    # certificado. Falha (status!=true, Error, HTTP>=400) => sucesso=false.
+    def to_certificado(resposta)
+      falha = resposta["Error"].present? || resposta["_http_status"].to_i >= 400 ||
+              resposta["status"] == false
+      avisos = Array(resposta["Avisos"]).map { |a| a.is_a?(Hash) ? (a["mensagem"] || a.values.first) : a }.compact
+
+      FiscalCertificado.new(
+        sucesso:        !falha,
+        expirado:       (resposta.key?("Expirado") ? resposta["Expirado"] : nil),
+        data_expiracao: resposta["DtExpiracao"],
+        mensagem:       resposta["Error"].presence || avisos.join("; ").presence,
+        avisos:         avisos,
+        bruto:          resposta
       )
     end
 

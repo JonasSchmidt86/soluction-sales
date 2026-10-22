@@ -1,8 +1,16 @@
 <div class="container-fluid mt-3">
-  <div class="card">
-    <div class="card-header bg-primary d-flex align-items-center">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary d-flex align-items-center flex-wrap gap-2">
       <h4 class="text-white mb-0"><i class="fa fa-gear me-2"></i> Configuração Fiscal</h4>
-      <div class="ms-auto d-flex gap-2">
+      <div class="ms-auto d-flex gap-2 flex-wrap">
+        <% if @config.persisted? && @config.provedor.to_s == "brasilnfe" %>
+          <button id="btnTestarConexao" type="button" class="btn btn-light btn-sm">
+            <i class="fa fa-plug-circle-check me-1"></i> Testar conexão
+          </button>
+          <button id="btnStatusSefaz" type="button" class="btn btn-light btn-sm">
+            <i class="fa fa-tower-broadcast me-1"></i> Status SEFAZ
+          </button>
+        <% end %>
         <% if @config.persisted? && @config.ativo? %>
           <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "btn btn-light btn-sm" do %>
             <i class="fa fa-box-archive me-1"></i> Pacotes XML
@@ -13,42 +21,101 @@
         <% end %>
       </div>
     </div>
+
     <div class="card-body">
+      <%# Área de alertas no meio da tela (resultado de Testar conexão / Status SEFAZ). %>
+      <div id="fiscalAlerta" class="mb-3" style="display:none;"></div>
+
       <% if @config.persisted? %>
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Ambiente:</strong>
-              <% if @config.producao? %>
-                <span class="badge bg-danger">Produção</span>
-              <% else %>
-                <span class="badge bg-warning text-dark">Homologação (teste)</span>
-              <% end %>
-            </p>
-            <p><strong>Regime:</strong> <%= @config.regime_tributario.titleize %> (CRT <%= @config.crt %>)</p>
-            <p><strong>Provedor:</strong> <%= @config.provedor.presence&.titleize || "A definir" %></p>
+        <%# ---- Resumo rápido (badges grandes) ---- %>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <% if @config.producao? %>
+            <span class="badge bg-danger fs-6 py-2 px-3"><i class="fa fa-circle-check me-1"></i> Produção</span>
+          <% else %>
+            <span class="badge bg-warning text-dark fs-6 py-2 px-3"><i class="fa fa-flask me-1"></i> Homologação (teste)</span>
+          <% end %>
+          <span class="badge bg-light text-dark border fs-6 py-2 px-3">
+            <i class="fa fa-building me-1"></i> <%= @config.provedor.presence&.titleize || "Provedor a definir" %>
+          </span>
+          <span class="badge <%= @config.ativo? ? 'bg-success' : 'bg-secondary' %> fs-6 py-2 px-3">
+            <i class="fa fa-power-off me-1"></i> <%= @config.ativo? ? "Módulo ativo" : "Módulo inativo" %>
+          </span>
+        </div>
+
+        <div class="row g-4">
+          <%# ---- Empresa / Regime ---- %>
+          <div class="col-lg-4">
+            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+              <i class="fa fa-sliders me-1"></i> Regime
+            </h6>
+            <dl class="row mb-0 small">
+              <dt class="col-5 text-muted">Regime</dt>
+              <dd class="col-7"><%= @config.regime_tributario.titleize %></dd>
+              <dt class="col-5 text-muted">CRT</dt>
+              <dd class="col-7"><%= @config.crt %></dd>
+            </dl>
           </div>
-          <div class="col-md-6">
-            <p><strong>NF-e:</strong> série <%= @config.serie_nfe %>, próximo nº <%= @config.proximo_numero_nfe %></p>
-            <p><strong>NFC-e:</strong> série <%= @config.serie_nfce %>, próximo nº <%= @config.proximo_numero_nfce %></p>
-            <p><strong>Token Brasil NFe:</strong>
-              <% if @config.credenciais_proprias? %>
-                <span class="badge bg-success">configurado</span>
-              <% elsif @config.brasilnfe_token_efetivo.present? %>
-                <span class="badge bg-secondary">herdado (global)</span>
-              <% else %>
-                <span class="badge bg-danger">ausente</span>
-              <% end %>
-            </p>
-            <p><strong>CSC (<%= @config.producao? ? "produção" : "homologação" %>):</strong>
-              <%= @config.csc_id_ambiente.present? ? "ID #{@config.csc_id_ambiente}" : "—" %>
-              <%= "· token salvo" if @config.csc_token_ambiente.present? %>
-            </p>
-            <p><strong>Certificado:</strong>
-              <%= @config.certificado_nome.presence || "—" %>
-              <% if @config.certificado_validade %>
-                (válido até <%= l @config.certificado_validade, format: :default rescue @config.certificado_validade %>)
-              <% end %>
-            </p>
+
+          <%# ---- Numeração ---- %>
+          <div class="col-lg-4">
+            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+              <i class="fa fa-list-ol me-1"></i> Numeração
+            </h6>
+            <dl class="row mb-0 small">
+              <dt class="col-5 text-muted">NF-e (55)</dt>
+              <dd class="col-7">série <%= @config.serie_nfe %> · nº <%= @config.proximo_numero_nfe %></dd>
+              <dt class="col-5 text-muted">NFC-e (65)</dt>
+              <dd class="col-7">série <%= @config.serie_nfce %> · nº <%= @config.proximo_numero_nfce %></dd>
+            </dl>
+          </div>
+
+          <%# ---- Credenciais / Certificado ---- %>
+          <div class="col-lg-4">
+            <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">
+              <i class="fa fa-key me-1"></i> Credenciais
+            </h6>
+            <dl class="row mb-0 small">
+              <dt class="col-5 text-muted">Token</dt>
+              <dd class="col-7">
+                <% if @config.credenciais_proprias? %>
+                  <span class="badge bg-success">configurado</span>
+                <% elsif @config.brasilnfe_token_efetivo.present? %>
+                  <span class="badge bg-secondary">herdado (global)</span>
+                <% else %>
+                  <span class="badge bg-danger">ausente</span>
+                <% end %>
+              </dd>
+              <dt class="col-5 text-muted">UserToken</dt>
+              <dd class="col-7">
+                <%= @config.brasilnfe_user_token_efetivo.present? ? "salvo" : "—" %>
+              </dd>
+              <dt class="col-5 text-muted">CSC</dt>
+              <dd class="col-7">
+                <%= @config.csc_id_ambiente.present? ? "ID #{@config.csc_id_ambiente}" : "—" %>
+              </dd>
+              <dt class="col-5 text-muted">Certificado</dt>
+              <dd class="col-7">
+                <% if @config.certificado_nome.present? %>
+                  <%= @config.certificado_nome %>
+                  <% if @config.certificado_validade %>
+                    <% venc = (@config.certificado_validade.to_date rescue nil) %>
+                    <% if venc %>
+                      <br>
+                      <% dias = (venc - Date.current).to_i %>
+                      <% if dias < 0 %>
+                        <span class="badge bg-danger">expirado em <%= venc.strftime("%d/%m/%Y") %></span>
+                      <% elsif dias <= 30 %>
+                        <span class="badge bg-warning text-dark">vence em <%= venc.strftime("%d/%m/%Y") %> (<%= dias %>d)</span>
+                      <% else %>
+                        <span class="badge bg-success">válido até <%= venc.strftime("%d/%m/%Y") %></span>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted">não enviado</span>
+                <% end %>
+              </dd>
+            </dl>
           </div>
         </div>
       <% else %>
@@ -63,30 +130,9 @@
     </div>
   </div>
 
+  <%# ---- Consulta de cadastro de contribuinte na SEFAZ (mantido) ---- %>
   <% if @config.persisted? && @config.ativo? %>
-    <%# ---- Status operacional da SEFAZ (consulta sob demanda) ---- %>
-    <div class="card mt-3">
-      <div class="card-header d-flex align-items-center">
-        <strong><i class="fa fa-tower-broadcast me-2"></i>Status da SEFAZ</strong>
-        <div class="ms-auto d-flex align-items-center gap-2">
-          <select id="statusModelo" class="form-select form-select-sm" style="width:auto;">
-            <option value="55">NF-e (55)</option>
-            <option value="65">NFC-e (65)</option>
-          </select>
-          <button id="btnStatusSefaz" type="button" class="btn btn-sm btn-outline-primary">
-            <i class="fa fa-rotate me-1"></i> Verificar
-          </button>
-        </div>
-      </div>
-      <div class="card-body">
-        <div id="statusSefazResultado" class="text-muted">
-          Clique em <em>Verificar</em> para consultar a disponibilidade da SEFAZ (consulta sempre em produção).
-        </div>
-      </div>
-    </div>
-
-    <%# ---- Consulta de cadastro de contribuinte na SEFAZ ---- %>
-    <div class="card mt-3">
+    <div class="card mt-3 shadow-sm">
       <div class="card-header">
         <strong><i class="fa fa-id-card me-2"></i>Consultar cadastro na SEFAZ</strong>
       </div>
@@ -110,134 +156,154 @@
         <div id="cadastroResultado" class="mt-3 text-muted">
           Informe UF e documento para verificar a situação cadastral do contribuinte.
         </div>
-        <%# Faixa de acao: cadastrar/abrir pessoa (preenchida via JS apos a consulta). %>
         <div id="cadastroAcao" class="mt-3" style="display:none;"></div>
       </div>
     </div>
+  <% end %>
 
+  <% if @config.persisted? && @config.provedor.to_s == "brasilnfe" %>
     <script>
       (function () {
-        var btn   = document.getElementById('btnStatusSefaz');
-        var sel   = document.getElementById('statusModelo');
-        var out   = document.getElementById('statusSefazResultado');
-        var url   = "<%= status_sefaz_collaborators_backoffice_fiscal_config_path %>";
+        var alerta = document.getElementById('fiscalAlerta');
+        function mostrar(classe, html) {
+          alerta.style.display = 'block';
+          alerta.className = 'mb-3 alert ' + classe + ' py-2';
+          alerta.innerHTML = html;
+          alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
 
-        btn.addEventListener('click', function () {
-          btn.disabled = true;
-          out.className = 'text-muted';
-          out.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
+        // ---- Testar conexão (BuscarEmpresa) ----
+        var btnTest = document.getElementById('btnTestarConexao');
+        if (btnTest) {
+          var urlTest = "<%= testar_conexao_collaborators_backoffice_fiscal_config_path %>";
+          btnTest.addEventListener('click', function () {
+            btnTest.disabled = true;
+            mostrar('alert-secondary', '<i class="fa fa-spinner fa-spin me-1"></i> Testando comunicação com a Brasil NFe...');
+            fetch(urlTest, { headers: { 'Accept': 'application/json' } })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (d.ok) {
+                  var e = d.empresa || {};
+                  var det = [e.razao_social, e.cnpj ? ('CNPJ ' + e.cnpj) : null,
+                             e.ie ? ('IE ' + e.ie) : null, e.ambiente].filter(Boolean).join(' · ');
+                  mostrar('alert-success', '<i class="fa fa-circle-check me-1"></i> <strong>' +
+                    (d.mensagem || 'Comunicação validada.') + '</strong>' + (det ? '<br><small>' + det + '</small>' : ''));
+                } else {
+                  mostrar('alert-danger', '<i class="fa fa-circle-xmark me-1"></i> ' +
+                    (d.mensagem || 'Não foi possível validar a comunicação.'));
+                }
+              })
+              .catch(function () { mostrar('alert-danger', 'Falha de conexão ao testar.'); })
+              .finally(function () { btnTest.disabled = false; });
+          });
+        }
 
-          fetch(url + '?modelo=' + encodeURIComponent(sel.value), { headers: { 'Accept': 'application/json' } })
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-              var badge = d.operante
-                ? '<span class="badge bg-success">Operante</span>'
-                : '<span class="badge bg-danger">Indisponível</span>';
-              var detalhe = [d.mensagem, d.uf, d.ambiente].filter(Boolean).join(' — ');
-              out.className = '';
-              out.innerHTML = badge + ' ' + (detalhe || '') +
-                (d.codigo ? ' <small class="text-muted">(cód ' + d.codigo + ')</small>' : '');
-            })
-            .catch(function () {
-              out.className = 'text-danger';
-              out.textContent = 'Falha ao consultar o status da SEFAZ.';
-            })
-            .finally(function () { btn.disabled = false; });
-        });
+        // ---- Status SEFAZ (botão no cabeçalho -> alerta no meio) ----
+        var btnStatus = document.getElementById('btnStatusSefaz');
+        if (btnStatus) {
+          var urlStatus = "<%= status_sefaz_collaborators_backoffice_fiscal_config_path %>";
+          btnStatus.addEventListener('click', function () {
+            btnStatus.disabled = true;
+            mostrar('alert-secondary', '<i class="fa fa-spinner fa-spin me-1"></i> Consultando status da SEFAZ (NF-e)...');
+            fetch(urlStatus + '?modelo=55', { headers: { 'Accept': 'application/json' } })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                var classe = d.operante ? 'alert-success' : 'alert-danger';
+                var icone = d.operante ? 'fa-circle-check' : 'fa-triangle-exclamation';
+                var rotulo = d.operante ? 'SEFAZ operante' : 'SEFAZ indisponível';
+                var detalhe = [d.mensagem, d.uf, d.ambiente].filter(Boolean).join(' — ');
+                mostrar(classe, '<i class="fa ' + icone + ' me-1"></i> <strong>' + rotulo + '</strong> ' +
+                  (detalhe ? '— ' + detalhe : '') + (d.codigo ? ' <small>(cód ' + d.codigo + ')</small>' : ''));
+              })
+              .catch(function () { mostrar('alert-danger', 'Falha ao consultar o status da SEFAZ.'); })
+              .finally(function () { btnStatus.disabled = false; });
+          });
+        }
 
         // ---- Consulta de cadastro ----
         var cadBtn  = document.getElementById('btnCadastro');
-        var cadUf   = document.getElementById('cadUf');
-        var cadDoc  = document.getElementById('cadDoc');
-        var cadOut  = document.getElementById('cadastroResultado');
-        var cadAcao = document.getElementById('cadastroAcao');
-        var cadUrl  = "<%= consultar_cadastro_collaborators_backoffice_fiscal_config_path %>";
-        var novoPessoaUrl = "<%= new_collaborators_backoffice_pessoa_path %>";
-        var editPessoaBase = "<%= collaborators_backoffice_pessoas_path %>"; // + /:id/edit
+        if (cadBtn) {
+          var cadUf   = document.getElementById('cadUf');
+          var cadDoc  = document.getElementById('cadDoc');
+          var cadOut  = document.getElementById('cadastroResultado');
+          var cadAcao = document.getElementById('cadastroAcao');
+          var cadUrl  = "<%= consultar_cadastro_collaborators_backoffice_fiscal_config_path %>";
+          var novoPessoaUrl = "<%= new_collaborators_backoffice_pessoa_path %>";
+          var editPessoaBase = "<%= collaborators_backoffice_pessoas_path %>";
 
-        // Monta a faixa de acao conforme a pessoa ja existe ou nao.
-        function montarAcaoCadastro(d) {
-          if (!d || !d.sucesso) { cadAcao.style.display = 'none'; return; }
-
-          if (d.pessoa_existe && d.cod_pessoa) {
+          function montarAcaoCadastro(d) {
+            if (!d || !d.sucesso) { cadAcao.style.display = 'none'; return; }
+            if (d.pessoa_existe && d.cod_pessoa) {
+              cadAcao.style.display = 'block';
+              cadAcao.innerHTML =
+                '<div class="alert alert-light border d-flex justify-content-between align-items-center mb-0">' +
+                  '<span><i class="fa fa-user-check me-1 text-success"></i> Já existe uma pessoa com este documento.</span>' +
+                  '<a class="btn btn-sm btn-outline-primary" href="' + editPessoaBase + '/' + d.cod_pessoa + '/edit">' +
+                    '<i class="fa fa-arrow-up-right-from-square me-1"></i> Abrir cadastro</a>' +
+                '</div>';
+              return;
+            }
+            var qs = Object.keys(d.prefill || {})
+              .filter(function (k) { return d.prefill[k] != null && d.prefill[k] !== ''; })
+              .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(d.prefill[k]); })
+              .join('&');
+            var href = novoPessoaUrl + (qs ? ('?' + qs) : '');
             cadAcao.style.display = 'block';
             cadAcao.innerHTML =
-              '<div class="alert alert-light border d-flex justify-content-between align-items-center mb-0">' +
-                '<span><i class="fa fa-user-check me-1 text-success"></i> Já existe uma pessoa com este documento.</span>' +
-                '<a class="btn btn-sm btn-outline-primary" href="' + editPessoaBase + '/' + d.cod_pessoa + '/edit">' +
-                  '<i class="fa fa-arrow-up-right-from-square me-1"></i> Abrir cadastro</a>' +
+              '<div class="alert alert-primary border d-flex justify-content-between align-items-center mb-0">' +
+                '<span><i class="fa fa-circle-info me-1"></i> Este CNPJ ainda não está cadastrado como pessoa.' +
+                  '<small class="d-block text-muted">Abre o cadastro de PJ já preenchido; o CEP completa o endereço.</small></span>' +
+                '<a class="btn btn-sm btn-success" target="_blank" href="' + href + '">' +
+                  '<i class="fa fa-plus me-1"></i> Cadastrar pessoa</a>' +
               '</div>';
-            return;
           }
 
-          // Nao existe: link para abrir o cadastro de PJ ja preenchido.
-          var qs = Object.keys(d.prefill || {})
-            .filter(function (k) { return d.prefill[k] != null && d.prefill[k] !== ''; })
-            .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(d.prefill[k]); })
-            .join('&');
-          var href = novoPessoaUrl + (qs ? ('?' + qs) : '');
-
-          cadAcao.style.display = 'block';
-          cadAcao.innerHTML =
-            '<div class="alert alert-primary border d-flex justify-content-between align-items-center mb-0">' +
-              '<span>' +
-                '<i class="fa fa-circle-info me-1"></i> Este CNPJ ainda não está cadastrado como pessoa.' +
-                '<small class="d-block text-muted">Abre o cadastro de PJ já preenchido; o CEP completa o endereço.</small>' +
-              '</span>' +
-              '<a class="btn btn-sm btn-success" target="_blank" href="' + href + '">' +
-                '<i class="fa fa-plus me-1"></i> Cadastrar pessoa</a>' +
-            '</div>';
-        }
-
-        cadBtn.addEventListener('click', function () {
-          cadBtn.disabled = true;
-          cadOut.className = 'mt-3 text-muted';
-          cadOut.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
-
-          var q = 'uf=' + encodeURIComponent(cadUf.value.trim()) +
-                  '&documento=' + encodeURIComponent(cadDoc.value.trim());
-          fetch(cadUrl + '?' + q, { headers: { 'Accept': 'application/json' } })
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-              if (!d.sucesso) {
+          cadBtn.addEventListener('click', function () {
+            cadBtn.disabled = true;
+            cadOut.className = 'mt-3 text-muted';
+            cadOut.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Consultando...';
+            var q = 'uf=' + encodeURIComponent(cadUf.value.trim()) +
+                    '&documento=' + encodeURIComponent(cadDoc.value.trim());
+            fetch(cadUrl + '?' + q, { headers: { 'Accept': 'application/json' } })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (!d.sucesso) {
+                  cadOut.className = 'mt-3 text-danger';
+                  cadOut.textContent = d.mensagem || 'Não foi possível consultar.';
+                  cadAcao.style.display = 'none';
+                  return;
+                }
+                var badge = d.habilitado
+                  ? '<span class="badge bg-success">Habilitado</span>'
+                  : '<span class="badge bg-warning text-dark">' + (d.situacao || 'Verificar') + '</span>';
+                var contato = d.contato ? [d.contato.telefone, d.contato.email].filter(Boolean).join(' · ') : null;
+                var linhas = [
+                  badge,
+                  d.razao_social ? '<strong>' + d.razao_social + '</strong>' : null,
+                  d.nome_fantasia ? ('Fantasia: ' + d.nome_fantasia) : null,
+                  d.ie ? ('IE: ' + d.ie) : 'IE: —',
+                  d.cnae ? ('CNAE: ' + d.cnae) : null,
+                  d.regime,
+                  d.endereco ? ('<i class="fa fa-location-dot me-1"></i>' + d.endereco) : null,
+                  contato ? ('<i class="fa fa-phone me-1"></i>' + contato) : null,
+                  [d.credenciado_nfe ? 'Credenciado NF-e' : 'NF-e não credenciado',
+                   d.credenciado_cte ? 'Credenciado CT-e' : null].filter(Boolean).join(' · '),
+                  d.data_inicio ? ('Início: ' + String(d.data_inicio).substring(0,10)) : null,
+                  [d.uf, d.fonte ? ('fonte: ' + d.fonte) : null].filter(Boolean).join(' — '),
+                  d.mensagem
+                ].filter(Boolean);
+                cadOut.className = 'mt-3';
+                cadOut.innerHTML = linhas.join('<br>');
+                montarAcaoCadastro(d);
+              })
+              .catch(function () {
                 cadOut.className = 'mt-3 text-danger';
-                cadOut.textContent = d.mensagem || 'Não foi possível consultar.';
-                return;
-              }
-              var badge = d.habilitado
-                ? '<span class="badge bg-success">Habilitado</span>'
-                : '<span class="badge bg-warning text-dark">' + (d.situacao || 'Verificar') + '</span>';
-              var contato = d.contato
-                ? [d.contato.telefone, d.contato.email].filter(Boolean).join(' · ')
-                : null;
-              var linhas = [
-                badge,
-                d.razao_social ? '<strong>' + d.razao_social + '</strong>' : null,
-                d.nome_fantasia ? ('Fantasia: ' + d.nome_fantasia) : null,
-                d.ie ? ('IE: ' + d.ie) : 'IE: —',
-                d.cnae ? ('CNAE: ' + d.cnae) : null,
-                d.regime,
-                d.endereco ? ('<i class="fa fa-location-dot me-1"></i>' + d.endereco) : null,
-                contato ? ('<i class="fa fa-phone me-1"></i>' + contato) : null,
-                [d.credenciado_nfe ? 'Credenciado NF-e' : 'NF-e não credenciado',
-                 d.credenciado_cte ? 'Credenciado CT-e' : null].filter(Boolean).join(' · '),
-                d.data_inicio ? ('Início: ' + String(d.data_inicio).substring(0,10)) : null,
-                [d.uf, d.fonte ? ('fonte: ' + d.fonte) : null].filter(Boolean).join(' — '),
-                d.mensagem
-              ].filter(Boolean);
-              cadOut.className = 'mt-3';
-              cadOut.innerHTML = linhas.join('<br>');
-
-              // Faixa de acao: abrir cadastro existente ou cadastrar novo.
-              montarAcaoCadastro(d);
-            })
-            .catch(function () {
-              cadOut.className = 'mt-3 text-danger';
-              cadOut.textContent = 'Falha ao consultar o cadastro.';
-              cadAcao.style.display = 'none';
-            })
-            .finally(function () { cadBtn.disabled = false; });
-        });
+                cadOut.textContent = 'Falha ao consultar o cadastro.';
+                cadAcao.style.display = 'none';
+              })
+              .finally(function () { cadBtn.disabled = false; });
+          });
+        }
       })();
     </script>
   <% end %>

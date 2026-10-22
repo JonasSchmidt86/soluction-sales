@@ -82,6 +82,30 @@ class FiscalService
     delegar(:consultar_status, modelo: modelo)
   end
 
+  # Verifica o certificado digital já cadastrado da empresa. Retorna
+  # FiscalCertificado (valido?/expirado?/data_expiracao). Exige UserToken.
+  def verificar_certificado
+    delegar(:verificar_certificado)
+  end
+
+  # Envia/troca o certificado A1 (.pfx/.p12 em base64 + senha). Retorna
+  # FiscalCertificado (validade do certificado enviado). Exige Token + UserToken.
+  def alterar_certificado(base64:, senha:)
+    delegar(:alterar_certificado, base64: base64, senha: senha)
+  end
+
+  # Busca os dados cadastrais da empresa (teste de conexão). Retorna o Hash cru
+  # do provedor. Exige Token + UserToken.
+  def buscar_empresa
+    delegar(:buscar_empresa)
+  end
+
+  # Consulta os serviços/plano ativos da empresa no provedor. Retorna o Hash cru
+  # ({ Servicos:[{Nome,Ativo}], status, erros }). Exige Token + UserToken.
+  def consultar_servicos
+    delegar(:consultar_servicos)
+  end
+
   # Consulta o cadastro de um contribuinte na SEFAZ (situação/IE). Retorna
   # FiscalCadastro (habilitado?). Útil para validar o destinatário antes de emitir.
   def consultar_cadastro(uf:, documento:)

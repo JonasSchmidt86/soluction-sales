@@ -3,11 +3,27 @@
 Documentação oficial do provedor **Brasil NFe** (API 2.0), salva para consulta
 offline durante o desenvolvimento do módulo fiscal. A doc online é renderizada
 por JavaScript e não é acessível por fetch simples — por isso guardamos os PDFs
-aqui.
+e as transcrições em Markdown aqui.
 
 > Coloque os PDFs exportados da doc nesta pasta (`docs/brasilnfe/*.pdf`).
 > Este README resume os fatos-chave extraídos para referência rápida; para
-> detalhes completos consulte o PDF correspondente.
+> detalhes completos consulte o PDF/Markdown correspondente.
+
+### Como extrair a doc online (renderizada por JS) sem depender de PDF
+A doc é uma SPA (Zudoku). Para capturar o conteúdo renderizado, usar o Chrome
+headless já instalado na máquina (não precisa de Playwright):
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --dump-dom --virtual-time-budget=12000 \
+  "https://www.brasilnfe.com.br/api/empresas" > /tmp/dom.html
+# depois: strip de tags para texto, ou localizar o openapi embutido.
+```
+- Cada grupo vira uma página: `/api/empresas`, `/api/nf-e-e-nfc-e`,
+  `/api/eventos-nf-e-nfc-e`, `/api/consultas` (âncoras `#slug` por endpoint).
+- Há um `openapi.json` embutido nos assets do Zudoku (fonte do schema exato).
+- O `empresas.md` foi conferido/atualizado contra esse schema real (22/10/2026):
+  campos de `VerificarCertificado`/`AlterarCertificado` (Expirado, DtExpiracao,
+  status, Error, Avisos) são os reais da API.
 
 Base URL: `https://api.brasilnfe.com.br/services/fiscal`
 Auth: header `Token: <token da empresa>` (obrigatório em todas as operações fiscais).
