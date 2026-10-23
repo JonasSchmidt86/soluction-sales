@@ -85,6 +85,21 @@ class DocumentoFiscal < ApplicationRecord
     status == "cancelada"
   end
 
+  # Ultimo evento de CANCELAMENTO registrado desta nota (o cancelar! grava o
+  # evento com a justificativa enviada a SEFAZ). Prioriza o que foi "registrado"
+  # com sucesso; na falta, o mais recente de qualquer status.
+  def evento_cancelamento
+    regs = eventos.select { |e| e.tipo == "cancelamento" }
+    return nil if regs.empty?
+    (regs.select { |e| e.status == "registrado" }.presence || regs)
+      .max_by { |e| e.registrado_em || e.created_at || Time.at(0) }
+  end
+
+  # Motivo/justificativa do cancelamento para exibicao (nil se nao houver).
+  def motivo_cancelamento
+    evento_cancelamento&.justificativa.presence
+  end
+
   def nfce?
     modelo.to_i == 65
   end
@@ -143,8 +158,16 @@ class DocumentoFiscal < ApplicationRecord
     )
 
     # Só muda o documento se a SEFAZ homologou o cancelamento.
+    #
+    # IMPORTANTE: NAO usar aplicar_resultado! aqui. Aquele metodo e para a
+    # EMISSAO e sobrescreveria xml_base64/danfe_base64/numero/serie/chave/
+    # mensagem_sefaz com os dados do EVENTO de cancelamento (cujo XML nao tem os
+    # produtos e cuja mensagem e "Evento registrado e vinculado a NF-e"). Isso
+    # quebrava o resumo de itens e o DANFE da nota. O XML/mensagem do evento ja
+    # ficam salvos no documento_fiscal_evento acima; aqui so marcamos o status,
+    # preservando os dados da NF-e original.
     if result.sucesso?
-      aplicar_resultado!(result)
+      update_columns(status: "cancelada")
       estornar_estoque_fiscal!(cod_funcionario)
     end
     result

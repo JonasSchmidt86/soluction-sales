@@ -282,6 +282,115 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
     render json: { sucesso: false, mensagem: "Falha ao consultar: #{e.message}" }
   end
 
+  # GET .../fiscal_config/consultar_numeracao — consulta no PROVEDOR a serie e o
+  # proximo numero cadastrados (por modelo e ambiente) e devolve JSON para a
+  # tela preencher os campos. Serve para o usuario VER o que o provedor usa hoje
+  # (que ate agora era automatico) e trazer para a configuracao.
+  def consultar_numeracao
+    unless @config&.persisted? && @config.ativo?
+      render json: { ok: false, mensagem: "Configuração fiscal ausente ou inativa." }
+      return
+    end
+    if @config.provedor.to_s != "brasilnfe"
+      render json: { ok: false, mensagem: "Disponível apenas para o provedor Brasil NFe." }
+      return
+    end
+
+    resp = FiscalService.new(@config).consultar_numeracao
+    erro = resp["Error"].to_s
+    if erro.present?
+      render json: { ok: false, mensagem: erro }
+      return
+    end
+
+    # Ambiente atual (1 producao / 2 homologacao) para filtrar as numeracoes.
+    amb_atual = @config.producao? ? 1 : 2
+
+    numeracoes = Array(resp["Numeracoes"]).map do |n|
+      {
+        modelo:   n["ModeloDocumento"].to_i,
+        serie:    n["Serie"].to_s,
+        numero:   n["Numero"].to_i,
+        ambiente: n["TipoAmbiente"].to_i,
+        padrao:   n["Padrao"] == true
+      }
+    end
+
+    # Melhor numeracao (padrao, ou a de maior numero) por modelo no ambiente atual.
+    def_por_modelo = ->(modelo) do
+      candidatas = numeracoes.select { |n| n[:modelo] == modelo && n[:ambiente] == amb_atual }
+      candidatas.detect { |n| n[:padrao] } || candidatas.max_by { |n| n[:numero] }
+    end
+
+    render json: {
+      ok: true,
+      ambiente: @config.producao? ? "Produção" : "Homologação",
+      numeracoes: numeracoes,
+      sugestao: {
+        nfe:  def_por_modelo.call(55),
+        nfce: def_por_modelo.call(65)
+      }
+    }
+  rescue FiscalService::NaoConfigurado => e
+    render json: { ok: false, mensagem: e.message }
+  rescue => e
+    Rails.logger.error("[FiscalConfig#consultar_numeracao] #{e.class} - #{e.message}")
+    render json: { ok: false, mensagem: "Falha ao consultar a numeração: #{e.message}" }
+  end
+
+  # POST .../fiscal_config/atualizar_numeracao — define/ajusta no PROVEDOR a serie
+  # e o proximo numero de um modelo (55/65), e reflete nos campos locais do
+  # FiscalConfig. E a forma SEGURA de "passar o numero": o provedor continua
+  # sendo a fonte de verdade da sequencia (evita chave duplicada).
+  def atualizar_numeracao
+    modelo = params[:modelo].to_i
+    serie  = params[:serie].to_s.strip
+    numero = params[:numero].to_i
+
+    unless [55, 65].include?(modelo)
+      render json: { ok: false, mensagem: "Modelo inválido (use 55 ou 65)." }
+      return
+    end
+    if serie.blank? || numero <= 0
+      render json: { ok: false, mensagem: "Informe a série e um número maior que zero." }
+      return
+    end
+    unless @config&.persisted? && @config.ativo?
+      render json: { ok: false, mensagem: "Configuração fiscal ausente ou inativa." }
+      return
+    end
+    if @config.provedor.to_s != "brasilnfe"
+      render json: { ok: false, mensagem: "Disponível apenas para o provedor Brasil NFe." }
+      return
+    end
+
+    resp = FiscalService.new(@config).atualizar_numeracao(
+      modelo: modelo, serie: serie, numero: numero, padrao: true
+    )
+    erro = resp["Error"].to_s
+    if erro.present?
+      render json: { ok: false, mensagem: erro }
+      return
+    end
+
+    # Reflete localmente (serie + proximo numero) para o painel e a emissao.
+    if modelo == 65
+      @config.update_columns(serie_nfce: serie.to_i, proximo_numero_nfce: numero)
+    else
+      @config.update_columns(serie_nfe: serie.to_i, proximo_numero_nfe: numero)
+    end
+
+    render json: {
+      ok: true,
+      mensagem: "Numeração atualizada no provedor para o modelo #{modelo} (série #{serie}, próximo número #{numero})."
+    }
+  rescue FiscalService::NaoConfigurado => e
+    render json: { ok: false, mensagem: e.message }
+  rescue => e
+    Rails.logger.error("[FiscalConfig#atualizar_numeracao] #{e.class} - #{e.message}")
+    render json: { ok: false, mensagem: "Falha ao atualizar a numeração: #{e.message}" }
+  end
+
   private
 
   # Lista de PENDENCIAS que impedem operar em PRODUCAO. Vazia = pronto.

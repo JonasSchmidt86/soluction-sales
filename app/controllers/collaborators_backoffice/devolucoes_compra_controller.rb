@@ -155,7 +155,14 @@ class CollaboratorsBackoffice::DevolucoesCompraController < CollaboratorsBackoff
                   alert: "Não é possível emitir. #{pend.join(' | ')}" and return
     end
 
-    documento = montar_emissor.emitir
+    # Reaproveita a devolucao em elaboracao desta compra ao REEMITIR apos uma
+    # rejeicao/erro: sem isso, cada tentativa pela tela de criacao gerava um
+    # DocumentoFiscal novo (mesma devolucao virando varios registros). Usa o
+    # documento_id (quando veio do edit) ou a ultima devolucao em elaboracao
+    # da compra; nil = primeira emissao (o EmissorFiscal cria o documento).
+    documento_existente = rascunho_existente || rascunho_em_elaboracao_da_compra
+
+    documento = montar_emissor(documento: documento_existente).emitir
 
     if documento.autorizada?
       redirect_to collaborators_backoffice_compra_path(@compra),

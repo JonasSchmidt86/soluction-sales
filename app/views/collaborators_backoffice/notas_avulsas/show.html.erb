@@ -14,6 +14,18 @@
       <div class="card-body">
         <% cor = @documento.autorizada? ? "success" : (@documento.cancelada? ? "secondary" : "danger") %>
         <p><strong>Status:</strong> <span class="badge text-bg-<%= cor %>"><%= @documento.status %></span></p>
+        <% if @documento.cancelada? %>
+          <% evt = @documento.evento_cancelamento %>
+          <p>
+            <strong>Motivo do cancelamento:</strong>
+            <%= evt&.justificativa.presence || "—" %>
+            <% if evt&.registrado_em.present? || evt&.created_at.present? %>
+              <small class="text-muted">
+                (em <%= (evt.registrado_em || evt.created_at).strftime("%d/%m/%Y %H:%M") %><%= " por #{evt.registrado_por}" if evt.registrado_por.present? %>)
+              </small>
+            <% end %>
+          </p>
+        <% end %>
         <% if @documento.chave_acesso.present? %>
           <p class="text-break"><strong>Chave:</strong> <%= @documento.chave_acesso %></p>
         <% end %>

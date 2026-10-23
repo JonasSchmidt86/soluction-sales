@@ -256,6 +256,10 @@ Rails.application.routes.draw do
       get :testar_conexao
       # Checa pre-requisitos para virar o ambiente para producao (JSON).
       get :checar_producao
+      # Consulta a numeracao (serie/proximo numero) cadastrada no provedor (JSON).
+      get :consultar_numeracao
+      # Atualiza a numeracao (serie/proximo numero) no provedor + local (JSON).
+      post :atualizar_numeracao
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 

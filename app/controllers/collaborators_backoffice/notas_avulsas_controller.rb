@@ -94,11 +94,51 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
 
     operacao = operacao_escolhida
 
+    # PERSISTE a nota (cabecalho + destinatario + operacao + itens) ANTES de
+    # transmitir. Assim, se a SEFAZ REJEITAR (ou der erro), os dados ficam
+    # salvos e o botao Editar reabre a nota preenchida — antes a avulsa era
+    # "efemera" (nao gravava itens/destinatario) e o Editar vinha vazio.
+    #
+    # Reaproveita a nota em elaboracao (reemissao apos rejeicao/erro) em vez de
+    # criar um DocumentoFiscal novo a cada tentativa.
+    documento = documento_avulso_reaproveitavel
+    ActiveRecord::Base.transaction do
+      if documento
+        documento.update!({
+          modelo:            @modelo,
+          natureza_operacao: operacao&.natureza_operacao,
+          finalidade:        (params[:finalidade].presence || 1).to_i,
+          status:            "rascunho",
+          mensagem_sefaz:    nil,
+          cod_status_sefaz:  nil,
+          cod_pessoa_rascunho: cliente&.cod_pessoa,
+          cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+        }.merge(atributos_cabecalho_documento))
+        documento.itens.destroy_all
+      else
+        documento = DocumentoFiscal.create!({
+          cod_empresa:       current_collaborator.cod_empresa,
+          cod_venda:         nil,
+          modelo:            @modelo,
+          natureza_operacao: operacao&.natureza_operacao,
+          finalidade:        (params[:finalidade].presence || 1).to_i,
+          ambiente:          FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)&.ambiente || "homologacao",
+          status:            "rascunho",
+          cod_funcionario:   current_collaborator.cod_funcionario,
+          cod_pessoa_rascunho: cliente&.cod_pessoa,
+          cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal
+        }.merge(atributos_cabecalho_documento))
+      end
+      gravar_itens_rascunho(documento, itens)
+    end
+
+    # Emite o documento JA PERSISTIDO (reaproveita, nao cria outro).
     avulso = montar_avulso(empresa: empresa, cliente: cliente, itens: itens, cab: cabecalho_param)
     documento = Fiscal::EmissorFiscal.new(avulso, modelo: @modelo,
                                           operacao: operacao,
                                           finalidade: params[:finalidade],
-                                          cod_funcionario: current_collaborator.cod_funcionario).emitir
+                                          cod_funcionario: current_collaborator.cod_funcionario,
+                                          documento: documento).emitir
 
     if documento.autorizada?
       redirect_to collaborators_backoffice_notas_avulsa_path(documento),
@@ -460,6 +500,32 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   EM_ELABORACAO = %w[rascunho erro rejeitada].freeze
   def em_elaboracao?(documento)
     EM_ELABORACAO.include?(documento.status)
+  end
+
+  # Nota AVULSA (sem venda) a ser REAPROVEITADA pela tela de criacao (create),
+  # para que reemitir apos uma rejeicao/erro atualize o MESMO DocumentoFiscal em
+  # vez de criar um novo a cada tentativa.
+  #
+  # Prioridade:
+  #  1) documento_id vindo do form (reemissao explicita de um rascunho salvo);
+  #  2) a ultima avulsa EM ELABORACAO (rejeitada/erro/rascunho) do mesmo
+  #     funcionario/empresa/modelo — o cenario "corrigi e tentei de novo".
+  # Retorna nil quando nao ha o que reaproveitar (primeira emissao) — ai o
+  # EmissorFiscal cria o documento normalmente.
+  def documento_avulso_reaproveitavel
+    escopo = DocumentoFiscal.where(cod_empresa: current_collaborator.cod_empresa,
+                                   cod_venda: nil, cod_compra: nil)
+
+    if params[:documento_id].present?
+      doc = escopo.find_by(cod_documento_fiscal: params[:documento_id])
+      return doc if doc && em_elaboracao?(doc)
+    end
+
+    escopo.where(modelo: @modelo,
+                 cod_funcionario: current_collaborator.cod_funcionario,
+                 status: EM_ELABORACAO)
+          .order(cod_documento_fiscal: :desc)
+          .first
   end
 
   # Compat: retorna so a LISTA DE MENSAGENS (usado na emissao). Internamente

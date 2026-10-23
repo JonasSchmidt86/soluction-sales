@@ -54,29 +54,144 @@
         <div class="row mb-3">
           <div class="col-md-3">
             <div class="form-floating">
-              <%= f.number_field :serie_nfe, class: "form-control" %>
+              <%= f.number_field :serie_nfe, class: "form-control", id: "serie_nfe" %>
               <%= f.label :serie_nfe, "Série NF-e" %>
             </div>
           </div>
           <div class="col-md-3">
             <div class="form-floating">
-              <%= f.number_field :proximo_numero_nfe, class: "form-control" %>
+              <%= f.number_field :proximo_numero_nfe, class: "form-control", id: "proximo_numero_nfe" %>
               <%= f.label :proximo_numero_nfe, "Próximo nº NF-e" %>
             </div>
           </div>
           <div class="col-md-3">
             <div class="form-floating">
-              <%= f.number_field :serie_nfce, class: "form-control" %>
+              <%= f.number_field :serie_nfce, class: "form-control", id: "serie_nfce" %>
               <%= f.label :serie_nfce, "Série NFC-e" %>
             </div>
           </div>
           <div class="col-md-3">
             <div class="form-floating">
-              <%= f.number_field :proximo_numero_nfce, class: "form-control" %>
+              <%= f.number_field :proximo_numero_nfce, class: "form-control", id: "proximo_numero_nfce" %>
               <%= f.label :proximo_numero_nfce, "Próximo nº NFC-e" %>
             </div>
           </div>
         </div>
+
+        <%# ===== Sincronizar numeracao com o provedor =====
+            Consulta a serie/proximo numero que o provedor (Brasil NFe) usa hoje
+            e permite GRAVAR no provedor a serie + proximo numero (forma segura
+            de "passar o numero"; o provedor segue sendo a fonte da sequencia).
+            E tudo via JSON (nao mexe no form principal de salvar a config). %>
+        <div class="border rounded p-3 mb-3 bg-light">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <button type="button" id="btnConsultarNumeracao" class="btn btn-outline-primary btn-sm">
+              <i class="fa fa-cloud-download-alt me-1"></i> Consultar numeração no provedor
+            </button>
+            <span id="numeracaoInfo" class="text-muted small"></span>
+          </div>
+          <div id="numeracaoResultado" class="alert mb-2" style="display:none;"></div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="small text-muted">Após ajustar série e próximo nº acima, grave no provedor:</span>
+            <button type="button" class="btn btn-success btn-sm" data-salvar-numeracao="55">
+              <i class="fa fa-upload me-1"></i> Salvar numeração NF-e (55)
+            </button>
+            <button type="button" class="btn btn-success btn-sm" data-salvar-numeracao="65">
+              <i class="fa fa-upload me-1"></i> Salvar numeração NFC-e (65)
+            </button>
+          </div>
+          <small class="text-danger d-block mt-2">
+            <i class="fa fa-triangle-exclamation me-1"></i>
+            Nunca defina um número menor ou igual a um já autorizado na SEFAZ — isso gera chave duplicada.
+          </small>
+        </div>
+
+        <script>
+          (function () {
+            var urlConsulta   = "<%= consultar_numeracao_collaborators_backoffice_fiscal_config_path(format: :json) %>";
+            var urlAtualiza   = "<%= atualizar_numeracao_collaborators_backoffice_fiscal_config_path(format: :json) %>";
+            var token         = document.querySelector('meta[name="csrf-token"]');
+            var csrf          = token ? token.getAttribute('content') : '';
+
+            var info      = document.getElementById('numeracaoInfo');
+            var resultado = document.getElementById('numeracaoResultado');
+
+            function mostrar(tipo, msg) {
+              resultado.style.display = 'block';
+              resultado.className = 'alert alert-' + tipo + ' mb-2';
+              resultado.innerHTML = msg;
+            }
+
+            function setVal(id, v) {
+              var el = document.getElementById(id);
+              if (el && v !== null && v !== undefined) el.value = v;
+            }
+
+            var btn = document.getElementById('btnConsultarNumeracao');
+            if (btn) {
+              btn.addEventListener('click', function () {
+                btn.disabled = true;
+                info.textContent = 'Consultando...';
+                fetch(urlConsulta, { headers: { 'Accept': 'application/json' } })
+                  .then(function (r) { return r.json(); })
+                  .then(function (data) {
+                    btn.disabled = false;
+                    info.textContent = '';
+                    if (!data.ok) { mostrar('danger', data.mensagem || 'Falha ao consultar.'); return; }
+
+                    var partes = [];
+                    if (data.sugestao && data.sugestao.nfe) {
+                      setVal('serie_nfe', data.sugestao.nfe.serie);
+                      setVal('proximo_numero_nfe', data.sugestao.nfe.numero);
+                      partes.push('NF-e: série ' + data.sugestao.nfe.serie + ', próximo nº ' + data.sugestao.nfe.numero);
+                    }
+                    if (data.sugestao && data.sugestao.nfce) {
+                      setVal('serie_nfce', data.sugestao.nfce.serie);
+                      setVal('proximo_numero_nfce', data.sugestao.nfce.numero);
+                      partes.push('NFC-e: série ' + data.sugestao.nfce.serie + ', próximo nº ' + data.sugestao.nfce.numero);
+                    }
+                    var txt = 'Ambiente ' + (data.ambiente || '') + '. ' +
+                      (partes.length ? partes.join(' | ') : 'Nenhuma numeração cadastrada no provedor ainda.');
+                    mostrar(partes.length ? 'info' : 'warning', txt + ' Os campos acima foram preenchidos — revise e salve se desejar.');
+                  })
+                  .catch(function (e) {
+                    btn.disabled = false; info.textContent = '';
+                    mostrar('danger', 'Erro de comunicação: ' + e.message);
+                  });
+              });
+            }
+
+            document.querySelectorAll('[data-salvar-numeracao]').forEach(function (b) {
+              b.addEventListener('click', function () {
+                var modelo = b.getAttribute('data-salvar-numeracao');
+                var serie  = modelo === '65' ? document.getElementById('serie_nfce').value : document.getElementById('serie_nfe').value;
+                var numero = modelo === '65' ? document.getElementById('proximo_numero_nfce').value : document.getElementById('proximo_numero_nfe').value;
+
+                if (!serie || !numero || parseInt(numero, 10) <= 0) {
+                  mostrar('warning', 'Informe a série e um próximo número maior que zero para o modelo ' + modelo + '.');
+                  return;
+                }
+                if (!confirm('Gravar no provedor: modelo ' + modelo + ', série ' + serie + ', próximo nº ' + numero + '?')) return;
+
+                b.disabled = true;
+                fetch(urlAtualiza, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
+                  body: JSON.stringify({ modelo: modelo, serie: serie, numero: numero })
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (data) {
+                    b.disabled = false;
+                    mostrar(data.ok ? 'success' : 'danger', data.mensagem || (data.ok ? 'Numeração atualizada.' : 'Falha ao atualizar.'));
+                  })
+                  .catch(function (e) {
+                    b.disabled = false;
+                    mostrar('danger', 'Erro de comunicação: ' + e.message);
+                  });
+              });
+            });
+          })();
+        </script>
 
         <%# ===== Brasil NFe — Credenciais ===== %>
         <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3 mt-4">

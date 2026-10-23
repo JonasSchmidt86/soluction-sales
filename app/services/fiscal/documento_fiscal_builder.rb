@@ -54,6 +54,10 @@ module Fiscal
         # Venda comum nao responde a esses metodos (try => nil) e nada muda.
         info_adicional:       @venda.try(:info_adicional).presence,
         info_adicional_fisco: @venda.try(:info_adicional_fisco).presence,
+        # Serie configurada no FiscalConfig (NFC-e=serie_nfce, NF-e=serie_nfe).
+        # O NUMERO continua automatico no provedor (controlado via a tela de
+        # Numeracao); so a SERIE e forcada aqui para respeitar a configuracao.
+        serie:                serie_configurada,
         # NF referenciada NO CABECALHO so quando NAO e devolucao. Na devolucao
         # (finalidade 4) a referencia vai POR ITEM (ChaveAcessoReferenciada); a
         # doc Brasil NFe diz "em vez do NFReferencia" — mandar nos dois gera a
@@ -139,6 +143,16 @@ module Fiscal
 
     private
 
+    # Serie a enviar no payload, conforme o FiscalConfig e o modelo:
+    #   modelo 65 (NFC-e) -> serie_nfce ; modelo 55 (NF-e) -> serie_nfe
+    # nil quando nao ha config ou a serie nao esta definida (ai o provedor
+    # usa a serie padrao dele). Retorna inteiro (o adapter aceita String/Int).
+    def serie_configurada
+      return nil if @config.nil?
+      serie = @modelo.to_i == 65 ? @config.serie_nfce : @config.serie_nfe
+      serie.presence && serie.to_i
+    end
+
     # Consumidor final (indFinal). Prioridade: escolha manual da nota avulsa
     # (@venda.consumidor_final_override "sim"/"nao"); senao infere. A escolha
     # manual resolve a rejeicao 696 (PJ NAO contribuinte exige indFinal=1).
@@ -183,10 +197,10 @@ module Fiscal
 
       ie = ie_destinatario
       if ie.present?
-        c["IndicadorIe"] = 1   # contribuinte ICMS
+        c["IndicadorIe"] = 1   # contribuinte ICMS (so PJ com IE valida)
         c["Ie"]          = ie
       else
-        c["IndicadorIe"] = 9   # nao contribuinte (sem IE cadastrada)
+        c["IndicadorIe"] = 9   # nao contribuinte (PF sempre; PJ sem IE/isento)
       end
 
       if @cliente.uf.present?
@@ -203,8 +217,13 @@ module Fiscal
       c.compact
     end
 
-    # IE do destinatario (campo rg_ie), so digitos. "ISENTO"/vazio => nil (sem IE).
+    # IE do destinatario (campo rg_ie), so digitos. Retorna nil (sem IE) quando:
+    #  - o cliente e PESSOA FISICA: para PF o campo rg_ie guarda o RG, NAO uma
+    #    Inscricao Estadual. Mandar isso como IE (IndicadorIe=1) faz a SEFAZ
+    #    rejeitar com "IE do destinatario invalida". PF nunca tem IE => indIEDest 9.
+    #  - PJ sem rg_ie ou com "ISENTO".
     def ie_destinatario
+      return nil unless @cliente.pessoa_juridica?
       bruto = @cliente.rg_ie.to_s.strip
       return nil if bruto.blank? || bruto.casecmp?("ISENTO")
       digitos(bruto)

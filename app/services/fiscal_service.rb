@@ -65,6 +65,18 @@ class FiscalService
                          numero_final: numero_final, justificativa: justificativa)
   end
 
+  # Consulta as numerações (série/próximo número por modelo+ambiente) cadastradas
+  # no provedor. Retorna o Hash cru ({ Numeracoes: [...], status, Error }).
+  def consultar_numeracao
+    delegar(:consultar_numeracao)
+  end
+
+  # Atualiza (ou cria) o contador de numeração de modelo+série no provedor.
+  # ATENÇÃO: nunca definir número <= a um já autorizado (gera chave duplicada).
+  def atualizar_numeracao(modelo:, serie:, numero:, padrao: true)
+    delegar(:atualizar_numeracao, modelo: modelo, serie: serie, numero: numero, padrao: padrao)
+  end
+
   # Emite uma nota de devolução (espelha a nota de origem).
   def devolver(documento_origem, itens)
     delegar(:devolver, documento_origem, itens)
