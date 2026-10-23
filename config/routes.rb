@@ -228,11 +228,11 @@ Rails.application.routes.draw do
     get 'fiscal_dashboard', to: 'fiscal_dashboard#index', as: :fiscal_dashboard
 
     # Painel de Notas Recebidas de fornecedor (entradas, automatico via SEFAZ).
-    resources :notas_recebidas, only: [:index] do
+    resources :notas_recebidas, only: [:index, :destroy] do
       collection do
-        post :sincronizar          # busca na SEFAZ as notas de entrada do periodo
-        post :sincronizar_status   # atualiza o status SEFAZ das notas (cancelamento)
+        post :ver_entradas         # busca na SEFAZ e REGISTRA (so dados) as entradas
         get  :consultar_chave      # CONSULTA (so ver) uma NF pela chave, sem gravar
+        post :salvar_chave         # grava na lista (so dados) uma nota consultada
         get  :baixar_chave         # DOWNLOAD manual do XML/PDF pela chave (nao salva)
         post :importar_chave       # baixa XML + cria XmlFile + vai montar a compra
       end

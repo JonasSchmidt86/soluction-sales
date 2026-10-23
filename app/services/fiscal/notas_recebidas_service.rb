@@ -49,6 +49,70 @@ module Fiscal
       Resultado.new(novas: 0, atualizadas: 0, erro: true, mensagem: e.message)
     end
 
+    # REGISTRA (grava só os dados, SEM baixar XML) as notas de entrada do periodo
+    # vindas da distribuicao (ObterNotasFiscais). Dedupe por chave: ja existente
+    # nao e tocada. Retorna Resultado (novas/atualizadas). O XML so e baixado
+    # depois, sob demanda (baixar/importar). Leitura pura na SEFAZ — nao manifesta.
+    def registrar_periodo!(dt_inicio:, dt_fim:)
+      resp = @adapter.obter_notas(dt_inicio: dt_inicio, dt_fim: dt_fim, tipo_documento: 0)
+      erro = resp["Error"].to_s
+      notas = resp["Notas"] || resp["notas"] || []
+
+      if erro.present? && notas.empty? && !erro.downcase.include?("existe")
+        return Resultado.new(novas: 0, atualizadas: 0, erro: true, mensagem: erro)
+      end
+
+      novas = 0
+      Array(notas).each do |n|
+        chave = (n["Chave"] || n["ChaveNF"] || n["chave"]).to_s.gsub(/\D/, "")
+        next if chave.blank?
+        next if NotaRecebida.exists?(cod_empresa: @empresa.cod_empresa, chave_acesso: chave)
+        novas += 1 if registrar_dados!(chave, n)
+      end
+
+      Resultado.new(novas: novas, atualizadas: 0, erro: false,
+                    mensagem: notas.empty? ? "Nenhuma nota no período." : "#{novas} nova(s) registrada(s).")
+    rescue => e
+      Rails.logger.error("[NotasRecebidasService#registrar_periodo] #{e.class} - #{e.message}")
+      Resultado.new(novas: 0, atualizadas: 0, erro: true, mensagem: e.message)
+    end
+
+    # Grava UMA nota (só dados, SEM XML) a partir do resumo da API. Usado pelo
+    # registro automatico do periodo e pelo "Salvar" da consulta por chave.
+    # Dedupe por chave (nao duplica). Retorna a NotaRecebida ou nil.
+    def registrar_dados!(chave, resumo_api)
+      chave = chave.to_s.gsub(/\D/, "")
+      return nil if chave.blank?
+      existente = NotaRecebida.find_by(cod_empresa: @empresa.cod_empresa, chave_acesso: chave)
+      return existente if existente
+
+      cnpj = (resumo_api["CnpjEmissor"] || resumo_api["CnpjEmitente"]).to_s.gsub(/\D/, "").presence
+      fornecedor = cnpj ? Pessoa.find_by(cpf_cnpj: cnpj) : nil
+
+      nota = NotaRecebida.new(
+        cod_empresa:   @empresa.cod_empresa,
+        chave_acesso:  chave,
+        origem:        "sefaz",
+        status_sefaz:  mapear_status_api(resumo_api["Status"]),
+        status_sincronizado_em: Time.current,
+        cod_pessoa:    fornecedor&.cod_pessoa,
+        numero:        resumo_api["Numero"],
+        serie:         resumo_api["Serie"],
+        modelo:        resumo_api["ModeloDocumento"],
+        valor_total:   resumo_api["Valor"],
+        emitente_cnpj: cnpj,
+        emitente_nome: resumo_api["NomeEmissor"] || resumo_api["NomeEmitente"],
+        data_emissao:  parse_data_api(resumo_api["DtEmissao"] || resumo_api["DataEmissao"])
+      )
+      # vincula a compra ja existente (se a nota ja tinha sido importada antes)
+      vincular_compra_existente(nota, fornecedor)
+      nota.save!
+      nota
+    rescue => e
+      Rails.logger.error("[NotasRecebidasService#registrar_dados chave=#{chave}] #{e.class} - #{e.message}")
+      nil
+    end
+
     # Importa UMA nota pela chave SOB DEMANDA (clicou em "Importar" na lista):
     # baixa o XML da SEFAZ, cria/garante o XmlFile e grava/atualiza a NotaRecebida.
     # Reaproveita o registro existente (dedupe por chave) para nao duplicar.
@@ -213,6 +277,22 @@ module Fiscal
       return if fornecedor.nil? || nota.numero.blank?
       compra = Compra.find_by(numeronf: nota.numero, cod_pessoa: fornecedor.cod_pessoa)
       nota.cod_compra = compra&.cod_compra if compra
+    end
+
+    # Status da listagem da API (1=autorizada) -> vocabulario do sistema.
+    def mapear_status_api(valor)
+      case valor.to_i
+      when 1 then "autorizada"
+      when 2 then "cancelada"
+      when 4 then "denegada"
+      else "autorizada" # listada pela SEFAZ sem status claro = tratada como autorizada
+      end
+    end
+
+    # Converte a data da API (ISO/date-time) para Date; nil se invalida.
+    def parse_data_api(valor)
+      return nil if valor.blank?
+      (Time.parse(valor.to_s).to_date rescue (Date.parse(valor.to_s) rescue nil))
     end
   end
 end

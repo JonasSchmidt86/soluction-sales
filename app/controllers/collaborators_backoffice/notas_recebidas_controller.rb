@@ -2,10 +2,12 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   before_action :autorizar_fiscal!
   before_action :set_nota, only: [:importar]
 
-  # Painel de notas de ENTRADA recebidas de fornecedores (automatico via SEFAZ).
+  # Painel UNICO de notas de ENTRADA recebidas (gravadas em NotaRecebida).
+  # A busca na SEFAZ (ver_entradas) grava os registros aqui; a tabela e a lista.
   def index
     @cod_empresa = current_collaborator.cod_empresa
     @inicio, @fim = periodo
+    @config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
 
     escopo = NotaRecebida.da_empresa(@cod_empresa)
                          .where(data_emissao: @inicio.beginning_of_day..@fim.end_of_day)
@@ -15,43 +17,62 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     elsif params[:integrado] == "0"
       escopo = escopo.nao_integradas
     end
+    # Filtro por TIPO de documento: mercadoria (NF-e 55) x servico (demais, ex.
+    # NFS-e / telecom modelo 10). @tipo guarda a selecao para a view.
+    @tipo = params[:tipo].presence
+    if @tipo == "mercadoria"
+      escopo = escopo.where(modelo: 55)
+    elsif @tipo == "servico"
+      escopo = escopo.where("modelo IS NULL OR modelo <> 55")
+    end
 
     @notas = escopo.recentes.page(params[:page])
-
-    # Alerta: notas que viraram compra mas foram CANCELADAS na SEFAZ.
     @alertas_canceladas = NotaRecebida.da_empresa(@cod_empresa).integradas.canceladas
-
-    # Listagem AO VIVO da distribuicao (ObterNotasFiscais) — SO LEITURA, nao grava
-    # NotaRecebida. Preenchida quando o usuario clica em "Ver entradas na SEFAZ"
-    # (params[:ver_entradas]=1). Permite visualizar o que a Brasil NFe captou e
-    # baixar XML/DANFE por chave, sem o automatismo de sincronizacao.
-    @entradas_sefaz = nil
-    @entradas_erro  = nil
-    @config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
-    if params[:ver_entradas] == "1"
-      @entradas_sefaz, @entradas_erro = listar_entradas_sefaz(@inicio, @fim)
-    end
   end
 
-  # Busca na SEFAZ as notas de entrada do periodo e grava as novas.
-  def sincronizar
+  # POST .../notas_recebidas/ver_entradas — busca as entradas do periodo na SEFAZ
+  # e REGISTRA (so dados, sem baixar XML) as novas em NotaRecebida. Dedupe por
+  # chave: as ja existentes nao sao duplicadas. Volta para a lista (index).
+  def ver_entradas
     inicio, fim = periodo
     res = Fiscal::NotasRecebidasService.new(current_collaborator.empresa)
-                                       .sincronizar!(dt_inicio: inicio, dt_fim: fim)
+                                       .registrar_periodo!(dt_inicio: inicio, dt_fim: fim)
     if res.erro
-      redirect_to notas_recebidas_path(filtros), alert: "Falha ao buscar notas: #{res.mensagem}"
+      redirect_to notas_recebidas_path(filtros), alert: "Falha ao buscar na SEFAZ: #{res.mensagem}"
     else
-      redirect_to notas_recebidas_path(filtros), notice: "Busca concluída: #{res.mensagem}"
+      redirect_to notas_recebidas_path(filtros), notice: res.mensagem
     end
   end
 
-  # Atualiza o status SEFAZ das notas ja conhecidas (detecta cancelamento).
-  def sincronizar_status
-    inicio, fim = periodo
-    res = Fiscal::NotasRecebidasService.new(current_collaborator.empresa)
-                                       .sincronizar!(dt_inicio: inicio, dt_fim: fim)
-    redirect_to notas_recebidas_path(filtros),
-                notice: "Status atualizado: #{res.mensagem}"
+  # POST .../notas_recebidas/salvar_chave?chave=... — grava na lista (NotaRecebida)
+  # uma nota consultada por chave, SO com os dados (sem baixar XML). Dedupe.
+  def salvar_chave
+    chave = params[:chave].to_s.gsub(/\D/, "")
+    if chave.length < 20
+      redirect_to notas_recebidas_path(filtros), alert: "Chave inválida." and return
+    end
+    config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
+    unless config&.ativo?
+      redirect_to notas_recebidas_path(filtros), alert: "Empresa sem configuração fiscal ativa." and return
+    end
+
+    # Consulta na SEFAZ para pegar os dados (numero/serie/situacao) e gravar.
+    consulta = FiscalService.new(config).consultar(chave: chave, modelo: 0)
+    resumo = {
+      "Numero"          => consulta&.numero,
+      "Serie"           => consulta&.serie,
+      "ModeloDocumento" => nil, # a consulta nao traz modelo confiavel; fica nil
+      "Status"          => nil
+    }
+    nota = Fiscal::NotasRecebidasService.new(current_collaborator.empresa).registrar_dados!(chave, resumo)
+    if nota
+      redirect_to notas_recebidas_path(filtros), notice: "Nota #{chave} salva na lista."
+    else
+      redirect_to notas_recebidas_path(filtros), alert: "Não foi possível salvar a nota."
+    end
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#salvar_chave] #{e.class} - #{e.message}")
+    redirect_to notas_recebidas_path(filtros), alert: "Falha ao salvar: #{e.message}"
   end
 
   # GET .../notas_recebidas/consultar_chave?chave=... — CONSULTA (só ver) uma NF
@@ -173,6 +194,21 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
                 alert: "Falha ao importar: #{e.message}"
   end
 
+  # DELETE .../notas_recebidas/:id — remove o REGISTRO da nota da lista (nosso
+  # banco). Nao afeta a SEFAZ nem a compra: se a nota ja virou compra, o registro
+  # pode ser removido sem apagar a compra (so perde o vinculo de rastreio aqui).
+  def destroy
+    nota = NotaRecebida.da_empresa(current_collaborator.cod_empresa).find_by(cod_nota_recebida: params[:id])
+    if nota.nil?
+      redirect_to notas_recebidas_path(filtros), alert: "Nota não encontrada." and return
+    end
+    nota.destroy
+    redirect_to notas_recebidas_path(filtros), notice: "Nota removida da lista."
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#destroy] #{e.class} - #{e.message}")
+    redirect_to notas_recebidas_path(filtros), alert: "Falha ao remover: #{e.message}"
+  end
+
   # Importar = levar ao fluxo de compra existente (produtoxmls#new monta a compra
   # a partir do XmlFile). Reusa toda a tela de conferencia atual.
   def importar
@@ -185,44 +221,6 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
 
   private
 
-  # Lista as notas de ENTRADA do periodo direto da distribuicao (ObterNotasFiscais),
-  # SEM gravar nada. Retorna [lista_de_hashes, erro_ou_nil]. Cada item: chave,
-  # numero, serie, modelo, valor, emissor, cnpj_emissor, data_emissao, status.
-  # So leitura — nao manifesta nem escritura (seguro rodar em paralelo com outro
-  # sistema). A empresa precisa de config fiscal ativa.
-  def listar_entradas_sefaz(inicio, fim)
-    config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
-    return [nil, "Configuração fiscal ausente ou inativa."] unless config&.ativo?
-
-    resp = Fiscal::BrasilNfeAdapter.new(config: config)
-                                   .obter_notas(dt_inicio: inicio, dt_fim: fim, tipo_documento: 0)
-    erro  = resp["Error"].to_s
-    notas = resp["Notas"] || resp["notas"] || []
-
-    # "Nao existe notas" = periodo vazio, nao e erro.
-    if notas.empty? && erro.present? && !erro.downcase.include?("existe")
-      return [nil, erro]
-    end
-
-    lista = Array(notas).map do |n|
-      {
-        chave:        (n["Chave"] || n["ChaveNF"] || n["chave"]).to_s.gsub(/\D/, ""),
-        numero:       n["Numero"],
-        serie:        n["Serie"],
-        modelo:       n["ModeloDocumento"],
-        valor:        n["Valor"],
-        emissor:      n["NomeEmissor"] || n["NomeEmitente"] || n["EmitenteNome"],
-        cnpj_emissor: n["CnpjEmissor"] || n["CnpjEmitente"],
-        data_emissao: n["DtEmissao"] || n["DataEmissao"],
-        status:       n["Status"]
-      }
-    end
-    [lista, nil]
-  rescue => e
-    Rails.logger.error("[NotasRecebidas#listar_entradas_sefaz] #{e.class} - #{e.message}")
-    [nil, "Falha ao consultar a SEFAZ: #{e.message}"]
-  end
-
   def set_nota
     @nota = NotaRecebida.da_empresa(current_collaborator.cod_empresa).find(params[:id])
   end
@@ -234,8 +232,12 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     [ini, fim]
   end
 
+  # Filtros atuais (datas/tipo/status/integrado) para preservar na navegacao e
+  # nos botoes. Exposto como helper para a view montar os links/forms.
+  helper_method :filtros
   def filtros
-    { inicio: params[:inicio], fim: params[:fim], status: params[:status], integrado: params[:integrado] }.compact
+    { inicio: params[:inicio], fim: params[:fim], status: params[:status],
+      integrado: params[:integrado], tipo: params[:tipo] }.compact
   end
 
   def parse_data(v)

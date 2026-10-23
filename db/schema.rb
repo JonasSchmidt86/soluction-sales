@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_30_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_30_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -846,7 +846,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_000001) do
 
   create_table "nota_recebida", primary_key: "cod_nota_recebida", force: :cascade do |t|
     t.bigint "cod_empresa", null: false, comment: "empresa destinataria (dona da nota recebida)"
-    t.string "chave_acesso", limit: 44, null: false, comment: "chave de acesso da NF-e (44 digitos)"
+    t.string "chave_acesso", limit: 60, null: false, comment: "chave de acesso da NF-e (44 digitos)"
     t.bigint "cod_pessoa", comment: "fornecedor emitente (resolvido pelo CNPJ do emit)"
     t.integer "modelo", comment: "55 NF-e / 65 NFC-e"
     t.string "numero", limit: 20
