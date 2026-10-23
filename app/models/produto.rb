@@ -63,6 +63,29 @@ class Produto < ApplicationRecord
       "#{nome} - #{cod_produto}"
     end
 
+    # Percentual de margem aplicavel ao produto: primeiro a margem do proprio
+    # produto (parametros.margemproduto via cod_margem), depois a margem do grupo
+    # como fallback. Considera apenas parametros ativos (igual a trigger de compra).
+    def margem_aplicada
+      pct = (parametro&.ativo ? parametro.margemproduto.to_f : 0.0)
+      return pct if pct > 0
+
+      grupo_margem = cod_grupo&.cod_margem
+      return 0.0 if grupo_margem.blank?
+      Parametro.where(ativo: true, cod_parametro: grupo_margem).pick(:margemproduto).to_f
+    end
+
+    # Valor de venda calculado a partir de um custo aplicando a margem do produto
+    # (ou do grupo). Mesma formula da trigger tgrf_estoquecompra:
+    #   venda = custo * (1 + margem/100); sem margem, cai no proprio custo.
+    # Usado no relatorio para exibir uma venda estimada quando a cadastrada e 0.
+    def valor_venda_por_margem(custo)
+      c = custo.to_f
+      return 0.0 if c <= 0
+      m = margem_aplicada
+      m > 0 ? (c * (1 + m / 100)).round(2) : c
+    end
+
     # Motivos que impedem a emissão fiscal deste produto (vazio = ok).
     def pendencias_fiscais
       motivos = []
