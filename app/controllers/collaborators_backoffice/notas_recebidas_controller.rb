@@ -27,6 +27,7 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     # baixar XML/DANFE por chave, sem o automatismo de sincronizacao.
     @entradas_sefaz = nil
     @entradas_erro  = nil
+    @config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
     if params[:ver_entradas] == "1"
       @entradas_sefaz, @entradas_erro = listar_entradas_sefaz(@inicio, @fim)
     end

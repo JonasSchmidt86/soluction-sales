@@ -147,8 +147,23 @@
               <span class="ms-2 small text-muted">
                 período <%= @inicio.strftime("%d/%m/%Y") %> a <%= @fim.strftime("%d/%m/%Y") %> — apenas visualização, nada é salvo
               </span>
+              <span class="ms-auto">
+                <% if @config&.producao? %>
+                  <span class="badge text-bg-danger">Produção</span>
+                <% else %>
+                  <span class="badge text-bg-warning">Homologação</span>
+                <% end %>
+              </span>
             </div>
             <div class="card-body">
+              <% unless @config&.producao? %>
+                <div class="alert alert-warning py-2">
+                  <i class="fa fa-triangle-exclamation me-1"></i>
+                  A empresa está em <strong>Homologação</strong>. A SEFAZ não distribui notas reais de entrada
+                  nesse ambiente, então a lista virá vazia. Para ver as notas recebidas de verdade, mude o
+                  ambiente para <strong>Produção</strong> em Configuração Fiscal.
+                </div>
+              <% end %>
               <% if @entradas_erro.present? %>
                 <div class="alert alert-warning py-2 mb-0"><%= @entradas_erro %></div>
               <% elsif @entradas_sefaz.blank? %>
