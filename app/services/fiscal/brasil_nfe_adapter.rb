@@ -285,7 +285,10 @@ module Fiscal
     # Retorna FiscalArquivo (xml_base64 / pdf_base64 / erro).
     def obter_arquivo(chave:, file_type: 1, tipo_documento: 1)
       ch = chave.to_s.gsub(/\D/, "")
-      raise ConfiguracaoInvalida, "Chave de acesso invalida (esperado 44 digitos)" unless ch.length == 44
+      # NF-e/NFC-e/CT-e tem chave de 44 digitos, mas NFS-e e documentos de
+      # servico/telecom (modelo 10) usam chaves de outro tamanho. Nao travar em
+      # 44: exigir apenas que haja digitos suficientes (a API valida o resto).
+      raise ConfiguracaoInvalida, "Chave de acesso ausente/invalida" if ch.length < 20
 
       body = {
         "ChaveNF"             => ch,

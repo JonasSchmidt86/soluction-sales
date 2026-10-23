@@ -48,8 +48,8 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   # Uso: rodar em paralelo com outro sistema sem risco de duplicar escrituração.
   def consultar_chave
     chave = params[:chave].to_s.gsub(/\D/, "")
-    unless chave.length == 44
-      render json: { sucesso: false, mensagem: "Informe uma chave de acesso com 44 dígitos." }
+    if chave.length < 20
+      render json: { sucesso: false, mensagem: "Informe a chave de acesso da nota." }
       return
     end
     config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
@@ -60,7 +60,9 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
 
     consulta = FiscalService.new(config).consultar(chave: chave, modelo: 0)
     unless consulta&.encontrada?
-      render json: { sucesso: false, mensagem: consulta&.mensagem.presence || "Nota não encontrada na SEFAZ." }
+      base = consulta&.mensagem.presence || "Nota não localizada na base da Brasil NFe."
+      render json: { sucesso: false,
+                     mensagem: "#{base} Notas de ENTRADA só aparecem após serem manifestadas/distribuídas para a sua conta." }
       return
     end
 
@@ -81,13 +83,17 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   end
 
   # GET .../notas_recebidas/baixar_chave?chave=...&tipo=xml|pdf — DOWNLOAD manual
-  # do arquivo (XML ou DANFE) da NF de ENTRADA pela chave. NÃO salva no ERP: só
-  # entrega o arquivo para o navegador. tipo_documento=0 (entrada/compra).
+  # do arquivo (XML ou DANFE) pela chave. NÃO salva no ERP: só entrega o arquivo
+  # para o navegador. So funciona para notas JA DISPONIVEIS na base do provedor
+  # (entrada: notas ja manifestadas/distribuidas; saida: emitidas pela empresa).
+  # Tenta ENTRADA (tipo 0) e, se vazio, SAIDA (tipo 1) — cobre os dois casos.
   def baixar_chave
     chave = params[:chave].to_s.gsub(/\D/, "")
     tipo  = params[:tipo].to_s == "pdf" ? :pdf : :xml
-    if chave.length != 44
-      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Chave inválida (44 dígitos)." and return
+    # NF-e/NFC-e usam 44 digitos; NFS-e/telecom (modelo 10) usam chaves maiores.
+    # Aceita qualquer chave com digitos suficientes (a API valida o resto).
+    if chave.length < 20
+      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Chave inválida." and return
     end
     config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
     unless config&.ativo?
@@ -95,8 +101,22 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     end
 
     file_type = (tipo == :pdf ? 2 : 1)
-    arquivo = FiscalService.new(config).obter_arquivo(chave: chave, file_type: file_type, tipo_documento: 0)
-    if arquivo.sucesso?
+    service = FiscalService.new(config)
+    # tipo_documento preferido pelo parametro (0 entrada / 1 saida); se nao vier,
+    # tenta entrada e cai para saida.
+    tentativas = case params[:origem].to_s
+                 when "saida"   then [1]
+                 when "entrada" then [0]
+                 else [0, 1]
+                 end
+
+    arquivo = nil
+    tentativas.each do |td|
+      arquivo = service.obter_arquivo(chave: chave, file_type: file_type, tipo_documento: td)
+      break if arquivo&.sucesso?
+    end
+
+    if arquivo&.sucesso?
       if tipo == :pdf
         send_data arquivo.conteudo, filename: "danfe-#{chave}.pdf",
                   type: "application/pdf", disposition: "attachment"
@@ -106,7 +126,7 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
       end
     else
       redirect_to collaborators_backoffice_notas_recebidas_path,
-                  alert: "Não foi possível baixar o arquivo: #{arquivo.erro}"
+                  alert: "Arquivo indisponível para esta chave. Se é uma nota de ENTRADA, ela só fica disponível após ser manifestada/distribuída para a sua conta na Brasil NFe. #{arquivo&.erro}".strip
     end
   rescue FiscalService::NaoConfigurado => e
     redirect_to collaborators_backoffice_notas_recebidas_path, alert: e.message
