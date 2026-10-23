@@ -1,4 +1,5 @@
 class CollaboratorsBackoffice::Report::RepEstoqueFiscalController < CollaboratorsBackofficeController
+  before_action :autorizar_fiscal!
 
   # Relatorio de Estoque Fiscal: mostra o estoque fiscal CONSOLIDADO por PRODUTO
   # (fiscal_produto.qtd_fiscal) da EMPRESA LOGADA — a MESMA fonte que a emissao
@@ -95,6 +96,15 @@ class CollaboratorsBackoffice::Report::RepEstoqueFiscalController < Collaborator
 
     rows.each_with_object({}) do |(cod, custo, venda), h|
       h[cod] = { custo: custo.to_d, valorvenda: venda.to_d }
+    end
+  end
+
+  # Mesma trava do menu fiscal: so acessa quem tem o modulo fiscal na empresa
+  # logada e pode ver a config (super_admin). Protege a URL direta, ja que o
+  # link do menu so aparece sob essa condicao.
+  def autorizar_fiscal!
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_config")
+      redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end
 end
