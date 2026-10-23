@@ -234,6 +234,7 @@ Rails.application.routes.draw do
         post :sincronizar_status   # atualiza o status SEFAZ das notas (cancelamento)
         get  :consultar_chave      # CONSULTA (so ver) uma NF pela chave, sem gravar
         get  :baixar_chave         # DOWNLOAD manual do XML/PDF pela chave (nao salva)
+        post :importar_chave       # baixa XML + cria XmlFile + vai montar a compra
       end
       member do
         post :importar             # leva ao fluxo de compra (produtoxmls#new)

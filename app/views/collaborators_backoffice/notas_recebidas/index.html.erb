@@ -179,11 +179,13 @@
                         <th>Emissão</th>
                         <th class="text-end">Valor</th>
                         <th>Chave</th>
-                        <th style="width:160px;">Arquivos</th>
+                        <th style="width:240px;">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       <% @entradas_sefaz.each do |e| %>
+                        <% # NF-e (55) entra no fluxo de compra de mercadoria; NFS-e/servico (modelo 10) nao.
+                           importavel = e[:modelo].to_i == 55 %>
                         <tr>
                           <td><%= e[:emissor] %><br><small class="text-muted"><%= e[:cnpj_emissor] %></small></td>
                           <td><%= e[:numero] %><%= " / #{e[:serie]}" if e[:serie].present? %></td>
@@ -193,14 +195,24 @@
                           <td class="text-break"><small><%= e[:chave] %></small></td>
                           <td>
                             <% if e[:chave].present? %>
-                              <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "xml", origem: "entrada"),
-                                    class: "btn btn-outline-secondary btn-sm", title: "Baixar XML" do %>
-                                <i class="fa fa-file-code"></i> XML
-                              <% end %>
-                              <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "pdf", origem: "entrada"),
-                                    class: "btn btn-outline-secondary btn-sm", title: "Baixar DANFE" do %>
-                                <i class="fa fa-file-pdf"></i> PDF
-                              <% end %>
+                              <div class="d-flex gap-1 flex-wrap">
+                                <% if importavel %>
+                                  <%= button_to importar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], inicio: params[:inicio], fim: params[:fim]),
+                                        method: :post, class: "btn btn-success btn-sm",
+                                        form: { class: "d-inline", data: { turbo: false } },
+                                        data: { confirm: "Baixar o XML e importar esta nota para montar a compra?" } do %>
+                                    <i class="fa fa-file-import"></i> Importar
+                                  <% end %>
+                                <% end %>
+                                <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "xml", origem: "entrada"),
+                                      class: "btn btn-outline-secondary btn-sm", title: "Baixar XML" do %>
+                                  <i class="fa fa-file-code"></i> XML
+                                <% end %>
+                                <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "pdf", origem: "entrada"),
+                                      class: "btn btn-outline-secondary btn-sm", title: "Baixar DANFE" do %>
+                                  <i class="fa fa-file-pdf"></i> PDF
+                                <% end %>
+                              </div>
                             <% end %>
                           </td>
                         </tr>

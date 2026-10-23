@@ -146,6 +146,33 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Falha ao baixar: #{e.message}"
   end
 
+  # POST .../notas_recebidas/importar_chave?chave=... — importa a nota DIRETO pela
+  # chave: baixa o XML da SEFAZ, cria o XmlFile e leva a tela de montar a compra
+  # (produtoxmls#new). Evita o vai-e-vem de baixar o XML no computador e subir em
+  # xml_files manualmente. Grava a NotaRecebida (registro) no processo.
+  def importar_chave
+    chave = params[:chave].to_s.gsub(/\D/, "")
+    if chave.length < 20
+      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Chave inválida." and return
+    end
+    config = FiscalConfig.find_by(cod_empresa: current_collaborator.cod_empresa)
+    unless config&.ativo?
+      redirect_to collaborators_backoffice_notas_recebidas_path, alert: "Empresa sem configuração fiscal ativa." and return
+    end
+
+    nota = Fiscal::NotasRecebidasService.new(current_collaborator.empresa).importar_chave!(chave)
+    if nota&.xml_file_id.present?
+      redirect_to new_collaborators_backoffice_produtoxml_path(nota.xml_file_id)
+    else
+      redirect_to collaborators_backoffice_notas_recebidas_path(ver_entradas: 1, inicio: params[:inicio], fim: params[:fim]),
+                  alert: "Não foi possível obter o XML desta nota para importar. Se for nota de serviço (NFS-e), ela não entra no fluxo de compra de mercadoria."
+    end
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#importar_chave] #{e.class} - #{e.message}")
+    redirect_to collaborators_backoffice_notas_recebidas_path(ver_entradas: 1),
+                alert: "Falha ao importar: #{e.message}"
+  end
+
   # Importar = levar ao fluxo de compra existente (produtoxmls#new monta a compra
   # a partir do XmlFile). Reusa toda a tela de conferencia atual.
   def importar

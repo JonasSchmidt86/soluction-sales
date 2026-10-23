@@ -49,7 +49,46 @@ module Fiscal
       Resultado.new(novas: 0, atualizadas: 0, erro: true, mensagem: e.message)
     end
 
+    # Importa UMA nota pela chave SOB DEMANDA (clicou em "Importar" na lista):
+    # baixa o XML da SEFAZ, cria/garante o XmlFile e grava/atualiza a NotaRecebida.
+    # Reaproveita o registro existente (dedupe por chave) para nao duplicar.
+    # Retorna a NotaRecebida (com xml_file) ou nil em falha. NAO vira compra aqui
+    # — so prepara o XmlFile; a compra e montada na tela seguinte (produtoxmls#new).
+    def importar_chave!(chave)
+      chave = chave.to_s.gsub(/\D/, "")
+      return nil if chave.blank?
+
+      nota = NotaRecebida.find_by(cod_empresa: @empresa.cod_empresa, chave_acesso: chave)
+      # Ja importada e com XML -> reaproveita.
+      return nota if nota&.xml_file_id.present?
+
+      if nota
+        # Registro existe mas sem XML: baixa e anexa agora.
+        anexar_xml!(nota, chave)
+        nota
+      else
+        # Novo: cria a partir da chave (baixa XML + cria XmlFile + grava registro).
+        criar_a_partir_da_chave(chave, {}) ? NotaRecebida.find_by(cod_empresa: @empresa.cod_empresa, chave_acesso: chave) : nil
+      end
+    rescue => e
+      Rails.logger.error("[NotasRecebidasService#importar_chave] chave=#{chave}: #{e.class} - #{e.message}")
+      nil
+    end
+
     private
+
+    # Baixa o XML e anexa a uma NotaRecebida ja existente (sem XML), preenchendo
+    # tambem os dados que faltarem (fornecedor/numero/serie...).
+    def anexar_xml!(nota, chave)
+      arquivo = @adapter.obter_arquivo(chave: chave, file_type: 1, tipo_documento: 0)
+      return unless arquivo.sucesso?
+      xml = arquivo.conteudo
+      r = Fiscal::XmlNotaResumo.new(xml) rescue nil
+      fornecedor = (r && r.valido?) ? resolver_fornecedor(r) : nil
+      nota.xml_file = criar_xml_file(xml, chave, fornecedor)
+      nota.cod_pessoa ||= fornecedor&.cod_pessoa
+      nota.save!
+    end
 
     # Baixa o XML da nota (entrada) e cria a NotaRecebida com o resumo extraido.
     def criar_a_partir_da_chave(chave, resumo_api)
