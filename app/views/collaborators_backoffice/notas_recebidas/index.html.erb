@@ -11,16 +11,22 @@
             basta re-adicionar os button_to aqui para religar. A consulta e o
             download por chave (manual, sem salvar nada) ficam na secao abaixo. %>
         <% mostrar_sincronizacao = false %>
-        <% if mostrar_sincronizacao %>
-          <div class="ms-auto">
+        <div class="ms-auto d-flex gap-2">
+          <%# Ver entradas na SEFAZ: lista AO VIVO (ObterNotasFiscais), so leitura,
+              NAO grava NotaRecebida. Mantem o periodo dos filtros. %>
+          <%= link_to collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim], ver_entradas: 1),
+                class: "btn btn-light btn-sm" do %>
+            <i class="fa fa-cloud-arrow-down me-1"></i> Ver entradas na SEFAZ
+          <% end %>
+          <% if mostrar_sincronizacao %>
             <%= button_to "Buscar na SEFAZ",
                   sincronizar_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
                   method: :post, class: "btn btn-light btn-sm" %>
             <%= button_to "Atualizar status",
                   sincronizar_status_collaborators_backoffice_notas_recebidas_path(inicio: params[:inicio], fim: params[:fim]),
                   method: :post, class: "btn btn-outline-light btn-sm" %>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
 
       <div class="card-body">
@@ -132,6 +138,70 @@
             });
           })();
         </script>
+
+        <%# ===== Entradas na SEFAZ (ao vivo, so leitura — nao grava) ===== %>
+        <% if params[:ver_entradas] == "1" %>
+          <div class="card border-secondary mb-3">
+            <div class="card-header bg-light d-flex align-items-center">
+              <strong><i class="fa fa-cloud-arrow-down me-2"></i>Entradas na SEFAZ</strong>
+              <span class="ms-2 small text-muted">
+                período <%= @inicio.strftime("%d/%m/%Y") %> a <%= @fim.strftime("%d/%m/%Y") %> — apenas visualização, nada é salvo
+              </span>
+            </div>
+            <div class="card-body">
+              <% if @entradas_erro.present? %>
+                <div class="alert alert-warning py-2 mb-0"><%= @entradas_erro %></div>
+              <% elsif @entradas_sefaz.blank? %>
+                <p class="text-muted mb-0">Nenhuma nota de entrada encontrada na SEFAZ para o período.</p>
+              <% else %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Emissor</th>
+                        <th>NF / Série</th>
+                        <th>Modelo</th>
+                        <th>Emissão</th>
+                        <th class="text-end">Valor</th>
+                        <th>Chave</th>
+                        <th style="width:160px;">Arquivos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% @entradas_sefaz.each do |e| %>
+                        <tr>
+                          <td><%= e[:emissor] %><br><small class="text-muted"><%= e[:cnpj_emissor] %></small></td>
+                          <td><%= e[:numero] %><%= " / #{e[:serie]}" if e[:serie].present? %></td>
+                          <td><%= e[:modelo] %></td>
+                          <td><% if e[:data_emissao].present? %><%= (Time.parse(e[:data_emissao].to_s).strftime("%d/%m/%Y") rescue e[:data_emissao]) %><% end %></td>
+                          <td class="text-end"><%= number_to_currency(e[:valor], unit: "R$ ", delimiter: ".", separator: ",") %></td>
+                          <td class="text-break"><small><%= e[:chave] %></small></td>
+                          <td>
+                            <% if e[:chave].present? %>
+                              <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "xml", origem: "entrada"),
+                                    class: "btn btn-outline-secondary btn-sm", title: "Baixar XML" do %>
+                                <i class="fa fa-file-code"></i> XML
+                              <% end %>
+                              <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: e[:chave], tipo: "pdf", origem: "entrada"),
+                                    class: "btn btn-outline-secondary btn-sm", title: "Baixar DANFE" do %>
+                                <i class="fa fa-file-pdf"></i> PDF
+                              <% end %>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+                <small class="text-muted d-block mt-2">
+                  <i class="fa fa-circle-info me-1"></i>
+                  Lista obtida direto da SEFAZ (distribuição DF-e). Não grava nada no sistema.
+                  Notas de compra (NF-e 55) só aparecem após manifestação/ciência na conta da Brasil NFe.
+                </small>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
 
         <%# Filtros %>
         <%= form_with url: collaborators_backoffice_notas_recebidas_path, method: :get, local: true, class: "row g-2 mb-3 align-items-end" do %>

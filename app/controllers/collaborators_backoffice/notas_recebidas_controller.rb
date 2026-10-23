@@ -20,6 +20,16 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
 
     # Alerta: notas que viraram compra mas foram CANCELADAS na SEFAZ.
     @alertas_canceladas = NotaRecebida.da_empresa(@cod_empresa).integradas.canceladas
+
+    # Listagem AO VIVO da distribuicao (ObterNotasFiscais) — SO LEITURA, nao grava
+    # NotaRecebida. Preenchida quando o usuario clica em "Ver entradas na SEFAZ"
+    # (params[:ver_entradas]=1). Permite visualizar o que a Brasil NFe captou e
+    # baixar XML/DANFE por chave, sem o automatismo de sincronizacao.
+    @entradas_sefaz = nil
+    @entradas_erro  = nil
+    if params[:ver_entradas] == "1"
+      @entradas_sefaz, @entradas_erro = listar_entradas_sefaz(@inicio, @fim)
+    end
   end
 
   # Busca na SEFAZ as notas de entrada do periodo e grava as novas.
@@ -146,6 +156,44 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   end
 
   private
+
+  # Lista as notas de ENTRADA do periodo direto da distribuicao (ObterNotasFiscais),
+  # SEM gravar nada. Retorna [lista_de_hashes, erro_ou_nil]. Cada item: chave,
+  # numero, serie, modelo, valor, emissor, cnpj_emissor, data_emissao, status.
+  # So leitura — nao manifesta nem escritura (seguro rodar em paralelo com outro
+  # sistema). A empresa precisa de config fiscal ativa.
+  def listar_entradas_sefaz(inicio, fim)
+    config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
+    return [nil, "Configuração fiscal ausente ou inativa."] unless config&.ativo?
+
+    resp = Fiscal::BrasilNfeAdapter.new(config: config)
+                                   .obter_notas(dt_inicio: inicio, dt_fim: fim, tipo_documento: 0)
+    erro  = resp["Error"].to_s
+    notas = resp["Notas"] || resp["notas"] || []
+
+    # "Nao existe notas" = periodo vazio, nao e erro.
+    if notas.empty? && erro.present? && !erro.downcase.include?("existe")
+      return [nil, erro]
+    end
+
+    lista = Array(notas).map do |n|
+      {
+        chave:        (n["Chave"] || n["ChaveNF"] || n["chave"]).to_s.gsub(/\D/, ""),
+        numero:       n["Numero"],
+        serie:        n["Serie"],
+        modelo:       n["ModeloDocumento"],
+        valor:        n["Valor"],
+        emissor:      n["NomeEmissor"] || n["NomeEmitente"] || n["EmitenteNome"],
+        cnpj_emissor: n["CnpjEmissor"] || n["CnpjEmitente"],
+        data_emissao: n["DtEmissao"] || n["DataEmissao"],
+        status:       n["Status"]
+      }
+    end
+    [lista, nil]
+  rescue => e
+    Rails.logger.error("[NotasRecebidas#listar_entradas_sefaz] #{e.class} - #{e.message}")
+    [nil, "Falha ao consultar a SEFAZ: #{e.message}"]
+  end
 
   def set_nota
     @nota = NotaRecebida.da_empresa(current_collaborator.cod_empresa).find(params[:id])
