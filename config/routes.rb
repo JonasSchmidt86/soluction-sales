@@ -259,6 +259,10 @@ Rails.application.routes.draw do
     end
     get 'fiscal_pendencias', to: 'fiscal_pendencias#index', as: :fiscal_pendencias
 
+    # Relatorio de Estoque Fiscal (modulo fiscal): lista a qtdfiscal por
+    # produto/cor da empresa logada, com filtros por nome/codigo, marca e grupo.
+    get 'report_estoque_fiscal', to: 'report/rep_estoque_fiscal#index', as: :report_estoque_fiscal_index
+
     # Importacao de INVENTARIO fiscal (fluxo novo, simplificado): le a planilha
     # padrao (Codigo/Quantidade/NCM/Produto), classifica (prontos/divergentes/
     # novos/erro) e grava fiscal_produto.qtd_fiscal + empresaproduto.qtdfiscal
