@@ -14,6 +14,14 @@ class CollaboratorsBackoffice::Report::RepBuyController < CollaboratorsBackoffic
                         scope = scope.joins(:pessoa).where("UPPER(pessoa.nome) LIKE ?", term)
                     end
 
+                    if params[:nf_pedido].present?
+                        nf_pedido = "%#{params[:nf_pedido].strip.upcase}%"
+                        scope = scope.where(
+                            "UPPER(compra.numeronf) LIKE :q OR UPPER(compra.nr_pedido) LIKE :q",
+                            q: nf_pedido
+                        )
+                    end
+
                     data_inicial, data_final = if params[:dataInicial].present? && params[:dataFinal].present?
                                                 [
                                                     Date.strptime(params[:dataInicial], '%d/%m/%Y'),

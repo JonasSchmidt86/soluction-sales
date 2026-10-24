@@ -29,7 +29,11 @@ class Compra < ApplicationRecord
       if self.cancelada
           return ["CANCELADA", (self.numeronf.blank? ? "0" : self.numeronf)].join(' / ')
       else
+        if self.nr_pedido
+          return [self.cod_compraempresa, (self.nr_pedido.blank? ? "0" : self.nr_pedido)].join(' / P-')
+        else
           return [self.cod_compraempresa, (self.numeronf.blank? ? "0" : self.numeronf)].join(' / ')
+        end
       end
   end
 

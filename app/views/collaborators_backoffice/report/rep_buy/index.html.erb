@@ -21,6 +21,9 @@
               <%= form.text_field :term, class:"form-control form-control-md", value: params[:term], placeholder:"Pessoa..." %>
             </div>
             <div class="col-auto">
+              <%= form.text_field :nf_pedido, class:"form-control form-control-md", value: params[:nf_pedido], placeholder:"Nº NF / Pedido..." %>
+            </div>
+            <div class="col-auto">
               <%= form.text_field :dataInicial, 
               value: params[:dataInicial].presence || Time.current.strftime("01/%m/%Y"), 
               class: "form-control form-control-md datepicker fallback", style:"width: 115px;", 
@@ -136,7 +139,7 @@
                         <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
                           <span class="visually-hidden">Toggle Dropdown</span>
                           <li>
-                            <%= link_to collaborators_backoffice_compra_path(buy, term: params[:term], dataInicial: params[:dataInicial], dataFinal: params[:dataFinal], cod_funcionario: params[:cod_funcionario], per_page: params[:per_page]), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
+                            <%= link_to collaborators_backoffice_compra_path(buy, term: params[:term], nf_pedido: params[:nf_pedido], dataInicial: params[:dataInicial], dataFinal: params[:dataFinal], cod_funcionario: params[:cod_funcionario], per_page: params[:per_page]), method: :delete, class: "dropdown-item btn btn-danger btn-circle", 
                                       data: { confirm: "Deseja remover a Compra?" } do %>
                               <i class="fa fa-trash-can",  style="width: 35px;"></i>Apagar
                             <% end %>
