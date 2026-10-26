@@ -59,6 +59,11 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
       compra.numeronf = (ide_element.at("nNF")&.text).to_i || 0;
       compra.serienf = (ide_element.at("serie")&.text).to_i || 0;
 
+      # Natureza da operacao (natOp do XML): exibida no form (so leitura). A
+      # tabela compra nao armazena esse campo, por isso vai por variavel de
+      # instancia e nao pela compra.
+      @natureza_operacao = ide_element.at("natOp")&.text
+
       # totais
       compra.valorfrete = ((icmsTotal_elements.at("vFrete")&.text).to_f || 0) ;  # vFrete -  Valor do frete que vem na NF
       compra.outrasdespesas = (icmsTotal_elements.at("vOutro")&.text.to_f || 0 ); # vOutro - Outras despesas 

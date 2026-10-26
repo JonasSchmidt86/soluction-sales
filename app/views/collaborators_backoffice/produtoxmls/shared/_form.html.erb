@@ -83,6 +83,14 @@
                   <%= form_buy.label :data_cadastro, class:"" %>
                 </div>
               </div>
+              <%# Natureza da operacao (natOp do XML). So leitura: a compra nao
+                  armazena esse campo; vem da variavel @natureza_operacao do controller. %>
+              <div class="col-md-6">
+                <div class="form-floating">
+                  <%= text_field_tag :natureza_operacao, @natureza_operacao, disabled: true, class: "text form-control", placeholder: "Natureza da operação" %>
+                  <%= label_tag :natureza_operacao, "Natureza da operação" %>
+                </div>
+              </div>
             </div>
             <hr class="my-2">
             <%# dados fornecedor %>

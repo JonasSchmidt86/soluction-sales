@@ -167,6 +167,7 @@
               <tr>
                 <th class="text-center" style="width:50px;">Status</th>
                 <th>Fornecedor (emitente)</th>
+                <th>Natureza da operação</th>
                 <th style="width:125px;">NF / Série</th>
                 <th class="text-center" style="width:50px;">Mod.</th>
                 <th>Emissão</th>
@@ -177,7 +178,7 @@
             </thead>
             <tbody>
               <% if @notas.empty? %>
-                <tr><td colspan="8" class="text-center text-muted py-3">
+                <tr><td colspan="9" class="text-center text-muted py-3">
                   Nenhuma nota no período. Clique em <strong>Ver entradas na SEFAZ</strong> para buscar e registrar,
                   ou use <strong>Consultar NF por chave</strong>.
                 </td></tr>
@@ -194,7 +195,9 @@
                        data-bs-toggle="tooltip"></i>
                   </td>
                   <%# Fornecedor: sem CNPJ, limitado a 40 caracteres (tooltip com o nome completo). %>
-                  <td title="<%= n.emitente_nome %>"><%= truncate(n.emitente_nome.to_s, length: 40) %></td>
+                  <td title="<%= n.emitente_nome %>"><%= truncate(n.emitente_nome.to_s, length: 35) %></td>
+                  <%# Natureza da operacao (natOp do XML), limitada no visual com tooltip. %>
+                  <td title="<%= n.natureza_operacao %>"><%= truncate(n.natureza_operacao.to_s, length: 20) %></td>
                   <td><%= n.numero %><%= " / #{n.serie}" if n.serie.present? %></td>
                   <%# Modelo compacto: S = servico, T = transporte (CT-e 57 / MDF-e 58),
                       mercadoria (NF-e 55) mostra o numero do modelo. %>

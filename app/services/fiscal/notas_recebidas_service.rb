@@ -139,7 +139,63 @@ module Fiscal
       nil
     end
 
+    # BACKFILL da natureza_operacao em notas ja gravadas sem esse campo. O dado
+    # so existe no XML (natOp), que nem toda nota tinha quando foi registrada.
+    # Para cada nota sem natureza:
+    #   - se ja tem XML anexado: extrai a natureza dali (sem tocar na SEFAZ);
+    #   - senao, se baixar_xml: baixa o XML da SEFAZ, anexa e extrai.
+    # Retorna um Hash com os totais. Seguro de rodar varias vezes (idempotente).
+    def preencher_naturezas_faltantes!(baixar_xml: true)
+      escopo = NotaRecebida.da_empresa(@empresa.cod_empresa)
+                           .where("natureza_operacao IS NULL OR natureza_operacao = ''")
+      preenchidas = 0
+      sem_xml     = 0
+      falhas      = 0
+
+      escopo.find_each do |nota|
+        resumo = resumo_do_xml_da_nota(nota, baixar_xml: baixar_xml)
+        if resumo.nil?
+          sem_xml += 1
+          next
+        end
+        natureza = resumo.natureza
+        if natureza.present?
+          nota.update_column(:natureza_operacao, natureza)
+          preenchidas += 1
+        end
+      rescue => e
+        falhas += 1
+        Rails.logger.error("[NotasRecebidas#preencher_naturezas chave=#{nota.chave_acesso}] #{e.class} - #{e.message}")
+      end
+
+      { preenchidas: preenchidas, sem_xml: sem_xml, falhas: falhas }
+    end
+
     private
+
+    # Devolve um XmlNotaResumo para a nota: usa o XML anexado se houver; senao,
+    # se baixar_xml, baixa da SEFAZ e (se vier) anexa para reaproveitar depois.
+    # Retorna nil quando nao ha XML disponivel.
+    def resumo_do_xml_da_nota(nota, baixar_xml: true)
+      if nota.xml_file&.file&.attached?
+        xml = nota.xml_file.file.download
+        return Fiscal::XmlNotaResumo.new(xml)
+      end
+      return nil unless baixar_xml
+
+      arquivo = @adapter.obter_arquivo(chave: nota.chave_acesso, file_type: 1, tipo_documento: 0)
+      return nil unless arquivo.sucesso?
+      xml = arquivo.conteudo
+      resumo = Fiscal::XmlNotaResumo.new(xml)
+      # Anexa o XML baixado para nao precisar baixar de novo (idempotente).
+      if resumo.valido?
+        fornecedor = resolver_fornecedor(resumo)
+        nota.xml_file ||= criar_xml_file(xml, nota.chave_acesso, fornecedor)
+        nota.cod_pessoa ||= fornecedor&.cod_pessoa
+        nota.save! if nota.changed?
+      end
+      resumo
+    end
 
     # Baixa o XML e anexa a uma NotaRecebida ja existente (sem XML), preenchendo
     # tambem os dados que faltarem (fornecedor/numero/serie...).
