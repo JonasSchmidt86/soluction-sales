@@ -67,7 +67,7 @@ class CollaboratorsBackoffice::RegrasFiscaisController < CollaboratorsBackoffice
   end
 
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal?
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_perfis")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

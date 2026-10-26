@@ -195,7 +195,7 @@
       <div class="position-fixed bottom-0 end-0 m-4">
         <div class="d-flex flex-column align-items-end gap-2 my-3 mx-3">
           <%# Botao fiscal (so super_admin + empresa com modulo): salvar e emitir/reemitir. %>
-          <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+          <% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
             <% ultima_nfe = @sale.persisted? ? DocumentoFiscal.where(cod_venda: @sale.cod_venda, modelo: 55).order(cod_documento_fiscal: :desc).first : nil %>
             <% pode_reemitir = ultima_nfe && %w[rejeitada erro rascunho enviada].include?(ultima_nfe.status) %>
             <% ja_autorizada = ultima_nfe&.autorizada? %>
@@ -227,7 +227,7 @@
 <%= render partial: 'layouts/shared/modal_alert' %>
 
 <%# Modal de perfil tributario do produto (so super_admin + modulo fiscal). %>
-<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+<% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
   <%# Estilos escopados: o custom.scss zera .modal-content (transparente/sem %>
   <%# borda) e .modal-body (padding:0 !important) para TODOS os modais; aqui %>
   <%# revertemos apenas para este modal, sem afetar os outros.               %>
@@ -959,7 +959,7 @@
       });
 </script>
 
-<% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+<% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
 <script>
   // ===================================================================
   // Perfil tributario do produto na venda.

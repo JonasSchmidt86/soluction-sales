@@ -10,25 +10,35 @@
 </button>
 <div id="collapseOts" class="collapse">
   <nav class="sb-sidenav-menu-nested nav">
-    <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
-      <i class="fa-solid fa-address-card fa-fw me-2" aria-hidden="true"></i>
-      Pessoas
+    <% if access_control.can_view?('pessoas') %>
+      <%= link_to collaborators_backoffice_pessoas_path, class: "nav-link" do %>
+        <i class="fa-solid fa-address-card fa-fw me-2" aria-hidden="true"></i>
+        Pessoas
+      <% end %>
     <% end %>
-    <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
-      <i class="fa-solid fa-box-open fa-fw me-2" aria-hidden="true"></i>
-      Produtos
+    <% if access_control.can_view?('produtos') %>
+      <%= link_to collaborators_backoffice_produtos_path, class: "nav-link" do %>
+        <i class="fa-solid fa-box-open fa-fw me-2" aria-hidden="true"></i>
+        Produtos
+      <% end %>
     <% end %>
-    <%= link_to collaborators_backoffice_marcas_path, class: "nav-link" do %>
-      <i class="fa-solid fa-copyright fa-fw me-2" aria-hidden="true"></i>
-      Marcas
+    <% if access_control.can_view?('marcas') %>
+      <%= link_to collaborators_backoffice_marcas_path, class: "nav-link" do %>
+        <i class="fa-solid fa-copyright fa-fw me-2" aria-hidden="true"></i>
+        Marcas
+      <% end %>
     <% end %>
-    <%= link_to collaborators_backoffice_grupos_index_path, class: "nav-link" do %>
-      <i class="fa-solid fa-layer-group fa-fw me-2" aria-hidden="true"></i>
-      Grupos
+    <% if access_control.can_view?('grupos') %>
+      <%= link_to collaborators_backoffice_grupos_index_path, class: "nav-link" do %>
+        <i class="fa-solid fa-layer-group fa-fw me-2" aria-hidden="true"></i>
+        Grupos
+      <% end %>
     <% end %>
-    <%= link_to collaborators_backoffice_cores_path, class: "nav-link" do %>
-      <i class="fa-solid fa-palette fa-fw me-2" aria-hidden="true"></i>
-      Cores
+    <% if access_control.can_view?('cores') %>
+      <%= link_to collaborators_backoffice_cores_path, class: "nav-link" do %>
+        <i class="fa-solid fa-palette fa-fw me-2" aria-hidden="true"></i>
+        Cores
+      <% end %>
     <% end %>
     <% if access_control.can_view?('produto_imagens') %>
       <%= link_to cadastro_rapido_collaborators_backoffice_produto_imagens_path, class: "nav-link" do %>

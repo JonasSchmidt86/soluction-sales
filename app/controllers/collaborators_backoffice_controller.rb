@@ -26,11 +26,21 @@ class CollaboratorsBackofficeController < ApplicationController
     end
     helper_method :access_control
 
-    # Modulo fiscal habilitado para a EMPRESA logada (via FiscalConfig ativo).
-    # Garante que emissao/telas fiscais so aparecem quando logado na empresa
-    # que tem o modulo — evita emitir por empresa errada.
+    # Modulo fiscal HABILITADO no cadastro da EMPRESA logada
+    # (parametrosempresa.modulo_fiscal). Gate do MENU Fiscal e da tela de
+    # Configuracao (onde se ativa o FiscalConfig). Independe de config feita.
+    def empresa_modulo_fiscal_habilitado?
+      return @empresa_modulo_fiscal_habilitado if defined?(@empresa_modulo_fiscal_habilitado)
+      @empresa_modulo_fiscal_habilitado = current_collaborator&.empresa&.modulo_fiscal_habilitado? || false
+    end
+    helper_method :empresa_modulo_fiscal_habilitado?
+
+    # Modulo fiscal OPERACIONAL da EMPRESA logada = habilitado E com FiscalConfig
+    # ATIVO. Gate do RESTANTE do fiscal (emissao/telas), que exige a configuracao
+    # feita — evita emitir por empresa sem config ou errada.
     def empresa_tem_modulo_fiscal?
-      @empresa_tem_modulo_fiscal ||= current_collaborator&.empresa&.modulo_fiscal? || false
+      return @empresa_tem_modulo_fiscal if defined?(@empresa_tem_modulo_fiscal)
+      @empresa_tem_modulo_fiscal = current_collaborator&.empresa&.modulo_fiscal? || false
     end
     helper_method :empresa_tem_modulo_fiscal?
 

@@ -27,9 +27,15 @@ class AccessControlService
     commission_adjustments
     commission_periods
     whatsapp_contacts
+    fiscal_dashboard
     fiscal_config
     fiscal_pendencias
     fiscal_perfis
+    notas_avulsas
+    notas_recebidas
+    fiscal_estoque
+    pacotes_fiscais
+    importacao_inventario
   ].freeze
 
   # Recursos em desenvolvimento/teste — visíveis SOMENTE para super_admin (cod_funcionario == 1).
@@ -40,7 +46,6 @@ class AccessControlService
     commission_assignments
     commission_periods
     commission_adjustments
-    notas_fiscais
   ].freeze
 
   def initialize(collaborator)

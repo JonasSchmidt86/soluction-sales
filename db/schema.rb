@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_30_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_30_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -956,6 +956,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_000002) do
     t.boolean "imprimerelatoriocaixa"
     t.boolean "maiusculo"
     t.boolean "etiqueta", default: false
+    t.boolean "modulo_fiscal", default: false, comment: "Habilita o modulo fiscal (menu + tela de Configuracao) para a empresa"
   end
 
   create_table "pedidos_compras", force: :cascade do |t|

@@ -111,7 +111,7 @@
                         </li>
                         <%# Devolver NF: so para super_admin com modulo fiscal. Se ja ha NF de %>
                         <%# devolucao, mostra o status; senao, se a compra tem NF+XML, o botao. %>
-                        <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                        <% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
                           <% doc_dev = (@docs_por_compra || {})[buy.cod_compra] %>
                           <% if doc_dev&.autorizada? %>
                             <%# Devolucao emitida: abre a NF (tela da nota, com DANFE/cancelar). %>

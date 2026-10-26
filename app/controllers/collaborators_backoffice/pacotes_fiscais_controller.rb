@@ -159,7 +159,7 @@ class CollaboratorsBackoffice::PacotesFiscaisController < CollaboratorsBackoffic
   end
 
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("pacotes_fiscais")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

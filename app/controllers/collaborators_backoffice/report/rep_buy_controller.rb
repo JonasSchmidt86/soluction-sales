@@ -59,7 +59,7 @@ class CollaboratorsBackoffice::Report::RepBuyController < CollaboratorsBackoffic
     # fiscal (quem ve o botao de devolucao). Mesmo padrao do relatorio de vendas.
     def carregar_documentos_fiscais
         @docs_por_compra = {}
-        return unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+        return unless empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas")
 
         cod_compras = @buys.map(&:cod_compra).compact
         return if cod_compras.empty?

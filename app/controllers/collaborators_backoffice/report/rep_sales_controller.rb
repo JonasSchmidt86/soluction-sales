@@ -82,7 +82,7 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
     # fiscal e exibido (modulo fiscal + super_admin); fora disso fica vazio.
     def carregar_documentos_fiscais
         @docs_por_venda = {}
-        return unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+        return unless empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas")
 
         cod_vendas = Array(@sales).map(&:cod_venda).compact.uniq
         return if cod_vendas.empty?

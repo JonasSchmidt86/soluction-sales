@@ -278,7 +278,7 @@ class CollaboratorsBackoffice::DocumentosFiscaisController < CollaboratorsBackof
   # quando logado numa empresa que tem o modulo fiscal ativo (evita emitir
   # pela empresa errada). Depois: trocar por empresa_tem_modulo_fiscal? apenas.
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

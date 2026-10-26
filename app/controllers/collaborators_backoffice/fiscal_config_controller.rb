@@ -474,7 +474,9 @@ class CollaboratorsBackoffice::FiscalConfigController < CollaboratorsBackofficeC
   # nao pode exigir modulo ja ativo (paradoxo). Fica restrita ao super_admin
   # (quem configura empresas), via SUPER_ADMIN_ONLY_RESOURCES 'fiscal_config'.
   def autorizar_fiscal!
-    unless access_control.can_view?("fiscal_config")
+    # Config exige o modulo HABILITADO no cadastro (parametro), mas NAO exige o
+    # FiscalConfig ativo — e justamente a tela que cria/ativa a configuracao.
+    unless empresa_modulo_fiscal_habilitado? && access_control.can_view?("fiscal_config")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

@@ -68,7 +68,7 @@ class CollaboratorsBackoffice::ProdutoPerfilFiscalController < CollaboratorsBack
   # Mesmo gate do modulo fiscal usado na emissao: por ora so super_admin em
   # empresa com modulo fiscal ativo.
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal? && access_control.super_admin?
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_perfis")
       render json: { erro: "Acesso negado" }, status: :forbidden
     end
   end

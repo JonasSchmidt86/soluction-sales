@@ -1,9 +1,10 @@
-<% if access_control.can_view?('notas_fiscais') %>
-  <!-- Colapso: Fiscal (aparece se a EMPRESA logada tem modulo fiscal) -->
-  <%# Grupo Fiscal aparece se a empresa TEM o modulo ativo OU se o usuario
-      pode ver a Configuracao (super_admin) — assim da para ATIVAR o modulo
-      numa empresa que ainda nao tem config, sem o paradoxo de o menu sumir. #%>
-  <% if empresa_tem_modulo_fiscal? || access_control.can_view?('fiscal_config') %>
+<%# Grupo Fiscal aparece quando o modulo esta HABILITADO no cadastro da empresa
+    (parametrosempresa.modulo_fiscal) E o usuario pode ver algum item fiscal
+    (incluindo a Configuracao). Sem o modulo habilitado, nada fiscal aparece. #%>
+<% recursos_fiscais = %w[fiscal_config fiscal_dashboard notas_avulsas notas_recebidas
+                         fiscal_estoque pacotes_fiscais fiscal_perfis importacao_inventario
+                         fiscal_pendencias] %>
+<% if empresa_modulo_fiscal_habilitado? && recursos_fiscais.any? { |r| access_control.can_view?(r) } %>
     <button class="nav-link collapsed sidebar-section-toggle" type="button" data-sidebar-toggle="#collapseFiscal" aria-expanded="false" aria-controls="collapseFiscal">
       <div class="sb-nav-link-icon">
         <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -13,38 +14,57 @@
     </button>
     <div class="collapse" id="collapseFiscal">
       <nav class="sb-sidenav-menu-nested nav">
-        <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+        <%# Cada item aparece com a MESMA condicao do seu controller:
+            empresa_tem_modulo_fiscal? && can_view?(<recurso>). can_view? ja
+            retorna true para admin, entao perfis com a permissao OU admin veem. %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_dashboard') %>
           <%= link_to collaborators_backoffice_fiscal_dashboard_path, class: "nav-link" do %>
             <i class="fa fa-gauge-high me-1"></i> Dashboard
           <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('notas_avulsas') %>
           <%= link_to collaborators_backoffice_notas_avulsas_path, class: "nav-link" do %>
             <i class="fa fa-file-invoice me-1"></i> Notas Avulsas
           <% end %>
-          <%= link_to collaborators_backoffice_report_estoque_fiscal_index_path, class: "nav-link" do %>
-            <i class="fa fa-boxes-stacked me-1"></i> Relatório de Estoque
-          <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('notas_recebidas') %>
           <%= link_to collaborators_backoffice_notas_recebidas_path, class: "nav-link" do %>
             <i class="fa fa-inbox me-1"></i> Notas Recebidas
           <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_estoque') %>
+          <%= link_to collaborators_backoffice_report_estoque_fiscal_index_path, class: "nav-link" do %>
+            <i class="fa fa-boxes-stacked me-1"></i> Relatório de Estoque
+          <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('pacotes_fiscais') %>
           <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "nav-link" do %>
             <i class="fa fa-box-archive me-1"></i> Pacotes XML
           <% end %>
         <% end %>
-        <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
-          <i class="fa fa-gear me-1"></i> Configuração
+
+        <%# Configuracao: aparece com o modulo HABILITADO no cadastro (mesmo SEM
+            FiscalConfig ainda) — e a tela que ATIVA a configuracao. %>
+        <% if empresa_modulo_fiscal_habilitado? && access_control.can_view?('fiscal_config') %>
+          <%= link_to collaborators_backoffice_fiscal_config_path, class: "nav-link" do %>
+            <i class="fa fa-gear me-1"></i> Configuração
+          <% end %>
         <% end %>
-        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_config') %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_perfis') %>
           <%= link_to collaborators_backoffice_perfis_tributarios_path, class: "nav-link" do %>
             <i class="fa fa-tags me-1"></i> Perfis Tributários
           <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('importacao_inventario') %>
           <%= link_to collaborators_backoffice_importacao_inventario_path, class: "nav-link" do %>
             <i class="fa fa-file-import me-1"></i> Importar Inventário
           <% end %>
+        <% end %>
+        <% if empresa_tem_modulo_fiscal? && access_control.can_view?('fiscal_pendencias') %>
           <%= link_to collaborators_backoffice_fiscal_pendencias_path, class: "nav-link" do %>
             <i class="fa fa-triangle-exclamation me-1"></i> Pendências
           <% end %>
         <% end %>
       </nav>
     </div>
-  <% end %>
 <% end %>

@@ -44,10 +44,19 @@ class Empresa < ApplicationRecord
         self.nome;
     end
 
-    # Modulo fiscal habilitado = existe FiscalConfig ATIVO para esta empresa.
-    # Controla visibilidade do menu Fiscal, telas e (futuro) botoes de emissao.
+    # Modulo fiscal HABILITADO para a empresa (ligado no cadastro, via
+    # parametrosempresa.modulo_fiscal). Gate do MENU Fiscal e da tela de
+    # Configuracao — e aqui que se ativa o FiscalConfig. Independe de ter
+    # configuracao feita.
+    def modulo_fiscal_habilitado?
+        parametrosempresa&.modulo_fiscal == true
+    end
+
+    # Modulo fiscal OPERACIONAL = habilitado E com FiscalConfig ATIVO.
+    # Gate do RESTANTE do fiscal (emissao, dashboard, notas, etc.), que exige a
+    # configuracao feita para funcionar. Controla telas e botoes de emissao.
     def modulo_fiscal?
-        fiscal_config.present? && fiscal_config.ativo?
+        modulo_fiscal_habilitado? && fiscal_config.present? && fiscal_config.ativo?
     end
 
     # --- Helpers fiscais (UF e municipio via Cidade->Estado) ---

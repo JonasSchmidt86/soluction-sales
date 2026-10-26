@@ -65,7 +65,7 @@ class CollaboratorsBackoffice::FiscalPendenciasController < CollaboratorsBackoff
   # Acesso liberado apenas se a EMPRESA logada tem modulo fiscal (FiscalConfig ativo).
   # Garante que so opera o fiscal quem esta logado na empresa que o tem.
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal?
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_pendencias")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

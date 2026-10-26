@@ -173,7 +173,7 @@
                   <% end %>
 
                   <%# Acoes fiscais da compra — so super_admin + modulo fiscal. %>
-                  <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                  <% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
                     <div class="d-flex justify-content-end gap-2 mt-2">
                       <%# Baixa o XML da nota de entrada pela chave (via provedor). %>
                       <%= link_to baixar_xml_collaborators_backoffice_compra_devolucao_path(@compra),

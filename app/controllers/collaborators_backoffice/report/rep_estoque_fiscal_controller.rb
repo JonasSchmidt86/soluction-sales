@@ -103,7 +103,7 @@ class CollaboratorsBackoffice::Report::RepEstoqueFiscalController < Collaborator
   # logada e pode ver a config (super_admin). Protege a URL direta, ja que o
   # link do menu so aparece sob essa condicao.
   def autorizar_fiscal!
-    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_config")
+    unless empresa_tem_modulo_fiscal? && access_control.can_view?("fiscal_estoque")
       redirect_to collaborators_backoffice_welcome_index_path, alert: "Acesso negado."
     end
   end

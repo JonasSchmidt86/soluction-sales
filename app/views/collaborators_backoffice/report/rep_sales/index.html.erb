@@ -170,7 +170,7 @@
                           <% end %>
                         </li>
                       <% end %>
-                      <% if empresa_tem_modulo_fiscal? && access_control.super_admin? %>
+                      <% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
                         <% unless @docs_por_venda[sale.cod_venda] %>
                             <li>
                               <%= link_to previsualizar_collaborators_backoffice_venda_documentos_fiscais_path(sale),
