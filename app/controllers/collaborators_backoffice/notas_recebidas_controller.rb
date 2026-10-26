@@ -26,7 +26,7 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
       escopo = escopo.where("modelo IS NULL OR modelo <> 55")
     end
 
-    @notas = escopo.recentes.page(params[:page])
+    @notas = escopo.includes(:compra).recentes.page(params[:page])
     @alertas_canceladas = NotaRecebida.da_empresa(@cod_empresa).integradas.canceladas
   end
 
@@ -149,11 +149,30 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     end
 
     if arquivo&.sucesso?
+      conteudo = arquivo.conteudo
+
+      # Sanidade: garante que o binario decodificado e mesmo um PDF/XML. Se vier
+      # corrompido (base64 malformado, JSON cru decodificado por engano etc.),
+      # nao entrega um arquivo quebrado ao navegador — loga o inicio p/ diagnostico.
       if tipo == :pdf
-        send_data arquivo.conteudo, filename: "danfe-#{chave}.pdf",
+        valido = conteudo.to_s.start_with?("%PDF")
+      else
+        amostra = conteudo.to_s[0, 200].to_s.lstrip
+        valido = amostra.start_with?("<") # XML/declaracao <?xml ...?>
+      end
+
+      unless valido
+        amostra = conteudo.to_s[0, 60].inspect
+        Rails.logger.error("[NotasRecebidas#baixar_chave] conteudo invalido (tipo=#{tipo}, chave=#{chave}). Inicio: #{amostra}")
+        redirect_to collaborators_backoffice_notas_recebidas_path,
+                    alert: "O arquivo retornado pelo provedor veio em formato inesperado e não pôde ser aberto. Tente novamente; se persistir, avise o suporte (a resposta foi registrada no log)." and return
+      end
+
+      if tipo == :pdf
+        send_data conteudo, filename: "danfe-#{chave}.pdf",
                   type: "application/pdf", disposition: "attachment"
       else
-        send_data arquivo.conteudo, filename: "nfe-#{chave}.xml",
+        send_data conteudo, filename: "nfe-#{chave}.xml",
                   type: "application/xml", disposition: "attachment"
       end
     else

@@ -161,24 +161,23 @@
         <% end %>
 
         <%# ===== Tabela UNICA de notas recebidas gravadas ===== %>
-        <div class="table-responsive">
+        <div class="table-responsive notas-recebidas-tabela">
           <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th>Status</th>
-                <th>Integrado</th>
+                <th class="text-center" style="width:50px;">Status</th>
                 <th>Fornecedor (emitente)</th>
-                <th>NF / Série</th>
-                <th>Modelo</th>
+                <th style="width:125px;">NF / Série</th>
+                <th class="text-center" style="width:50px;">Mod.</th>
                 <th>Emissão</th>
-                <th class="text-end">Total</th>
-                <th class="text-break">Chave</th>
-                <th style="width:230px;">Ações</th>
+                <th class="text-end" style="max-width:200px;">Total</th>
+                <th class="text-break" style="width:425px;">Chave</th>
+                <th class="text-center" style="width:95px;">Ações</th>
               </tr>
             </thead>
             <tbody>
               <% if @notas.empty? %>
-                <tr><td colspan="9" class="text-center text-muted py-3">
+                <tr><td colspan="8" class="text-center text-muted py-3">
                   Nenhuma nota no período. Clique em <strong>Ver entradas na SEFAZ</strong> para buscar e registrar,
                   ou use <strong>Consultar NF por chave</strong>.
                 </td></tr>
@@ -186,51 +185,91 @@
               <% @notas.each do |n| %>
                 <% mercadoria = n.modelo.to_i == 55 %>
                 <tr class="<%= 'table-warning' if n.integrada_mas_cancelada? %>">
-                  <td>
-                    <% badge = { "autorizada" => "success", "cancelada" => "danger", "denegada" => "dark" }[n.status_sefaz] || "secondary" %>
-                    <span class="badge text-bg-<%= badge %>"><%= n.status_sefaz %></span>
+                  <%# Status: so um icone. Verde = autorizada; cinza = os demais.
+                      O status real aparece no tooltip (title). %>
+                  <td class="text-center">
+                    <% autorizada = n.status_sefaz == "autorizada" %>
+                    <i class="fa fa-circle-check <%= autorizada ? 'text-success' : 'text-secondary' %>"
+                       title="<%= (n.status_sefaz || 'desconhecido').capitalize %>"
+                       data-bs-toggle="tooltip"></i>
                   </td>
-                  <td>
-                    <% if n.integrada? %>
-                      <%= link_to "Compra ##{n.cod_compra}", collaborators_backoffice_compra_path(n.cod_compra), class: "badge text-bg-info text-decoration-none" %>
+                  <%# Fornecedor: sem CNPJ, limitado a 40 caracteres (tooltip com o nome completo). %>
+                  <td title="<%= n.emitente_nome %>"><%= truncate(n.emitente_nome.to_s, length: 40) %></td>
+                  <td><%= n.numero %><%= " / #{n.serie}" if n.serie.present? %></td>
+                  <%# Modelo compacto: S = servico, T = transporte (CT-e 57 / MDF-e 58),
+                      mercadoria (NF-e 55) mostra o numero do modelo. %>
+                  <td class="text-center">
+                    <% if [57, 58].include?(n.modelo.to_i) %>
+                      <span class="badge text-bg-info" title="Transporte (modelo <%= n.modelo %>)">T</span>
+                    <% elsif n.modelo.to_i == 55 %>
+                      <span title="NF-e (mercadoria)"><%= n.modelo %></span>
                     <% else %>
-                      <span class="badge text-bg-light">não</span>
+                      <span class="badge text-bg-secondary" title="Serviço (modelo <%= n.modelo %>)">S</span>
                     <% end %>
                   </td>
-                  <td><%= n.emitente_nome %><br><small class="text-muted"><%= n.emitente_cnpj %></small></td>
-                  <td><%= n.numero %><%= " / #{n.serie}" if n.serie.present? %></td>
-                  <td><%= n.modelo %><%= mercadoria ? "" : " (serviço)" %></td>
                   <td><%= n.data_emissao&.strftime("%d/%m/%Y") %></td>
-                  <td class="text-end"><%= number_to_currency(n.valor_total, unit: "R$ ", delimiter: ".", separator: ",") %></td>
-                  <td class="text-break"><small><%= n.chave_acesso %></small></td>
+                  <%# Total em formato contabil: "R$" a esquerda, valor a direita. %>
                   <td>
-                    <div class="d-flex gap-1 flex-wrap">
-                      <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: n.chave_acesso, tipo: "xml", origem: "entrada"),
-                            class: "btn btn-outline-secondary btn-sm", title: "Baixar XML" do %>
-                        <i class="fa fa-file-code"></i>
-                      <% end %>
-                      <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: n.chave_acesso, tipo: "pdf", origem: "entrada"),
-                            target: "_blank", class: "btn btn-outline-secondary btn-sm", title: "Abrir DANFE" do %>
-                        <i class="fa fa-file-pdf"></i>
-                      <% end %>
-                      <% if mercadoria && !n.integrada? && n.status_sefaz == "autorizada" %>
+                    <div class="d-flex justify-content-between">
+                      <span>R$</span>
+                      <span><%= number_with_precision(n.valor_total, precision: 2, delimiter: ".", separator: ",") %></span>
+                    </div>
+                  </td>
+                  <td class="text-break"><small><%= n.chave_acesso %></small></td>
+                  <td class="text-center">
+                    <div class="d-inline-flex gap-1 align-items-center">
+                      <%# Acao principal (em cima): se ja integrada, VER COMPRA;
+                          senao, se mercadoria autorizada, IMPORTAR. So icone. %>
+                      <% if n.integrada? %>
+                        <%= link_to collaborators_backoffice_compra_path(n.cod_compra),
+                              class: "btn btn-info btn-sm text-white", style: "width:34px;",
+                              title: "Ver compra ##{n.compra&.cod_compraempresa || n.cod_compra}" do %>
+                          <i class="fa fa-cart-shopping"></i>
+                        <% end %>
+                      <% elsif mercadoria && n.status_sefaz == "autorizada" %>
                         <%= button_to importar_chave_collaborators_backoffice_notas_recebidas_path(chave: n.chave_acesso, inicio: params[:inicio], fim: params[:fim]),
                               method: :post, class: "btn btn-success btn-sm", title: "Importar compra",
                               form: { class: "d-inline", data: { turbo: false } },
+                              style: "width:34px;",
                               data: { confirm: "Baixar o XML e importar esta nota para montar a compra?" } do %>
-                          <i class="fa fa-file-import me-1"></i> Importar
+                          <i class="fa fa-file-import"></i>
                         <% end %>
                       <% end %>
-                      <%# Excluir: remove o registro da lista (nao afeta SEFAZ nem a compra). %>
-                      <% msg_excluir = n.integrada? ?
-                           "Esta nota já está vinculada à Compra ##{n.cod_compra}. Remover só o registro da lista (a compra NÃO é apagada)?" :
-                           "Remover esta nota da lista?" %>
-                      <%= button_to collaborators_backoffice_notas_recebida_path(n, filtros),
-                            method: :delete, class: "btn btn-outline-danger btn-sm", title: "Excluir da lista",
-                            form: { class: "d-inline", data: { turbo: false } },
-                            data: { confirm: msg_excluir } do %>
-                        <i class="fa fa-trash-can"></i>
-                      <% end %>
+
+                      <%# Dropdown (embaixo). strategy fixed + overflow visible
+                          evitam que o menu seja cortado pela tabela. %>
+                      <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                                style="width:34px;" data-bs-toggle="dropdown" aria-expanded="false" title="Ações">
+                          <i class="fa fa-ellipsis-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: n.chave_acesso, tipo: "xml", origem: "entrada"),
+                                  class: "dropdown-item" do %>
+                              <i class="fa fa-file-code me-2"></i> Baixar XML
+                            <% end %>
+                          </li>
+                          <li>
+                            <%= link_to baixar_chave_collaborators_backoffice_notas_recebidas_path(chave: n.chave_acesso, tipo: "pdf", origem: "entrada"),
+                                  target: "_blank", class: "dropdown-item" do %>
+                              <i class="fa fa-file-pdf me-2"></i> Abrir DANFE
+                            <% end %>
+                          </li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <% msg_excluir = n.integrada? ?
+                                 "Esta nota já está vinculada à Compra ##{n.compra&.cod_compraempresa || n.cod_compra}. Remover só o registro da lista (a compra NÃO é apagada)?" :
+                                 "Remover esta nota da lista?" %>
+                            <%= button_to collaborators_backoffice_notas_recebida_path(n, filtros),
+                                  method: :delete, class: "dropdown-item text-danger",
+                                  form: { data: { turbo: false } },
+                                  data: { confirm: msg_excluir } do %>
+                              <i class="fa fa-trash-can me-2"></i> Excluir da lista
+                            <% end %>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -246,3 +285,33 @@
     </div>
   </main>
 </div>
+
+<style>
+  /* O .table-responsive corta o dropdown (overflow). Deixa o overflow visivel
+     para o menu "escapar" da tabela. A tabela aqui nao precisa de scroll
+     horizontal, entao nao ha efeito colateral. */
+  .notas-recebidas-tabela.table-responsive { overflow: visible; }
+  /* Botoes de acao empilhados e compactos (sem margem extra do button_to). */
+  .notas-recebidas-tabela form { margin: 0; }
+  .notas-recebidas-tabela td { vertical-align: middle; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Tooltips (status por icone).
+    if (window.bootstrap && bootstrap.Tooltip) {
+      document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        new bootstrap.Tooltip(el);
+      });
+    }
+    // Dropdowns com Popper em strategy "fixed": renderiza fora do clipping da
+    // tabela, evitando que o menu apareca cortado.
+    if (window.bootstrap && bootstrap.Dropdown) {
+      document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (el) {
+        new bootstrap.Dropdown(el, { popperConfig: function (defaultConfig) {
+          return Object.assign({}, defaultConfig, { strategy: 'fixed' });
+        } });
+      });
+    }
+  });
+</script>

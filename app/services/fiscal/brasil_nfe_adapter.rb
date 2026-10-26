@@ -534,8 +534,12 @@ module Fiscal
     end
 
     # Converte a resposta crua do ObterArquivoNotaFiscal em FiscalArquivo.
-    # Sucesso: corpo = string base64 pura. Falha: HTTP>=400, erro de transporte,
-    # ou corpo em JSON com { Error: ... }.
+    # A API pode responder de varias formas: (a) string base64 PURA, (b) string
+    # base64 entre aspas (JSON string), (c) um data-URI ("data:...;base64,xxx"),
+    # ou (d) um objeto JSON com o base64 num campo (Base64File / Base64Xml /
+    # Base64 / Arquivo...). Tratar so (a) fazia o JSON cru (d) ser decodificado
+    # como se fosse base64, gerando PDF/XML corrompido. Aqui normalizamos todos.
+    # Falha: HTTP>=400, erro de transporte, corpo vazio, ou JSON com { Error }.
     def to_arquivo(res, file_type:)
       if res[:erro]
         return FiscalArquivo.new(erro: res[:erro])
@@ -545,18 +549,50 @@ module Fiscal
         erro = (JSON.parse(corpo)["Error"] rescue nil) if corpo.start_with?("{")
         return FiscalArquivo.new(erro: erro.presence || "Falha ao obter o arquivo (HTTP #{res[:status]}).")
       end
-      # Se vier JSON de erro mesmo com HTTP 200.
+
+      b64 = nil
+
+      # IMPORTANTE: quando o corpo e um literal JSON (comeca com " ou {), ele
+      # precisa ser DESSERIALIZADO com JSON.parse. O base64 contem '/' e '+',
+      # e a API escapa o '/' como '\/' dentro da string JSON. Resolver isso na
+      # mao (gsub) erra os escapes e desloca os bytes -> PDF estruturalmente
+      # valido mas que nao renderiza. O parser JSON resolve todos os escapes.
       if corpo.start_with?("{")
         j = JSON.parse(corpo) rescue nil
-        return FiscalArquivo.new(erro: j["Error"].presence || "Resposta inesperada do provedor.") if j && j["Error"].present?
+        return FiscalArquivo.new(erro: "Resposta inesperada do provedor (JSON inválido).") if j.nil?
+        return FiscalArquivo.new(erro: j["Error"].to_s) if j["Error"].present?
+        # Procura o base64 nos nomes de campo conhecidos (varia por tipo/endpoint).
+        campos = file_type.to_i == 2 ?
+                   %w[Base64File Base64Pdf Base64PDF Base64 Arquivo File] :
+                   %w[Base64Xml Base64XML Base64 Arquivo File]
+        b64 = campos.map { |k| j[k] }.find(&:present?)
+        return FiscalArquivo.new(erro: "Arquivo não veio na resposta do provedor.") if b64.blank?
+      elsif corpo.start_with?('"')
+        # String JSON ("<base64>"): parseia como JSON para desescapar \/ \n etc.
+        b64 = JSON.parse(corpo) rescue nil
+        # Fallback defensivo: se nao parsear, tira as aspas de borda na mao.
+        b64 ||= corpo.sub(/\A"/, "").sub(/"\z/, "")
+      else
+        # Base64 cru (sem aspas), possivelmente como data-URI.
+        b64 = corpo
       end
 
-      # Corpo pode vir com aspas (JSON string) — remove se for o caso.
-      b64 = corpo.start_with?('"') && corpo.end_with?('"') ? corpo[1..-2] : corpo
+      b64 = normalizar_base64(b64)
+      return FiscalArquivo.new(erro: "Conteúdo do arquivo vazio ou ilegível.") if b64.blank?
+
       FiscalArquivo.new(
         xml_base64: file_type.to_i == 1 ? b64 : nil,
         pdf_base64: file_type.to_i == 2 ? b64 : nil
       )
+    end
+
+    # Limpeza FINAL do base64 (ja desescapado do JSON): remove prefixo data-URI
+    # e qualquer whitespace. Nao mexe em '/' nem '+', que sao caracteres validos
+    # do alfabeto base64.
+    def normalizar_base64(valor)
+      s = valor.to_s.strip
+      s = s.sub(/\Adata:[^;,]*;base64,/i, "") # tira "data:application/pdf;base64,"
+      s.gsub(/\s+/, "")                        # tira quebras de linha / espacos
     end
 
     # Converte a resposta do ObterArquivosPorPeriodo no FiscalPacote neutro.
