@@ -121,58 +121,43 @@
         <i class="fas fa-th me-2"></i>Ver Todos os Produtos
       </a>
     </div>
-    <div class="row justify-content-center">
+    <div class="row justify-content-center g-2">
       <% if @produtos.present? %>
         <% @produtos.take(8).each do |produto| %>
           <% produto.produto_imagens.group_by(&:cod_cor).each do |cod_cor, imagens| %>
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-              <div class="card h-100">
-                <div class="text-center p-3">
-                  <% if imagens.count > 1 %>
-                    <div id="carousel<%= produto.cod_produto %>_<%= cod_cor %>" class="carousel slide" data-bs-ride="carousel">
-                      <div class="carousel-inner">
-                        <% imagens.each_with_index do |imagem, index| %>
-                          <div class="carousel-item <%= 'active' if index == 0 %>">
-                            <div class="watermark-wrap watermark-wrap-inline">
-                              <%= image_tag(imagem.imagem.variant(resize_to_limit: [220, 180]),
-                                    class: "rounded mx-auto d-block", 
-                                    style: "max-width: 220px; height: 180px; object-fit: contain; cursor: zoom-in;",
-                                    data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
-                                    ondblclick: "openImageModal(this)" 
-                                  ) %>
-                            </div>
-                          </div>
-                        <% end %>
-                      </div>
-                      <button class="carousel-control-prev" type="button" data-bs-target="#carousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
-                      </button>
-                      <button class="carousel-control-next" type="button" data-bs-target="#carousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
-                      </button>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+              <div class="card produto-card h-100">
+                <% if imagens.count > 1 %>
+                  <div id="carousel<%= produto.cod_produto %>_<%= cod_cor %>" class="carousel slide produto-card-media" data-bs-ride="carousel">
+                    <div class="carousel-inner h-100">
+                      <% imagens.each_with_index do |imagem, index| %>
+                        <div class="carousel-item h-100 <%= 'active' if index == 0 %>">
+                          <%= image_tag(imagem.imagem.variant(resize_to_limit: [500, 500]),
+                                class: "home-produto-img", 
+                                data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
+                                ondblclick: "openImageModal(this)" 
+                              ) %>
+                        </div>
+                      <% end %>
                     </div>
-                  <% else %>
-                    <div class="watermark-wrap watermark-wrap-inline">
-                      <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [220, 180]),
-                            class: "rounded mx-auto d-block", 
-                            style: "max-width: 220px; height: 180px; object-fit: contain; cursor: zoom-in;",
-                            data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
-                            ondblclick: "openImageModal(this)" 
-                          ) %>
-                    </div>
-                  <% end %>
-                </div>
-                <div class="card-body">
-                  <h5 class="card-title">
-                    <p class="card-text"><%= truncate(produto.titulo&.capitalize, length: 50) %></p>
-                  </h5>
-                  <div class="card-text">
-                    <span id="desc-short-<%= produto.cod_produto %>_<%= cod_cor %>"><%= simple_format(truncate(produto.descricao&.capitalize, length: 100)) %></span>
-                    <span id="desc-full-<%= produto.cod_produto %>_<%= cod_cor %>" style="display: none;"><%= simple_format(produto.descricao&.capitalize) %></span>
-                    <% if produto.descricao&.length.to_i > 100 %>
-                      <a href="#" class="text-primary" onclick="toggleDescription('<%= produto.cod_produto %>_<%= cod_cor %>')" id="toggle-<%= produto.cod_produto %>_<%= cod_cor %>">...mais</a>
-                    <% end %>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carousel<%= produto.cod_produto %>_<%= cod_cor %>" data-bs-slide="next">
+                      <span class="carousel-control-next-icon" aria-hidden="true" style="filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);"></span>
+                    </button>
                   </div>
+                <% else %>
+                  <div class="produto-card-media">
+                    <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [500, 500]),
+                          class: "home-produto-img", 
+                          data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
+                          ondblclick: "openImageModal(this)" 
+                        ) %>
+                  </div>
+                <% end %>
+                <div class="card-body text-center">
+                  <h6 class="card-title mb-3 text-capitalize fw-normal fs-6"><%= truncate(produto.titulo&.downcase, length: 50) %></h6>
                   <% valor = produto.valor_site_por_cor(cod_cor).to_f %>
                   <% if valor > 0 %>
                     <div class="mb-2">
@@ -180,12 +165,12 @@
                     </div>
                   <% end %>
                   <% produto_url = produto_url(produto.cod_produto, cod_cor) %>
-                  <div class="d-grid gap-2">
-                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-dark btn-sm">
+                  <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-dark btn-sm rounded-pill px-3">
                       Ver Detalhes
                     </a>
                     <button type="button" 
-                          class="btn btn-primary btn-sm" 
+                          class="btn btn-primary btn-sm rounded-pill px-3" 
                           data-bs-toggle="modal" 
                           data-bs-target="#lojaModal<%= produto.cod_produto %>_<%= cod_cor %>"
                           data-produto-url="<%= produto_url %>">
@@ -293,27 +278,37 @@
     }
   });
   });
-
-
-  function toggleDescription(id) {
-    const shortDesc = document.getElementById('desc-short-' + id);
-    const fullDesc = document.getElementById('desc-full-' + id);
-    const toggle = document.getElementById('toggle-' + id);
-
-    if (shortDesc.style.display === 'none') {
-      shortDesc.style.display = 'inline';
-      fullDesc.style.display = 'none';
-      toggle.textContent = '...mais';
-    } else {
-      shortDesc.style.display = 'none';
-      fullDesc.style.display = 'inline';
-      toggle.textContent = ' menos';
-    }
-  }
 </script>
 <style>
   .card-text p:first-letter {
     text-transform: uppercase;
+  }
+
+  /* Card de produto no estilo da referência */
+  #produtos .produto-card {
+    border: 1px solid #e7ddcd;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+    max-width: 260px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Área da imagem ocupa o topo inteiro, sem espaço em branco */
+  .produto-card-media {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    background-color: #f5efe6;
+  }
+
+  .home-produto-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: zoom-in;
   }
   /* Marca d'água sobre as fotos dos produtos */
   .watermark-wrap {
