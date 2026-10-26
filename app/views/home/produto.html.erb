@@ -8,12 +8,14 @@
             <div class="carousel-inner">
               <% imagens.each_with_index do |imagem, index| %>
                 <div class="carousel-item <%= 'active' if index == 0 %>">
-                  <%= image_tag(imagem.imagem, 
-                        class: "d-block w-100", 
-                        style: "height: 400px; object-fit: contain; cursor: zoom-in;",
-                        data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
-                        ondblclick: "openImageModal(this)" 
-                      ) %>
+                  <div class="produto-detalhe-img">
+                    <%= image_tag(imagem.imagem, 
+                          class: "d-block w-100", 
+                          style: "height: 400px; object-fit: contain; cursor: zoom-in;",
+                          data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
+                          ondblclick: "openImageModal(this)" 
+                        ) %>
+                  </div>
                 </div>
               <% end %>
             </div>
@@ -25,12 +27,14 @@
             </button>
           </div>
         <% else %>
-          <%= image_tag(imagens.first.imagem, 
-                class: "img-fluid", 
-                style: "width: 100%; height: 400px; object-fit: contain; cursor: zoom-in;",
-                data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
-                ondblclick: "openImageModal(this)" 
-              ) %>
+          <div class="produto-detalhe-img">
+            <%= image_tag(imagens.first.imagem, 
+                  class: "img-fluid", 
+                  style: "width: 100%; height: 400px; object-fit: contain; cursor: zoom-in;",
+                  data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
+                  ondblclick: "openImageModal(this)" 
+                ) %>
+          </div>
         <% end %>
       <% else %>
         <div class="text-center p-5 bg-light">
@@ -43,9 +47,12 @@
       <div class="mb-4">
         <%= simple_format(@produto.descricao&.capitalize) %>
       </div>
-      <div class="mb-4">
-        <h3 class="text-success">R$ <%= number_to_currency(@produto.valor_site_por_cor(@cod_cor), unit: "") %></h3>
-      </div>
+      <% valor = @produto.valor_site_por_cor(@cod_cor).to_f %>
+      <% if valor > 0 %>
+        <div class="mb-4">
+          <h3 class="text-success">R$ <%= number_to_currency(valor, unit: "") %></h3>
+        </div>
+      <% end %>
       <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#interesseModal">
         <i class="fab fa-whatsapp me-2"></i>Tenho Interesse
       </button>
@@ -58,6 +65,36 @@
 <style>
   p:first-letter {
     text-transform: uppercase;
+  }
+  /* Área da foto com a logo ancorada dentro do quadro */
+  .produto-detalhe-img {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    background-color: #f7f5f2;
+    border-radius: 8px;
+  }
+  .produto-detalhe-img img {
+    height: 100% !important;
+    width: 100%;
+    object-fit: contain;
+  }
+  .produto-detalhe-img::before {
+    content: "";
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 34px;
+    height: 34px;
+    background-image: url('/images/mrosa.png');
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-size: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
   }
 </style>
 <%= render partial: 'home/shared/image_modal' %>

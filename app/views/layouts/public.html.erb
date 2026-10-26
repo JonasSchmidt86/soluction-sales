@@ -15,6 +15,18 @@
     <style>
       body {
         font-family: 'Poppins', sans-serif;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Empurra o rodapé para o fim quando o conteúdo é curto */
+      .page-content {
+        flex: 1 0 auto;
+      }
+
+      footer {
+        flex-shrink: 0;
       }
         <%# background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80'); %>
       .hero-section {
@@ -28,45 +40,55 @@
         position: relative;
       }
 
+      /* Cabeçalho fixo em tom bege claro, sempre visível */
       .navbar {
-        background-color: transparent !important;
-        position: absolute;
+        background-color: #f8f6f1 !important;
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
         z-index: 1000;
-        padding: 1.5rem 0;
+        padding: 0.2rem 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
       }
 
+      /* Leve escurecida/sombra ao rolar, mantendo o bege */
       .navbar.scrolled {
-        background-color: #fff !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        padding: 0.8rem 0;
-      }
-
-      .navbar.scrolled .nav-link, .navbar.scrolled .navbar-brand {
-        color: #333 !important;
-      }
-
-      .navbar.scrolled .btn-outline-light {
-        color: #333 !important;
-        border-color: #333 !important;
-      }
-
-      .navbar.scrolled .btn-outline-light:hover {
-        color: #fff !important;
-        background-color: #333 !important;
+        background-color: #efe7d8 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
       }
 
       .navbar-brand, .nav-link {
-        color: white !important;
+        color: #4a3f35 !important;
         font-weight: 600;
         transition: all 0.3s ease;
       }
 
       .nav-link:hover {
         color: #17a2b8 !important;
+      }
+
+      /* Botão "Área Restrita" legível sobre o bege */
+      .navbar .btn-outline-light {
+        color: #4a3f35 !important;
+        border-color: #4a3f35 !important;
+      }
+
+      .navbar .btn-outline-light:hover {
+        color: #fff !important;
+        background-color: #4a3f35 !important;
+        border-color: #4a3f35 !important;
+      }
+
+      /* Compensa a altura do header fixo nas páginas sem hero */
+      body.has-fixed-header {
+        padding-top: 72px;
+      }
+
+      /* Na home, a hero começa no topo e o header fica sobreposto a ela */
+      .hero-section {
+        margin-top: -72px;
       }
 
       .btn-primary {
@@ -105,13 +127,36 @@
       }
 
       footer {
-        background-color: #343a40;
-        color: white;
+        background-color: #f5efe6;
+        color: #4a3f35;
         padding: 3rem 0;
       }
 
+      footer a.text-white {
+        color: #4a3f35 !important;
+      }
+
+      footer a.text-white:hover {
+        color: #17a2b8 !important;
+      }
+
+      .footer-contact-link {
+        color: #4a3f35;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .footer-contact-link:hover {
+        color: #17a2b8;
+      }
+
+      footer hr {
+        border-color: rgba(74, 63, 53, 0.25) !important;
+        opacity: 1;
+      }
+
       .social-icons a {
-        color: white;
+        color: #4a3f35;
         font-size: 1.5rem;
         margin: 0 10px;
         transition: all 0.3s ease;
@@ -170,6 +215,46 @@
         text-decoration: none;
       }
 
+      /* Botão de lupa do cabeçalho */
+      .search-toggle {
+        color: #4a3f35;
+        font-size: 1.15rem;
+        line-height: 1;
+        text-decoration: none;
+      }
+      .search-toggle:hover,
+      .search-toggle:focus {
+        color: #17a2b8;
+      }
+
+      /* Painel de busca ancorado logo abaixo do header fixo */
+      .site-search-panel {
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        background-color: #f5efe6;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      }
+
+      /* No desktop o campo de busca fica centralizado no cabeçalho;
+         no mobile ele some e a lupa (que abre o painel) assume. */
+      @media (min-width: 992px) {
+        .navbar-search {
+          flex: 0 1 420px;
+          max-width: 420px;
+        }
+        .navbar-search .input-group-text,
+        .navbar-search .form-control {
+          background-color: #fff;
+        }
+        .navbar-search .form-control:focus {
+          box-shadow: none;
+          border-color: #ced4da;
+        }
+      }
+
       /* Alinhamento da logo em dispositivos móveis */
       @media (max-width: 991px) {
         .navbar-brand {
@@ -177,21 +262,36 @@
           margin-left: 0;
           text-align: left;
         }
-
-        .navbar > .container {
-          display: flex;
-          justify-content: flex-start;
-        }
       }
     </style>
   </head>
-  <body>
+  <body class="has-fixed-header">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-light">
       <div class="container">
         <a class="navbar-brand" href=<%= root_path %>>
           <img src="/images/logo.png" alt="Móveis Rosa Store" height="40">
         </a>
+
+        <!-- Busca inline centralizada: só no desktop -->
+        <%= form_with url: portfolio_path, method: :get, local: true,
+              class: "navbar-search d-none d-lg-flex mx-auto" do %>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+            <%= text_field_tag :q, params[:q], class: "form-control border-start-0",
+                  placeholder: "Buscar produtos..." %>
+          </div>
+        <% end %>
+
+        <!-- Lupa de busca: só no mobile (fora do dropdown) -->
+        <button class="btn btn-link search-toggle p-0 ms-auto me-2 d-lg-none" type="button"
+                data-bs-toggle="collapse" data-bs-target="#siteSearch"
+                aria-expanded="false" aria-controls="siteSearch" aria-label="Buscar produtos">
+          <i class="fas fa-search"></i>
+        </button>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -209,7 +309,22 @@
 </div>
 </div>
 </nav>
-<%= yield %>
+<!-- Painel de busca de produtos (abre ao clicar na lupa, só no mobile) -->
+<div class="collapse site-search-panel d-lg-none" id="siteSearch">
+  <div class="container py-3">
+    <%= form_with url: portfolio_path, method: :get, local: true do %>
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+        <%= text_field_tag :q, params[:q], class: "form-control",
+              placeholder: "Buscar produtos...", autofocus: true %>
+        <button type="submit" class="btn btn-primary px-4">Buscar</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+<main class="page-content">
+  <%= yield %>
+</main>
 <!-- Footer -->
 <footer>
   <div class="container">
@@ -235,17 +350,52 @@
           </div>
           <div class="col-md-4">
             <h5 class="mb-4">Contato</h5>
-            <p><i class="fas fa-map-marker-alt me-2"></i> Rua Barão do Rio Branco - Toledo - PR</p>
-            <p><i class="fas fa-phone me-2"></i> (45) 99996-7722</p>
-            <p><i class="fas fa-envelope me-2"></i> moveisrosa_toledo@hotmail.com</p>
+            <p>
+              <a href="https://www.google.com/maps/search/?api=1&query=<%= u('Móveis Rosa Store, Rua Barão do Rio Branco, Toledo - PR') %>"
+                 target="_blank" rel="noopener" class="footer-contact-link">
+                <i class="fas fa-map-marker-alt me-2"></i> Rua Barão do Rio Branco - Toledo - PR
+              </a>
+            </p>
+            <p>
+              <a href="#" class="footer-contact-link" data-bs-toggle="modal" data-bs-target="#contatoTelefoneModal">
+                <i class="fas fa-phone me-2"></i> (45) 99996-7722
+              </a>
+            </p>
+            <p>
+              <a href="mailto:moveisrosa_toledo@hotmail.com" class="footer-contact-link">
+                <i class="fas fa-envelope me-2"></i> moveisrosa_toledo@hotmail.com
+              </a>
+            </p>
           </div>
         </div>
-        <hr class="my-4 bg-light">
+        <hr class="my-4">
         <div class="text-center">
           <p>&copy; <%= Time.now.year %> Móveis Rosa Store. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
+      <!-- Modal: como deseja falar com a loja (telefone) -->
+      <div class="modal fade" id="contatoTelefoneModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Falar com a loja</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center">
+              <p class="text-muted mb-4">Como você prefere entrar em contato?</p>
+              <div class="d-grid gap-2">
+                <a href="tel:+5545999967722" class="btn btn-dark">
+                  <i class="fas fa-phone me-2"></i> Ligar
+                </a>
+                <a href="https://wa.me/5545999967722" target="_blank" rel="noopener" class="btn btn-success">
+                  <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Back to top button -->
       <a href="javascript:void(0);" id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
       <!-- WhatsApp float button -->

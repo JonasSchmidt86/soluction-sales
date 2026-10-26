@@ -123,9 +123,9 @@
     </div>
     <div class="row justify-content-center">
       <% if @produtos.present? %>
-        <% @produtos.take(6).each do |produto| %>
+        <% @produtos.take(8).each do |produto| %>
           <% produto.produto_imagens.group_by(&:cod_cor).each do |cod_cor, imagens| %>
-            <div class="col-md-4 mb-4">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
               <div class="card h-100">
                 <div class="text-center p-3">
                   <% if imagens.count > 1 %>
@@ -173,11 +173,19 @@
                       <a href="#" class="text-primary" onclick="toggleDescription('<%= produto.cod_produto %>_<%= cod_cor %>')" id="toggle-<%= produto.cod_produto %>_<%= cod_cor %>">...mais</a>
                     <% end %>
                   </div>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-success fw-bold">R$ <%= number_to_currency(produto.valor_site_por_cor(cod_cor), unit: "") %></span>
-                    <% produto_url = produto_url(produto.cod_produto, cod_cor) %>
+                  <% valor = produto.valor_site_por_cor(cod_cor).to_f %>
+                  <% if valor > 0 %>
+                    <div class="mb-2">
+                      <span class="text-success fw-bold">R$ <%= number_to_currency(valor, unit: "") %></span>
+                    </div>
+                  <% end %>
+                  <% produto_url = produto_url(produto.cod_produto, cod_cor) %>
+                  <div class="d-grid gap-2">
+                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-dark btn-sm">
+                      Ver Detalhes
+                    </a>
                     <button type="button" 
-                          class="btn btn-primary" 
+                          class="btn btn-primary btn-sm" 
                           data-bs-toggle="modal" 
                           data-bs-target="#lojaModal<%= produto.cod_produto %>_<%= cod_cor %>"
                           data-produto-url="<%= produto_url %>">

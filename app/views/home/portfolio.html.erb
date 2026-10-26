@@ -1,8 +1,45 @@
 <div class="container py-5">
-  <div class="text-center mb-5">
+  <div class="text-center mb-4">
     <h1 class="display-4">Nosso Portfólio</h1>
     <p class="lead">Conheça todos os nossos produtos</p>
   </div>
+
+  <!-- Barra de busca e filtros -->
+  <%= form_with url: portfolio_path, method: :get, local: true, class: "mb-4" do %>
+    <div class="row g-2 justify-content-center align-items-end">
+      <div class="col-lg-6 col-md-6">
+        <label class="form-label small text-muted mb-1">Buscar produto</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <%= text_field_tag :q, params[:q], class: "form-control",
+                placeholder: "Nome, modelo ou descrição..." %>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label small text-muted mb-1">Categoria</label>
+        <%= select_tag :grupo,
+              options_from_collection_for_select(@grupos, :cod_grupo, :nome, params[:grupo]),
+              include_blank: "Todas", class: "form-select" %>
+      </div>
+      <div class="col-lg-2 col-md-12 d-grid gap-2 d-md-flex">
+        <button type="submit" class="btn btn-primary flex-fill">
+          <i class="fas fa-filter me-1"></i>Filtrar
+        </button>
+        <% if params[:q].present? || params[:grupo].present? %>
+          <a href="<%= portfolio_path %>" class="btn btn-outline-secondary" title="Limpar filtros">
+            <i class="fas fa-times"></i>
+          </a>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if params[:q].present? || params[:grupo].present? %>
+    <p class="text-center text-muted small mb-4">
+      <%= @produtos.total_count %> produto<%= 's' if @produtos.total_count != 1 %> encontrado<%= 's' if @produtos.total_count != 1 %>
+    </p>
+  <% end %>
+
   <div class="row justify-content-center">
     <% if @produtos.present? %>
       <% @produtos.each do |produto| %>
@@ -16,9 +53,8 @@
                       <% imagens.each_with_index do |imagem, index| %>
                         <div class="carousel-item <%= 'active' if index == 0 %>">
                           <div class="watermark-wrap">
-                            <%= image_tag(imagem.imagem.variant(resize_to_limit: [300, 250]),
-                                  class: "card-img-top", 
-                                  style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                            <%= image_tag(imagem.imagem.variant(resize_to_limit: [600, 500]),
+                                  class: "card-img-top portfolio-img", 
                                   data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
                                   ondblclick: "openImageModal(this)" 
                                 ) %>
@@ -35,34 +71,28 @@
                   </div>
                 <% else %>
                   <div class="watermark-wrap">
-                    <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [300, 250]),
-                          class: "card-img-top", 
-                          style: "height: 250px; object-fit: cover; cursor: zoom-in;",
+                    <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [600, 500]),
+                          class: "card-img-top portfolio-img", 
                           data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
                           ondblclick: "openImageModal(this)" 
                         ) %>
                   </div>
                 <% end %>
-                <div class="position-absolute top-0 end-0 m-2">
-                  <span class="badge bg-primary"><%= produto.cod_produto %></span>
-                </div>
               </div>
               <div class="card-body d-flex flex-column">
-                <h5 class="card-title"><%= truncate(produto.titulo&.capitalize, length: 40) %></h5>
-                <div class="card-text flex-grow-1">
-                  <span id="desc-short-<%= produto.cod_produto %>_<%= cod_cor %>"><%= simple_format(truncate(produto.descricao&.capitalize, length: 80)) %></span>
-                  <span id="desc-full-<%= produto.cod_produto %>_<%= cod_cor %>" style="display: none;"><%= simple_format(produto.descricao&.capitalize) %></span>
-                  <% if produto.descricao&.length.to_i > 80 %>
-                    <a href="#" class="text-primary " onclick="toggleDescription('<%= produto.cod_produto %>_<%= cod_cor %>')" id="toggle-<%= produto.cod_produto %>_<%= cod_cor %>">...mais</a>
-                  <% end %>
-                </div>
+                <h5 class="card-title flex-grow-1"><%= truncate(produto.titulo&.capitalize, length: 40) %></h5>
                 <div class="mt-auto">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-success fw-bold">R$ <%= number_to_currency(produto.valor_site_por_cor(cod_cor), unit: "") %></span>
+                    <% valor = produto.valor_site_por_cor(cod_cor).to_f %>
+                    <% if valor > 0 %>
+                      <span class="text-success fw-bold">R$ <%= number_to_currency(valor, unit: "") %></span>
+                    <% else %>
+                      <span></span>
+                    <% end %>
                     <small class="text-muted"><%= imagens.count %> foto<%= 's' if imagens.count > 1 %></small>
                   </div>
                   <div class="d-grid gap-2">
-                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-primary btn-sm">
+                    <a href="<%= produto_path(produto.cod_produto, cod_cor) %>" class="btn btn-outline-dark btn-sm">
                       Ver Detalhes
                     </a>
                     <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#portfolioModal<%= produto.cod_produto %>_<%= cod_cor %>">
@@ -76,63 +106,61 @@
         <% end %>
       <% end %>
     <% else %>
-      <div class="col-12 text-center">
-        <p class="lead">Nenhum produto disponível no momento.</p>
+      <div class="col-12 text-center py-5">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <% if params[:q].present? || params[:grupo].present? %>
+          <p class="lead">Nenhum produto encontrado com esses filtros.</p>
+          <a href="<%= portfolio_path %>" class="btn btn-outline-primary">Ver todos os produtos</a>
+        <% else %>
+          <p class="lead">Nenhum produto disponível no momento.</p>
+        <% end %>
       </div>
     <% end %>
   </div>
+
+  <!-- Paginação -->
+  <% if @produtos.respond_to?(:total_pages) && @produtos.total_pages > 1 %>
+    <div class="d-flex justify-content-center mt-4">
+      <%= paginate @produtos, params: { q: params[:q], grupo: params[:grupo] } %>
+    </div>
+  <% end %>
 </div>
 <style>
   .card-text p:first-letter {
     text-transform: uppercase;
+  }
+  /* Imagem do card: mostra a foto inteira, sem cortar nem deformar */
+  .portfolio-img {
+    width: 100%;
+    height: 250px;
+    object-fit: contain;
+    background-color: #f7f5f2;
+    cursor: zoom-in;
+  }
+  @media (max-width: 575.98px) {
+    .portfolio-img {
+      height: 320px;
+    }
   }
   /* Marca d'água sobre as fotos do portfólio */
   .watermark-wrap {
     position: relative;
     display: block;
     overflow: hidden;
+    height: 250px;
+  }
+  @media (max-width: 575.98px) {
+    .watermark-wrap {
+      height: 320px;
+    }
   }
   .watermark-wrap img {
     display: block;
     width: 100%;
-  }
-  /* Logo colorida no canto inferior direito */
-  .watermark-wrap::before {
-    content: "";
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    width: 26px;
-    height: 26px;
-    background-image: url('/images/mrosa.png');
-    background-repeat: no-repeat;
-    background-position: bottom right;
-    background-size: contain;
-    opacity: 0.9;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-    pointer-events: none;
-    user-select: none;
-    z-index: 2;
+    height: 100%;
   }
 </style>
 <%= render partial: 'home/shared/image_modal' %>
-<script>
-  function toggleDescription(id) {
-    const shortDesc = document.getElementById('desc-short-' + id);
-    const fullDesc = document.getElementById('desc-full-' + id);
-    const toggle = document.getElementById('toggle-' + id);
-
-    if (shortDesc.style.display === 'none') {
-      shortDesc.style.display = 'inline';
-      fullDesc.style.display = 'none';
-      toggle.textContent = '...mais';
-    } else {
-      shortDesc.style.display = 'none';
-      fullDesc.style.display = 'inline';
-      toggle.textContent = ' menos';
-    }
-  }
-</script>
 <!-- Modais para WhatsApp -->
 <% if @produtos.present? %>
   <% @produtos.each do |produto| %>
