@@ -98,6 +98,7 @@ Rails.application.routes.draw do
 
       member do
         patch :record_payment
+        patch :reactivate
         get :payment_receipt
       end
 

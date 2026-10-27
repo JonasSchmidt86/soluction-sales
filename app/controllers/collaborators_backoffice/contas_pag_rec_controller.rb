@@ -1,7 +1,8 @@
 class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeController
 
 
-    before_action :set_bill, only: [:record_payment, :edit, :update, :destroy]
+    before_action :set_bill, only: [:record_payment, :reactivate, :edit, :update, :destroy]
+    before_action :require_admin!, only: [:reactivate, :destroy]
     # before_action :params_bill, only: [:update]
 
     def index
@@ -94,6 +95,21 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
     def destroy
         puts params[:return_params];
 
+        # Se a conta ainda estiver ativa, o primeiro clique apenas cancela (ativo = false),
+        # mantendo o registro na tabela. Só é excluída de fato se já estiver cancelada.
+        if @bill.ativo
+            if @bill.update(ativo: false)
+                redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                            Rack::Utils.parse_nested_query(params[:return_params])
+                ), notice: "Conta cancelada com sucesso."
+            else
+                redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                            Rack::Utils.parse_nested_query(params[:return_params])
+                ), alert: "Erro ao cancelar a conta."
+            end
+            return
+        end
+
         @lanca = Lancamentoscaixa.where(cod_contaspagrec: @bill.cod_contaspagrec);
         # se tiver lancamento de caixa vinculado, não pode excluir a conta 
         if @lanca.present?
@@ -120,6 +136,20 @@ class CollaboratorsBackoffice::ContasPagRecController < CollaboratorsBackofficeC
             @bill.quitada = true
             partion((@bill.valorparcela - @bill.valorPago), nil)
         end 
+    end
+
+    # Reabre a conta: torna ativa novamente e remove o status de quitada.
+    # Disponivel apenas para administradores (nivel == 1), via view.
+    def reactivate
+        if @bill.update(ativo: true, quitada: false)
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                        Rack::Utils.parse_nested_query(params[:return_params])
+            ), notice: "Conta reaberta com sucesso."
+        else
+            redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                        Rack::Utils.parse_nested_query(params[:return_params])
+            ), alert: "Erro ao reabrir a conta."
+        end
     end
 
     def update
@@ -220,8 +250,18 @@ private
             end
 
         end
+
+        consulta += " and cod_empresa = ? ";
+
+        # Em "Todos" tambem exibimos as contas canceladas (ativo = false),
+        # para que seja possivel exclui-las definitivamente. Nos demais
+        # filtros, mostramos apenas as contas ativas.
+        unless params[:status_bill] == "Todos"
+            consulta += " and ativo = true "
+        end
+
         # puts consulta;
-        return consulta += " and cod_empresa = ? and ativo = true ";
+        return consulta;
     end
 
     def params_bill
@@ -232,6 +272,15 @@ private
     def set_bill 
         @bill = Contaspagrec.find(params[:id])
         @caixa = Caixa.where(" cod_empresa = ? and datafechamento is null ", current_collaborator.empresa).limit(1)
+    end
+
+    # Restringe acoes sensiveis (excluir/cancelar e reabrir) a administradores (permissao.nivel == 1).
+    def require_admin!
+        return if current_collaborator.funcionario.permissao.nivel == 1
+
+        redirect_to collaborators_backoffice_contas_pag_rec_index_path(
+                    Rack::Utils.parse_nested_query(params[:return_params])
+        ), alert: "Acesso negado. Apenas administradores podem realizar esta ação."
     end
 
     def partion(param_valor, historic)

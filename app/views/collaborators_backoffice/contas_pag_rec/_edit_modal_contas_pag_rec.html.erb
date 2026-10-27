@@ -61,13 +61,21 @@
           <%= hidden_field_tag :return_params, filtros.to_query %>
           <!-- Botão de Submissão -->
           <div class="modal-footer">
-            <%= link_to "Excluir",
+            <%= link_to (bill.ativo ? "Cancelar Conta" : "Excluir"),
                 collaborators_backoffice_contas_pag_rec_path(bill,
-                          return_params: filtros.to_query
-          ),
-                method: :delete,
-                data: { confirm: "Tem certeza que deseja excluir?" },
+                          return_params: filtros.to_query),
+                          method: :delete,
+                          data: { confirm: bill.ativo ? "Deseja cancelar esta conta?" : "A conta já está cancelada. Deseja excluí-la definitivamente?" },
                 class: "btn btn-danger" %>
+            <% if !bill.ativo || bill.quitada %>
+              <%= link_to "Ativar",
+                  reactivate_collaborators_backoffice_contas_pag_rec_path(bill,
+                            return_params: filtros.to_query
+              ),
+                  method: :patch,
+                  data: { confirm: "Deseja reabrir esta conta?" },
+                  class: "btn btn-warning" %>
+            <% end %>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             <%= form.submit "Salvar", class: "btn btn-success" %>
           </div>
