@@ -16,6 +16,56 @@
   </div>
 
   <div class="card-body">
+    <!-- Abas: Cadastrar novas x Editar existentes -->
+    <ul class="nav nav-tabs mb-3" id="tabs_cadastro_rapido" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-novas" data-bs-toggle="tab" data-bs-target="#pane-novas"
+                type="button" role="tab"><i class="fa fa-plus"></i> Cadastrar novas</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-editar" data-bs-toggle="tab" data-bs-target="#pane-editar"
+                type="button" role="tab"><i class="fa fa-pen"></i> Editar existentes</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- ============ ABA: EDITAR EXISTENTES ============ -->
+      <div class="tab-pane fade" id="pane-editar" role="tabpanel">
+        <div class="alert alert-info">
+          Busque um produto por <strong>código ou nome</strong> para carregar as imagens já cadastradas,
+          navegar entre elas, remover ou adicionar novas e editar título, descrição, cor e publicação.
+        </div>
+
+        <div class="row g-2 align-items-end mb-3" style="position: relative;">
+          <div class="col-md-6">
+            <label class="form-label mb-1">Produto (código ou nome)</label>
+            <input type="text" id="edit_produto_search" class="form-control" autocomplete="off"
+                   placeholder="Digite o código ou o nome do produto">
+            <div id="edit_products_list" class="position-absolute bg-light rounded border p-2 mt-1"
+                 style="display: none; z-index: 1000; width: 100%; max-height: 260px; overflow-y: auto;"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label mb-1">Publicação</label>
+            <select id="edit_publicado_filtro" class="form-select">
+              <option value="todas">Todas</option>
+              <option value="publicadas">Publicadas</option>
+              <option value="nao_publicadas">Não publicadas</option>
+            </select>
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <button type="button" id="edit_limpar" class="btn btn-outline-secondary w-100">Limpar</button>
+          </div>
+        </div>
+
+        <!-- Área onde o produto carregado é renderizado -->
+        <div id="edit_container"></div>
+
+        <!-- input de arquivo oculto para "Adicionar imagem" -->
+        <input type="file" id="edit_file_input" accept="image/*" style="display: none;">
+      </div>
+
+      <!-- ============ ABA: CADASTRAR NOVAS (fluxo atual) ============ -->
+      <div class="tab-pane fade show active" id="pane-novas" role="tabpanel">
     <div class="alert alert-info">
       Selecione várias imagens de uma vez. Para cada imagem escolha o
       <strong>produto</strong> (buscando por código ou nome), a <strong>cor</strong>
@@ -63,8 +113,83 @@
         </button>
       </div>
     <% end %>
+      </div><!-- /#pane-novas -->
+    </div><!-- /.tab-content -->
   </div>
 </div>
+
+<!-- Template do card de edição de um produto (aba Editar existentes) -->
+<template id="template_edit_produto">
+  <div class="card mb-3 edit-produto-card">
+    <div class="card-header d-flex align-items-center py-1">
+      <strong class="edit-nome-produto"></strong>
+      <span class="badge bg-secondary ms-2 edit-cod-produto"></span>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <label class="small text-muted mb-0">Cor</label>
+        <select class="form-select form-select-sm edit-cod-cor" style="width: auto; min-width: 160px;"></select>
+        <button type="button" class="btn btn-outline-danger btn-sm edit-apagar-todas" title="Apagar todas as imagens">
+          <i class="fa fa-trash"></i> Apagar todas
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Galeria -->
+        <div class="col-md-6">
+          <div class="position-relative text-center border rounded p-2 bg-light" style="min-height: 200px;">
+            <div class="edit-galeria-vazia text-muted py-5" style="display:none;">Nenhuma imagem cadastrada.</div>
+            <img class="edit-galeria-img rounded" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+            <!-- setas -->
+            <button type="button" class="btn btn-light border edit-prev"
+                    style="position:absolute; top:50%; left:8px; transform:translateY(-50%);" title="Anterior">
+              <i class="fa fa-chevron-left"></i>
+            </button>
+            <button type="button" class="btn btn-light border edit-next"
+                    style="position:absolute; top:50%; right:8px; transform:translateY(-50%);" title="Próxima">
+              <i class="fa fa-chevron-right"></i>
+            </button>
+            <!-- lixeira -->
+            <button type="button" class="btn btn-danger edit-remover"
+                    style="position:absolute; top:8px; right:8px;" title="Remover esta imagem">
+              <i class="fa fa-trash"></i>
+            </button>
+            <!-- contador -->
+            <span class="badge bg-dark edit-contador"
+                  style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%);"></span>
+          </div>
+          <div class="d-grid mt-2">
+            <button type="button" class="btn btn-outline-primary edit-add-imagem">
+              <i class="fa fa-plus"></i> Adicionar imagem
+            </button>
+          </div>
+        </div>
+
+        <!-- Campos -->
+        <div class="col-md-6">
+          <div class="form-floating mb-2">
+            <input type="text" class="form-control edit-titulo" placeholder="Título">
+            <label>Título</label>
+          </div>
+          <div class="form-floating mb-2">
+            <textarea class="form-control edit-descricao" style="height: 150px; white-space: pre-wrap;"
+                      placeholder="Descrição"></textarea>
+            <label>Descrição</label>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check mb-0">
+              <input type="checkbox" class="form-check-input edit-publicado" id="edit_pub_chk">
+              <label class="form-check-label" for="edit_pub_chk">Publicar no site</label>
+            </div>
+            <button type="button" class="btn btn-success edit-salvar-dados">
+              <i class="fa fa-save"></i> Salvar dados
+            </button>
+            <span class="edit-status small"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <!-- Picker de emojis (estilo WhatsApp) - único, reutilizado por todas as linhas -->
 <div id="emoji_picker_wrapper" style="display: none; position: absolute; z-index: 3000;">
@@ -626,5 +751,413 @@
         i++;
       });
     });
+
+    // ============================================================
+    //  MODO EDIÇÃO (aba "Editar existentes")
+    // ============================================================
+    const PRODUTO_URL     = '<%= cadastro_rapido_produto_collaborators_backoffice_produto_imagens_path %>';
+    const BUSCAR_URL       = '<%= cadastro_rapido_buscar_collaborators_backoffice_produto_imagens_path %>';
+    const SALVAR_DADOS_URL = '<%= cadastro_rapido_salvar_dados_collaborators_backoffice_produto_imagens_path %>';
+    const APAGAR_TODAS_URL = '<%= cadastro_rapido_apagar_todas_collaborators_backoffice_produto_imagens_path %>';
+    const LINHA_URL        = '<%= cadastro_rapido_linha_collaborators_backoffice_produto_imagens_path %>';
+
+    const editSearch    = document.getElementById('edit_produto_search');
+    const editList      = document.getElementById('edit_products_list');
+    const editContainer = document.getElementById('edit_container');
+    const editLimpar    = document.getElementById('edit_limpar');
+    const editFileInput = document.getElementById('edit_file_input');
+    const tplEdit       = document.getElementById('template_edit_produto');
+
+    // estado por card (suporta vários produtos carregados ao mesmo tempo)
+    const stateDoCard = new WeakMap();
+    // últimos resultados da busca (para "Carregar todos" / Enter)
+    let editUltimosResultados = [];
+
+    // ---- Busca de produto (código ou nome) ----
+    let editDebounce = null;
+    editSearch.addEventListener('input', function () {
+      clearTimeout(editDebounce);
+      editDebounce = setTimeout(() => editBuscarProdutos(this.value.trim()), 400);
+    });
+    editSearch.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { editList.style.display = 'none'; }
+    });
+
+    // re-busca ao trocar o filtro de publicação (se já houver termo digitado)
+    const editFiltroPub = document.getElementById('edit_publicado_filtro');
+    if (editFiltroPub) {
+      editFiltroPub.addEventListener('change', function () {
+        const termo = editSearch.value.trim();
+        if (termo) editBuscarProdutos(termo);
+      });
+    }
+
+    function editBuscarProdutos(query) {
+      if (!query) { editList.style.display = 'none'; editList.innerHTML = ''; return; }
+      const filtroPub = document.getElementById('edit_publicado_filtro')?.value || 'todas';
+      $.ajax({
+        url: BUSCAR_URL, // só produtos que possuem imagem cadastrada
+        method: 'GET',
+        data: { query: query, publicado: filtroPub },
+        success: function (data) {
+          editList.innerHTML = '';
+          if (!data.length) {
+            editList.innerHTML = '<div class="text-muted small px-1">Nenhum produto com imagem encontrado</div>';
+            editList.style.display = 'block';
+            return;
+          }
+          // guarda os resultados para o "Carregar todos"
+          editUltimosResultados = data.slice();
+
+          // cabeçalho com ação "Carregar todos os N"
+          const head = document.createElement('div');
+          head.className = 'd-flex justify-content-between align-items-center px-1 pb-1 mb-1 border-bottom';
+          head.innerHTML = '<span class="small text-muted">' + data.length + ' produto(s) encontrado(s)</span>';
+          const btnTodos = document.createElement('button');
+          btnTodos.type = 'button';
+          btnTodos.className = 'btn btn-sm btn-primary';
+          btnTodos.innerHTML = '<i class="fa fa-layer-group"></i> Carregar todos';
+          btnTodos.addEventListener('click', function () {
+            editList.style.display = 'none';
+            carregarVarios(editUltimosResultados.map(p => p.cod_produto));
+          });
+          head.appendChild(btnTodos);
+          editList.appendChild(head);
+
+          data.forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item list-group-item-action';
+            item.style.cursor = 'pointer';
+            item.textContent = product.produto;
+            item.addEventListener('click', function () {
+              editSearch.value = product.produto;
+              editList.style.display = 'none';
+              carregarVarios([product.cod_produto]); // carrega só este
+            });
+            editList.appendChild(item);
+          });
+          editList.style.display = 'block';
+        }
+      });
+    }
+
+    // Enter dispara "carregar todos" os resultados atuais da busca.
+    editSearch.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (editUltimosResultados.length) {
+          editList.style.display = 'none';
+          carregarVarios(editUltimosResultados.map(p => p.cod_produto));
+        }
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#edit_produto_search') && !e.target.closest('#edit_products_list')) {
+        editList.style.display = 'none';
+      }
+    });
+
+    editLimpar.addEventListener('click', function () {
+      editSearch.value = '';
+      editContainer.innerHTML = '';
+      editUltimosResultados = [];
+    });
+
+    // ---- Carrega VÁRIOS produtos (um card cada), em sequência ----
+    function carregarVarios(codigos) {
+      editContainer.innerHTML = '';
+      if (!codigos || !codigos.length) return;
+
+      // carrega em sequência para não disparar dezenas de fetch ao mesmo tempo
+      (async function () {
+        for (const cod of codigos) {
+          try {
+            const r = await fetch(`${PRODUTO_URL}?cod_produto=${encodeURIComponent(cod)}`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            const data = await r.json();
+            if (!data.error) montarCard(data);
+          } catch (e) { /* ignora falha individual */ }
+        }
+      })();
+    }
+
+    function montarCard(data) {
+      const frag = tplEdit.content.cloneNode(true);
+      const card = frag.querySelector('.edit-produto-card');
+
+      card.querySelector('.edit-nome-produto').textContent = data.nome || '';
+      card.querySelector('.edit-cod-produto').textContent  = '#' + data.cod_produto;
+      card.querySelector('.edit-titulo').value    = data.titulo || '';
+      card.querySelector('.edit-descricao').value = data.descricao || '';
+
+      // cores
+      const selCor = card.querySelector('.edit-cod-cor');
+      selCor.innerHTML = '';
+      (data.cores || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.cod_cor;
+        opt.textContent = c.nmcor + ' - ' + c.cod_cor;
+        selCor.appendChild(opt);
+      });
+      // seleciona a cor publicada (vinda do backend), se houver
+      if (data.cod_cor_selecionada != null) {
+        selCor.value = String(data.cod_cor_selecionada);
+      }
+
+      // ids únicos do checkbox publicado (por produto)
+      const chk = card.querySelector('.edit-publicado');
+      const lbl = card.querySelector('label[for="edit_pub_chk"]');
+      const pubId = 'edit_pub_' + data.cod_produto;
+      chk.id = pubId; if (lbl) lbl.setAttribute('for', pubId);
+
+      editContainer.appendChild(frag);
+
+      // estado próprio deste card
+      const estado = {
+        cod_produto: data.cod_produto,
+        imagens: data.imagens || [],
+        publicadoPorCor: data.publicado_por_cor || {},
+        idxAtual: 0,
+        card: card
+      };
+      stateDoCard.set(card, estado);
+
+      // ao trocar a cor, reflete o "publicado" daquela cor
+      selCor.addEventListener('change', function () {
+        chk.checked = !!estado.publicadoPorCor[this.value];
+      });
+      selCor.dispatchEvent(new Event('change'));
+
+      bindCardEventos(card);
+      renderGaleria(card);
+    }
+
+    // ---- Galeria: navegação, contador, estado vazio (por card) ----
+    function renderGaleria(card) {
+      const estado = stateDoCard.get(card);
+      if (!estado) return;
+      const img        = card.querySelector('.edit-galeria-img');
+      const vazia      = card.querySelector('.edit-galeria-vazia');
+      const contador   = card.querySelector('.edit-contador');
+      const btnRemover = card.querySelector('.edit-remover');
+      const btnPrev    = card.querySelector('.edit-prev');
+      const btnNext    = card.querySelector('.edit-next');
+
+      const total = estado.imagens.length;
+      if (total === 0) {
+        img.style.display = 'none';
+        vazia.style.display = 'block';
+        contador.style.display = 'none';
+        btnRemover.style.display = 'none';
+        btnPrev.style.display = 'none';
+        btnNext.style.display = 'none';
+        return;
+      }
+
+      if (estado.idxAtual >= total) estado.idxAtual = total - 1;
+      if (estado.idxAtual < 0) estado.idxAtual = 0;
+
+      img.src = estado.imagens[estado.idxAtual].url;
+      img.style.display = 'inline-block';
+      vazia.style.display = 'none';
+      btnRemover.style.display = 'inline-block';
+      contador.style.display = 'inline-block';
+      contador.textContent = (estado.idxAtual + 1) + ' / ' + total;
+
+      const varias = total > 1;
+      btnPrev.style.display = varias ? 'inline-block' : 'none';
+      btnNext.style.display = varias ? 'inline-block' : 'none';
+    }
+
+    function bindCardEventos(card) {
+      card.querySelector('.edit-prev').addEventListener('click', function () {
+        const estado = stateDoCard.get(card);
+        estado.idxAtual = (estado.idxAtual - 1 + estado.imagens.length) % estado.imagens.length;
+        renderGaleria(card);
+      });
+      card.querySelector('.edit-next').addEventListener('click', function () {
+        const estado = stateDoCard.get(card);
+        estado.idxAtual = (estado.idxAtual + 1) % estado.imagens.length;
+        renderGaleria(card);
+      });
+
+      // Remover imagem atual (lixeira) com confirmação
+      card.querySelector('.edit-remover').addEventListener('click', function () {
+        const estado = stateDoCard.get(card);
+        const atual = estado.imagens[estado.idxAtual];
+        if (!atual) return;
+        if (!confirm('Tem certeza de que deseja remover esta imagem?')) return;
+        removerImagem(card, atual.id);
+      });
+
+      // Adicionar imagem: abre o seletor de arquivo lembrando qual card pediu
+      card.querySelector('.edit-add-imagem').addEventListener('click', function () {
+        cardDoUpload = card;
+        editFileInput.value = '';
+        editFileInput.click();
+      });
+
+      // Salvar dados (título/descrição/cor/publicado)
+      card.querySelector('.edit-salvar-dados').addEventListener('click', function () {
+        salvarDados(card);
+      });
+
+      // Apagar TODAS as imagens do produto (ação em lote, com dupla confirmação)
+      card.querySelector('.edit-apagar-todas').addEventListener('click', function () {
+        apagarTodas(card);
+      });
+    }
+
+    // ---- Apagar todas as imagens de um produto ----
+    function apagarTodas(card) {
+      const estado = stateDoCard.get(card);
+      if (!estado) return;
+      const total = estado.imagens.length;
+      if (total === 0) { mostrarToast('Este produto não tem imagens.', 'warning'); return; }
+
+      if (!confirm('Apagar TODAS as ' + total + ' imagem(ns) deste produto? Esta ação não pode ser desfeita.')) return;
+      if (!confirm('Confirma mesmo? Todas as imagens serão removidas permanentemente.')) return;
+
+      const dados = new FormData();
+      dados.append('cod_produto', estado.cod_produto);
+
+      mostrarToast('Apagando imagens...', 'warning');
+      fetch(APAGAR_TODAS_URL, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
+        body: dados
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            estado.imagens = [];
+            renderGaleria(card);
+            mostrarToast((res.removidas || 0) + ' imagem(ns) apagada(s).', 'success');
+          } else {
+            mostrarToast('Falha: ' + (res.error || 'erro ao apagar'), 'danger');
+          }
+        })
+        .catch(() => mostrarToast('Erro de conexão ao apagar.', 'danger'));
+    }
+
+    // ---- Remover imagem (reusa a rota destroy padrão) ----
+    function removerImagem(card, id) {
+      const estado = stateDoCard.get(card);
+      const body = new FormData();
+      body.append('_method', 'delete');
+      body.append('term', 'cadastro_rapido'); // evita depender de @produto no controller
+
+      fetch(`${urlBase}produto_imagens/${id}`, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'text/html' },
+        body: body
+      })
+        .then(r => {
+          if (r.ok || r.redirected) {
+            estado.imagens = estado.imagens.filter(im => im.id !== id);
+            renderGaleria(card);
+            mostrarToast('Imagem removida.', 'success');
+          } else {
+            mostrarToast('Falha ao remover a imagem.', 'danger');
+          }
+        })
+        .catch(() => mostrarToast('Erro de conexão ao remover.', 'danger'));
+    }
+
+    // ---- Adicionar imagem (reusa cadastro_rapido_linha) ----
+    let cardDoUpload = null; // card que acionou o seletor de arquivo
+    editFileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      const card = cardDoUpload;
+      if (!file || !card) return;
+      const estado = stateDoCard.get(card);
+
+      const codCor = card.querySelector('.edit-cod-cor').value;
+      if (!codCor) { mostrarToast('Selecione uma cor antes de adicionar a imagem.', 'warning'); return; }
+
+      const dados = new FormData();
+      dados.append('cod_produto', estado.cod_produto);
+      dados.append('cod_cor', codCor);
+      dados.append('descricao', card.querySelector('.edit-descricao').value || '');
+      dados.append('titulo', card.querySelector('.edit-titulo').value || '');
+      dados.append('publicado', card.querySelector('.edit-publicado').checked ? '1' : '0');
+      dados.append('arquivo', file);
+      dados.append('forcar', '1'); // na edição, não bloqueia por duplicidade
+
+      mostrarToast('Enviando imagem...', 'warning');
+      fetch(LINHA_URL, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
+        body: dados
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            mostrarToast('Imagem adicionada!', 'success');
+            recarregarCard(card, estado.cod_produto);
+          } else {
+            mostrarToast('Falha: ' + (res.error || 'erro ao adicionar'), 'danger');
+          }
+        })
+        .catch(() => mostrarToast('Erro de conexão ao adicionar.', 'danger'));
+    });
+
+    // Recarrega só as imagens de um card específico (após adicionar).
+    function recarregarCard(card, codProduto) {
+      fetch(`${PRODUTO_URL}?cod_produto=${encodeURIComponent(codProduto)}`, {
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) return;
+          const estado = stateDoCard.get(card);
+          estado.imagens = data.imagens || [];
+          estado.publicadoPorCor = data.publicado_por_cor || {};
+          renderGaleria(card);
+        })
+        .catch(() => {});
+    }
+
+    // ---- Salvar dados do produto (título/descrição/cor/publicado) ----
+    function salvarDados(card) {
+      const estado = stateDoCard.get(card);
+      if (!estado) return;
+      const status = card.querySelector('.edit-status');
+
+      const dados = new FormData();
+      dados.append('cod_produto', estado.cod_produto);
+      dados.append('cod_cor', card.querySelector('.edit-cod-cor').value || '');
+      dados.append('titulo', card.querySelector('.edit-titulo').value || '');
+      dados.append('descricao', card.querySelector('.edit-descricao').value || '');
+      dados.append('publicado', card.querySelector('.edit-publicado').checked ? '1' : '0');
+
+      status.textContent = 'Salvando...';
+      status.className = 'edit-status small text-muted';
+
+      fetch(SALVAR_DADOS_URL, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
+        body: dados
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const cor = card.querySelector('.edit-cod-cor').value;
+            estado.publicadoPorCor[cor] = card.querySelector('.edit-publicado').checked;
+            status.textContent = '✅ Salvo';
+            status.className = 'edit-status small text-success';
+            mostrarToast('Dados salvos!', 'success');
+          } else {
+            status.textContent = '⚠ ' + (res.error || 'Falha');
+            status.className = 'edit-status small text-danger';
+          }
+        })
+        .catch(() => {
+          status.textContent = '⚠ Erro de conexão';
+          status.className = 'edit-status small text-danger';
+        });
+    }
   });
 </script>

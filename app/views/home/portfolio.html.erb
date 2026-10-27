@@ -18,7 +18,7 @@
       <div class="col-lg-4 col-md-6">
         <label class="form-label small text-muted mb-1">Categoria</label>
         <%= select_tag :grupo,
-              options_from_collection_for_select(@grupos, :cod_grupo, :nome, params[:grupo]),
+              options_for_select(@grupos.map { |g| [g.nome.to_s.downcase.capitalize, g.cod_grupo] }, params[:grupo]),
               include_blank: "Todas", class: "form-select" %>
       </div>
       <div class="col-lg-2 col-md-12 d-grid gap-2 d-md-flex">

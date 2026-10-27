@@ -74,6 +74,10 @@ Rails.application.routes.draw do
         post :cadastro_rapido_salvar
         post :cadastro_rapido_linha
         post :cadastro_rapido_verificar
+        get :cadastro_rapido_produto
+        get :cadastro_rapido_buscar
+        post :cadastro_rapido_salvar_dados
+        post :cadastro_rapido_apagar_todas
       end
     end
     resources :cores, only: [:index, :edit, :update, :new, :create, :destroy]

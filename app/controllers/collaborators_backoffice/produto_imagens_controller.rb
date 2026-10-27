@@ -106,6 +106,135 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   def cadastro_rapido
   end
 
+  # GET (AJAX) — busca de produtos para o modo EDIÇÃO do cadastro rápido.
+  # Diferente da busca genérica, retorna APENAS produtos que já possuem imagem
+  # cadastrada (produto_imagens), pois só esses fazem sentido editar aqui.
+  # Aceita código exato ou nome (ILIKE, com curinga % no termo). Espera: query.
+  def cadastro_rapido_buscar
+    query = params[:query].to_s.strip
+    return render(json: []) if query.blank?
+
+    cod_empresa = current_collaborator.empresa.cod_empresa
+
+    produtos = Produto
+      .where("cod_produto IN (SELECT DISTINCT cod_produto FROM produto_imagens)")
+      .where("cod_produto::varchar = REPLACE(TRIM(:q), '%', '') OR nome ILIKE :q", q: "%#{query}%")
+
+    # Filtro por publicação (empresaproduto.publicado, por cor desta empresa).
+    # publicadas     = tem ao menos uma cor publicada
+    # nao_publicadas = não tem nenhuma cor publicada
+    publicados_sql = "SELECT DISTINCT cod_produto FROM empresaproduto WHERE cod_empresa = #{cod_empresa.to_i} AND publicado = true"
+    case params[:publicado].to_s
+    when 'publicadas'
+      produtos = produtos.where("cod_produto IN (#{publicados_sql})")
+    when 'nao_publicadas'
+      produtos = produtos.where("cod_produto NOT IN (#{publicados_sql})")
+    end
+
+    produtos = produtos
+      .select(:cod_produto, :nome)
+      .order(:nome)
+      .limit(50)
+      .map { |p| { cod_produto: p.cod_produto, produto: "#{p.cod_produto} - #{p.nome}" } }
+
+    render json: produtos
+  end
+
+  # GET (AJAX) — carrega um produto já cadastrado para EDIÇÃO no cadastro rápido.
+  # Retorna os dados do produto (título/descrição), as cores com estoque e o
+  # estado de "publicado" por cor, além de todas as imagens já cadastradas
+  # (id, url, cod_cor, ordem). Espera: cod_produto.
+  def cadastro_rapido_produto
+    produto = Produto.find_by(cod_produto: params[:cod_produto])
+    return render(json: { error: 'Produto não encontrado' }, status: :not_found) if produto.nil?
+
+    cod_empresa = current_collaborator.empresa.cod_empresa
+
+    # Cores do produto nesta empresa (+ fallback cor 1 quando não houver).
+    cores = Core.select(:nmcor, :cod_cor)
+                .joins(:empresaprodutos)
+                .where("empresaproduto.cod_produto = ? AND empresaproduto.cod_empresa = ?", produto.cod_produto, cod_empresa)
+                .order(:cod_cor)
+                .map { |c| { cod_cor: c.cod_cor, nmcor: c.nmcor } }
+    cores = [{ cod_cor: 1, nmcor: (Core.find_by(cod_cor: 1)&.nmcor || 'Padrão') }] if cores.blank?
+
+    publicado_por_cor = Empresaproduto
+                        .where(cod_produto: produto.cod_produto, cod_empresa: cod_empresa)
+                        .pluck(:cod_cor, :publicado)
+                        .to_h
+
+    # Cor que deve vir selecionada ao abrir: a primeira cor PUBLICADA (entre as
+    # cores listadas). Se nenhuma estiver publicada, cai na primeira cor da lista.
+    codigos_cor = cores.map { |c| c[:cod_cor] }
+    cod_cor_selecionada = codigos_cor.find { |cc| publicado_por_cor[cc] } || codigos_cor.first
+
+    imagens = produto.produto_imagens.ordenadas.map do |img|
+      {
+        id: img.id,
+        cod_cor: img.cod_cor,
+        ordem: img.ordem,
+        principal: img.principal,
+        url: (rails_blob_path(img.imagem, only_path: true) if img.imagem.attached?)
+      }
+    end
+
+    render json: {
+      cod_produto: produto.cod_produto,
+      nome: produto.nome,
+      titulo: produto.titulo,
+      descricao: produto.descricao,
+      cores: cores,
+      publicado_por_cor: publicado_por_cor,
+      cod_cor_selecionada: cod_cor_selecionada,
+      imagens: imagens
+    }
+  end
+
+  # POST (AJAX) — salva os dados editáveis de um produto já cadastrado:
+  # título e descrição (no produto) e publicado (no empresaproduto da cor).
+  # Espera: cod_produto, cod_cor, titulo, descricao, publicado.
+  def cadastro_rapido_salvar_dados
+    produto = Produto.find_by(cod_produto: params[:cod_produto])
+    return render(json: { success: false, error: 'Produto não encontrado' }, status: :not_found) if produto.nil?
+
+    produto.descricao = params[:descricao] if params.key?(:descricao)
+    produto.titulo    = params[:titulo]    if params.key?(:titulo)
+    produto.save if produto.changed?
+
+    aplicar_publicado(produto, params[:cod_cor], params[:publicado]) if params[:cod_cor].present? && params.key?(:publicado)
+
+    render json: { success: true }
+  rescue => e
+    Rails.logger.warn "[CadastroRapido] Falha ao salvar dados: #{e.message}"
+    render json: { success: false, error: 'Falha ao salvar' }, status: :internal_server_error
+  end
+
+  # POST (AJAX) — apaga TODAS as imagens de um produto de uma vez (ação em lote).
+  # Remove os anexos (purge) e destrói os registros produto_imagem. Espera: cod_produto.
+  def cadastro_rapido_apagar_todas
+    produto = Produto.find_by(cod_produto: params[:cod_produto])
+    return render(json: { success: false, error: 'Produto não encontrado' }, status: :not_found) if produto.nil?
+
+    imagens = produto.produto_imagens.to_a
+    removidas = 0
+
+    imagens.each do |img|
+      img.imagem.purge if img.imagem.attached?
+      removidas += 1 if img.destroy
+    end
+
+    # Produto sem imagem não deve ficar publicado: despublica todas as cores
+    # desse produto na empresa logada.
+    Empresaproduto
+      .where(cod_produto: produto.cod_produto, cod_empresa: current_collaborator.empresa.cod_empresa)
+      .update_all(publicado: false)
+
+    render json: { success: true, removidas: removidas }
+  rescue => e
+    Rails.logger.warn "[CadastroRapido] Falha ao apagar todas as imagens: #{e.message}"
+    render json: { success: false, error: 'Falha ao apagar' }, status: :internal_server_error
+  end
+
   # POST — salva em lote. Recebe uma linha por imagem:
   #   itens[<i>][arquivo], itens[<i>][cod_produto], itens[<i>][cod_cor], itens[<i>][descricao]
   def cadastro_rapido_salvar
