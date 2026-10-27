@@ -101,6 +101,12 @@
                             </button>
                           </li>
                           <li>
+                            <%= link_to edit_collaborators_backoffice_produto_imagen_path(id: imagem.cod_produto),
+                                        class: "dropdown-item" do %>
+                              ✏️ Editar
+                            <% end %>
+                          </li>
+                          <li>
                             <button class="open-modal dropdown-item" 
                                       type="button" 
                                       data-bs-toggle="modal" 
