@@ -54,7 +54,7 @@
                         <%= image_tag(imagem.imagem.variant(resize_to_limit: [500, 500]),
                               class: "home-produto-img", 
                               data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
-                              ondblclick: "openImageModal(this)" 
+                              onclick: "openImageModal(this)" 
                             ) %>
                       </div>
                     <% end %>
@@ -71,7 +71,7 @@
                   <%= image_tag(imagens.first.imagem.variant(resize_to_limit: [500, 500]),
                         class: "home-produto-img", 
                         data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
-                        ondblclick: "openImageModal(this)" 
+                        onclick: "openImageModal(this)" 
                       ) %>
                 </div>
               <% end %>

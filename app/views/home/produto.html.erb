@@ -3,39 +3,39 @@
     <div class="col-md-6">
       <% imagens = @produto.produto_imagens %>
       <% if imagens.present? %>
-        <% if imagens.count > 1 %>
-          <div id="produtoCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-              <% imagens.each_with_index do |imagem, index| %>
-                <div class="carousel-item <%= 'active' if index == 0 %>">
-                  <div class="produto-detalhe-img">
-                    <%= image_tag(imagem.imagem, 
-                          class: "d-block w-100", 
-                          style: "height: 400px; object-fit: contain; cursor: zoom-in;",
-                          data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: index },
-                          ondblclick: "openImageModal(this)" 
-                        ) %>
-                  </div>
-                </div>
-              <% end %>
+        <% urls = imagens.map { |img| url_for(img.imagem) } %>
+        <div class="produto-galeria" data-images="<%= urls.to_json %>">
+          <!-- Miniaturas laterais com setas -->
+          <% if imagens.count > 1 %>
+            <div class="galeria-thumbs">
+              <button type="button" class="galeria-thumb-nav" data-galeria-prev aria-label="Anterior">
+                <i class="fas fa-chevron-up"></i>
+              </button>
+              <div class="galeria-thumbs-list">
+                <% imagens.each_with_index do |imagem, index| %>
+                  <button type="button" class="galeria-thumb <%= 'active' if index == 0 %>" data-galeria-index="<%= index %>">
+                    <%= image_tag(imagem.imagem.variant(resize_to_limit: [160, 160])) %>
+                  </button>
+                <% end %>
+              </div>
+              <button type="button" class="galeria-thumb-nav" data-galeria-next aria-label="Próxima">
+                <i class="fas fa-chevron-down"></i>
+              </button>
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#produtoCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#produtoCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            </button>
+          <% end %>
+
+          <!-- Imagem principal -->
+          <div class="produto-detalhe-main">
+            <div class="produto-detalhe-img">
+              <%= image_tag(imagens.first.imagem,
+                    id: "galeriaPrincipal",
+                    class: "d-block",
+                    style: "cursor: zoom-in;",
+                    data: { images: urls.to_json.html_safe, index: 0 },
+                    onclick: "openImageModal(this)") %>
+            </div>
           </div>
-        <% else %>
-          <div class="produto-detalhe-img">
-            <%= image_tag(imagens.first.imagem, 
-                  class: "img-fluid", 
-                  style: "width: 100%; height: 400px; object-fit: contain; cursor: zoom-in;",
-                  data: { images: imagens.map{|img| url_for(img.imagem)}.to_json.html_safe, index: 0 },
-                  ondblclick: "openImageModal(this)" 
-                ) %>
-          </div>
-        <% end %>
+        </div>
       <% else %>
         <div class="text-center p-5 bg-light">
           <p class="text-muted">Nenhuma imagem disponível</p>
@@ -43,7 +43,7 @@
       <% end %>
     </div>
     <div class="col-md-6">
-      <h1 class="mb-3"><%= @produto.titulo&.capitalize %></h1>
+      <h1 class="mb-3 text-capitalize"><%= @produto.titulo&.downcase %></h1>
       <div class="mb-4">
         <%= simple_format(@produto.descricao&.capitalize) %>
       </div>
@@ -53,12 +53,14 @@
           <h3 class="text-success">R$ <%= number_to_currency(valor, unit: "") %></h3>
         </div>
       <% end %>
-      <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#interesseModal">
-        <i class="fab fa-whatsapp me-2"></i>Tenho Interesse
-      </button>
-      <a href="<%= portfolio_path %>" class="btn btn-outline-secondary btn-lg ms-2 mt-2">
-        Voltar aos Produtos
-      </a>
+      <div class="d-flex flex-column align-items-center gap-2" style="max-width: 260px;">
+        <button type="button" class="btn btn-success rounded-pill px-4 w-100" data-bs-toggle="modal" data-bs-target="#interesseModal">
+          <i class="fab fa-whatsapp me-1"></i>Tenho Interesse
+        </button>
+        <a href="<%= portfolio_path %>" class="btn btn-outline-dark btn-sm rounded-pill px-4" data-voltar>
+          Voltar
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -66,19 +68,100 @@
   p:first-letter {
     text-transform: uppercase;
   }
-  /* Área da foto com a logo ancorada dentro do quadro */
+  /* Galeria: miniaturas na lateral + imagem principal */
+  .produto-galeria {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .galeria-thumbs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 92px;
+    flex-shrink: 0;
+  }
+  .galeria-thumbs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    flex: 1 1 auto;
+  }
+  .galeria-thumb {
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    background: #f5efe6;
+    cursor: pointer;
+    height: 84px;
+    width: 84px;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease;
+  }
+  .galeria-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .galeria-thumb.active {
+    border-color: #4a3f35;
+  }
+  .galeria-thumb-nav {
+    border: none;
+    background: transparent;
+    color: #4a3f35;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 4px;
+    cursor: pointer;
+  }
+  .galeria-thumb-nav:hover {
+    color: #17a2b8;
+  }
+
+  /* Coluna da foto principal ocupa o espaço restante e centraliza a foto */
+  .produto-detalhe-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  /* O wrapper encolhe para a largura exata da imagem, então a logo
+     ancorada no seu canto cai sempre sobre a foto. */
   .produto-detalhe-img {
     position: relative;
-    height: 400px;
-    overflow: hidden;
-    background-color: #f7f5f2;
-    border-radius: 8px;
+    display: inline-block;
+    line-height: 0;
+    max-width: 100%;
   }
   .produto-detalhe-img img {
-    height: 100% !important;
-    width: 100%;
-    object-fit: contain;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 620px;
+    object-fit: contain !important;
+    display: block;
+    border-radius: 16px;
   }
+  @media (max-width: 575.98px) {
+    .produto-detalhe-img img {
+      max-height: 440px;
+    }
+    .galeria-thumbs {
+      width: 70px;
+    }
+    .galeria-thumb {
+      height: 64px;
+      width: 64px;
+    }
+  }
+  /* Cantos arredondados também na logo acompanhando a foto */
+  .produto-detalhe-img::before { border-bottom-right-radius: 16px; }
   .produto-detalhe-img::before {
     content: "";
     position: absolute;
@@ -97,6 +180,54 @@
     z-index: 2;
   }
 </style>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const galeria = document.querySelector(".produto-galeria");
+    const principal = document.getElementById("galeriaPrincipal");
+    const thumbs = Array.from(document.querySelectorAll(".galeria-thumb"));
+    if (!galeria || !principal || thumbs.length === 0) return;
+
+    const urls = JSON.parse(galeria.dataset.images || "[]");
+    let atual = 0;
+
+    function selecionar(index) {
+      if (index < 0) index = thumbs.length - 1;
+      if (index >= thumbs.length) index = 0;
+      atual = index;
+      principal.src = urls[index];
+      principal.dataset.index = index;
+      thumbs.forEach((t, i) => t.classList.toggle("active", i === index));
+      thumbs[index].scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    thumbs.forEach((thumb, i) => {
+      thumb.addEventListener("click", () => selecionar(i));
+    });
+
+    const prev = document.querySelector("[data-galeria-prev]");
+    const next = document.querySelector("[data-galeria-next]");
+    if (prev) prev.addEventListener("click", () => selecionar(atual - 1));
+    if (next) next.addEventListener("click", () => selecionar(atual + 1));
+  });
+
+  // Botão "Voltar": se o usuário chegou aqui navegando pelo próprio site
+  // (ex.: a partir do portfólio filtrado), usa o histórico do navegador para
+  // voltar preservando o filtro e a posição da rolagem. Caso contrário
+  // (acesso direto), segue o link normal para o portfólio.
+  document.addEventListener("DOMContentLoaded", function () {
+    const voltar = document.querySelector("[data-voltar]");
+    if (!voltar) return;
+
+    voltar.addEventListener("click", function (e) {
+      const veioDoSite = document.referrer &&
+        new URL(document.referrer).origin === window.location.origin;
+      if (window.history.length > 1 && veioDoSite) {
+        e.preventDefault();
+        window.history.back();
+      }
+    });
+  });
+</script>
 <%= render partial: 'home/shared/image_modal' %>
 <!-- Modal de Interesse -->
 <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: @produto, cod_cor: @cod_cor, modal_id: "interesseModal" } %>
