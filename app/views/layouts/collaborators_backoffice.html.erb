@@ -56,6 +56,15 @@
       }
       .wa-menu-item:hover, .wa-menu-item:focus { background: #f1f3f5; color: #212529; }
       .wa-menu-divider { height: 0; margin: .25rem 0; border-top: 1px solid rgba(0,0,0,.1); }
+
+      /* Linha do widget de aniversariantes cuja felicitação já foi enviada:
+         fundo verde suave + barra lateral verde para identificação rápida. */
+      .wa-aniv-item.wa-enviado {
+        background-color: rgba(25, 135, 84, .12) !important;
+        border-left: 3px solid #198754 !important;
+        padding-left: .5rem !important;
+        border-radius: .25rem;
+      }
     </style>
   </head>
   <body class="sb-nav-fixed bg-light collaborators-backoffice-layout" autocomplete="off">
@@ -831,6 +840,14 @@
             return;
           }
 
+          // Registra o "evento de envio" ao clicar num item de felicitação
+          // marcado com data-wa-registrar-envio. Não bloqueia a abertura do
+          // WhatsApp; apenas grava o evento e pinta a linha/célula de verde.
+          var itemEnvio = e.target.closest('[data-wa-registrar-envio]');
+          if (itemEnvio) {
+            registrarEnvioWhatsapp(itemEnvio);
+          }
+
           // clique fora do menu fecha (cliques nos itens seguem o link e fecham)
           if (menuAberto && !e.target.closest('.wa-menu')) {
             fecharMenu();
@@ -838,6 +855,54 @@
             fecharMenu();
           }
         });
+
+        function csrfToken() {
+          var meta = document.querySelector('meta[name="csrf-token"]');
+          return meta ? meta.content : null;
+        }
+
+        // Pinta de verde a identificação de "enviado" em qualquer tela:
+        // - no widget do dashboard: a linha .wa-aniv-item ganha .wa-enviado
+        // - no relatório: a célula [data-envio-cod-pessoa] mostra a data/hora
+        function marcarEnviado(codPessoa, textoData) {
+          var alvos = document.querySelectorAll('[data-envio-cod-pessoa="' + codPessoa + '"]');
+          alvos.forEach(function (el) {
+            if (el.classList.contains('wa-aniv-item')) {
+              el.classList.remove('bg-transparent');
+              el.classList.add('wa-enviado');
+              el.setAttribute('title', 'Felicitação já enviada');
+            } else {
+              el.innerHTML =
+                '<span class="badge bg-success" title="Última felicitação registrada">' +
+                '<i class="fa fa-check"></i> ' + textoData + '</span>';
+            }
+          });
+        }
+
+        function registrarEnvioWhatsapp(link) {
+          var url = link.getAttribute('data-registrar-envio-url');
+          var codPessoa = link.getAttribute('data-cod-pessoa');
+          if (!url || !codPessoa) return;
+
+          var body = new FormData();
+          body.append('cod_pessoa', codPessoa);
+          var msgId = link.getAttribute('data-whatsapp-message-id');
+          if (msgId) body.append('whatsapp_message_id', msgId);
+          var tel = link.getAttribute('data-telefone');
+          if (tel) body.append('telefone', tel);
+
+          fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken(), 'Accept': 'application/json' },
+            body: body,
+            keepalive: true // garante o envio mesmo com a aba perdendo foco ao abrir o WhatsApp
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              if (data && data.ok) marcarEnviado(data.cod_pessoa, data.enviado_em);
+            })
+            .catch(function () { /* silencioso: não atrapalha a abertura do WhatsApp */ });
+        }
 
         // fecha ao rolar/redimensionar (o position: fixed não acompanha o scroll do contêiner)
         window.addEventListener('scroll', fecharMenu, true);

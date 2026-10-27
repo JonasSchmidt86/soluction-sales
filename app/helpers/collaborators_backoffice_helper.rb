@@ -208,7 +208,9 @@ module CollaboratorsBackofficeHelper
     # @param fone_zap [String] telefone/celular (com ou sem máscara)
     # @param nome_cliente [String] nome completo do cliente
     # @param css [String] classes extras para o ícone/gatilho
-    def whatsapp_client_button(fone_zap, nome_cliente, css: "text-success ms-1")
+    # @param cod_pessoa [Integer, nil] quando informado, os links de mensagem
+    #   recebem data-* para registrar o evento de envio (clique) via JS.
+    def whatsapp_client_button(fone_zap, nome_cliente, css: "text-success ms-1", cod_pessoa: nil)
         base_url = whatsapp_link(fone_zap)
         return "".html_safe if base_url.blank?
 
@@ -236,7 +238,20 @@ module CollaboratorsBackofficeHelper
             lista << content_tag(:div, "", class: "wa-menu-divider")
             mensagens.each do |msg|
                 texto = msg.render(nome_cliente: nome_cliente, nome_empresa: nome_empresa)
-                lista << link_to(msg.titulo, whatsapp_link(fone_zap, texto), target: "_blank", class: "wa-menu-item")
+                data_attrs =
+                    if cod_pessoa.present?
+                        {
+                            "wa-registrar-envio"  => "1",
+                            "registrar-envio-url" => collaborators_backoffice_registrar_envio_report_aniversariantes_path,
+                            "cod-pessoa"          => cod_pessoa,
+                            "whatsapp-message-id" => msg.id,
+                            "telefone"            => fone_zap.to_s.gsub(/\D/, "")
+                        }
+                    else
+                        {}
+                    end
+                lista << link_to(msg.titulo, whatsapp_link(fone_zap, texto),
+                                 target: "_blank", class: "wa-menu-item", data: data_attrs)
             end
         end.join.html_safe
 

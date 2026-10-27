@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_30_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_01_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -1195,6 +1195,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_000003) do
     t.index ["empresa_id"], name: "index_whatsapp_contacts_on_empresa_id"
   end
 
+  create_table "whatsapp_envios", force: :cascade do |t|
+    t.integer "cod_empresa", null: false
+    t.integer "cod_pessoa", null: false
+    t.integer "cod_funcionario"
+    t.integer "whatsapp_message_id"
+    t.string "canal", default: "aniversario", null: false
+    t.string "telefone"
+    t.datetime "enviado_em", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cod_empresa", "cod_pessoa", "canal"], name: "idx_whatsapp_envios_empresa_pessoa_canal"
+    t.index ["enviado_em"], name: "index_whatsapp_envios_on_enviado_em"
+  end
+
   create_table "whatsapp_messages", force: :cascade do |t|
     t.integer "empresa_id", null: false
     t.string "titulo", null: false
@@ -1351,6 +1365,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_000003) do
   add_foreign_key "venda", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa", name: "fk_pessoa"
   add_foreign_key "whatsapp_contacts", "empresa", primary_key: "cod_empresa"
   add_foreign_key "whatsapp_contacts", "funcionario", primary_key: "cod_funcionario"
+  add_foreign_key "whatsapp_envios", "empresa", column: "cod_empresa", primary_key: "cod_empresa"
+  add_foreign_key "whatsapp_envios", "pessoa", column: "cod_pessoa", primary_key: "cod_pessoa"
   add_foreign_key "xml_files", "compra", primary_key: "cod_compra"
   add_foreign_key "xml_files", "empresa", primary_key: "cod_empresa"
   add_foreign_key "xml_files", "pessoa", primary_key: "cod_pessoa"

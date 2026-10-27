@@ -61,6 +61,7 @@
                 <th class="text-center">Compras</th>
                 <th class="text-center">Última compra</th>
                 <th class="text-center">Situação</th>
+                <th class="text-center">Felicitação enviada</th>
               </tr>
             </thead>
             <tbody>
@@ -71,6 +72,7 @@
                   dt = row['dtnascimento'].is_a?(String) ? Date.parse(row['dtnascimento']) : row['dtnascimento']
                   total_aberto = row['total_aberto'].to_f
                   ultima = row['ultima_compra'].present? ? (row['ultima_compra'].is_a?(String) ? Time.zone.parse(row['ultima_compra']) : row['ultima_compra']) : nil
+                  ultimo_envio = row['ultimo_envio'].present? ? (row['ultimo_envio'].is_a?(String) ? Time.zone.parse(row['ultimo_envio']) : row['ultimo_envio']) : nil
                 %>
                 <tr>
                   <td><%= row['nome'] %></td>
@@ -78,7 +80,7 @@
                     <% if celular.present? %>
                       <%= celular %>
                       <% if fone_zap.length >= 10 %>
-                        <%= whatsapp_client_button(fone_zap, row['nome']) %>
+                        <%= whatsapp_client_button(fone_zap, row['nome'], cod_pessoa: row['cod_pessoa']) %>
                       <% end %>
                     <% else %>
                       <span class="text-muted">—</span>
@@ -109,6 +111,17 @@
                       </span>
                     <% else %>
                       <span class="badge bg-success">Em dia</span>
+                    <% end %>
+                  </td>
+                  <td class="text-center text-nowrap" data-envio-cod-pessoa="<%= row['cod_pessoa'] %>">
+                    <% if ultimo_envio %>
+                      <span class="badge bg-success" title="Última felicitação registrada">
+                        <i class="fa fa-check"></i> <%= ultimo_envio.strftime('%d/%m/%Y %H:%M') %>
+                      </span>
+                    <% else %>
+                      <span class="badge bg-secondary" title="Nenhuma felicitação registrada">
+                        <i class="fa fa-minus"></i> Não enviada
+                      </span>
                     <% end %>
                   </td>
                 </tr>
@@ -145,3 +158,5 @@
     }
   })();
 </script>
+
+

@@ -291,16 +291,26 @@ class DashboardDataService
     intervalo = ini_key <= fim_key ? "#{aniv} BETWEEN #{ini_key} AND #{fim_key}" : "(#{aniv} >= #{ini_key} OR #{aniv} <= #{fim_key})"
 
     sql = <<~SQL
-      SELECT p.cod_pessoa, p.nome, p.celular, p.telefone, p.dtnascimento
+      SELECT p.cod_pessoa, p.nome, p.celular, p.telefone, p.dtnascimento, env.ultimo_envio
       FROM pessoa p
       JOIN venda v
         ON v.cod_pessoa = p.cod_pessoa
        AND v.cod_empresa = :cod_empresa
        AND v.tipo = 'V'
        AND v.cancelada = false
+      LEFT JOIN (
+        SELECT cod_pessoa, MAX(enviado_em) AS ultimo_envio
+        FROM whatsapp_envios
+        WHERE cod_empresa = :cod_empresa
+          AND canal = 'aniversario'
+          -- só considera envios feitos no ano-calendário atual: a felicitação
+          -- do ano passado não marca o cliente como "enviado" este ano.
+          AND EXTRACT(YEAR FROM enviado_em) = EXTRACT(YEAR FROM CURRENT_DATE)
+        GROUP BY cod_pessoa
+      ) env ON env.cod_pessoa = p.cod_pessoa
       WHERE p.dtnascimento IS NOT NULL
         AND #{intervalo}
-      GROUP BY p.cod_pessoa, p.nome, p.celular, p.telefone, p.dtnascimento
+      GROUP BY p.cod_pessoa, p.nome, p.celular, p.telefone, p.dtnascimento, env.ultimo_envio
       ORDER BY EXTRACT(MONTH FROM p.dtnascimento), EXTRACT(DAY FROM p.dtnascimento), p.nome
       LIMIT 50
     SQL
