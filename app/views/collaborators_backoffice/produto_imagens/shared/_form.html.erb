@@ -30,7 +30,7 @@
                 <div class="col-md-4">
                   <div class="form-floating mb-3 mb-md-0">
                     <%= form.collection_select(:cod_cor, ((@produto.nil?) ? Core.all : Core.where("cod_cor in (select DISTINCT cod_cor from empresaproduto where cod_produto = ?  and cod_empresa = ?)", @produto.cod_produto, current_collaborator.cod_empresa ).order(:cod_cor) ), :cod_cor, :nmcor_cod,
-                                                        {:prompt => 'Selecione uma Cor'}, {class: "form-control", id: "select_cor"}) %>
+                                                        {:prompt => 'Selecione uma Cor', selected: @cod_cor_selecionada}, {class: "form-control", id: "select_cor"}) %>
                     <%= form.label :Cores, class:"" %>
                   </div>
                 </div>
@@ -53,10 +53,26 @@
                   </div>
                 </div>
                 <div class="form-group mt-3">
+                  <!-- Barra de emojis (atalhos rápidos) + picker completo -->
+                  <div class="emoji-bar mb-1 d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🛋️" title="Produto/Móvel">🛋️</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="📏" title="Tamanho/Medidas">📏</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🌳" title="Madeira">🌳</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🧵" title="Tecido">🧵</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🎨" title="Cor/Acabamento">🎨</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🛡️" title="Garantia">🛡️</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="✅" title="Item/Check">✅</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="⭐" title="Destaque">⭐</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="📦" title="Embalagem/Entrega">📦</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="🚚" title="Frete/Entrega">🚚</button>
+                    <button type="button" class="btn btn-sm btn-light border emoji-btn" data-emoji="💲" title="Preço">💲</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary border abrir-picker" title="Mais emojis">😀 +</button>
+                  </div>
                   <div class="form-floating">
                     <%= form.text_area :descricao, class: "form-control", style: "height: 200px;", rows: 30, id: "campo_descricao" %>
                     <%= form.label :descricao, "Descrição" %>
                   </div>
+                  <div class="form-text">Use os emojis acima e pressione Enter para quebrar linha.</div>
                 </div>
                 <div class="form-group mt-3">
                   <div class="form-check">
@@ -159,6 +175,13 @@
     </div>
   </div>
 </div>
+
+<!-- Picker de emojis (estilo WhatsApp) - reutilizado pelo textarea de descrição -->
+<div id="emoji_picker_wrapper" style="display: none; position: absolute; z-index: 3000;">
+  <emoji-picker></emoji-picker>
+</div>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     // ---- 1️⃣ Abertura de Modal por Duplo Clique ----
@@ -289,6 +312,79 @@
             console.error('Erro na requisição:', error);
           });
       });
+
+      // Se o select já abriu com uma cor pré-selecionada (cor publicada ou
+      // produto com uma única cor), dispara o carregamento dos dados dessa cor
+      // automaticamente, preenchendo título/valor/descrição/publicado.
+      if (selectCor.value) {
+        selectCor.dispatchEvent(new Event('change'));
+      }
     }
+
+    // ---- 7️⃣ Emojis na Descrição ----
+    const campoDescricao = document.getElementById('campo_descricao');
+
+    // Insere texto na posição atual do cursor do textarea.
+    function inserirNoCursor(textarea, texto) {
+      if (!textarea) return;
+      const inicio = textarea.selectionStart ?? textarea.value.length;
+      const fim    = textarea.selectionEnd ?? textarea.value.length;
+      const antes  = textarea.value.substring(0, inicio);
+      const depois = textarea.value.substring(fim);
+      textarea.value = antes + texto + depois;
+      const novaPos = inicio + texto.length;
+      textarea.focus();
+      textarea.setSelectionRange(novaPos, novaPos);
+    }
+
+    // Atalhos rápidos: insere o emoji do botão no cursor.
+    document.querySelectorAll('.emoji-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        inserirNoCursor(campoDescricao, this.getAttribute('data-emoji') + ' ');
+      });
+    });
+
+    // Picker completo (estilo WhatsApp).
+    const pickerWrapper = document.getElementById('emoji_picker_wrapper');
+    const picker = pickerWrapper ? pickerWrapper.querySelector('emoji-picker') : null;
+
+    function fecharPicker() {
+      if (pickerWrapper) pickerWrapper.style.display = 'none';
+    }
+
+    document.querySelectorAll('.abrir-picker').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!pickerWrapper) return;
+
+        // toggle: se já estava aberto, fecha
+        if (pickerWrapper.style.display === 'block') {
+          fecharPicker();
+          return;
+        }
+        const rect = this.getBoundingClientRect();
+        pickerWrapper.style.top  = (window.scrollY + rect.bottom + 4) + 'px';
+        pickerWrapper.style.left = (window.scrollX + rect.left) + 'px';
+        pickerWrapper.style.display = 'block';
+      });
+    });
+
+    if (picker) {
+      picker.addEventListener('emoji-click', function (event) {
+        const unicode = event.detail.unicode;
+        if (unicode) inserirNoCursor(campoDescricao, unicode + ' ');
+        // não fecha: permite escolher vários seguidos
+      });
+    }
+
+    // fecha o picker ao clicar fora dele e fora do botão que o abre
+    document.addEventListener('click', function (e) {
+      if (!pickerWrapper || pickerWrapper.style.display !== 'block') return;
+      if (!e.target.closest('#emoji_picker_wrapper') && !e.target.closest('.abrir-picker')) {
+        fecharPicker();
+      }
+    });
   });
 </script>

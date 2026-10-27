@@ -100,6 +100,19 @@
           </select>
           <label>Cor</label>
         </div>
+
+        <!-- Linha 3: Título do produto -->
+        <div class="form-floating">
+          <input type="text" class="form-control campo_titulo" data-name="titulo"
+                 placeholder="Título do produto" autocomplete="off">
+          <label>Título</label>
+        </div>
+
+        <!-- Linha 4: Publicar direto -->
+        <div class="form-check mt-1">
+          <input type="checkbox" class="form-check-input campo_publicado" data-name="publicado" value="1" id="pub_{{idx}}">
+          <label class="form-check-label" for="pub_{{idx}}">Publicar no site</label>
+        </div>
       </div>
     </td>
 
@@ -210,6 +223,15 @@
       tr.dataset.idx = idx;
 
       arquivosPorLinha.set(idx, file);
+
+      // ids únicos para o checkbox "Publicar" e seu label (evita conflito entre linhas)
+      const chkPublicado = tr.querySelector('.campo_publicado');
+      const lblPublicado = tr.querySelector('label[for^="pub_"]');
+      if (chkPublicado && lblPublicado) {
+        const pubId = 'pub_' + idx;
+        chkPublicado.id = pubId;
+        lblPublicado.setAttribute('for', pubId);
+      }
 
       // preview
       const img = tr.querySelector('.preview-img');
@@ -341,13 +363,17 @@
       const codProduto = linha.querySelector('.campo_cod_produto').value;
       const codCor = this.value;
       const campoDescricao = linha.querySelector('.campo_descricao');
+      const campoTitulo    = linha.querySelector('.campo_titulo');
+      const campoPublicado = linha.querySelector('.campo_publicado');
       if (!codProduto || !codCor) return;
 
       fetch(`<%= get_cor_data_collaborators_backoffice_produto_imagens_path %>?cod_produto=${codProduto}&cod_cor=${codCor}`)
         .then(r => r.json())
         .then(data => {
-          if (data && !data.error && !campoDescricao.value) {
-            campoDescricao.value = data.descricao || '';
+          if (data && !data.error) {
+            if (!campoDescricao.value) campoDescricao.value = data.descricao || '';
+            if (campoTitulo && !campoTitulo.value) campoTitulo.value = data.name || '';
+            if (campoPublicado) campoPublicado.checked = !!data.publicado;
           }
         })
         .catch(() => {});
@@ -407,6 +433,8 @@
       const codProduto = linha.querySelector('.campo_cod_produto').value;
       const codCor     = linha.querySelector('.campo_cod_cor').value;
       const descricao  = linha.querySelector('.campo_descricao').value;
+      const titulo     = linha.querySelector('.campo_titulo')?.value || '';
+      const publicado  = linha.querySelector('.campo_publicado')?.checked ? '1' : '0';
       const status     = linha.querySelector('.status-linha');
 
       if (!codProduto || !codCor || !file) {
@@ -428,6 +456,8 @@
       dados.append('cod_produto', codProduto);
       dados.append('cod_cor', codCor);
       dados.append('descricao', descricao);
+      dados.append('titulo', titulo);
+      dados.append('publicado', publicado);
       dados.append('arquivo', file);
       dados.append('forcar', forcar);
 
@@ -588,7 +618,8 @@
           hidden.type = 'hidden';
           hidden.name = `itens[${i}][${campo.dataset.name}]`;
           hidden.className = 'campo-gerado';
-          hidden.value = campo.value || '';
+          // checkbox envia "1"/"0" conforme marcado; demais usam o value
+          hidden.value = campo.type === 'checkbox' ? (campo.checked ? '1' : '0') : (campo.value || '');
           form.appendChild(hidden);
         });
 

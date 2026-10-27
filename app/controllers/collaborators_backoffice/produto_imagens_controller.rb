@@ -57,6 +57,10 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
         q: "%#{term}%")
     end
 
+    if params[:cod_produto].present?
+      @produto_imagens = @produto_imagens.where(produto_imagens: { cod_produto: params[:cod_produto] })
+    end
+
     if params[:cod_cor].present?
       @produto_imagens = @produto_imagens.where(cod_cor: params[:cod_cor])
     end
@@ -92,6 +96,7 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       else
         @produto_imagens = @produto.produto_imagens.ordenadas
         .page(params[:page])
+        @cod_cor_selecionada = cor_pre_selecionada(@produto)
       end
     end
   end
@@ -130,10 +135,13 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
             end
       cor ||= Core.find_by(cod_cor: 1)
 
-      # Atualiza a descrição no próprio produto (por hora usamos produto.descricao)
-      if item[:descricao].present?
-        produto.update(descricao: item[:descricao])
-      end
+      # Atualiza descrição e título no próprio produto.
+      produto.descricao = item[:descricao] if item[:descricao].present?
+      produto.titulo    = item[:titulo]    if item[:titulo].present?
+      produto.save if produto.changed?
+
+      # Publicar direto (empresaproduto.publicado) para a cor efetivamente usada.
+      aplicar_publicado(produto, cor&.cod_cor, item[:publicado]) if item.key?(:publicado)
 
       resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: arquivo)
 
@@ -186,7 +194,12 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       return
     end
 
-    produto.update(descricao: params[:descricao]) if params[:descricao].present?
+    produto.descricao = params[:descricao] if params[:descricao].present?
+    produto.titulo    = params[:titulo]    if params[:titulo].present?
+    produto.save if produto.changed?
+
+    # Publicar direto (empresaproduto.publicado) para a cor efetivamente usada.
+    aplicar_publicado(produto, cor.cod_cor, params[:publicado]) if params.key?(:publicado)
 
     forcar    = params[:forcar].to_s == '1' || params[:forcar].to_s == 'true'
     resultado = ProdutoImagemUploadService.call(produto: produto, cor: cor, arquivo: params[:arquivo], forcar: forcar)
@@ -278,15 +291,14 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
       end
       # ---- Fim processamento ----
 
-      path = if params[:path].present?
-              edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto)
-            else
-              collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto)
-            end
-      redirect_to path, notice: 'Imagens associadas ao produto foram salvas com sucesso!'
+      # Após salvar, redireciona sempre para a listagem com todas as imagens
+      # do produto (index), e não de volta para a tela de editar.
+      redirect_to collaborators_backoffice_produto_imagens_path(cod_produto: @produto.cod_produto),
+                  notice: 'Imagens associadas ao produto foram salvas com sucesso!'
 
     else
-      redirect_to path, alert: 'Nenhuma imagem foi selecionada!'
+      redirect_to edit_collaborators_backoffice_produto_imagen_path(@produto.cod_produto),
+                  alert: 'Nenhuma imagem foi selecionada!'
     end
   rescue ActiveRecord::Rollback => e
     redirect_to collaborators_backoffice_produto_imagens_path, alert: "Falha ao salvar imagens: #{e.message}"
@@ -326,7 +338,49 @@ class CollaboratorsBackoffice::ProdutoImagensController < CollaboratorsBackoffic
   end
   
   private
-  
+
+  # Aplica o "publicado" no empresaproduto da cor informada, para a empresa logada.
+  # Quando ainda NÃO existe empresaproduto para essa combinação produto+cor+empresa,
+  # cria o registro (com os campos mínimos) para que a publicação não se perca.
+  # valor aceita '1'/'true' (publica) ou '0'/'false' (despublica).
+  def aplicar_publicado(produto, cod_cor, valor)
+    return if cod_cor.blank?
+
+    cod_empresa = current_collaborator.empresa.cod_empresa
+
+    empresa_produto = Empresaproduto.find_or_initialize_by(
+      cod_produto: produto.cod_produto,
+      cod_cor: cod_cor,
+      cod_empresa: cod_empresa
+    )
+
+    # Garante ativo=true ao criar (default do banco é true, mas deixamos explícito
+    # para o caso de registro novo recém-inicializado).
+    empresa_produto.ativo = true if empresa_produto.new_record?
+
+    publicar = valor.to_s == '1' || valor.to_s == 'true'
+    empresa_produto.publicado = publicar
+    empresa_produto.save
+  end
+
+  # Define a cor que deve vir pré-selecionada no select ao abrir o editar:
+  #   1) se alguma cor do produto (nesta empresa) está marcada como publicada,
+  #      usa a primeira publicada (por cod_cor);
+  #   2) senão, se o produto tem apenas UMA cor cadastrada, usa essa única.
+  # Retorna nil quando há várias cores e nenhuma publicada (mantém o prompt).
+  def cor_pre_selecionada(produto)
+    escopo = Empresaproduto.where(
+      cod_produto: produto.cod_produto,
+      cod_empresa: current_collaborator.cod_empresa
+    )
+
+    publicada = escopo.where(publicado: true).order(:cod_cor).limit(1).pick(:cod_cor)
+    return publicada if publicada.present?
+
+    cores = escopo.distinct.pluck(:cod_cor)
+    cores.first if cores.size == 1
+  end
+
   def set_produto
     if params[:cod_produto].present?
       @produto = Produto.find(params[:cod_produto]);
