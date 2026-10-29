@@ -16,16 +16,15 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
     @qtd_cancel = @docs_periodo.where(status: "cancelada").count
     @qtd_problema = @docs_periodo.where(status: %w[rejeitada erro denegada]).count
 
-    # ---- Compras COM NF que somaram no estoque fiscal (qtdfiscal) ----
-    # A entrada de qtdfiscal da compra e feita pela trigger do Postgres quando a
-    # compra tem numeronf > 0. Aqui contamos essas compras no periodo (pela data
-    # da compra) e somamos a quantidade dos itens (= qtdfiscal que entrou).
-    compras_nf = Compra.where(cod_empresa: @cod_empresa, cancelada: [false, nil])
-                       .where("datacompra::date BETWEEN ? AND ?", @inicio, @fim)
-                       .where("COALESCE(NULLIF(regexp_replace(numeronf, '\\D', '', 'g'), ''), '0')::bigint > 0")
-    @valor_compras_nf = compras_nf.sum(:valortotal)
-    @qtd_compras_nf = compras_nf.count
-    @qtd_fiscal_entrada = Itemcompra.where(cod_compra: compras_nf.select(:cod_compra)).sum(:quantidade)
+    # ---- Notas RECEBIDAS no periodo (entradas registradas da SEFAZ) ----
+    # Antes contava as COMPRAS da empresa; agora conta as NOTAS RECEBIDAS
+    # (NotaRecebida) com emissao no periodo — ou seja, o que entrou pra mim,
+    # independente de ja ter virado compra. O cartao linka pro relatorio de
+    # notas recebidas.
+    notas_receb = NotaRecebida.da_empresa(@cod_empresa)
+                              .where(data_emissao: @inicio.beginning_of_day..@fim.end_of_day)
+    @valor_compras_nf = notas_receb.sum(:valor_total)
+    @qtd_compras_nf = notas_receb.count
 
     @valor_autorizado = autorizadas.sum(:valor_total)
     @valor_nfe   = autorizadas.where(modelo: 55).sum(:valor_total)

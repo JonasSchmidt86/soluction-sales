@@ -8,11 +8,52 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   # de compra). Antes filtrava cod_venda: nil (so avulsas puras), o que escondia
   # os rascunhos/notas gerados a partir de venda. A coluna "Origem" distingue.
   def index
-    @documentos = DocumentoFiscal
-                  .where(cod_empresa: current_collaborator.cod_empresa)
-                  .includes(:venda) # evita N+1 ao exibir cod_vendaempresa
-                  .order(cod_documento_fiscal: :desc)
-                  .limit(100)
+    escopo = DocumentoFiscal
+             .where(cod_empresa: current_collaborator.cod_empresa)
+             .includes(:venda) # evita N+1 ao exibir cod_vendaempresa
+
+    # 🔎 Tipo de nota (NF-e 55 / NFC-e 65). "" = todos.
+    @tipo = params[:tipo].to_s
+    escopo = escopo.where(modelo: @tipo.to_i) if @tipo.present?
+
+    # 🔎 Status (autorizada/rejeitada/cancelada/...). Aceita grupo "problema"
+    # (rejeitada+erro+denegada), usado pelo cartao "Rejeitadas / erro".
+    @status = params[:status].to_s
+    if @status == "problema"
+      escopo = escopo.com_problema
+    elsif @status.present?
+      escopo = escopo.where(status: @status)
+    end
+
+    # 🔎 Numero da nota
+    escopo = escopo.where(numero: params[:numero].to_s.gsub(/\D/, "")) if params[:numero].present?
+
+    # 🔎 Pessoa (cliente): por codigo exato ou por nome (via cod_pessoa_rascunho).
+    if params[:cod_pessoa].present?
+      escopo = escopo.where(cod_pessoa_rascunho: params[:cod_pessoa])
+    elsif params[:term].present?
+      cods = Pessoa.where("UPPER(nome) LIKE ?", "%#{params[:term].to_s.upcase}%").pluck(:cod_pessoa)
+      escopo = escopo.where(cod_pessoa_rascunho: cods)
+    end
+
+    # 🔎 Datas (por created_at). dataInicial/dataFinal em dd/mm/yyyy.
+    # Padrao: dia 1 ate o ultimo dia do mes corrente (igual aos campos da tela).
+    di = parse_data_br(params[:dataInicial]) || Date.current.beginning_of_month
+    df = parse_data_br(params[:dataFinal])   || Date.current.end_of_month
+    di, df = df, di if di > df
+    escopo = escopo.por_periodo(di, df)
+    @data_inicial, @data_final = di, df
+
+    escopo = escopo.order(cod_documento_fiscal: :desc)
+
+    # 🔥 paginacao (padrao dos relatorios: 30 por pagina, ou "Todas")
+    per_page = params[:per_page].to_i.zero? ? 30 : params[:per_page].to_i
+    @documentos =
+      if params[:per_page].present? && params[:per_page].to_i.zero?
+        escopo.page(1).per(escopo.count + 1)
+      else
+        escopo.page(params[:page]).per(per_page)
+      end
   end
 
   # Formulario de emissao avulsa. modelo = 55 (NF-e, default) ou 65 (NFC-e).
@@ -482,6 +523,14 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   end
 
   private
+
+  # Converte "dd/mm/yyyy" (ou ISO yyyy-mm-dd) em Date; nil se invalido/vazio.
+  def parse_data_br(str)
+    return nil if str.blank?
+    Date.strptime(str, "%d/%m/%Y")
+  rescue ArgumentError
+    (Date.parse(str) rescue nil)
+  end
 
   def set_documento
     # Atende tanto notas avulsas puras (cod_venda nil) quanto RASCUNHOS de NF

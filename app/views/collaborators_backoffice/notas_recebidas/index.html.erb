@@ -134,28 +134,43 @@
         </script>
 
         <%# ===== Filtros ===== %>
-        <%= form_with url: collaborators_backoffice_notas_recebidas_path, method: :get, local: true, class: "row g-2 mb-3 align-items-end" do %>
-          <div class="col-md-2">
-            <label class="form-label small mb-0">De</label>
-            <%= text_field_tag :inicio, params[:inicio] || Date.today.beginning_of_month.strftime("%Y-%m-%d"), type: "date", class: "form-control form-control-sm" %>
+        <%# Mesmo layout de notas_avulsas/report_sales: sem labels, com placeholders. %>
+        <%= form_with url: collaborators_backoffice_notas_recebidas_path, method: :get, local: true, class: "d-flex flex-wrap gap-2 mb-3 align-items-center" do %>
+          <div style="width: 75px;">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-select form-select-sm px-1", title: "Por página" %>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-0">Até</label>
-            <%= text_field_tag :fim, params[:fim] || Date.today.strftime("%Y-%m-%d"), type: "date", class: "form-control form-control-sm" %>
+          <div style="width: 110px;">
+            <%= text_field_tag :inicio, @inicio.strftime('%d/%m/%Y'), class: "form-control form-control-sm px-1 datepicker fallback", placeholder: "Data Inicial", autocomplete: "off" %>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-0">Tipo</label>
-            <%= select_tag :tipo, options_for_select([["Todos", ""], ["Mercadoria (NF-e)", "mercadoria"], ["Serviço", "servico"]], params[:tipo]), class: "form-select form-select-sm" %>
+          <div style="width: 110px;">
+            <%= text_field_tag :fim, @fim.strftime('%d/%m/%Y'), class: "form-control form-control-sm px-1 datepicker fallback", placeholder: "Data Final", autocomplete: "off" %>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-0">Status SEFAZ</label>
-            <%= select_tag :status, options_for_select([["Todos", ""], ["Autorizada","autorizada"], ["Cancelada","cancelada"], ["Denegada","denegada"]], params[:status]), class: "form-select form-select-sm" %>
+          <div class="flex-grow-1" style="min-width: 200px;">
+            <%= text_field_tag :term, params[:term], class: "form-control form-control-sm", placeholder: "Fornecedor / Pessoa...", autocomplete: "off" %>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small mb-0">Integrado</label>
-            <%= select_tag :integrado, options_for_select([["Todos",""],["Sim","1"],["Não","0"]], params[:integrado]), class: "form-select form-select-sm" %>
+          <div style="width: 170px;">
+            <%# Modelos do BrasilNF. Padrão: 55 (NF-e). @tipo vem do controller. %>
+            <%= select_tag :tipo, options_for_select([
+                  ["Todos", ""],
+                  ["55 - Nota Fiscal Eletrônica (NF-e)", "55"],
+                  ["65 - Nota Fiscal de Consumidor (NFC-e)", "65"],
+                  ["10 - Nota Fiscal de Serviço (NFS-e)", "10"],
+                  ["57 - Conhecimento de Transporte Eletrônico (CT-e)", "57"],
+                  ["58 - Manifesto Eletrônico de Documentos Fiscais (MDF-e)", "58"],
+                  ["59 - Cupom Fiscal Eletrônico SAT (CFe SAT)", "59"],
+                  ["06 - Energia", "06"],
+                  ["21 - Comunicação", "21"],
+                  ["22 - Telecomunicação", "22"],
+                  ["99 - Declaração de Conteúdo Eletrônica (DC-e)", "99"]
+                ], @tipo), class: "form-select form-select-sm px-1", title: "Modelo documento" %>
           </div>
-          <div class="col-md-2">
+          <div style="width: 120px;">
+            <%= select_tag :status, options_for_select([["Status SEFAZ", ""], ["Autorizada","autorizada"], ["Cancelada","cancelada"], ["Denegada","denegada"]], params[:status]), class: "form-select form-select-sm px-1" %>
+          </div>
+          <div style="width: 135px;">
+            <%= select_tag :integrado, options_for_select([["Integrado", ""], ["Integradas","1"], ["Não integradas","0"]], params[:integrado]), class: "form-select form-select-sm px-1" %>
+          </div>
+          <div>
             <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
           </div>
         <% end %>

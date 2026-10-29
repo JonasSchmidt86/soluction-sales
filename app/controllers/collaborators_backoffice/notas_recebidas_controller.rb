@@ -6,7 +6,7 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   # A busca na SEFAZ (ver_entradas) grava os registros aqui; a tabela e a lista.
   def index
     @cod_empresa = current_collaborator.cod_empresa
-    @inicio, @fim = periodo
+    @inicio, @fim = periodo(Date.today.end_of_month)
     @config = FiscalConfig.find_by(cod_empresa: @cod_empresa)
 
     escopo = NotaRecebida.da_empresa(@cod_empresa)
@@ -17,16 +17,37 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     elsif params[:integrado] == "0"
       escopo = escopo.nao_integradas
     end
-    # Filtro por TIPO de documento: mercadoria (NF-e 55) x servico (demais, ex.
-    # NFS-e / telecom modelo 10). @tipo guarda a selecao para a view.
-    @tipo = params[:tipo].presence
-    if @tipo == "mercadoria"
-      escopo = escopo.where(modelo: 55)
-    elsif @tipo == "servico"
-      escopo = escopo.where("modelo IS NULL OR modelo <> 55")
+    # Filtro por MODELO de documento (padrao BrasilNF: 55, 65, 10, 57, 58, 59,
+    # 06, 21, 22, 99). Padrao = 55 (NF-e) no primeiro acesso. "" (Todos) nao
+    # filtra. @tipo guarda a selecao para a view.
+    #   params[:tipo] == nil  -> primeiro acesso: assume 55
+    #   params[:tipo] == ""   -> usuario escolheu "Todos": sem filtro
+    #   params[:tipo] == "55" -> filtra pelo modelo informado
+    @tipo = params.key?(:tipo) ? params[:tipo].to_s : "55"
+    if @tipo.present?
+      escopo = escopo.where(modelo: @tipo.to_i)
     end
 
-    @notas = escopo.includes(:compra).recentes.page(params[:page])
+    # Filtro por nome do fornecedor: procura no emitente gravado na nota e no
+    # cadastro de pessoa vinculado (cod_pessoa pode estar vazio quando o
+    # fornecedor ainda nao foi cadastrado).
+    if params[:term].present?
+      termo = "%#{params[:term].to_s.strip.upcase}%"
+      escopo = escopo.left_joins(:pessoa)
+                     .where("UPPER(nota_recebida.emitente_nome) LIKE :t OR UPPER(pessoa.nome) LIKE :t", t: termo)
+    end
+
+    # 🔥 paginacao (padrao dos relatorios: 30 por pagina, ou "Todas")
+    per_page = params[:per_page].to_i.zero? ? 30 : params[:per_page].to_i
+    escopo = escopo.includes(:compra).recentes
+    @notas =
+      if params[:per_page].present? && params[:per_page].to_i.zero?
+        # "Todas": sem paginacao real, mas mantem a interface do Kaminari
+        escopo.page(1).per(escopo.count + 1)
+      else
+        escopo.page(params[:page]).per(per_page)
+      end
+
     @alertas_canceladas = NotaRecebida.da_empresa(@cod_empresa).integradas.canceladas
   end
 
@@ -244,9 +265,11 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
     @nota = NotaRecebida.da_empresa(current_collaborator.cod_empresa).find(params[:id])
   end
 
-  def periodo
+  # fim_padrao: hoje por padrao (busca na SEFAZ nao deve olhar datas futuras);
+  # a listagem (index) passa o ultimo dia do mes para bater com o campo da tela.
+  def periodo(fim_padrao = Date.today)
     ini = parse_data(params[:inicio]) || Date.today.beginning_of_month
-    fim = parse_data(params[:fim])    || Date.today
+    fim = parse_data(params[:fim])    || fim_padrao
     ini, fim = fim, ini if ini > fim
     [ini, fim]
   end
@@ -256,11 +279,14 @@ class CollaboratorsBackoffice::NotasRecebidasController < CollaboratorsBackoffic
   helper_method :filtros
   def filtros
     { inicio: params[:inicio], fim: params[:fim], status: params[:status],
-      integrado: params[:integrado], tipo: params[:tipo] }.compact
+      integrado: params[:integrado], tipo: params[:tipo], per_page: params[:per_page],
+      term: params[:term].presence }.compact
   end
 
+  # Aceita dd/mm/aaaa (datepicker da tela) e aaaa-mm-dd (links do painel fiscal).
   def parse_data(v)
-    Date.parse(v) if v.present?
+    return nil if v.blank?
+    v.to_s.include?("/") ? Date.strptime(v.to_s, "%d/%m/%Y") : Date.parse(v.to_s)
   rescue ArgumentError
     nil
   end

@@ -76,6 +76,17 @@ class DocumentoFiscal < ApplicationRecord
   scope :autorizadas, -> { where(status: "autorizada") }
   scope :pendentes,   -> { where(status: %w[rascunho enviada]) }
   scope :da_empresa,  ->(cod) { where(cod_empresa: cod) }
+  scope :nfe,         -> { where(modelo: 55) }
+  scope :nfce,        -> { where(modelo: 65) }
+  scope :canceladas,  -> { where(status: "cancelada") }
+  # Com problema = rejeitada/erro/denegada (as que aparecem no cartao "Rejeitadas").
+  scope :com_problema, -> { where(status: %w[rejeitada erro denegada]) }
+  # Periodo por created_at (mesma base usada no painel fiscal).
+  scope :por_periodo, ->(inicio, fim) {
+    where(created_at: inicio.beginning_of_day..fim.end_of_day)
+  }
+
+  paginates_per 30
 
   def autorizada?
     status == "autorizada"

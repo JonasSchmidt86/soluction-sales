@@ -22,43 +22,59 @@
     <% end %>
   </div>
 
-  <%# ---- Cartoes de resumo ---- %>
+  <%# ---- Cartoes de resumo (clicaveis -> relatorios filtrados) ---- %>
+  <%
+    di_br = @inicio.strftime('%d/%m/%Y'); df_br = @fim.strftime('%d/%m/%Y')
+    di_iso = @inicio.strftime('%Y-%m-%d'); df_iso = @fim.strftime('%Y-%m-%d')
+  %>
   <div class="row g-3 mb-3">
     <div class="col-md-3">
-      <div class="card border-start border-4 border-success h-100">
-        <div class="card-body">
-          <div class="text-muted small">NF-e autorizadas</div>
-          <div class="h3 mb-0"><%= @qtd_nfe %></div>
-          <div class="small text-muted">R$ <%= number_with_precision(@valor_nfe, precision: 2, separator: ",", delimiter: ".") %></div>
+      <%= link_to collaborators_backoffice_notas_avulsas_path(tipo: 55, status: 'autorizada', dataInicial: di_br, dataFinal: df_br),
+                  class: "text-decoration-none" do %>
+        <div class="card border-start border-4 border-success h-100">
+          <div class="card-body">
+            <div class="text-muted small">NF-e autorizadas</div>
+            <div class="h3 mb-0"><%= @qtd_nfe %></div>
+            <div class="small text-muted">R$ <%= number_with_precision(@valor_nfe, precision: 2, separator: ",", delimiter: ".") %></div>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
     <div class="col-md-3">
-      <div class="card border-start border-4 border-info h-100">
-        <div class="card-body">
-          <div class="text-muted small">NFC-e autorizadas</div>
-          <div class="h3 mb-0"><%= @qtd_nfce %></div>
-          <div class="small text-muted">R$ <%= number_with_precision(@valor_nfce, precision: 2, separator: ",", delimiter: ".") %></div>
+      <%= link_to collaborators_backoffice_notas_avulsas_path(tipo: 65, status: 'autorizada', dataInicial: di_br, dataFinal: df_br),
+                  class: "text-decoration-none" do %>
+        <div class="card border-start border-4 border-info h-100">
+          <div class="card-body">
+            <div class="text-muted small">NFC-e autorizadas</div>
+            <div class="h3 mb-0"><%= @qtd_nfce %></div>
+            <div class="small text-muted">R$ <%= number_with_precision(@valor_nfce, precision: 2, separator: ",", delimiter: ".") %></div>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
     <div class="col-md-3">
-      <div class="card border-start border-4 border-warning h-100">
-        <div class="card-body">
-          <div class="text-muted small">Compras com NF (estoque fiscal)</div>
-          <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
-          <div class="small text-muted">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, delimiter: ".") %> </div>
+      <%= link_to collaborators_backoffice_notas_recebidas_path(inicio: di_iso, fim: df_iso, tipo: ''),
+                  class: "text-decoration-none" do %>
+        <div class="card border-start border-4 border-warning h-100">
+          <div class="card-body">
+            <div class="text-muted small">Notas recebidas no período</div>
+            <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
+            <div class="small text-muted">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, delimiter: ".") %> </div>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
     <div class="col-md-3">
-      <div class="card border-start border-4 border-danger h-100">
-        <div class="card-body">
-          <div class="text-muted small">Rejeitadas / erro</div>
-          <div class="h3 mb-0"><%= @qtd_problema %></div>
-          <div class="small text-muted"><%= @qtd_cancel %> cancelada(s) no período</div>
+      <%= link_to collaborators_backoffice_notas_avulsas_path(status: 'problema', dataInicial: di_br, dataFinal: df_br),
+                  class: "text-decoration-none" do %>
+        <div class="card border-start border-4 border-danger h-100">
+          <div class="card-body">
+            <div class="text-muted small">Rejeitadas / erro</div>
+            <div class="h3 mb-0"><%= @qtd_problema %></div>
+            <div class="small text-muted"><%= @qtd_cancel %> cancelada(s) no período</div>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
 

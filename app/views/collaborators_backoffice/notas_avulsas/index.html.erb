@@ -15,8 +15,41 @@
       </div>
 
       <div class="card-body">
+        <%# ===== Filtros ===== %>
+        <%# Mesmo estilo do report_sales: sem labels, com placeholders. %>
+        <%# Larguras fixas nos campos curtos; a Pessoa (flex-grow-1) ocupa o resto. %>
+        <%= form_with url: collaborators_backoffice_notas_avulsas_path, method: :get, local: true, class: "d-flex flex-wrap gap-2 mb-3 align-items-center" do %>
+          <div style="width: 75px;">
+            <%= select_tag :per_page, options_for_select([30, 40, 70, 150, "Todas"], params[:per_page]), onchange: 'this.form.submit()', class: "form-select form-select-sm px-1", title: "Por página" %>
+          </div>
+          <div style="width: 110px;">
+            <%= text_field_tag :dataInicial, @data_inicial.strftime('%d/%m/%Y'), class: "form-control form-control-sm px-1 datepicker fallback", placeholder: "Data Inicial", autocomplete: "off" %>
+          </div>
+          <div style="width: 110px;">
+            <%= text_field_tag :dataFinal, @data_final.strftime('%d/%m/%Y'), class: "form-control form-control-sm px-1 datepicker fallback", placeholder: "Data Final", autocomplete: "off" %>
+          </div>
+          <div style="width: 110px;">
+            <%= text_field_tag :numero, params[:numero], class: "form-control form-control-sm px-1", placeholder: "Nº Nota" %>
+          </div>
+          <div class="flex-grow-1" style="min-width: 220px;">
+            <%= text_field_tag :term, params[:term], class: "form-control form-control-sm", placeholder: "Pessoa..." %>
+          </div>
+          <div style="width: 95px;">
+            <%= select_tag :tipo, options_for_select([["Tipo", ""], ["NF-e", "55"], ["NFC-e", "65"]], params[:tipo]), class: "form-select form-select-sm px-1" %>
+          </div>
+          <div style="width: 120px;">
+            <%= select_tag :status, options_for_select([
+                  ["Status", ""], ["Autorizada", "autorizada"], ["Rascunho", "rascunho"],
+                  ["Rejeitada/Erro", "problema"], ["Cancelada", "cancelada"]
+                ], params[:status]), class: "form-select form-select-sm px-1" %>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+          </div>
+        <% end %>
+
         <% if @documentos.empty? %>
-          <p class="text-muted mb-0">Nenhuma nota avulsa emitida ainda.</p>
+          <p class="text-muted mb-0">Nenhuma nota encontrada com os filtros atuais.</p>
         <% else %>
           <table class="table table-sm table-striped align-middle">
             <thead class="table-light">
@@ -89,6 +122,15 @@
               <% end %>
             </tbody>
           </table>
+
+          <% if @documentos.respond_to?(:total_pages) && @documentos.total_pages > 1 %>
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+              <div class="small text-muted"><%= page_entries_info @documentos, entry_name: 'nota' %></div>
+              <div><%= paginate @documentos %></div>
+            </div>
+          <% else %>
+            <div class="small text-muted">Exibindo <%= @documentos.total_count %> nota(s)</div>
+          <% end %>
         <% end %>
       </div>
     </div>
