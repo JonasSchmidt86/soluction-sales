@@ -21,9 +21,21 @@ class Compra < ApplicationRecord
 
     has_one :xml_file, autosave: true
 
+    # Notas recebidas ligadas a esta compra. Ao EXCLUIR a compra, desliga as notas
+    # (cod_compra = NULL) para voltarem a oferecer "Importar" em vez de apontar
+    # para uma compra que nao existe mais. (O CANCELAMENTO e tratado no
+    # ComprasController#destroy, que usa update_columns e nao dispara callbacks.)
+    has_many :notas_recebidas, class_name: 'NotaRecebida', foreign_key: 'cod_compra',
+             primary_key: 'cod_compra', dependent: :nullify
+
     validates :itenscompra, :contas, :collaborator, :empresa, :pessoa, presence: true
 
     # after_save :atualizar_codigo_no_xml_file
+
+    # Quando a compra nasce de um XML (importacao de NF recebida), liga a
+    # NotaRecebida a esta compra para a lista de Notas Recebidas mostrar o
+    # carrinho (ver compra) em vez do botao Importar.
+    after_save :vincular_nota_recebida
     
     def compra_nfe
       if self.cancelada
@@ -81,6 +93,18 @@ class Compra < ApplicationRecord
   end
 
   private
+
+  # Liga as notas recebidas que usam o XML desta compra (match exato por
+  # xml_file_id, sem adivinhar por numero). Nao mexe em compra cancelada e nao
+  # sobrescreve nota que ja esta ligada a outra compra.
+  def vincular_nota_recebida
+    return if cancelada? || xml_file.nil? || xml_file.id.blank?
+
+    NotaRecebida.where(xml_file_id: xml_file.id, cod_compra: nil)
+                .update_all(cod_compra: cod_compra)
+  rescue => e
+    Rails.logger.warn("[Compra#vincular_nota_recebida] compra #{cod_compra}: #{e.class} - #{e.message}")
+  end
 
   def reject_empty_items(attributes)
     attributes['cod_produto'].blank? || attributes['quantidade'].blank? || attributes['valorunitario'].blank?

@@ -25,6 +25,10 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
                               .where(data_emissao: @inicio.beginning_of_day..@fim.end_of_day)
     @valor_compras_nf = notas_receb.sum(:valor_total)
     @qtd_compras_nf = notas_receb.count
+    # Faturadas = notas recebidas que ja viraram compra (integradas).
+    faturadas = notas_receb.integradas
+    @qtd_receb_faturadas = faturadas.count
+    @valor_receb_faturadas = faturadas.sum(:valor_total)
 
     @valor_autorizado = autorizadas.sum(:valor_total)
     @valor_nfe   = autorizadas.where(modelo: 55).sum(:valor_total)
@@ -41,6 +45,20 @@ class CollaboratorsBackoffice::FiscalDashboardController < CollaboratorsBackoffi
 
     # ---- Serie diaria para o grafico (empilhado por status) ----
     @serie = serie_diaria(@docs_periodo)
+
+    # ---- Recebimentos (para BAIXO no grafico): notas recebidas FATURADAS ----
+    # So as que ja viraram compra, contadas no DIA DA COMPRA (compra.datacompra),
+    # e nao no dia de emissao da nota. Compras canceladas ficam de fora.
+    recebidas = NotaRecebida.da_empresa(@cod_empresa).integradas.joins(:compra)
+                            .merge(Compra.where(cancelada: [false, nil]))
+                            .where("compra.datacompra::date BETWEEN ? AND ?", @inicio, @fim)
+    por_dia = recebidas.group("compra.datacompra::date").count # { Date => qtd }
+    valor_por_dia = recebidas.group("compra.datacompra::date").sum(:valor_total) # { Date => R$ }
+    @serie[:recebida] = (@inicio..@fim).map { |d| por_dia[d].to_i }
+    @serie[:recebida_valor] = (@inicio..@fim).map { |d| valor_por_dia[d].to_f.round(2) }
+    # Datas dd/mm/aaaa de cada ponto: usadas no clique para abrir o report_buy do dia.
+    @serie[:dias_br] = (@inicio..@fim).map { |d| d.strftime("%d/%m/%Y") }
+    @valor_recebido_faturadas = recebidas.sum(:valor_total)
 
     # ---- Ultimos documentos ----
     # includes(:venda): exibimos cod_vendaempresa na coluna Origem (evita N+1).

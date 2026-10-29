@@ -182,7 +182,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
                                           documento: documento).emitir
 
     if documento.autorizada?
-      redirect_to collaborators_backoffice_notas_avulsa_path(documento),
+      # Autorizada pela SEFAZ: volta para a lista de notas (nao para o detalhe).
+      redirect_to collaborators_backoffice_notas_avulsas_path(filtros_index),
                   notice: "NF autorizada. Chave: #{documento.chave_acesso}"
     else
       reexibir_form("NF #{documento.status}: #{documento.mensagem_sefaz}")
@@ -524,6 +525,14 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
 
   private
 
+  # Filtros/pagina da lista (index) que precisam sobreviver a uma acao feita nela
+  # (ex.: Emitir), para o redirect voltar na mesma visao. So chaves conhecidas.
+  FILTROS_INDEX = %w[dataInicial dataFinal per_page page tipo status numero term cod_pessoa].freeze
+  helper_method :filtros_index
+  def filtros_index
+    params.to_unsafe_h.slice(*FILTROS_INDEX).compact_blank
+  end
+
   # Converte "dd/mm/yyyy" (ou ISO yyyy-mm-dd) em Date; nil se invalido/vazio.
   def parse_data_br(str)
     return nil if str.blank?
@@ -758,7 +767,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
                                         documento: documento).emitir
 
     if emitido.autorizada?
-      redirect_to collaborators_backoffice_notas_avulsa_path(emitido),
+      # Autorizada: volta para a lista mantendo os filtros/pagina de onde veio
+      # (quando emitida pelo botao da lista, a pagina apenas recarrega).
+      redirect_to collaborators_backoffice_notas_avulsas_path(filtros_index),
                   notice: "NF autorizada. Chave: #{emitido.chave_acesso}"
     else
       redirect_to edit_collaborators_backoffice_notas_avulsa_path(emitido),

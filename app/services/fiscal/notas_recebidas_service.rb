@@ -204,7 +204,10 @@ module Fiscal
       return unless arquivo.sucesso?
       xml = arquivo.conteudo
       r = Fiscal::XmlNotaResumo.new(xml) rescue nil
-      fornecedor = (r && r.valido?) ? resolver_fornecedor(r) : nil
+      # So NF-e/NFC-e (infNFe) vira XmlFile de compra. CT-e, NFS-e e afins nao
+      # entram na Importacao de XML (a nota continua listada em Notas Recebidas).
+      return unless r && r.valido?
+      fornecedor = resolver_fornecedor(r)
       nota.xml_file = criar_xml_file(xml, chave, fornecedor)
       nota.cod_pessoa ||= fornecedor&.cod_pessoa
       nota.save!

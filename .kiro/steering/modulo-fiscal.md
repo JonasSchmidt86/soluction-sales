@@ -72,9 +72,9 @@ justificativa ≥15) e só muda status se SEFAZ homologar. `aplicar_resultado!` 
   `nfe_autorizada?`). Contas com lançamento no caixa ficam read-only (removidas do params_venda_update).
 
 ## EMISSÃO NA TELA DE VENDA (UX atual)
-- Rodapé do form: botão VERDE (salvar) + botão AZUL redondo (salvar e emitir/reemitir, tooltip
-  dinâmico conforme status da última NF; some se já autorizada). Azul marca `emitir_nfe=1` e o
-  controller emite após salvar (`emitir_nfe_apos_salvar?`).
+- Rodapé do form: apenas o botão VERDE (salvar). O botão azul "salvar e emitir" (`emitButton`) foi
+  removido; a NF é emitida pelo editor de nota, a partir do relatório de vendas.
+  (`emitir_nfe_apos_salvar?` no controller já estava desativado.)
 - Indicador de perfil fiscal por item (abaixo do produto): texto pequeno azul (nome do perfil) /
   vermelho ("Sem perfil fiscal"); só aparece com produto selecionado. Clica → modal escolhe o
   Perfil Tributário e grava direto no produto via AJAX (`ProdutoPerfilFiscalController`).

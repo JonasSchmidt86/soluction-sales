@@ -512,6 +512,10 @@ class CollaboratorsBackoffice::ComprasController < CollaboratorsBackofficeContro
               xml.compra = nil
               xml.save
             end
+
+            # Desliga as notas recebidas desta compra: com a compra cancelada a nota
+            # volta a oferecer "Importar" (o XML ja foi solto acima).
+            @compra.notas_recebidas.update_all(cod_compra: nil)
           end
 
           redirect_to collaborators_backoffice_report_buy_path(request.query_parameters),

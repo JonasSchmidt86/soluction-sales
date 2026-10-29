@@ -34,8 +34,8 @@
         <div class="card border-start border-4 border-success h-100">
           <div class="card-body">
             <div class="text-muted small">NF-e autorizadas</div>
-            <div class="h3 mb-0"><%= @qtd_nfe %></div>
-            <div class="small text-muted">R$ <%= number_with_precision(@valor_nfe, precision: 2, separator: ",", delimiter: ".") %></div>
+            <div class="h3 mb-0">R$ <%= number_with_precision(@valor_nfe, precision: 2, separator: ",", delimiter: ".") %></div>
+            <div class="small text-muted"><%= @qtd_nfe %> nota(s)</div>
           </div>
         </div>
       <% end %>
@@ -46,23 +46,31 @@
         <div class="card border-start border-4 border-info h-100">
           <div class="card-body">
             <div class="text-muted small">NFC-e autorizadas</div>
-            <div class="h3 mb-0"><%= @qtd_nfce %></div>
-            <div class="small text-muted">R$ <%= number_with_precision(@valor_nfce, precision: 2, separator: ",", delimiter: ".") %></div>
+            <div class="h3 mb-0">R$ <%= number_with_precision(@valor_nfce, precision: 2, separator: ",", delimiter: ".") %></div>
+            <div class="small text-muted"><%= @qtd_nfce %> nota(s)</div>
           </div>
         </div>
       <% end %>
     </div>
     <div class="col-md-3">
-      <%= link_to collaborators_backoffice_notas_recebidas_path(inicio: di_iso, fim: df_iso, tipo: ''),
-                  class: "text-decoration-none" do %>
-        <div class="card border-start border-4 border-warning h-100">
-          <div class="card-body">
-            <div class="text-muted small">Notas recebidas no período</div>
-            <div class="h3 mb-0"><%= @qtd_compras_nf %></div>
-            <div class="small text-muted">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, delimiter: ".") %> </div>
+      <%# Um unico cartao com duas metades clicaveis: Todas | Faturadas (ja viraram compra). %>
+      <div class="card border-start border-4 border-warning h-100">
+        <div class="card-body">
+          <div class="text-muted small">Notas recebidas no período</div>
+          <div class="d-flex justify-content-between gap-2">
+            <%= link_to collaborators_backoffice_notas_recebidas_path(inicio: di_iso, fim: df_iso, tipo: ''),
+                        class: "text-decoration-none text-reset", title: "Ver todas as notas recebidas" do %>
+              <div class="h4 mb-0">R$ <%= number_with_precision(@valor_compras_nf, precision: 2, separator: ",", delimiter: ".") %></div>
+              <div class="small text-muted"><%= @qtd_compras_nf %> todas</div>
+            <% end %>
+            <%= link_to collaborators_backoffice_notas_recebidas_path(inicio: di_iso, fim: df_iso, tipo: '', integrado: '1'),
+                        class: "text-decoration-none text-reset text-end", title: "Ver só as faturadas (já viraram compra)" do %>
+              <div class="h4 mb-0">R$ <%= number_with_precision(@valor_receb_faturadas, precision: 2, separator: ",", delimiter: ".") %></div>
+              <div class="small text-muted"><%= @qtd_receb_faturadas %> faturadas</div>
+            <% end %>
           </div>
         </div>
-      <% end %>
+      </div>
     </div>
     <div class="col-md-3">
       <%= link_to collaborators_backoffice_notas_avulsas_path(status: 'problema', dataInicial: di_br, dataFinal: df_br),
@@ -83,10 +91,11 @@
     <div class="col-lg-8">
       <div class="card h-100">
         <div class="card-header">
-          <strong>Emissões por dia</strong>
+          <strong>Emissões / Recebimentos por dia</strong>
           <span class="small text-muted">
             (<%= l @inicio, format: :long rescue @inicio %> a <%= l @fim, format: :long rescue @fim %>) —
-            total autorizado: R$ <%= number_with_precision(@valor_autorizado, precision: 2, separator: ",", delimiter: ".") %>
+            emitido: R$ <%= number_with_precision(@valor_autorizado, precision: 2, separator: ",", delimiter: ".") %> ·
+            recebido (faturadas): R$ <%= number_with_precision(@valor_recebido_faturadas, precision: 2, separator: ",", delimiter: ".") %>
           </span>
         </div>
         <div class="card-body">
@@ -116,6 +125,16 @@
           <div class="d-grid gap-2">
             <%= link_to new_collaborators_backoffice_notas_avulsa_path(modelo: 55), class: "btn btn-sm btn-outline-success" do %>
               <i class="fa fa-file-circle-plus me-1"></i> Emitir NF avulsa
+            <% end %>
+            <% if access_control.can_view?('notas_recebidas') %>
+              <%= link_to collaborators_backoffice_notas_recebidas_path, class: "btn btn-sm btn-outline-warning" do %>
+                <i class="fa fa-inbox me-1"></i> Notas Recebidas
+              <% end %>
+            <% end %>
+            <% if access_control.can_view?('fiscal_estoque') %>
+              <%= link_to collaborators_backoffice_report_estoque_fiscal_index_path, class: "btn btn-sm btn-outline-primary" do %>
+                <i class="fa fa-boxes-stacked me-1"></i> Relatório de estoque fiscal
+              <% end %>
             <% end %>
             <%= link_to collaborators_backoffice_pacotes_fiscais_path, class: "btn btn-sm btn-outline-secondary" do %>
               <i class="fa fa-box-archive me-1"></i> Pacotes XML
@@ -256,7 +275,12 @@
   (function () {
     // ---- Grafico de emissoes por dia (empilhado por status) ----
     var dados = <%= raw({ labels: @serie[:labels], autorizada: @serie[:autorizada],
-                          cancelada: @serie[:cancelada], problema: @serie[:problema] }.to_json) %>;
+                          cancelada: @serie[:cancelada], problema: @serie[:problema],
+                          recebida: @serie[:recebida], recebida_valor: @serie[:recebida_valor],
+                          dias_br: @serie[:dias_br] }.to_json) %>;
+    var REPORT_BUY_URL = "<%= collaborators_backoffice_report_buy_path %>";
+    var IDX_RECEBIDAS = 3; // posicao do dataset "Recebidas (faturadas)" abaixo
+    function brl(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     var ctx = document.getElementById('graficoEmissoes');
     if (ctx && window.Chart) {
       new Chart(ctx, {
@@ -266,14 +290,56 @@
           datasets: [
             { label: 'Autorizadas', data: dados.autorizada, backgroundColor: '#198754' },
             { label: 'Canceladas',  data: dados.cancelada,  backgroundColor: '#212529' },
-            { label: 'Rejeit./erro', data: dados.problema,  backgroundColor: '#dc3545' }
+            { label: 'Rejeit./erro', data: dados.problema,  backgroundColor: '#dc3545' },
+            // Recebimentos (faturadas, no dia da compra): valores NEGATIVOS para
+            // as barras irem para baixo do eixo; o rotulo/tooltip mostram o valor absoluto.
+            { label: 'Recebidas (faturadas)', data: dados.recebida.map(function (v) { return -v; }), backgroundColor: '#fd7e14' }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
-          plugins: { legend: { position: 'bottom' } }
+          scales: {
+            x: { stacked: true, grid: { display: false } }, // sem linhas verticais
+            y: { stacked: true, beginAtZero: true,
+                 ticks: { precision: 0, callback: function (v) { return Math.abs(v); } },
+                 // Linha divisoria no zero: separa emissoes (cima) de recebimentos (baixo).
+                 grid: {
+                   color: function (ctx) { return ctx.tick && ctx.tick.value === 0 ? '#adb5bd' : 'rgba(0,0,0,0.08)'; },
+                   lineWidth: function (ctx) { return ctx.tick && ctx.tick.value === 0 ? 2 : 1; }
+                 } }
+          },
+          // Cursor de "link" ao passar sobre a barra de recebidas.
+          onHover: function (evt, els) {
+            var sobreRecebida = els.length && els[0].datasetIndex === IDX_RECEBIDAS;
+            evt.native.target.style.cursor = sobreRecebida ? 'pointer' : 'default';
+          },
+          // Clique na barra de recebidas: abre o report_buy filtrado naquele dia.
+          onClick: function (evt, els) {
+            if (!els.length || els[0].datasetIndex !== IDX_RECEBIDAS) return;
+            var dia = dados.dias_br[els[0].index];
+            if (!dia) return;
+            window.location.href = REPORT_BUY_URL + '?dataInicial=' + encodeURIComponent(dia) +
+                                   '&dataFinal=' + encodeURIComponent(dia);
+          },
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: function (c) {
+                  if (c.datasetIndex === IDX_RECEBIDAS) {
+                    // quantidade + valor das compras do dia (faturadas)
+                    return c.dataset.label + ': ' + Math.abs(c.parsed.y) + ' nota(s) · ' + brl(dados.recebida_valor[c.dataIndex]);
+                  }
+                  return c.dataset.label + ': ' + Math.abs(c.parsed.y);
+                },
+                footer: function (items) {
+                  var r = items.find(function (i) { return i.datasetIndex === IDX_RECEBIDAS; });
+                  return r ? 'Clique para ver as compras do dia' : '';
+                }
+              }
+            }
+          }
         }
       });
     }
