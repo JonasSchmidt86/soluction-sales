@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_01_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_03_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -442,6 +442,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_01_000001) do
     t.jsonb "transporte", comment: "Dados de transporte/frete (modalidade, transportadora, volumes)"
     t.jsonb "cobranca", comment: "Cobranca da NF (fatura + duplicatas/parcelas com vencimento)"
     t.string "consumidor_final", limit: 3, comment: "Operacao com consumidor final (indFinal): sim/nao/nil(auto)"
+    t.decimal "outras_despesas", precision: 15, scale: 2, default: "0.0", comment: "Valor de outras despesas acessorias da nota (vOutro)"
+    t.decimal "desconto", precision: 15, scale: 2, default: "0.0", comment: "Valor de desconto da nota (vDesc)"
+    t.decimal "frete", precision: 15, scale: 2, default: "0.0", comment: "Valor do frete da nota (vFrete)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
     t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"

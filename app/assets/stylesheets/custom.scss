@@ -40,6 +40,17 @@ form {
   width: auto !important;
 }
 
+/* Dropdown de acoes do relatorio de vendas: abre para a ESQUERDA do botao,
+   sobrescrevendo a regra global acima (que centraliza todos os dropdowns). */
+.dropdown .dropdown-menu-acoes {
+  top: 100% !important;
+  left: auto !important;
+  right: 0 !important;
+  transform: none !important;
+  min-width: 240px !important;
+  width: auto !important;
+}
+
 .spinner-overlay {
   position: fixed;
   top: 0;

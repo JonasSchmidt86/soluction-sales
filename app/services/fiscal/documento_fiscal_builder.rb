@@ -233,12 +233,20 @@ module Fiscal
       itens = @venda.itensvenda.reject(&:cancelado?)
       raise DadoFiscalAusente, "Venda sem itens" if itens.empty?
 
-      # Rateio do acrescimo/desconto de CABECALHO da venda (venda.acrescimo /
-      # venda.desconto) entre os itens. O acrescimo/desconto POR ITEM
-      # (item.valor_total) ja vem embutido no total de cada item. Assim o total
-      # da nota (soma dos itens) fecha com venda.valortotal e com o pagamento,
-      # evitando a rejeicao "ausencia de troco" (pagamento > total da nota).
-      ajustes = ratear_ajuste_cabecalho(itens)
+      # Acrescimo/desconto da nota vao nos CAMPOS PROPRIOS do item (vOutro/vDesc)
+      # e NAO embutidos no ValorTotal. A SEFAZ calcula o total da nota por item
+      # como: vNF = SUM(ValorTotal) - SUM(ValorDesconto) + SUM(ValorOutrasDespesas)
+      # (+frete +seguro). Assim o acrescimo aparece como "Outras Despesas" na
+      # DANFE e o desconto como "Desconto", em vez de distorcer o preco unitario.
+      #
+      # O acrescimo/desconto POR ITEM (venda) e o de CABECALHO sao somados e
+      # rateados em dois baldes separados (um por campo), proporcional ao valor
+      # bruto de cada item. O liquido total continua = venda.valortotal, entao
+      # VlPago nao muda e nao ha rejeicao de troco.
+      bases_brutas = itens.map { |i| valor_bruto_item(i) }
+      acrescimos   = ratear_valor(itens, bases_brutas, total_acrescimo(itens))
+      descontos    = ratear_valor(itens, bases_brutas, total_desconto(itens))
+      fretes       = ratear_valor(itens, bases_brutas, total_frete(itens))
 
       itens.each_with_index.map do |item, idx|
         produto = item.produto
@@ -257,25 +265,33 @@ module Fiscal
           end
 
         quantidade  = item.quantidade.to_d
-        # Total liquido do item: subtotal + acrescimo_item - desconto_item
-        # (item.valor_total) + a parcela do ajuste de cabecalho rateada nele.
-        valor_total = (item.valor_total.to_d + ajustes[idx]).round(2)
-        # Preco unitario coerente com o total (SEFAZ valida unitario*qtd ~ total).
+        # ValorTotal = valor BRUTO do item (unitario x qtd), SEM desconto nem
+        # acrescimo. O desconto vai em ValorDesconto e o acrescimo em
+        # ValorOutrasDespesas (campos proprios da nota).
+        valor_total = bases_brutas[idx].round(2)
+        # Preco unitario coerente com o total bruto (SEFAZ valida unitario*qtd ~
+        # total). Com total bruto o unitario volta a ser o preco real do produto.
         valor_unit  = quantidade.nonzero? ? (valor_total / quantidade).round(10) : valor_total
+        desconto    = descontos[idx].round(2)
+        acrescimo   = acrescimos[idx].round(2)
+        frete       = fretes[idx].round(2)
 
         prod = {
-          "NmProduto"        => produto&.nome,
-          "CodProdutoServico"=> produto&.cod_produto.to_s,
-          "EAN"              => fiscal.gtin.presence,
-          "NCM"              => fiscal.ncm,
-          "CEST"             => fiscal.cest.presence,
-          "UnidadeComercial" => produto&.ucom.presence || "UN",
-          "Quantidade"       => quantidade.to_f,
-          "ValorUnitario"    => valor_unit.to_f,
-          "ValorTotal"       => valor_total.to_f,
-          "CFOP"             => cfop&.to_i,
-          "OrigemProduto"    => (fiscal.origem.presence || "0").to_i,
-          "Imposto"          => montar_imposto(regra)
+          "NmProduto"            => produto&.nome,
+          "CodProdutoServico"    => produto&.cod_produto.to_s,
+          "EAN"                  => fiscal.gtin.presence,
+          "NCM"                  => fiscal.ncm,
+          "CEST"                 => fiscal.cest.presence,
+          "UnidadeComercial"     => produto&.ucom.presence || "UN",
+          "Quantidade"           => quantidade.to_f,
+          "ValorUnitario"        => valor_unit.to_f,
+          "ValorTotal"           => valor_total.to_f,
+          "ValorDesconto"        => (desconto.positive? ? desconto.to_f : nil),
+          "ValorOutrasDespesas"  => (acrescimo.positive? ? acrescimo.to_f : nil),
+          "ValorFrete"           => (frete.positive? ? frete.to_f : nil),
+          "CFOP"                 => cfop&.to_i,
+          "OrigemProduto"        => (fiscal.origem.presence || "0").to_i,
+          "Imposto"              => montar_imposto(regra)
         }
 
         # Devolucao (finalidade 4): a SEFAZ exige a NF original referenciada
@@ -306,26 +322,58 @@ module Fiscal
       Array(@venda.try(:chave_referenciada)).reject(&:blank?).presence
     end
 
-    # Rateia o acrescimo/desconto de CABECALHO da venda (ajuste = acrescimo -
-    # desconto) entre os itens, proporcional ao valor_total de cada item.
-    # Retorna um array de BigDecimal (um por item, na ordem) somando exatamente
-    # o ajuste; o residuo de centavos vai para o ultimo item. Sem ajuste de
-    # cabecalho (ex.: nota avulsa, ou venda sem acrescimo/desconto), retorna
-    # zeros e nada muda no total dos itens.
-    def ratear_ajuste_cabecalho(itens)
-      zeros  = Array.new(itens.size, BigDecimal("0"))
-      ajuste = (@venda.try(:acrescimo).to_d - @venda.try(:desconto).to_d)
-      return zeros if ajuste.zero?
+    # Valor BRUTO do item (unitario x quantidade), sem desconto nem acrescimo.
+    # E a base do rateio e o que vai em ValorTotal do produto.
+    def valor_bruto_item(item)
+      (item.valorunitario.to_d * item.quantidade.to_d)
+    end
 
-      base = itens.sum { |i| i.valor_total.to_d }
-      return zeros if base.zero?
+    # Acrescimo TOTAL a destacar como "Outras Despesas": acrescimo por item
+    # (Itemvenda#valor_acrescimo) + acrescimo de CABECALHO da venda
+    # (venda.acrescimo). Nota avulsa responde 0 nos dois (sem acrescimo).
+    def total_acrescimo(itens)
+      por_item  = itens.sum { |i| i.try(:valor_acrescimo).to_d }
+      cabecalho = @venda.try(:acrescimo).to_d
+      por_item + cabecalho
+    end
+
+    # Desconto TOTAL a destacar como "Desconto": desconto por item
+    # (Itemvenda#valor_desconto) + desconto de CABECALHO da venda
+    # (venda.desconto).
+    def total_desconto(itens)
+      por_item  = itens.sum { |i| i.try(:valor_desconto).to_d }
+      cabecalho = @venda.try(:desconto).to_d
+      por_item + cabecalho
+    end
+
+    # Frete TOTAL a destacar como "Frete" (vFrete) da nota. Valor monetario do
+    # frete (NAO e o bloco de transporte/transportadora). Venda comum nao
+    # responde a :frete (try => nil) -> 0; nota avulsa expoe o valor digitado.
+    def total_frete(itens)
+      @venda.try(:frete).to_d
+    end
+
+    # Rateia um VALOR (>= 0) entre os itens, proporcional ao valor bruto de cada
+    # um (bases). Retorna um array de BigDecimal (um por item, na ordem) somando
+    # EXATAMENTE o valor; o residuo de centavos vai para o ultimo item com base
+    # positiva. Valor zero (ou base total zero) retorna zeros.
+    def ratear_valor(itens, bases, valor)
+      zeros = Array.new(itens.size, BigDecimal("0"))
+      valor = valor.to_d
+      return zeros unless valor.positive?
+
+      base_total = bases.sum
+      return zeros unless base_total.positive?
+
+      # Indice do ultimo item com base positiva (absorve o residuo de centavos).
+      ultimo = bases.rindex { |b| b.positive? } || (itens.size - 1)
 
       acumulado = BigDecimal("0")
-      itens.each_with_index.map do |item, idx|
-        if idx == itens.size - 1
-          (ajuste - acumulado).round(2) # ultimo absorve o residuo de centavos
+      itens.each_index.map do |idx|
+        if idx == ultimo
+          (valor - acumulado).round(2)
         else
-          parcela = (ajuste * (item.valor_total.to_d / base)).round(2)
+          parcela = (valor * (bases[idx] / base_total)).round(2)
           acumulado += parcela
           parcela
         end
@@ -460,14 +508,20 @@ module Fiscal
       nil
     end
 
-    # Soma dos ValorTotal liquidos dos itens (base unica para VlPago e para o
-    # total da nota). Equivale a venda.valortotal, mas calculado a partir dos
-    # mesmos numeros ja arredondados dos itens, evitando divergencia de centavos.
+    # Total LIQUIDO da nota (base do VlPago). Com acrescimo/desconto/frete agora
+    # em campos proprios do item (vOutro/vDesc/vFrete), o liquido e:
+    #   SUM(bruto) - SUM(desconto) + SUM(acrescimo) + SUM(frete)
+    # Esse e exatamente o vNF que a SEFAZ calcula a partir dos itens e equivale
+    # a venda.valortotal. Calculado a partir dos mesmos numeros ja rateados/
+    # arredondados dos itens, evitando divergencia de centavos com o VlPago.
     def total_liquido_itens
-      itens = @venda.itensvenda.reject(&:cancelado?)
-      ajustes = ratear_ajuste_cabecalho(itens)
-      itens.each_with_index
-           .map { |item, idx| (item.valor_total.to_d + ajustes[idx]).round(2) }
+      itens        = @venda.itensvenda.reject(&:cancelado?)
+      bases_brutas = itens.map { |i| valor_bruto_item(i) }
+      acrescimos   = ratear_valor(itens, bases_brutas, total_acrescimo(itens))
+      descontos    = ratear_valor(itens, bases_brutas, total_desconto(itens))
+      fretes       = ratear_valor(itens, bases_brutas, total_frete(itens))
+      itens.each_index
+           .map { |idx| (bases_brutas[idx].round(2) - descontos[idx].round(2) + acrescimos[idx].round(2) + fretes[idx].round(2)) }
            .sum
     end
 

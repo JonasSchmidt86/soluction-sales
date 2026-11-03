@@ -15,7 +15,11 @@ module Fiscal
     attr_reader :empresa, :pessoa,
                 :info_adicional, :info_adicional_fisco,
                 :pagamentos, :transporte, :cobranca, :chave_referenciada,
-                :consumidor_final_override
+                :consumidor_final_override,
+                # Valores da nota (rateados por item pelo builder). acrescimo =
+                # "outras despesas" (vOutro); desconto (vDesc); frete (vFrete).
+                # Nomes iguais aos da Venda para o builder ler via duck typing.
+                :acrescimo, :desconto, :frete
 
     # pagamentos: lista opcional de { forma:, valor:, descricao: } (uma ou mais
     # formas, como no painel Brasil NFe). Vazia = o builder usa o padrao (1
@@ -24,10 +28,14 @@ module Fiscal
     # cobranca: hash opcional { fatura: {...}, parcelas: [{numero,vencimento,valor}] }
     # (duplicatas a prazo; so vai ao provedor quando a forma e a prazo).
     # consumidor_final: "sim"/"nao"/nil. nil = automatico (inferido pelo builder).
+    # outras_despesas/desconto/frete: valores da nota (R$). O builder os rateia
+    # por item nos campos ValorOutrasDespesas/ValorDesconto/ValorFrete, somando
+    # ao total da nota (nao distorcem o preco unitario do produto).
     def initialize(empresa:, itens:, cliente: nil,
                    info_adicional: nil, info_adicional_fisco: nil,
                    pagamentos: nil, transporte: nil, cobranca: nil,
-                   chave_referenciada: nil, consumidor_final: nil)
+                   chave_referenciada: nil, consumidor_final: nil,
+                   outras_despesas: nil, desconto: nil, frete: nil)
       @empresa = empresa
       @pessoa  = cliente
       cf = consumidor_final.to_s.strip.downcase
@@ -41,6 +49,10 @@ module Fiscal
       @transporte           = transporte.presence
       @cobranca             = cobranca.presence
       @chave_referenciada   = chave_referenciada.to_s.gsub(/\D/, "").presence
+      # Valores da nota (o builder le acrescimo/desconto/frete via duck typing).
+      @acrescimo            = outras_despesas.to_d
+      @desconto             = desconto.to_d
+      @frete                = frete.to_d
     end
 
     private

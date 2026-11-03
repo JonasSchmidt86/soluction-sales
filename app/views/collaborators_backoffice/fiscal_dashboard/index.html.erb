@@ -203,7 +203,8 @@
   <%# ---- Ultimos documentos ---- %>
   <div class="card mt-3">
     <div class="card-header"><strong>Últimos documentos</strong></div>
-    <div class="table-responsive">
+    <%# min-height para a tabela nao "encolher" quando ha poucos registros %>
+    <div class="table-responsive" style="min-height: 420px;">
       <table class="table table-sm table-striped mb-0 align-middle">
         <thead class="table-light">
           <tr>
@@ -238,8 +239,9 @@
               <td class="text-end" onclick="event.stopPropagation();">
                 <div class="dropdown">
                   <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                          data-bs-toggle="dropdown" aria-expanded="false">Ações</button>
-                  <ul class="dropdown-menu dropdown-menu-end">
+                          data-bs-toggle="dropdown" data-bs-display="static"
+                          aria-expanded="false">Ações</button>
+                  <ul class="dropdown-menu dropdown-menu-end" style="z-index: 1030;">
                     <li>
                       <%= link_to "Visualizar NF", collaborators_backoffice_notas_avulsa_path(d),
                                   class: "dropdown-item" %>
@@ -373,6 +375,22 @@
       row.addEventListener('click', function () {
         var href = row.getAttribute('data-href');
         if (href) window.location.href = href;
+      });
+    });
+
+    // ---- Dropdown "Ações" ----
+    // Com data-bs-display="static" o Bootstrap posiciona o menu via CSS normal
+    // (sem Popper/transform), relativo ao botao. O unico problema restante e o
+    // .table-responsive cortar o menu (overflow). Solucao: enquanto um menu
+    // estiver aberto, liberamos o overflow do wrapper; ao fechar, voltamos.
+    document.querySelectorAll('.table-responsive .dropdown').forEach(function (dd) {
+      var wrapper = dd.closest('.table-responsive');
+      if (!wrapper) return;
+      dd.addEventListener('show.bs.dropdown', function () {
+        wrapper.style.overflow = 'visible';
+      });
+      dd.addEventListener('hide.bs.dropdown', function () {
+        wrapper.style.overflow = '';
       });
     });
   })();

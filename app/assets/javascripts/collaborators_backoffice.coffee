@@ -10,7 +10,7 @@
 # //= require jquery-ui/ui/i18n/datepicker-pt-BR  
 
 //= require jquery/dist/jquery
-//= require bootstrap/dist/js/bootstrap
+//= require bootstrap/dist/js/bootstrap.bundle.min
 //= require bootstrap-growl-ifightcrime/jquery.bootstrap-growl
 //= require jquery-ui/ui/widgets/datepicker
 //= require jquery-ui/ui/i18n/datepicker-pt-BR

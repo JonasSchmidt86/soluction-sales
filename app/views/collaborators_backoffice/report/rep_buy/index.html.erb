@@ -94,11 +94,11 @@
                     <% somaRecebida += buy.valorPago; %>
                   <% end %>
                   <td class="align-middle">
-                    <div class="dropdown" >
-                      <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false",  style="width: 35px; ">
+                    <div class="dropdown" style="position: relative;">
+                      <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false",  style="width: 35px; ">
                         <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                       </button>
-                      <ul class="dropdown-menu" style="width: 50px;">
+                      <ul class="dropdown-menu dropdown-menu-acoes">
                         <li>
                           <%= link_to collaborators_backoffice_compra_path(buy.cod_compra), class:"dropdown-item btn btn-info btn-circle" do %>
                             <i class="fa fa-info", style="width: 35px;"></i>Informações

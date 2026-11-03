@@ -291,6 +291,13 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
         cod_funcionario:   current_collaborator.cod_funcionario,
         cod_pessoa_rascunho: venda.cod_pessoa,
         cod_operacao_fiscal_rascunho: operacao&.cod_operacao_fiscal,
+        # Valores da venda -> campos proprios da NF: acrescimo da venda vira
+        # "outras despesas" (vOutro) e o desconto vira desconto (vDesc). Sem
+        # isso o acrescimo/desconto da venda nao chegava ao rascunho e o vOutro
+        # saia zerado na NF. Frete fica 0 (a venda nao tem campo de frete).
+        outras_despesas:   [venda.acrescimo.to_d, 0].max,
+        desconto:          [venda.desconto.to_d, 0].max,
+        frete:             0,
         # Pre-preenche as parcelas (duplicatas) a partir das contas da venda.
         # Fica salvo, mas so VAI ao cliente se a forma de pagamento na NF for a
         # prazo (≠ 99/90). No default (99) a duplicata nao e enviada.
@@ -342,6 +349,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @cobranca_sel             = @documento.cobranca || {}
     @consumidor_final_sel     = @documento.consumidor_final
     @chave_referenciada_sel   = @documento.chave_referenciada
+    @outras_despesas_sel      = @documento.outras_despesas
+    @desconto_sel             = @documento.desconto
+    @frete_sel                = @documento.frete
     # Numero-base da fatura: da cobranca salva; senao o cod_vendaempresa da venda
     # vinculada (NF de venda). Usado pelo JS ao (re)gerar parcelas, para numerar
     # as duplicatas como <base>-1..n em vez de um numero generico.
@@ -671,7 +681,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     # o builder usa o padrao (1 pagamento = total) e nada e validado aqui.
     pags = Array(pagamentos)
     if pags.any?
-      total_nota = itens.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+      # Total LIQUIDO (itens - desconto + outras despesas + frete), igual ao vNF.
+      total_nota = total_itens_param
       soma_pag = pags.sum { |p| (p["valor"] || p[:valor]).to_d }
       if (soma_pag - total_nota).abs >= BigDecimal("0.01")
         mensagens << "Pagamentos (#{MoedaBr.format(soma_pag)}) não batem com o total da nota (#{MoedaBr.format(total_nota)})."
@@ -682,7 +693,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     # total da nota (a SEFAZ valida). So checa quando ha parcelas informadas.
     parcelas = cobranca.is_a?(Hash) ? Array(cobranca["parcelas"]) : []
     if parcelas.any?
-      total_nota = itens.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+      # Total LIQUIDO (itens - desconto + outras despesas + frete), igual ao vNF.
+      total_nota = total_itens_param
       soma_parc = parcelas.sum { |p| (p["valor"] || p[:valor]).to_d }
       if (soma_parc - total_nota).abs >= BigDecimal("0.01")
         mensagens << "Duplicatas (#{MoedaBr.format(soma_parc)}) não batem com o total da nota (#{MoedaBr.format(total_nota)})."
@@ -875,6 +887,9 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     @cobranca_sel             = cobranca_param || {}
     @consumidor_final_sel     = params[:consumidor_final]
     @chave_referenciada_sel   = params[:chave_referenciada]
+    @outras_despesas_sel      = params[:outras_despesas]
+    @desconto_sel             = params[:desconto]
+    @frete_sel                = params[:frete]
     @fatura_numero_base       = params[:fatura_numero].presence ||
                                 @cobranca_sel.dig("fatura", "numero")
     @itens_preenchidos = itens_raw
@@ -919,7 +934,11 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       transporte:           transporte_param,
       cobranca:             cobranca_param,
       consumidor_final:     (cf if %w[sim nao].include?(cf)),
-      chave_referenciada:   ((chave if chave&.length == 44)) # so grava chave de 44 digitos
+      chave_referenciada:   ((chave if chave&.length == 44)), # so grava chave de 44 digitos
+      # Valores da nota (R$). Negativos nao fazem sentido -> clamp em 0.
+      outras_despesas:      valor_outras_despesas_param,
+      desconto:             valor_desconto_param,
+      frete:                valor_frete_param
     }
   end
 
@@ -989,9 +1008,26 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     lista.presence
   end
 
-  # Total dos itens do form (base para o valor do pagamento quando em branco).
+  # Total LIQUIDO da nota do form (base para o valor do pagamento quando em
+  # branco). = soma bruta dos itens - desconto + outras despesas + frete, igual
+  # ao vNF que a SEFAZ calcula. Sem os valores, cai na soma bruta dos itens.
   def total_itens_param
-    itens_param.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+    bruto = itens_param.sum { |it| it[:quantidade].to_d * it[:valorunitario].to_d }
+    bruto - valor_desconto_param + valor_outras_despesas_param + valor_frete_param
+  end
+
+  # Valores da nota (R$) ja parseados e nao-negativos. Reaproveitados pelo
+  # pagamento padrao e pela validacao de soma.
+  def valor_outras_despesas_param
+    [MoedaBr.parse(params[:outras_despesas]).to_d, 0].max
+  end
+
+  def valor_desconto_param
+    [MoedaBr.parse(params[:desconto]).to_d, 0].max
+  end
+
+  def valor_frete_param
+    [MoedaBr.parse(params[:frete]).to_d, 0].max
   end
 
   # Dados de transporte do form (jsonb). A transportadora e uma Pessoa do
@@ -1041,7 +1077,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       transporte:           cab[:transporte],
       cobranca:             cab[:cobranca],
       consumidor_final:     cab[:consumidor_final],
-      chave_referenciada:   cab[:chave_referenciada]
+      chave_referenciada:   cab[:chave_referenciada],
+      outras_despesas:      cab[:outras_despesas],
+      desconto:             cab[:desconto],
+      frete:                cab[:frete]
     )
   end
 
@@ -1055,7 +1094,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       transporte:           documento.transporte,
       cobranca:             documento.cobranca,
       consumidor_final:     documento.consumidor_final,
-      chave_referenciada:   documento.chave_referenciada
+      chave_referenciada:   documento.chave_referenciada,
+      outras_despesas:      documento.outras_despesas,
+      desconto:             documento.desconto,
+      frete:                documento.frete
     }
   end
 
@@ -1069,7 +1111,10 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       transporte:           cab[:transporte],
       cobranca:             cab[:cobranca],
       consumidor_final:     cab[:consumidor_final],
-      chave_referenciada:   cab[:chave_referenciada]
+      chave_referenciada:   cab[:chave_referenciada],
+      outras_despesas:      cab[:outras_despesas],
+      desconto:             cab[:desconto],
+      frete:                cab[:frete]
     }
   end
 

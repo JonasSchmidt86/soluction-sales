@@ -43,9 +43,9 @@
           <%= hidden_field_tag :modelo, @modelo %>
           <% if editando_rascunho %><%= hidden_field_tag :rascunho_id, @documento.cod_documento_fiscal %><% end %>
 
-          <%# ---- Operacao (natureza) e Finalidade ---- %>
-          <div class="row mb-3">
-            <div class="col-md-6">
+          <%# ---- Linha 1: Operacao | Consumidor final | Finalidade ---- %>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
               <div class="form-floating">
                 <%= select_tag :cod_operacao_fiscal,
                       options_from_collection_for_select(@operacoes, :cod_operacao_fiscal, :nome, @operacao_padrao&.cod_operacao_fiscal),
@@ -53,7 +53,23 @@
                 <label>Operação (natureza)</label>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <div class="form-floating">
+                <%= select_tag :consumidor_final,
+                      options_for_select([["Automático (pelo destinatário)", ""],
+                                          ["Sim", "sim"], ["Não", "nao"]],
+                                         @consumidor_final_sel.to_s),
+                      id: "consumidorFinal", class: "form-select" %>
+                <%# Dica (texto antigo) agora em tooltip no icone, liberando a linha. %>
+                <label>
+                  Operação com consumidor final?
+                  <i class="fa fa-circle-question text-muted ms-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     title="Consumidor final = quem compra para uso próprio (não para revenda). Destinatário pessoa física ou PJ não contribuinte → Sim."></i>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
               <div class="form-floating">
                 <%= select_tag :finalidade,
                       options_for_select(@finalidades.map { |cod, nome| ["#{cod} - #{nome}", cod] }, (@finalidade_sel.presence || 1).to_i),
@@ -63,38 +79,25 @@
             </div>
           </div>
 
-          <%# ---- Operacao com consumidor final? (indFinal) ---- %>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="form-floating">
-                <%= select_tag :consumidor_final,
-                      options_for_select([["Automático (pelo destinatário)", ""],
-                                          ["Sim", "sim"], ["Não", "nao"]],
-                                         @consumidor_final_sel.to_s),
-                      id: "consumidorFinal", class: "form-select" %>
-                <label>Operação com consumidor final?</label>
-              </div>
-              <small class="text-muted">
-                Consumidor final = quem compra para uso próprio (não para revenda).
-                Destinatário pessoa física ou PJ não contribuinte → "Sim".
-              </small>
-            </div>
-          </div>
-
-          <%# ---- Destinatario ---- %>
+          <%# ---- Linha 2: Destinatario (mesmo estilo form-floating do topo) ---- %>
           <div class="mb-3">
-            <label class="form-label fw-semibold">
-              Destinatário
-              <span id="destObrigatorio" class="text-danger" style="<%= 'display:none;' unless @modelo == 55 %>">*</span>
-              <span id="destOpcional" class="text-muted" style="<%= 'display:none;' if @modelo == 55 %>">(opcional)</span>
-            </label>
             <div class="position-relative">
+              <%# form-floating + input-group: label flutuante dentro do campo e %>
+              <%# o botao Limpar ao lado (padrao Bootstrap 5.2). %>
               <div class="input-group">
-                <%# Na edicao/reexibicao, preenche o campo visivel com o nome do %>
-                <%# destinatario ja escolhido (o hidden sozinho nao aparece na tela). %>
-                <input type="text" id="clienteBusca" class="form-control"
-                       placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off"
-                       value="<%= @nome_pessoa_sel %>">
+                <div class="form-floating">
+                  <%# Na edicao/reexibicao, preenche o campo visivel com o nome do %>
+                  <%# destinatario ja escolhido (o hidden sozinho nao aparece na tela). %>
+                  <%# text-truncate: nome longo vira "..." em vez de quebrar. %>
+                  <input type="text" id="clienteBusca" class="form-control text-truncate"
+                         placeholder="Nome ou CPF/CNPJ — digite para buscar" autocomplete="off"
+                         value="<%= @nome_pessoa_sel %>">
+                  <label for="clienteBusca">
+                    Destinatário
+                    <span id="destObrigatorio" class="text-danger" style="<%= 'display:none;' unless @modelo == 55 %>">*</span>
+                    <span id="destOpcional" class="text-muted" style="<%= 'display:none;' if @modelo == 55 %>">(opcional)</span>
+                  </label>
+                </div>
                 <%# Limpa o destinatario manualmente (util na NFC-e sem destinatario). %>
                 <button type="button" class="btn btn-outline-secondary" id="btnLimparDestinatario" title="Limpar destinatário">
                   <i class="fa fa-xmark"></i> Limpar
@@ -103,7 +106,42 @@
               <%= hidden_field_tag :cod_pessoa, @cod_pessoa_sel, id: "codPessoa" %>
               <div id="clienteLista" class="list-group position-absolute w-100" style="display:none; z-index:1000;"></div>
             </div>
-            <small id="clienteSelecionado" class="text-success"><%= "Selecionado: #{@nome_pessoa_sel}" if @nome_pessoa_sel.present? %></small>
+          </div>
+
+          <%# ---- Linha 3: Valores da nota (mesmo estilo form-floating do topo) ---- %>
+          <%# Outras despesas (vOutro), Desconto (vDesc) e Frete (vFrete) sao     %>
+          <%# VALORES monetarios da nota. NAO confundir com a aba Transporte      %>
+          <%# (dados logisticos da transportadora, sem valor).                    %>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" name="outras_despesas" id="outrasDespesas" class="form-control valor-nota"
+                       inputmode="numeric" placeholder="0,00"
+                       value="<%= @outras_despesas_sel.present? ? MoedaBr.format(@outras_despesas_sel) : '' %>">
+                <label for="outrasDespesas">Outras despesas (R$)</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" name="desconto" id="descontoNota" class="form-control valor-nota"
+                       inputmode="numeric" placeholder="0,00"
+                       value="<%= @desconto_sel.present? ? MoedaBr.format(@desconto_sel) : '' %>">
+                <label for="descontoNota">Desconto (R$)</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" name="frete" id="freteNota" class="form-control valor-nota"
+                       inputmode="numeric" placeholder="0,00"
+                       value="<%= @frete_sel.present? ? MoedaBr.format(@frete_sel) : '' %>">
+                <label for="freteNota">
+                  Frete (R$)
+                  <i class="fa fa-circle-question text-muted ms-1"
+                     data-bs-toggle="tooltip" data-bs-placement="top"
+                     title="VALOR do frete (vFrete), entra no total. A transportadora/veículo ficam na aba Transporte."></i>
+                </label>
+              </div>
+            </div>
           </div>
 
           <%# ---- Abas: Produtos / Pagamento / Transporte ---- %>
@@ -583,7 +621,7 @@
 
   cliInput.addEventListener('input', function () {
     var q = this.value.trim();
-    cliHidden.value = ''; cliSel.textContent = '';
+    cliHidden.value = ''; if (cliSel) cliSel.textContent = '';
     validarNota(); // limpou/alterou o destinatario -> revalida
     if (q.length < 2) { cliLista.style.display = 'none'; return; }
     fetch(base + 'buscas/buscar_pessoas?query=' + encodeURIComponent(q))
@@ -597,7 +635,7 @@
           it.addEventListener('click', function () {
             cliHidden.value = p.cod_pessoa;
             cliInput.value = p.nome;
-            cliSel.textContent = 'Selecionado: ' + p.nome;
+            if (cliSel) cliSel.textContent = 'Selecionado: ' + p.nome;
             cliLista.style.display = 'none';
             // UF do destinatario muda o CFOP (5/6/7) -> recalcula tudo.
             // (forcarPerfil=false: preserva o perfil escolhido em cada linha.)
@@ -613,15 +651,27 @@
   function parseBR(v) { return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0; }
   function fmtBR(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
+  // Valores da nota (outras despesas / desconto / frete). Entram no total.
+  function valorNota(id) {
+    var el = document.getElementById(id);
+    return el ? parseBR(el.value) : 0;
+  }
+
   function recalc() {
-    var total = 0;
+    var totalItens = 0;
     document.querySelectorAll('.item-row').forEach(function (row) {
       var q = parseBR(row.querySelector('.qtd').value);
       var v = parseBR(row.querySelector('.vlunit').value);
       var t = q * v;
       row.querySelector('.total-item').textContent = 'R$ ' + fmtBR(t);
-      total += t;
+      totalItens += t;
     });
+    // Total da nota = itens - desconto + outras despesas + frete (igual ao vNF).
+    var outras = valorNota('outrasDespesas');
+    var desc   = valorNota('descontoNota');
+    var frete  = valorNota('freteNota');
+    var total  = totalItens - desc + outras + frete;
+    if (total < 0) total = 0;
     document.getElementById('totalNota').textContent = fmtBR(total);
   }
 
@@ -903,10 +953,52 @@
     preenchidos.forEach(function (i) { addItem(i); });
     // Repopula destinatario selecionado (so o cod; o nome o usuario reconhece).
     var codSel = codPessoaHidden ? codPessoaHidden.value : '';
-    if (codSel) cliSel.textContent = 'Destinatário selecionado (cód ' + codSel + ')';
+    if (codSel && cliSel) cliSel.textContent = 'Destinatário selecionado (cód ' + codSel + ')';
   } else {
     addItem();
   }
+  // Mascara de moeda BR para os campos de valores: aceita SO digitos e formata
+  // enquanto digita (estilo "da direita pra esquerda": os 2 ultimos digitos sao
+  // os centavos). Ex.: digitar 1,2,3,4,5 => 1,00 / 12 => 0,12 / 123 => 1,23 /
+  // 12345 => 123,45. Vazio continua vazio (usa default/zero).
+  function formatarMoedaDigitando(str) {
+    var digitos = String(str).replace(/\D/g, '');
+    if (digitos === '') return '';
+    // Remove zeros a esquerda, mas mantem ao menos 1 digito (p/ virar centavos).
+    digitos = digitos.replace(/^0+(?=\d)/, '');
+    while (digitos.length < 3) { digitos = '0' + digitos; } // garante ,XX
+    var centavos = digitos.slice(-2);
+    var inteiros = digitos.slice(0, -2).replace(/^0+(?=\d)/, '');
+    // Separador de milhar no inteiro.
+    inteiros = inteiros.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return inteiros + ',' + centavos;
+  }
+
+  // Campos de valores da nota: mascara ao digitar + recalcula total e revalida
+  // (o pagamento padrao e o total mudam quando ha desconto/outras/frete).
+  document.querySelectorAll('.valor-nota').forEach(function (el) {
+    el.addEventListener('input', function () {
+      var pos = this.selectionStart;
+      var antes = this.value.length;
+      this.value = formatarMoedaDigitando(this.value);
+      // Mantem o cursor no fim (mascara reescreve o campo inteiro).
+      var depois = this.value.length;
+      try { this.setSelectionRange(this.value.length, this.value.length); } catch (e) {}
+      recalc(); validarNota();
+    });
+    // Ao focar com conteudo "0,00" vazio-equivalente, nao faz nada especial.
+    el.addEventListener('blur', function () {
+      if (this.value !== '') this.value = formatarMoedaDigitando(this.value);
+    });
+  });
+
+  // Tooltips do Bootstrap (dicas de consumidor final e valores).
+  if (window.bootstrap && bootstrap.Tooltip) {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  }
+
   reindex(); recalc(); validarNota(); // estado inicial do botao Emitir
 
   // ---------- Enter NAO submete o form ----------
