@@ -517,9 +517,8 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       "Segue a sua nota fiscal nº #{@documento.numero} da #{empresa_nome}.",
       "",
       "DANFE (PDF): #{nota_publica_url(token: token)}",
-      "XML: #{nota_publica_xml_url(token: token)}",
       "",
-      "Os links ficam disponíveis por 30 dias."
+      "O link fica disponível por 30 dias."
     ].join("\n")
 
     # Grava o celular no cadastro so quando esta vazio (o "atualizar" fica no botao).
