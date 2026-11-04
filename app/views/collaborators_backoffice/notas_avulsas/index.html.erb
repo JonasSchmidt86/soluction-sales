@@ -86,7 +86,30 @@
                   <td class="text-end">
                     <%= link_to "Ver", collaborators_backoffice_notas_avulsa_path(d), class: "btn btn-sm btn-outline-primary" %>
                     <% if d.autorizada? && d.danfe_base64.present? %>
-                      <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
+                      <% if d.nfce? %>
+                        <%# NFC-e e cupom de balcao: nao se envia ao cliente, so imprime (abre o DANFCE e chama a impressao). %>
+                        <%= link_to danfe_collaborators_backoffice_notas_avulsa_path(d, imprimir: 1), target: "_blank",
+                                    class: "btn btn-sm btn-outline-secondary", title: "Imprimir cupom" do %>
+                          <i class="fa fa-print me-1"></i> Imprimir
+                        <% end %>
+                      <% else %>
+                        <%= link_to "DANFE", danfe_collaborators_backoffice_notas_avulsa_path(d), target: "_blank", class: "btn btn-sm btn-outline-info" %>
+                      <% end %>
+                    <% end %>
+                    <%# NF-e autorizada: enviar ao cliente por WhatsApp (link, 30 dias) ou e-mail (DANFE+XML anexados). %>
+                    <% if d.autorizada? && d.nfe? %>
+                      <% pessoa_envio = (@pessoas_por_cod || {})[d.cod_pessoa_destinatario] || d.destinatario %>
+                      <button type="button" class="btn btn-sm btn-outline-success"
+                              data-bs-toggle="modal" data-bs-target="#modalEnviarNota"
+                              data-numero="<%= d.numero %>"
+                              data-cliente="<%= pessoa_envio&.nome %>"
+                              data-celular="<%= pessoa_envio&.celular.presence || pessoa_envio&.telefone %>"
+                              data-email="<%= pessoa_envio&.email %>"
+                              data-url-whatsapp="<%= enviar_whatsapp_collaborators_backoffice_notas_avulsa_path(d, filtros_index) %>"
+                              data-url-email="<%= enviar_email_collaborators_backoffice_notas_avulsa_path(d, filtros_index) %>"
+                              data-url-contato="<%= atualizar_contato_destinatario_collaborators_backoffice_notas_avulsa_path(d) %>">
+                        <i class="fa-brands fa-whatsapp me-1"></i> Enviar
+                      </button>
                     <% end %>
                     <%# Em elaboracao (rascunho, erro de validacao ou rejeitada %>
                     <%# pela SEFAZ): editar e reenviar. Rejeitada = sem valor %>
@@ -137,3 +160,235 @@
     </div>
   </main>
 </div>
+
+<%# Modal unico "Enviar nota": os dados da linha clicada entram via data-* do botao. %>
+<div class="modal fade" id="modalEnviarNota" tabindex="-1" aria-labelledby="modalEnviarNotaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white px-4 py-3">
+        <h5 class="modal-title" id="modalEnviarNotaLabel">Enviar nota fiscal</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <%= form_with url: "#", method: :post, local: true, html: { id: "formEnviarNota", novalidate: true, data: { turbo: false } } do %>
+        <div class="modal-body px-4 py-3">
+
+          <p class="mb-3">
+            NF-e <strong id="enviarNotaNumero"></strong>
+            <span class="text-muted" id="enviarNotaCliente"></span>
+          </p>
+
+          <%# input-group: botao "Salvar" ao lado grava o valor no cadastro da pessoa. %>
+          <div class="mb-3">
+            <div class="input-group">
+              <div class="form-floating">
+                <input type="text" id="enviarNotaTelefone" name="telefone" class="form-control no-upper phone_with_ddd"
+                       inputmode="tel" autocomplete="off" placeholder="(45) 9 9999-9999">
+                <label for="enviarNotaTelefone">Celular (WhatsApp)</label>
+              </div>
+              <button type="button" id="salvarCelular" class="btn btn-outline-secondary"
+                      title="Salvar celular no cadastro do cliente">
+                <i class="fa fa-floppy-disk"></i>
+              </button>
+            </div>
+            <div id="erroEnviarTelefone" class="invalid-feedback d-block d-none" role="alert">Informe um celular válido, com DDD.</div>
+          </div>
+
+          <div class="mb-0">
+            <div class="input-group">
+              <div class="form-floating">
+                <input type="email" id="enviarNotaEmail" name="email" class="form-control"
+                       autocomplete="off" placeholder="cliente@exemplo.com">
+                <label for="enviarNotaEmail">E-mail</label>
+              </div>
+              <button type="button" id="salvarEmail" class="btn btn-outline-secondary"
+                      title="Salvar e-mail no cadastro do cliente">
+                <i class="fa fa-floppy-disk"></i>
+              </button>
+            </div>
+            <div id="erroEnviarEmail" class="invalid-feedback d-block d-none" role="alert">Informe um e-mail válido.</div>
+            <div class="form-text">Envia o DANFE (PDF) e o XML anexados.</div>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-end gap-2 px-4 py-3">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          <button type="submit" id="btnEnviarEmail" class="btn btn-sm btn-outline-primary">
+            <i class="fa fa-envelope me-1"></i> Enviar por e-mail
+          </button>
+          <button type="submit" id="btnEnviarWhatsapp" class="btn btn-sm btn-success" formtarget="_blank">
+            <i class="fa-brands fa-whatsapp me-1"></i> Enviar link
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var modal    = document.getElementById('modalEnviarNota');
+    var form     = document.getElementById('formEnviarNota');
+    var telefone = document.getElementById('enviarNotaTelefone');
+    var email    = document.getElementById('enviarNotaEmail');
+    var btnZap   = document.getElementById('btnEnviarWhatsapp');
+    var btnMail  = document.getElementById('btnEnviarEmail');
+    var salvarTel  = document.getElementById('salvarCelular');
+    var salvarMail = document.getElementById('salvarEmail');
+    var erroTel  = document.getElementById('erroEnviarTelefone');
+    var erroMail = document.getElementById('erroEnviarEmail');
+    if (!modal || !form) { return; }
+
+    var token = (document.querySelector('meta[name="csrf-token"]') || {}).content;
+    var urlContato = null;         // URL de atualizacao da pessoa (por nota)
+    var origCelular = '', origEmail = ''; // o que esta no cadastro
+
+    function marcar(campo, erroEl, invalido) {
+      campo.classList.toggle('is-invalid', invalido);
+      campo.setAttribute('aria-invalid', invalido ? 'true' : 'false');
+      if (erroEl) { erroEl.classList.toggle('d-none', !invalido); }
+    }
+    function telefoneValido() { return telefone.value.replace(/\D/g, '').length >= 10; }
+    function emailValido()    { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()); }
+
+    // Preenche um input e dispara "input" para a mascara (jquery-mask) formatar.
+    function setCampo(input, valor) {
+      input.value = valor || '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Preenche o modal a partir dos data-* do botao clicado.
+    function preencher(origem) {
+      if (!origem) { return; }
+      var elNum = document.getElementById('enviarNotaNumero');
+      var elCli = document.getElementById('enviarNotaCliente');
+      if (elNum) { elNum.textContent = origem.dataset.numero || ''; }
+      if (elCli) { elCli.textContent = origem.dataset.cliente ? '- ' + origem.dataset.cliente : ''; }
+      origCelular = origem.dataset.celular || '';
+      origEmail   = origem.dataset.email || '';
+      setCampo(telefone, origCelular);
+      setCampo(email, origEmail);
+      urlContato = origem.dataset.urlContato || null;
+      btnZap.setAttribute('formaction', origem.dataset.urlWhatsapp || '');
+      btnMail.setAttribute('formaction', origem.dataset.urlEmail || '');
+      marcar(telefone, erroTel, false);
+      marcar(email, erroMail, false);
+    }
+
+    // Grava um campo no cadastro da pessoa via fetch (botao "Salvar"/"Atualizar").
+    function salvarContato(campo, valor, botao) {
+      if (!urlContato) { return; }
+      botao.disabled = true;
+      fetch(urlContato, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token, 'Accept': 'application/json' },
+        body: JSON.stringify({ campo: campo, valor: valor })
+      })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        botao.disabled = false;
+        if (res.ok && res.j.ok) {
+          if (campo === 'celular') { origCelular = valor; } else { origEmail = valor; }
+          // Feedback visual: vira check verde por um instante, depois volta ao normal.
+          botao.classList.remove('btn-outline-secondary');
+          botao.classList.add('btn-success');
+          botao.innerHTML = '<i class="fa fa-check"></i>';
+          setTimeout(function () {
+            botao.classList.add('btn-outline-secondary');
+            botao.classList.remove('btn-success');
+            botao.innerHTML = '<i class="fa fa-floppy-disk"></i>';
+          }, 1200);
+        } else {
+          alert((res.j && res.j.erro) || 'Não foi possível salvar.');
+        }
+      })
+      .catch(function () { botao.disabled = false; alert('Falha de conexão ao salvar.'); });
+    }
+
+    // Preenche no evento do Bootstrap (quando disponivel)...
+    modal.addEventListener('show.bs.modal', function (evento) { preencher(evento.relatedTarget); });
+    // ...e tambem no clique do gatilho, como fallback (build sem o bundle JS).
+    document.querySelectorAll('[data-bs-target="#modalEnviarNota"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { preencher(btn); });
+    });
+
+    salvarTel.addEventListener('click', function () {
+      if (telefoneValido()) { salvarContato('celular', telefone.value.trim(), salvarTel); }
+    });
+    salvarMail.addEventListener('click', function () {
+      if (emailValido()) { salvarContato('email', email.value.trim(), salvarMail); }
+    });
+
+    // Fecha o modal e LIMPA o backdrop escuro manualmente. O submit do botao do
+    // WhatsApp abre a URL em outra aba (formtarget=_blank) e a pagina atual NAO
+    // navega; sem isso o overlay do Bootstrap ficava preso na tela.
+    function fecharModalLimpo() {
+      try {
+        var inst = (window.bootstrap && bootstrap.Modal.getInstance(modal));
+        if (inst) { inst.hide(); }
+      } catch (e) { /* sem bundle JS: cai no fallback abaixo */ }
+      // Fallback/garantia: remove as classes/elementos que deixam a tela escura.
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+      document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
+    }
+
+    // Cada botao de envio valida so o campo que usa.
+    btnZap.addEventListener('click', function (evento) {
+      var invalido = !telefoneValido();
+      marcar(telefone, erroTel, invalido);
+      if (invalido) { evento.preventDefault(); telefone.focus(); return; }
+      // Deixa o submit abrir o WhatsApp na nova aba e, logo apos, limpa o modal.
+      setTimeout(fecharModalLimpo, 400);
+    });
+    btnMail.addEventListener('click', function (evento) {
+      var invalido = !emailValido();
+      marcar(email, erroMail, invalido);
+      if (invalido) { evento.preventDefault(); email.focus(); }
+    });
+
+    // Enter nos campos nao envia nada: o usuario escolhe o canal pelo botao.
+    form.addEventListener('keydown', function (evento) {
+      if (evento.key === 'Enter' && evento.target.tagName === 'INPUT') { evento.preventDefault(); }
+    });
+    telefone.addEventListener('input', function () { if (telefoneValido()) { marcar(telefone, erroTel, false); } });
+
+    // Feedback do e-mail ENQUANTO digita: vazio = neutro; valido = verde (is-valid);
+    // invalido = vermelho (is-invalid) com a mensagem. Tambem bloqueia os botoes
+    // que dependem do e-mail (enviar por e-mail / salvar e-mail) ate ficar valido.
+    function validarEmailAoVivo() {
+      var v = email.value.trim();
+      if (v === '') {
+        email.classList.remove('is-valid', 'is-invalid');
+        erroMail.classList.add('d-none');
+      } else if (emailValido()) {
+        email.classList.add('is-valid');
+        email.classList.remove('is-invalid');
+        erroMail.classList.add('d-none');
+      } else {
+        email.classList.add('is-invalid');
+        email.classList.remove('is-valid');
+        erroMail.classList.remove('d-none');
+      }
+      var invalido = v !== '' && !emailValido();
+      btnMail.disabled   = invalido;
+      salvarMail.disabled = invalido;
+    }
+    email.addEventListener('input', validarEmailAoVivo);
+    // Revalida ao abrir o modal (o preencher dispara "input", mas garantimos aqui).
+    modal.addEventListener('shown.bs.modal', validarEmailAoVivo);
+
+    // Se a pagina for restaurada do cache do navegador (voltar/avancar) com um
+    // backdrop preso de uma visita anterior, limpa-o ao mostrar a pagina.
+    window.addEventListener('pageshow', function () {
+      if (!modal.classList.contains('show')) {
+        document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+      }
+    });
+  })();
+</script>

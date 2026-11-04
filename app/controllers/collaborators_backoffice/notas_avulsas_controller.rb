@@ -1,6 +1,8 @@
 class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeController
   before_action :autorizar_fiscal!
-  before_action :set_documento, only: [:show, :danfe, :cancelar, :destroy, :edit, :update, :emitir]
+  before_action :set_documento, only: [:show, :danfe, :cancelar, :destroy, :edit, :update, :emitir,
+                                       :enviar_whatsapp, :enviar_email, :atualizar_contato_destinatario]
+  before_action :exigir_nfe_autorizada!, only: [:enviar_whatsapp, :enviar_email]
 
   MODELOS = [55, 65].freeze
 
@@ -10,7 +12,7 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   def index
     escopo = DocumentoFiscal
              .where(cod_empresa: current_collaborator.cod_empresa)
-             .includes(:venda) # evita N+1 ao exibir cod_vendaempresa
+             .includes(:venda, :compra) # evita N+1 ao exibir cod_vendaempresa / achar o destinatario
 
     # 🔎 Tipo de nota (NF-e 55 / NFC-e 65). "" = todos.
     @tipo = params[:tipo].to_s
@@ -54,6 +56,11 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
       else
         escopo.page(params[:page]).per(per_page)
       end
+
+    # Destinatarios das NF-e autorizadas da pagina (uma query so) para pre-preencher
+    # celular/e-mail no modal "Enviar" sem N+1.
+    cods = @documentos.select { |d| d.autorizada? && d.nfe? }.map(&:cod_pessoa_destinatario).compact.uniq
+    @pessoas_por_cod = Pessoa.where(cod_pessoa: cods).index_by(&:cod_pessoa)
   end
 
   # Formulario de emissao avulsa. modelo = 55 (NF-e, default) ou 65 (NFC-e).
@@ -471,12 +478,120 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
     # real pelos primeiros bytes e serve com o Content-Type certo (senao o
     # navegador tenta abrir HTML como PDF e falha).
     tipo, ext = danfe_tipo_extensao(conteudo)
+
+    # Botao "Imprimir" da NFC-e: o DANFCE e HTML; injeta a chamada de impressao
+    # para o dialogo abrir assim que a pagina carregar.
+    if params[:imprimir].present? && tipo == "text/html"
+      script = "<script>window.addEventListener('load', function () { window.print(); });</script>"
+      conteudo = conteudo.match?(%r{</body>}i) ? conteudo.sub(%r{</body>}i) { script + "</body>" } : conteudo + script
+    end
+
     # no-store: o navegador nao reusa resposta antiga quando o Content-Type
     # muda (NFC-e 65 = HTML, NF-e 55 = PDF), evitando aba em branco por cache.
     response.headers["Cache-Control"] = "no-store"
     send_data conteudo,
               filename: "danfe-avulsa-#{@documento.cod_documento_fiscal}.#{ext}",
               type: tipo, disposition: "inline"
+  end
+
+  # POST .../notas_avulsas/:id/enviar_whatsapp (telefone=)
+  # Abre o WhatsApp (nova aba) com o telefone do cliente e uma mensagem com os
+  # LINKS de download do DANFE e do XML (validos por 30 dias). O WhatsApp nao
+  # permite anexar arquivo por link, por isso vai o link; o anexo real e o e-mail.
+  def enviar_whatsapp
+    telefone = params[:telefone].to_s.gsub(/\D/, "")
+    # Aceita com ou sem o 55 do pais: DDD+numero = 10/11 digitos (12/13 com 55).
+    if telefone.length < 10
+      redirect_to collaborators_backoffice_notas_avulsas_path(filtros_index),
+                  alert: "Informe um celular válido, com DDD." and return
+    end
+
+    pessoa = @documento.destinatario
+    token  = @documento.token_publico
+    empresa_nome = @documento.empresa&.nome.to_s.strip.presence || "Móveis Rosa"
+    # Razao social de PJ nao serve de saudacao; so usa o primeiro nome de pessoa fisica.
+    primeiro_nome = pessoa && !pessoa.pessoa_juridica? ? pessoa.nome.to_s.split.first.to_s.capitalize : nil
+
+    mensagem = [
+      primeiro_nome.present? ? "Olá, #{primeiro_nome}!" : "Olá!",
+      "Segue a sua nota fiscal nº #{@documento.numero} da #{empresa_nome}.",
+      "",
+      "DANFE (PDF): #{nota_publica_url(token: token)}",
+      "XML: #{nota_publica_xml_url(token: token)}",
+      "",
+      "Os links ficam disponíveis por 30 dias."
+    ].join("\n")
+
+    # Grava o celular no cadastro so quando esta vazio (o "atualizar" fica no botao).
+    preencher_contato_se_vazio(pessoa, :celular, params[:telefone].to_s.strip) if pessoa&.celular.blank?
+
+    registrar_envio_whatsapp(pessoa, telefone)
+    redirect_to helpers.whatsapp_link(telefone, mensagem), allow_other_host: true
+  end
+
+  # PATCH .../notas_avulsas/:id/atualizar_contato_destinatario (campo=, valor=)
+  # Salva/atualiza celular OU e-mail no cadastro da pessoa da nota. Acionado pelo
+  # botao ao lado do campo no modal (quando o valor digitado difere do cadastro).
+  # Responde JSON (chamado via fetch, sem recarregar o modal).
+  def atualizar_contato_destinatario
+    unless @documento.nfe? && @documento.autorizada?
+      return render json: { ok: false, erro: "Nota inválida para esta ação." }, status: :unprocessable_entity
+    end
+
+    pessoa = @documento.destinatario
+    return render json: { ok: false, erro: "Nota sem destinatário cadastrado." }, status: :unprocessable_entity if pessoa.nil?
+
+    campo = params[:campo].to_s
+    valor = params[:valor].to_s.strip
+    unless %w[celular email].include?(campo)
+      return render json: { ok: false, erro: "Campo inválido." }, status: :unprocessable_entity
+    end
+    if campo == "email" && !valor.match?(URI::MailTo::EMAIL_REGEXP)
+      return render json: { ok: false, erro: "E-mail inválido." }, status: :unprocessable_entity
+    end
+    if campo == "celular" && valor.gsub(/\D/, "").length < 10
+      return render json: { ok: false, erro: "Celular inválido (informe com DDD)." }, status: :unprocessable_entity
+    end
+
+    pessoa.update_column(campo, valor) # pula validacao de CPF/CNPJ (legado)
+    render json: { ok: true, campo: campo, valor: valor }
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#atualizar_contato_destinatario] doc #{@documento&.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    render json: { ok: false, erro: "Falha ao salvar: #{e.message}" }, status: :unprocessable_entity
+  end
+
+  # POST .../notas_avulsas/:id/enviar_email (email=)
+  # Envia o DANFE (PDF) e o XML ANEXADOS por e-mail ao cliente.
+  def enviar_email
+    destino_lista = collaborators_backoffice_notas_avulsas_path(filtros_index)
+    email = params[:email].to_s.strip
+
+    unless email.match?(URI::MailTo::EMAIL_REGEXP)
+      redirect_to destino_lista, alert: "Informe um e-mail válido." and return
+    end
+
+    arquivos = Fiscal::ArquivosNota.new(@documento)
+    pdf = arquivos.danfe_pdf
+    if pdf.nil?
+      redirect_to destino_lista, alert: "DANFE indisponível para esta nota. Tente novamente em instantes." and return
+    end
+
+    pessoa = @documento.destinatario
+    DocumentoFiscalMailer.enviar_nota(
+      documento:      @documento,
+      para:           email,
+      nome_cliente:   (pessoa && !pessoa.pessoa_juridica? ? pessoa.nome.to_s.split.first.to_s.capitalize : nil),
+      danfe_pdf:      pdf,
+      xml:            arquivos.xml,
+      responder_para: current_collaborator.email
+    ).deliver_now
+
+    salvo = preencher_contato_se_vazio(pessoa, :email, email)
+    aviso = salvo ? " E-mail salvo no cadastro do cliente." : ""
+    redirect_to destino_lista, notice: "Nota #{@documento.numero} enviada para #{email} (DANFE e XML anexados).#{aviso}"
+  rescue => e
+    Rails.logger.error("[NotasAvulsas#enviar_email] doc #{@documento&.cod_documento_fiscal}: #{e.class} - #{e.message}")
+    redirect_to destino_lista, alert: "Falha ao enviar o e-mail: #{e.message}"
   end
 
   # Cancela a NF avulsa autorizada.
@@ -541,6 +656,48 @@ class CollaboratorsBackoffice::NotasAvulsasController < CollaboratorsBackofficeC
   helper_method :filtros_index
   def filtros_index
     params.to_unsafe_h.slice(*FILTROS_INDEX).compact_blank
+  end
+
+  # Envio por WhatsApp/e-mail so para NF-e (55) AUTORIZADA. NFC-e nao e enviada
+  # (so impressa) e nota cancelada/rascunho nao tem DANFE valido para o cliente.
+  def exigir_nfe_autorizada!
+    return if @documento.nfe? && @documento.autorizada?
+
+    redirect_to collaborators_backoffice_notas_avulsas_path(filtros_index),
+                alert: "Só é possível enviar NF-e (modelo 55) autorizada."
+  end
+
+  # Grava UM campo de contato (celular/email) no cadastro da pessoa SO quando o
+  # cadastro esta VAZIO — o preenchimento automatico nunca sobrescreve um valor
+  # ja existente (para isso ha o botao "Atualizar" via action dedicada).
+  # Usa update_column para NAO disparar as validacoes de CPF/CNPJ (clientes
+  # legados podem ter CPF ausente/invalido). Retorna true se gravou.
+  def preencher_contato_se_vazio(pessoa, campo, valor)
+    return false if pessoa.nil? || valor.blank?
+    return false if pessoa.public_send(campo).present? # ja tem -> nao mexe
+
+    pessoa.update_column(campo, valor)
+    true
+  rescue => e
+    Rails.logger.warn("[NotasAvulsas#preencher_contato_se_vazio] pessoa #{pessoa&.cod_pessoa} #{campo}: #{e.class} - #{e.message}")
+    false
+  end
+
+  # Registra o envio (clique) em whatsapp_envios, como no aniversario: o sistema
+  # nao confirma a entrega, entao grava o inicio do envio. Nunca derruba o envio.
+  def registrar_envio_whatsapp(pessoa, telefone)
+    return if pessoa.nil?
+
+    WhatsappEnvio.create!(
+      cod_empresa:     current_collaborator.cod_empresa,
+      cod_pessoa:      pessoa.cod_pessoa,
+      cod_funcionario: current_collaborator.cod_funcionario,
+      canal:           WhatsappEnvio::CANAL_NOTA_FISCAL,
+      telefone:        telefone,
+      enviado_em:      Time.current
+    )
+  rescue => e
+    Rails.logger.warn("[NotasAvulsas#registrar_envio_whatsapp] doc #{@documento&.cod_documento_fiscal}: #{e.class} - #{e.message}")
   end
 
   # Converte "dd/mm/yyyy" (ou ISO yyyy-mm-dd) em Date; nil se invalido/vazio.

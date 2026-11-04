@@ -1,0 +1,12 @@
+<p>Olá<%= ", #{@nome_cliente}" if @nome_cliente.present? %>!</p>
+<p>
+  Segue em anexo a nota fiscal <strong>nº <%= @numero %></strong> da <%= @empresa_nome %>:
+</p>
+<ul>
+  <li>DANFE (PDF)</li>
+  <li>XML da NF-e</li>
+</ul>
+<p>Guarde o XML: ele é o documento fiscal oficial da compra.</p>
+<p style="color:#888;font-size:12px;">
+  E-mail enviado automaticamente pelo sistema. Para falar com a loja, responda esta mensagem.
+</p>

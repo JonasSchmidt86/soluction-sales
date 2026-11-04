@@ -10,4 +10,5 @@ class WhatsappEnvio < ApplicationRecord
   scope :recentes,    -> { order(enviado_em: :desc) }
 
   CANAL_ANIVERSARIO = 'aniversario'.freeze
+  CANAL_NOTA_FISCAL = 'nota_fiscal'.freeze
 end

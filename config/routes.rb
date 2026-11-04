@@ -15,6 +15,11 @@ Rails.application.routes.draw do
   post 'orcamentos/:id/:nome_cliente/duration', to: 'orcamentos_publicos#record_duration', as: :orcamento_publico_duration
   get 'orcamentos/:id/pdf', to: 'orcamentos_publicos#pdf', as: :orcamento_publico_pdf
 
+  # Download publico do DANFE/XML da NF-e (link enviado ao cliente). Protegido por
+  # token assinado com validade de 30 dias (ver DocumentoFiscal#token_publico).
+  get 'nota/:token',     to: 'notas_publicas#danfe', as: :nota_publica,     constraints: { token: /[A-Za-z0-9]+/ }
+  get 'nota/:token/xml', to: 'notas_publicas#xml',   as: :nota_publica_xml, constraints: { token: /[A-Za-z0-9]+/ }
+
   devise_for :collaborators, skip: [:registrations], controllers: { passwords: 'collaborators/passwords' }
   devise_for :users, skip: [:registrations]
 
@@ -300,6 +305,9 @@ Rails.application.routes.draw do
         get  :danfe
         post :cancelar
         post :emitir # emite uma nota em elaboracao (rascunho) ja salva
+        post :enviar_whatsapp # abre o WhatsApp com a mensagem + link (30 dias) do DANFE/XML
+        post :enviar_email    # envia DANFE (PDF) + XML anexados por e-mail
+        patch :atualizar_contato_destinatario # salva/atualiza celular e/ou e-mail no cadastro da pessoa da nota
       end
       collection do
         get :cores_produto # cores de um produto (p/ o select de cor)

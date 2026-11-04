@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_03_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_04_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -445,10 +445,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_03_000001) do
     t.decimal "outras_despesas", precision: 15, scale: 2, default: "0.0", comment: "Valor de outras despesas acessorias da nota (vOutro)"
     t.decimal "desconto", precision: 15, scale: 2, default: "0.0", comment: "Valor de desconto da nota (vDesc)"
     t.decimal "frete", precision: 15, scale: 2, default: "0.0", comment: "Valor do frete da nota (vFrete)"
+    t.string "public_token", limit: 24, comment: "token do link publico do DANFE/XML enviado ao cliente"
+    t.datetime "public_token_expira_em", comment: "validade do link publico (30 dias a partir da geracao)"
     t.index ["chave_acesso"], name: "idx_documento_fiscal_chave"
     t.index ["cod_compra"], name: "idx_documento_fiscal_compra"
     t.index ["cod_empresa", "status"], name: "idx_documento_fiscal_empresa_status"
     t.index ["cod_venda"], name: "idx_documento_fiscal_venda"
+    t.index ["public_token"], name: "index_documento_fiscal_on_public_token", unique: true
   end
 
   create_table "documento_fiscal_evento", primary_key: "cod_documento_fiscal_evento", force: :cascade do |t|

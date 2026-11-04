@@ -96,6 +96,48 @@ class DocumentoFiscal < ApplicationRecord
     status == "cancelada"
   end
 
+  # --- Link publico de download (DANFE/XML) enviado ao cliente -----------------
+  # Token CURTO e aleatorio (16 caracteres url-safe), salvo em public_token, para
+  # a URL do WhatsApp nao ficar gigante. A validade (30 dias) e guardada em
+  # public_token_expira_em e verificada pela aplicacao. Reutiliza o mesmo token
+  # enquanto estiver valido; renova quando expira. O endpoint publico ainda
+  # confere o status (cancelada nao entrega o arquivo).
+  LINK_PUBLICO_VALIDADE = 30.days
+
+  # Garante um token valido e o retorna (gera/renova se preciso).
+  def token_publico(validade: LINK_PUBLICO_VALIDADE)
+    if public_token.blank? || public_token_expira_em.nil? || public_token_expira_em.past?
+      novo = nil
+      loop do
+        novo = SecureRandom.urlsafe_base64(12).tr("-_", "AB")[0, 16]
+        break unless self.class.exists?(public_token: novo)
+      end
+      update_columns(public_token: novo, public_token_expira_em: validade.from_now)
+    end
+    public_token
+  end
+
+  # nil quando o token nao existe ou ja expirou.
+  def self.por_token_publico(token)
+    t = token.to_s
+    return nil if t.blank?
+    doc = find_by(public_token: t)
+    return nil if doc.nil?
+    return nil if doc.public_token_expira_em.nil? || doc.public_token_expira_em.past?
+    doc
+  end
+
+  # Codigo da pessoa destinataria: cliente do rascunho/avulsa, da venda ou
+  # (devolucao de compra) o fornecedor da compra.
+  def cod_pessoa_destinatario
+    cod_pessoa_rascunho || venda&.cod_pessoa || compra&.cod_pessoa
+  end
+
+  def destinatario
+    cod = cod_pessoa_destinatario
+    cod && Pessoa.find_by(cod_pessoa: cod)
+  end
+
   # Ultimo evento de CANCELAMENTO registrado desta nota (o cancelar! grava o
   # evento com a justificativa enviada a SEFAZ). Prioriza o que foi "registrado"
   # com sucesso; na falta, o mais recente de qualquer status.
