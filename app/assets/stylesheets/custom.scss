@@ -105,3 +105,23 @@ form {
 
 .ui-datepicker .ui-datepicker-prev:after { content: "\f053"; }
 .ui-datepicker .ui-datepicker-next:after { content: "\f054"; }
+
+/* O theme.css do jQuery UI referencia imagens ui-icons_*.png (sprite) que nao
+   existem neste projeto, gerando 404 no console ao abrir o datepicker. As setas
+   do calendario ja usam Font Awesome (regras acima), entao essas imagens nao
+   sao necessarias: anula o background-image para eliminar os 404. */
+.ui-icon,
+.ui-widget-content .ui-icon,
+.ui-widget-header .ui-icon,
+.ui-state-hover .ui-icon,
+.ui-state-focus .ui-icon,
+.ui-button:hover .ui-icon,
+.ui-button:focus .ui-icon,
+.ui-state-active .ui-icon,
+.ui-button:active .ui-icon,
+.ui-state-highlight .ui-icon,
+.ui-state-error .ui-icon,
+.ui-state-error-text .ui-icon,
+.ui-button .ui-icon {
+  background-image: none !important;
+}

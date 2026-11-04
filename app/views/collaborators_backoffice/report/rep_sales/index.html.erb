@@ -53,7 +53,7 @@
           <div class="col-auto">
             <% checked = params[:cancelada] == '1' %>
             <%= form.check_box :cancelada, checked: checked, class: "btn-check", id: "cancelada-checkbox" %>
-            <label class="btn btn-outline-primary" for="cancelada-checkbox">
+            <label class="btn btn-outline-primary cancelada-label" for="cancelada-checkbox">
               Ativas
             </label>
           </div>
@@ -301,14 +301,16 @@
       var estoqueLabel = document.querySelector('.cancelada-label');
 
       function updateLabel() {
-        estoqueLabel.textContent = canceladaCheckbox.checked ? 'Todas' : 'Ativas';
+        // O label pode nao existir (ou nao ter a classe): evita quebrar o script.
+        if (estoqueLabel) {
+          estoqueLabel.textContent = canceladaCheckbox.checked ? 'Todas' : 'Ativas';
+        }
       }
 
-      updateLabel();
-
-      canceladaCheckbox.addEventListener('change', function() {
+      if (canceladaCheckbox) {
         updateLabel();
-      });
+        canceladaCheckbox.addEventListener('change', updateLabel);
+      }
 
       var transfCheckbox = document.getElementById('transferencia-checkbox');
       if (transfCheckbox) {
