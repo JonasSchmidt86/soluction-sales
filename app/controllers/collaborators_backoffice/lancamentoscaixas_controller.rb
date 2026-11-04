@@ -19,7 +19,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
         origem = params[:origem]
         @launch = Lancamentoscaixa.new
 
-        valor_com_ponto_e_virgula = the_params[:valor]
+        valor_com_ponto_e_virgula = the_params[:valor].to_s
 
         # Substituir vírgula por ponto e remover ponto de milhar
         valor_com_ponto = valor_com_ponto_e_virgula.gsub(".", "").sub(",", ".")
@@ -93,6 +93,22 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
                 return
             end
 
+            # Validacao do lancamento avulso (modal de Lancamentos de Caixa). O modal ja
+            # valida no navegador; aqui garante o mesmo caso o envio venha sem passar por la.
+            if the_params[:descricao].to_s.strip.empty?
+                redirect_to collaborators_backoffice_report_put_box_index_path, alert: "Informe a descrição do lançamento!"
+                return
+            end
+            historico = params[:cod_historico].present? ? Tiposhistoricoscaixa.find_by(cod_tphitorico: params[:cod_historico].to_i) : nil
+            if historico.nil?
+                redirect_to collaborators_backoffice_report_put_box_index_path, alert: "Informe o histórico do lançamento!"
+                return
+            end
+            if valor_float <= 0
+                redirect_to collaborators_backoffice_report_put_box_index_path, alert: "Informe um valor maior que zero!"
+                return
+            end
+
             @launch = Lancamentoscaixa.new;
             @launch.datapagto = DateTime.now;
             @launch.funcionario = current_collaborator.funcionario;
@@ -108,7 +124,7 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
             @launch.empresa = Empresa.find(current_collaborator.cod_empresa);
             @launch.cancelada = false;
-            @launch.historico = Tiposhistoricoscaixa.find(params[:cod_historico].to_i);
+            @launch.historico = historico;
 
             if the_params[:tipo] == "E"
                 @launch.tipo = 'E'

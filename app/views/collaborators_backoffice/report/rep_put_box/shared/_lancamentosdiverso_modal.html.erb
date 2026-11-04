@@ -6,7 +6,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body ms-2 me-2 mt-3">
-        <%= form_with model: [ :collaborators_backoffice, Lancamentoscaixa.new ], local: true do |form| %>
+        <%# novalidate: a validacao e feita pelo script abaixo, com mensagens no proprio modal. %>
+        <%= form_with model: [ :collaborators_backoffice, Lancamentoscaixa.new ], local: true,
+                      html: { id: "formLancamentoCaixa", novalidate: true } do |form| %>
           <!-- Tipo (Entrada ou Saída) -->
           <div class="mb-3">
             <%= form.label :tipo, "Tipo" %>
@@ -15,21 +17,43 @@
           <!-- Descrição -->
           <div class="mb-3">
             <%= form.label :descricao, "Descrição" %>
-            <%= form.text_field :descricao, class: "text form-control", placeholder: "Digite a descrição" %>
+            <%= form.text_field :descricao,
+                                id: "lancamento_descricao",
+                                required: true,
+                                class: "text form-control",
+                                placeholder: "Digite a descrição",
+                                "aria-describedby": "erroDescricao" %>
+            <div id="erroDescricao" class="invalid-feedback" role="alert">Informe a descrição do lançamento.</div>
           </div>
+          <!-- Histórico (obrigatório) -->
           <div class="mb-3">
-            <%= form.label :descricao, "Histórico" %>
-            <%= select_tag(:cod_historico, options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao",
-                                                  params[:cod_historico] ), include_blank: "Histórico", class: "form-control") %>
+            <%= label_tag :lancamento_cod_historico, "Histórico" %>
+            <%= select_tag(:cod_historico,
+                           options_from_collection_for_select(Tiposhistoricoscaixa.where(" ativo = true ").order( :cod_tphitorico), "cod_tphitorico", "descricao", params[:cod_historico] ),
+                           include_blank: "Selecione o histórico",
+                           id: "lancamento_cod_historico",
+                           required: true,
+                           class: "form-control",
+                           "aria-describedby": "erroHistorico") %>
+            <div id="erroHistorico" class="invalid-feedback" role="alert">Informe o histórico do lançamento.</div>
           </div>
-          <!-- Valor -->
+          <!-- Valor (somente números; 2 casas decimais automáticas) -->
           <div class="mb-3">
             <%= form.label :valor, "Valor" %>
-            <%= form.text_field :valor, input_html: { inputmode: "numeric", pattern: "[0-9]*" }, class: "money2 form-control", placeholder: "0,00" %>
+            <%= form.text_field :valor,
+                                id: "lancamento_valor",
+                                inputmode: "numeric",
+                                autocomplete: "off",
+                                maxlength: 14,
+                                required: true,
+                                class: "form-control",
+                                placeholder: "0,00",
+                                "aria-describedby": "erroValor" %>
+            <div id="erroValor" class="invalid-feedback" role="alert">Informe um valor maior que zero.</div>
           </div>
           <!-- Destino -->
           <div class="md-3">
-            <%= form.label :valor, "Destino" %>
+            <%= form.label :cod_bancoconta, "Destino" %>
             <%= form.collection_select(:cod_bancoconta, 
                               (Bancoconta.where("ativo = true and cod_empresa = ? ", current_collaborator.cod_empresa).order(:cod_bancoconta)), 
                                 :cod_bancoconta, :nome_banco, {:include_blank => 'CAIXA', selected: params[:cod_bancoconta]}, 
@@ -38,7 +62,6 @@
           <!-- Botão de Submissão -->
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            <!-- <button type="submit" class="btn btn-success btn-block">Salvar</button>  -->
             <%= form.submit "Salvar", class: "btn btn-success" %>
           </div>
         <% end %>
@@ -46,3 +69,67 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    var modal      = document.getElementById('modalLancamento');
+    var form       = document.getElementById('formLancamentoCaixa');
+    var descricao  = document.getElementById('lancamento_descricao');
+    var historico  = document.getElementById('lancamento_cod_historico');
+    var valor      = document.getElementById('lancamento_valor');
+    if (!modal || !form || !descricao || !historico || !valor) { return; }
+
+    // Mascara de centavos: so digitos; os 2 ultimos sao os decimais (1 -> 0,01 ; 123 -> 1,23).
+    function formatarMoeda(texto) {
+      var digitos = texto.replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
+      if (digitos === '') { return ''; }
+      while (digitos.length < 3) { digitos = '0' + digitos; }
+      var inteiro  = digitos.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return inteiro + ',' + digitos.slice(-2);
+    }
+
+    function valorNumerico() {
+      // "1.234,56" -> 1234.56
+      return parseFloat(valor.value.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+
+    function marcar(campo, invalido) {
+      campo.classList.toggle('is-invalid', invalido);
+      campo.setAttribute('aria-invalid', invalido ? 'true' : 'false');
+    }
+
+    valor.addEventListener('input', function () {
+      valor.value = formatarMoeda(valor.value);
+      if (valorNumerico() > 0) { marcar(valor, false); }
+    });
+    descricao.addEventListener('input', function () {
+      if (descricao.value.trim()) { marcar(descricao, false); }
+    });
+    historico.addEventListener('change', function () {
+      if (historico.value) { marcar(historico, false); }
+    });
+
+    form.addEventListener('submit', function (evento) {
+      var semDescricao = !descricao.value.trim();
+      var semHistorico = !historico.value;
+      var semValor     = valorNumerico() <= 0;
+      marcar(descricao, semDescricao);
+      marcar(historico, semHistorico);
+      marcar(valor, semValor);
+
+      if (semDescricao || semHistorico || semValor) {
+        evento.preventDefault();
+        // Foca o primeiro campo com problema, na ordem em que aparecem no modal.
+        (semDescricao ? descricao : (semHistorico ? historico : valor)).focus();
+      }
+    });
+
+    // Ao fechar o modal, limpa os avisos de erro e o formulario.
+    modal.addEventListener('hidden.bs.modal', function () {
+      form.reset();
+      marcar(descricao, false);
+      marcar(historico, false);
+      marcar(valor, false);
+    });
+  })();
+</script>

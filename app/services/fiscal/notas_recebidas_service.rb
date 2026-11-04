@@ -334,7 +334,15 @@ module Fiscal
 
     def vincular_compra_existente(nota, fornecedor)
       return if fornecedor.nil? || nota.numero.blank?
-      compra = Compra.find_by(numeronf: nota.numero, cod_pessoa: fornecedor.cod_pessoa)
+      # Mesmo numero de NF pode existir em fornecedores e empresas diferentes:
+      # restringe pela empresa da nota e ignora compra cancelada.
+      filtro = { numeronf: nota.numero, cod_pessoa: fornecedor.cod_pessoa,
+                 cod_empresa: nota.cod_empresa, cancelada: false }
+      # Serie: o mesmo fornecedor pode repetir o numero em series diferentes.
+      # compra.serienf e string, mas gravada via to_i na importacao do XML (ex.:
+      # "001" vira "1"); normaliza a serie da nota do mesmo jeito para comparar.
+      filtro[:serienf] = nota.serie.to_i.to_s if nota.serie.present?
+      compra = Compra.find_by(filtro)
       nota.cod_compra = compra&.cod_compra if compra
     end
 

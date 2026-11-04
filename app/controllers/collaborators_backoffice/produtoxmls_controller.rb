@@ -16,6 +16,27 @@ class CollaboratorsBackoffice::ProdutoxmlsController < CollaboratorsBackofficeCo
     # puts "--------------------------"
     # puts @xml_file.name.to_s.upcase
 
+    if @xml_file.nil?
+      redirect_to collaborators_backoffice_xml_files_path, alert: "Arquivo XML não encontrado." and return
+    end
+
+    # NF ja importada: o XmlFile aponta para uma compra gravada. Os itens dela
+    # vem do banco (sem pro_xml_temp, que so existe na montagem a partir do XML),
+    # e o form de conferencia quebraria. Leva para a compra existente.
+    if @xml_file.compra.present? && @xml_file.compra.persisted?
+      compra_existente = @xml_file.compra
+
+      # Autocura: a nota recebida deste XML ficou sem vinculo com a compra (por isso
+      # a lista ainda mostrava "Importar"). Religa para passar a mostrar "Ver compra".
+      unless compra_existente.cancelada
+        NotaRecebida.where(xml_file_id: @xml_file.id, cod_compra: nil)
+                    .update_all(cod_compra: compra_existente.cod_compra)
+      end
+
+      redirect_to collaborators_backoffice_compra_path(compra_existente.cod_compra),
+                  alert: "Esta NF já foi importada (compra ##{compra_existente.cod_compra})." and return
+    end
+
     if @xml_file.compra.nil?
       compra = Compra.new;
       puts "------------ nil compra ---------- "
