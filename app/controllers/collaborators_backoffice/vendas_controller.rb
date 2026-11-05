@@ -132,8 +132,12 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         return
       end
 
-      # Garante autoria correta nos logs de estoque do trigger (le VENDA.cod_funcionario).
-      @sale.cod_funcionario = current_collaborator.cod_funcionario
+      # Preserva o vendedor original da venda: editar (ex.: so a cor) NAO deve
+      # reatribuir a venda para quem esta editando. A troca de vendedor so
+      # acontece se o form enviar explicitamente um cod_funcionario (campo so
+      # visivel para nivel 1/2) — tratado em aplicar_vendedor_edicao!.
+      vendedor_original = @sale.cod_funcionario
+      aplicar_vendedor_edicao!(@sale, vendedor_original)
 
       aplicar_pessoa!(@sale)
 
@@ -265,13 +269,45 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
         sale.datanf = nil
       end
       sale.cod_empresa = current_collaborator.cod_empresa
-      sale.cod_funcionario = current_collaborator.cod_funcionario
+      # Vendedor: o logado e o default. Nivel 1/2 pode escolher outro no form;
+      # quem nao pode tem o valor forcado para o logado (ignora POST forjado).
+      vendedor_informado = sale.cod_funcionario
+      if pode_alterar_vendedor? && vendedor_informado.present? &&
+         Funcionario.exists?(cod_funcionario: vendedor_informado)
+        sale.cod_funcionario = vendedor_informado
+      else
+        sale.cod_funcionario = current_collaborator.cod_funcionario
+      end
       sale.tipo = 'V' if sale.tipo.blank?
 
       if sale.transferencia? && sale.cod_empresa_transferida.blank?
         sale.cod_empresa_transferida = Empresa.find_by(cod_pessoa: sale.pessoa&.cod_pessoa)&.cod_empresa
       end
     end
+
+    # Define o vendedor (cod_funcionario) na EDICAO.
+    #  - Mantem o vendedor original por padrao (nao rouba a venda de quem vendeu);
+    #  - So troca se o usuario puder reatribuir (nivel 1/2) E o form enviar um
+    #    cod_funcionario valido e diferente.
+    def aplicar_vendedor_edicao!(sale, vendedor_original)
+      sale.cod_funcionario = vendedor_original
+
+      return unless pode_alterar_vendedor?
+
+      novo = params.dig(:venda, :cod_funcionario)
+      return if novo.blank?
+
+      funcionario = Funcionario.find_by(cod_funcionario: novo)
+      sale.cod_funcionario = funcionario.cod_funcionario if funcionario
+    end
+
+    # So niveis 1 e 2 podem reatribuir a venda a outro vendedor (mesma regra do
+    # modal "Alterar Vendedor" no relatorio).
+    def pode_alterar_vendedor?
+      nivel = current_collaborator.funcionario&.permissao&.nivel
+      [1, 2].include?(nivel)
+    end
+    helper_method :pode_alterar_vendedor?
 
     def transferencia_sem_destino?(sale)
       sale.transferencia? && Empresa.find_by(cod_empresa: sale.cod_empresa_transferida).nil?
@@ -318,6 +354,9 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     #  - remove de contas_attributes as parcelas que ja tem lancamentos no
     #    caixa (nao podem ser alteradas/removidas por aqui).
     def params_venda_update
+      # NAO permite :cod_funcionario aqui de proposito: o vendedor da edicao e
+      # controlado pelo servidor em aplicar_vendedor_edicao! (com checagem de
+      # permissao), evitando que o campo seja forjado via POST.
       permitido = params.require(:venda).permit(
         :datavenda, :valortotal, :acrescimo, :desconto, :aceita, :cod_pessoa,
         itensvenda_attributes: [:id, :cod_produto, :quantidade, :valorunitario, :valor_acrescimo, :valor_desconto, :cod_cor, :cod_empresa, :_destroy],

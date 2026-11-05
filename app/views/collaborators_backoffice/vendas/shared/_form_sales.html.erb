@@ -58,6 +58,31 @@
               <%= sale.label :numero_nf, class:"" %>
             </div>
           </div>
+          <%# Vendedor da venda.
+              - Nova venda: pre-seleciona o colaborador logado.
+              - Edicao: vem com o vendedor atual da venda e so muda se trocarem.
+              - Nivel 1/2 pode trocar; demais veem o campo somente leitura
+                (o servidor ignora qualquer troca vinda de quem nao pode). %>
+          <% vendedor_selecionado = sale.object.cod_funcionario.presence || current_collaborator.cod_funcionario %>
+          <% vendedores = Funcionario.joins(:funcionarioempresas)
+                                     .where(funcionarioempresas: { cod_empresa: current_collaborator.cod_empresa, ativo: true })
+                                     .where(ativo: true, datademissao: nil)
+                                     .select(:cod_funcionario, :usuario)
+                                     .order(:usuario) %>
+          <div class="col-md-3">
+            <div class="form-floating">
+              <%= sale.collection_select :cod_funcionario, vendedores, :cod_funcionario, :usuario,
+                    { selected: vendedor_selecionado },
+                    class: "form-select border-top-0 border-start-0 border-end-0 border-dark",
+                    disabled: !pode_alterar_vendedor? %>
+              <%# Quando disabled, o <select> nao e enviado no POST; reenvia o valor atual
+                  num hidden para o servidor ter referencia (o controller preserva mesmo assim). %>
+              <% unless pode_alterar_vendedor? %>
+                <%= sale.hidden_field :cod_funcionario, value: vendedor_selecionado %>
+              <% end %>
+              <%= sale.label :cod_funcionario, "Vendedor" %>
+            </div>
+          </div>
         </div>
         <div class="row my-2 mx-2">
           <div class="col-md-2">
