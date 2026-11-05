@@ -3,7 +3,7 @@ class HomeController < ApplicationController
   
   def index
     # Buscar produtos ativos com imagem e publicados no scope/model Produto
-    @produtos = Produto.ativos.com_imagem_e_publicado.limit(8) rescue []
+    @produtos = Produto.ativos.com_imagem_e_publicado.limit(7) rescue []
                       
     # Buscar contatos de WhatsApp ativos com foto
     @colaboradores = WhatsappContact.all.order(:id).select do |contact|
