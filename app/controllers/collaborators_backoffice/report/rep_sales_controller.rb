@@ -11,6 +11,10 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         if params[:codigo_venda].present?
             @sales = vendas.where(cod_venda: params[:codigo_venda].to_i)
                         .order(datavenda: :desc)
+            # Monta @docs_por_venda tambem neste atalho (ex.: redirect do
+            # atualizar_vendedor com ?codigo_venda=). Sem isso a view fiscal
+            # quebrava com "undefined method [] for nil" em @docs_por_venda.
+            carregar_documentos_fiscais
             return
         end
 
