@@ -8,6 +8,10 @@ Rails.application.routes.draw do
   get 'produto/:cod_produto/:cod_cor', to: 'home#produto', as: 'produto'
   get 'portfolio', to: 'home#portfolio'
 
+  # Analytics do catalogo publico (clique no WhatsApp e tempo de permanencia)
+  post 'a/whatsapp', to: 'site_events#whatsapp', as: :site_event_whatsapp
+  post 'a/tempo',    to: 'site_events#tempo',    as: :site_event_tempo
+
   # Página pública "link na bio" (Instagram) por empresa
   get 'l/:slug', to: 'link_pages#show', as: :link_page
 
@@ -372,6 +376,7 @@ Rails.application.routes.draw do
     get 'report_atendimentos', to: 'report/rep_atendimentos#index', as: 'report_atendimentos'
     get 'report_aniversariantes', to: 'report/rep_aniversariantes#index', as: 'report_aniversariantes'
     post 'report_aniversariantes/registrar_envio', to: 'report/rep_aniversariantes#registrar_envio', as: 'registrar_envio_report_aniversariantes'
+    get 'report_site_analytics', to: 'report/rep_site_analytics#index', as: 'report_site_analytics'
     get 'report_sugestao_compra', to: 'report/rep_sugestao_compra#index', as: 'report_sugestao_compra'
     post 'report_sugestao_compra/add_to_order', to: 'report/rep_sugestao_compra#add_to_order', as: 'add_to_order_sugestao_compra'
   end

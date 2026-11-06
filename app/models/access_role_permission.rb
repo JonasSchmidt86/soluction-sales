@@ -45,6 +45,7 @@ class AccessRolePermission < ApplicationRecord
     'report_custom_reports' => 'Outros Relatórios',
     'report_sugestao_compra' => 'Sugestão de Compra',
     'report_aniversariantes' => 'Aniversariantes',
+    'report_site_analytics' => 'Analytics do Site (Portfólio)',
     'atendimentos' => 'Atendimentos',
     'notas_fiscais' => 'Notas Fiscais',
     'fiscal_dashboard' => 'Fiscal - Dashboard',

@@ -54,6 +54,19 @@ class Produto < ApplicationRecord
         .distinct
   }
 
+    # Busca textual por nome, título ou descrição, insensível a acentos (unaccent) e a
+    # maiúsculas (ILIKE): "sofa" = "sofá" = "SOFÁ". Usada pelo portfólio público
+    # (HomeController#portfolio) e pelo relatório de analytics (buscas sem resultado),
+    # para as duas telas nunca divergirem.
+    scope :busca_texto, ->(termo) {
+      where(
+        "unaccent(produto.nome) ILIKE unaccent(:q) OR " \
+        "unaccent(produto.titulo) ILIKE unaccent(:q) OR " \
+        "unaccent(produto.descricao) ILIKE unaccent(:q)",
+        q: "%#{termo.to_s.strip}%"
+      )
+    }
+
     # Métodos de busca
     def self.search(query)
       where("cod_produto LIKE ? OR nome LIKE ?", "%#{query}%", "%#{query}%")

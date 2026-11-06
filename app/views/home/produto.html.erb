@@ -215,6 +215,59 @@
     });
   });
 </script>
+<% if @evento&.id %>
+<script>
+  // Analytics: tempo de permanencia nesta pagina de produto.
+  // Conta so o tempo com a aba VISIVEL (pausa ao trocar de aba/app) e envia em
+  // segundo plano, sem atrasar a pagina nem a saida: sendBeacon sobrevive a
+  // navegacao. Cada envio leva so o DELTA desde o anterior; o servidor soma ao
+  // evento desta visita (e limita o total a 1 h).
+  (function () {
+    var url       = '<%= site_event_tempo_path %>';
+    var eventoId  = <%= @evento.id.to_json %>;
+    var MAX_ENVIO = 3600;   // teto aceito pelo servidor por envio (segundos)
+
+    var acumuladoMs = 0;    // tempo visivel ja contabilizado
+    var inicio      = null; // instante em que a aba ficou visivel (null = pausado)
+    var enviadoSeg  = 0;    // segundos ja enviados ao servidor
+
+    function iniciar() {
+      if (inicio === null && document.visibilityState === 'visible') inicio = Date.now();
+    }
+
+    function pausar() {
+      if (inicio !== null) { acumuladoMs += Date.now() - inicio; inicio = null; }
+    }
+
+    function enviar() {
+      var delta = Math.min(Math.round(acumuladoMs / 1000) - enviadoSeg, MAX_ENVIO);
+      if (delta < 1) return;
+      enviadoSeg += delta;
+      try {
+        var dados = new FormData();
+        dados.append('evento_id', eventoId);
+        dados.append('segundos', delta);
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, dados);
+        } else if (window.fetch) {
+          fetch(url, { method: 'POST', body: dados, keepalive: true, credentials: 'same-origin' })
+            .catch(function () {});
+        }
+      } catch (e) { /* analytics nunca deve atrapalhar a pagina */ }
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') { pausar(); enviar(); } else { iniciar(); }
+    });
+    // Safari/iOS e cache de voltar/avancar: pagehide cobre saidas em que o
+    // visibilitychange nao dispara; pageshow retoma a contagem ao restaurar a pagina.
+    window.addEventListener('pagehide', function () { pausar(); enviar(); });
+    window.addEventListener('pageshow', function (e) { if (e.persisted) iniciar(); });
+
+    iniciar();
+  })();
+</script>
+<% end %>
 <%= render partial: 'home/shared/image_modal' %>
 <!-- Modal de Interesse -->
 <%= render partial: 'home/shared/whatsapp_modal', locals: { produto: @produto, cod_cor: @cod_cor, modal_id: "interesseModal" } %>

@@ -24,6 +24,12 @@
         Páginas de Links
       <% end %>
     <% end %>
+    <% if access_control.can_view?('report_site_analytics') %>
+      <%= link_to collaborators_backoffice_report_site_analytics_path, class: "nav-link" do %>
+        <i class="fa-solid fa-chart-line fa-fw me-2" aria-hidden="true"></i>
+        Analytics do Site
+      <% end %>
+    <% end %>
     <%= link_to collaborators_backoffice_lembretes_path, class: "nav-link" do %>
       <i class="fa-solid fa-bell fa-fw me-2" aria-hidden="true"></i>
       Lembretes

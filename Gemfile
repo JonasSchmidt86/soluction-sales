@@ -34,6 +34,10 @@ gem "cpf_cnpj"
 # Gem para buscar endereço e cidade por cep
 gem 'httparty'
 
+# Leitura da base GeoIP local (GeoLite2-City.mmdb) para estimar a cidade do
+# visitante no analytics do portfolio publico. Ver app/services/geo_ip_resolver.rb
+gem 'maxmind-db', '1.5.0'
+
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 # gem 'rails', '~> 6.1', '>= 6.1.7.10'
 gem 'rails', '~> 7.1.0'

@@ -35,6 +35,8 @@ A maioria das tasks de correção/migração de dados segue o mesmo padrão de s
 | `notas_recebidas:vincular_compras` | notas_recebidas | Sincroniza o vínculo nota recebida × compra | `DRY_RUN=1` só mostra |
 | `xml_files:backfill_numeronf` | xml_files | Preenche `numeronf` e `chave` dos `xml_files` (lê o XML) | sempre (só o vazio) |
 | `cidade:corrige_homonima` | cidade | Corrige pessoas numa cidade homônima de UF errada | `APPLY=1` |
+| `site_analytics:demo_seed` | site_analytics | Gera eventos **falsos** de demonstração em `site_events` (analytics do portfólio) | `APPLY=1` |
+| `site_analytics:demo_clear` | site_analytics | Remove só os eventos de demonstração (`visitor_id` `demo-%`) | `APPLY=1` |
 | `dev:setup` (+ `dev:*`) | dev | Prepara o ambiente de desenvolvimento / dados padrão | sim (dev) |
 
 ---
@@ -197,6 +199,33 @@ DE=5294 PARA=43 APPLY=1 bundle exec rails cidade:corrige_homonima
 
 Parâmetros: `APPLY=1` grava · `DE=` cod_cidade errado (default 5294) · `PARA=`
 cod_cidade correto (default 43).
+
+---
+
+### `site_analytics:demo_seed` e `site_analytics:demo_clear`
+
+Arquivo: `lib/tasks/site_analytics_demo.rake` · spec: `.kiro/specs/analytics-portfolio/`
+
+Geram/removem dados **de demonstração** em `site_events` (contador de acessos do
+portfólio público), para desenhar e validar o relatório sem esperar tráfego real.
+Os eventos usam produtos reais do catálogo, cidades da região oeste do Paraná (Toledo,
+Cascavel, Marechal Cândido Rondon…), alguns visitantes do exterior (Paraguai etc.),
+buscas típicas de móveis, picos de horário (almoço e noite) e cliques de WhatsApp.
+
+- Todo evento demo tem `visitor_id` com prefixo `demo-`; `demo_clear` apaga **só** esses.
+- **DRY-RUN por padrão**; `APPLY=1` grava. `demo_seed` é idempotente (substitui os
+  eventos demo anteriores). **Recusa rodar em produção** sem `FORCE=1`.
+- Parâmetros: `VISITAS` (padrão 1200), `DIAS` (45), `SEED` (20261110).
+- Respeita as regras do `SiteAnalytics` (uma visita por sessão de 30 min, sem produto ou
+  busca repetidos na janela). Os dados demo se misturam aos reais nos relatórios:
+  **rode `demo_clear` antes de usar o relatório com tráfego real**.
+
+```bash
+bundle exec rails site_analytics:demo_seed                  # simulação
+APPLY=1 bundle exec rails site_analytics:demo_seed          # grava
+APPLY=1 VISITAS=3000 DIAS=60 bundle exec rails site_analytics:demo_seed
+APPLY=1 bundle exec rails site_analytics:demo_clear         # remove os dados demo
+```
 
 ---
 

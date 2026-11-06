@@ -451,6 +451,45 @@
             behavior: 'smooth'
           });
         });
+
+        // Analytics: conta cliques em QUALQUER link do WhatsApp (wa.me) do site
+        // (modal de contatos, equipe, rodape, botao flutuante). Nao impede nem atrasa
+        // o clique: sendBeacon enfileira o envio em segundo plano e sobrevive a
+        // navegacao. O produto vem de data-cod-produto (so no modal de um produto).
+        (function () {
+          var url = '<%= site_event_whatsapp_path %>';
+
+          function registrar(link) {
+            try {
+              var dados = new FormData();
+              var cod = link.getAttribute('data-cod-produto');
+              if (cod) dados.append('cod_produto', cod);
+
+              if (navigator.sendBeacon) {
+                navigator.sendBeacon(url, dados);
+              } else if (window.fetch) {
+                fetch(url, { method: 'POST', body: dados, keepalive: true, credentials: 'same-origin' })
+                  .catch(function () {});
+              }
+            } catch (e) { /* analytics nunca deve atrapalhar o clique */ }
+          }
+
+          function linkWhatsapp(e) {
+            return e.target && e.target.closest ? e.target.closest('a[href*="wa.me/"]') : null;
+          }
+
+          document.addEventListener('click', function (e) {
+            var link = linkWhatsapp(e);
+            if (link) registrar(link);
+          });
+
+          // Clique com o botao do meio (abre em nova aba) nao dispara "click".
+          document.addEventListener('auxclick', function (e) {
+            if (e.button !== 1) return;
+            var link = linkWhatsapp(e);
+            if (link) registrar(link);
+          });
+        })();
       </script>
     </body>
   </html>

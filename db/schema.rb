@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_04_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_10_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -1122,6 +1122,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_04_000001) do
     t.index ["cod_empresa", "cod_perfil_tributario", "cod_operacao_fiscal", "uf_destino", "tipo_cliente"], name: "idx_regra_fiscal_resolucao"
     t.index ["cod_operacao_fiscal"], name: "idx_regra_fiscal_operacao"
     t.index ["cod_perfil_tributario"], name: "idx_regra_fiscal_perfil"
+  end
+
+  create_table "site_events", force: :cascade do |t|
+    t.string "event_type", limit: 20, null: false, comment: "view_portfolio | view_produto | click_whatsapp | busca"
+    t.bigint "cod_produto", comment: "produto do evento (view_produto / click_whatsapp)"
+    t.string "termo_busca", limit: 120, comment: "termo normalizado (evento busca)"
+    t.string "visitor_id", limit: 40, null: false, comment: "id anonimo do cookie"
+    t.string "cidade", limit: 120
+    t.string "estado", limit: 2
+    t.integer "duracao_seg", comment: "tempo de permanencia no produto (segundos)"
+    t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "pais", limit: 2, comment: "ISO 3166-1 alpha-2 estimado por GeoIP (ex.: BR, US)"
+    t.string "pais_nome", limit: 80, comment: "nome do pais em pt-BR (apenas exibicao)"
+    t.index ["cod_produto"], name: "idx_site_events_produto"
+    t.index ["event_type", "created_at"], name: "idx_site_events_tipo_data"
+    t.index ["termo_busca"], name: "idx_site_events_termo"
+    t.index ["visitor_id", "created_at"], name: "idx_site_events_visitor_data"
   end
 
   create_table "social_links", force: :cascade do |t|

@@ -179,6 +179,7 @@ GEM
       net-pop
       net-smtp
     marcel (1.0.4)
+    maxmind-db (1.5.0)
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
@@ -393,6 +394,7 @@ DEPENDENCIES
   kaminari
   kaminari-i18n
   listen (~> 3.5)
+  maxmind-db (= 1.5.0)
   mini_magick
   nfe-io
   nokogiri

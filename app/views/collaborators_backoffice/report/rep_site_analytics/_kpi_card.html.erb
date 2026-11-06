@@ -1,0 +1,36 @@
+<%# Cartao de indicador do dashboard de analytics do site.
+    locals: titulo, valor, sub (texto auxiliar), variacao (Float em % ou nil),
+            cor (primary|info|success|secondary|dark), icone (classes FontAwesome completas) %>
+<div class="col">
+  <div class="card border-0 border-start border-4 border-<%= cor %> h-100 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="text-muted small"><%= titulo %></div>
+        <i class="<%= icone %> text-<%= cor %> opacity-75" aria-hidden="true"></i>
+      </div>
+      <div class="h3 mb-1"><%= valor %></div>
+      <div class="small text-muted"><%= sub %></div>
+      <div class="small mt-1">
+        <% if variacao.nil? %>
+          <span class="text-muted">sem base de comparação</span>
+        <% elsif variacao.zero? %>
+          <span class="text-muted">igual ao anterior</span>
+        <% elsif variacao.positive? %>
+          <span class="text-success">
+            <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+            <span class="visually-hidden">aumento de</span>
+            <%= number_with_precision(variacao, precision: 1, separator: ",", delimiter: ".") %>%
+          </span>
+          <span class="text-muted">vs. anterior</span>
+        <% else %>
+          <span class="text-danger">
+            <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+            <span class="visually-hidden">queda de</span>
+            <%= number_with_precision(variacao.abs, precision: 1, separator: ",", delimiter: ".") %>%
+          </span>
+          <span class="text-muted">vs. anterior</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

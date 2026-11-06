@@ -19,6 +19,7 @@ class AccessControlService
   ADMIN_ONLY_RESOURCES = %w[
     report_rep_dre
     report_custom_reports
+    report_site_analytics
     funcionarios
     collaborators
     access_roles

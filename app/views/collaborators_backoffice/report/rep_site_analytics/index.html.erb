@@ -1,0 +1,372 @@
+<%# Dashboard de analytics do catalogo publico. Dados: SiteAnalyticsReport (@relatorio).
+    created_at ja e horario de Sao Paulo: nenhuma conversao de fuso aqui. %>
+<% r = @relatorio %>
+<% hoje = Date.current %>
+<% n   = ->(v) { number_with_delimiter(v.to_i, delimiter: ".") } %>
+<% pct = ->(v) { v.nil? ? "—" : "#{number_with_precision(v, precision: 1, separator: ',', delimiter: '.')}%" } %>
+<% dur = ->(s) { OrcamentoAnalyticsService.format_duration(s) } %>
+<% dia = ->(d) { d.strftime("%d/%m/%Y") } %>
+
+<div class="container-fluid mt-3 mb-4">
+
+  <%# ---------- Cabecalho + filtro de periodo ---------- %>
+  <div class="d-flex flex-wrap align-items-end mb-3 gap-2">
+    <div>
+      <h3 class="mb-0"><i class="fa-solid fa-chart-line me-2" aria-hidden="true"></i>Analytics do Site</h3>
+      <div class="text-muted small">
+        Catálogo público (portfólio e produtos) · <%= dia.(r.inicio) %> a <%= dia.(r.fim) %>
+        (<%= r.dias %> <%= r.dias == 1 ? "dia" : "dias" %>)
+        · comparado com <%= dia.(r.inicio_anterior) %> a <%= dia.(r.fim_anterior) %>
+      </div>
+    </div>
+
+    <div class="ms-auto d-flex flex-wrap align-items-end gap-2">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Períodos rápidos">
+        <% [7, 30, 90].each do |d| %>
+          <% ativo = r.fim == hoje && r.dias == d %>
+          <%= link_to "#{d} dias",
+                collaborators_backoffice_report_site_analytics_path(inicio: (hoje - (d - 1)).iso8601, fim: hoje.iso8601),
+                class: "btn #{ativo ? 'btn-primary' : 'btn-outline-primary'}",
+                "aria-current": (ativo ? "true" : nil) %>
+        <% end %>
+      </div>
+      <%= form_with url: collaborators_backoffice_report_site_analytics_path, method: :get, local: true,
+                    class: "d-flex align-items-end gap-2" do %>
+        <div>
+          <label for="inicio" class="form-label small text-muted mb-0">De</label>
+          <%= date_field_tag :inicio, @inicio.iso8601, max: hoje.iso8601, class: "form-control form-control-sm" %>
+        </div>
+        <div>
+          <label for="fim" class="form-label small text-muted mb-0">Até</label>
+          <%= date_field_tag :fim, @fim.iso8601, max: hoje.iso8601, class: "form-control form-control-sm" %>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ---------- Aviso de dados de demonstracao ---------- %>
+  <% if r.demo_total.positive? %>
+    <div class="alert alert-warning py-2 small" role="alert">
+      <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+      Existem <strong><%= n.(r.demo_total) %></strong> eventos de <strong>demonstração</strong> (dados fictícios)
+      no banco, <%= n.(r.demo_no_periodo) %> deles neste período, misturados aos reais.
+      Para removê-los: <code>APPLY=1 bundle exec rails site_analytics:demo_clear</code>
+    </div>
+  <% end %>
+
+  <% if r.vazio? %>
+    <div class="alert alert-info" role="status">
+      <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
+      Nenhum acesso registrado neste período. Tente um intervalo maior.
+    </div>
+  <% else %>
+    <% t = r.totais %>
+    <% v = r.variacoes %>
+
+    <%# ---------- Cartoes de indicadores ---------- %>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-3">
+      <%= render "kpi_card", titulo: "Visitantes únicos", valor: n.(t[:visitantes]), cor: "info",
+            icone: "fa-solid fa-users", variacao: v[:visitantes],
+            sub: "pessoas distintas" %>
+      <%= render "kpi_card", titulo: "Visitas ao portfólio", valor: n.(t[:visitas]), cor: "primary",
+            icone: "fa-solid fa-table-cells-large", variacao: v[:visitas],
+            sub: "sessões de 30 min" %>
+      <%= render "kpi_card", titulo: "Produtos vistos", valor: n.(t[:views_produto]), cor: "secondary",
+            icone: "fa-solid fa-images", variacao: v[:views_produto],
+            sub: "#{n.(t[:produtos_vistos])} produtos diferentes" %>
+      <%= render "kpi_card", titulo: "Cliques no WhatsApp", valor: n.(t[:cliques_whatsapp]), cor: "success",
+            icone: "fa-brands fa-whatsapp", variacao: v[:cliques_whatsapp],
+            sub: "#{pct.(t[:conversao])} dos visitantes" %>
+      <%= render "kpi_card", titulo: "Tempo no produto", valor: dur.(t[:tempo_medio]), cor: "dark",
+            icone: "fa-solid fa-stopwatch", variacao: v[:tempo_medio],
+            sub: "média, só aba visível" %>
+    </div>
+
+    <%# ---------- Visitas por dia ---------- %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white d-flex flex-wrap justify-content-between">
+        <strong>Visitas por dia</strong>
+        <span class="text-muted small">barras: visitas ao portfólio · linha: cliques no WhatsApp</span>
+      </div>
+      <div class="card-body">
+        <div style="position:relative;height:260px">
+          <canvas id="grafico-diario" class="sa-grafico" role="img"
+                  aria-label="Gráfico de visitas ao portfólio e cliques no WhatsApp por dia"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <%# ---------- Produtos mais vistos ---------- %>
+      <div class="col-xl-7">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white"><strong>Produtos mais vistos</strong></div>
+          <div class="table-responsive">
+            <% if r.produtos.empty? %>
+              <p class="text-muted p-3 mb-0">Nenhum produto visto neste período.</p>
+            <% else %>
+              <% max_views = [r.produtos.map { |p| p[:views] }.max, 1].max %>
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="text-center" style="width:2.5rem">#</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col" class="text-end">Visualizações</th>
+                    <th scope="col" class="text-end">Tempo médio</th>
+                    <th scope="col" class="text-end">WhatsApp</th>
+                    <th scope="col" class="text-end" title="Cliques no WhatsApp ÷ visualizações">Conversão</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% r.produtos.each_with_index do |p, i| %>
+                    <tr>
+                      <td class="text-center text-muted"><%= i + 1 %></td>
+                      <td class="text-capitalize"><%= p[:nome].to_s.downcase %>
+                        <span class="text-muted small">#<%= p[:cod_produto] %></span></td>
+                      <td class="text-end" style="min-width:120px">
+                        <%= n.(p[:views]) %>
+                        <div class="progress" style="height:4px" aria-hidden="true">
+                          <div class="progress-bar" style="width: <%= (p[:views] * 100.0 / max_views).round %>%"></div>
+                        </div>
+                      </td>
+                      <td class="text-end"><%= dur.(p[:tempo_medio]) %></td>
+                      <td class="text-end"><%= n.(p[:cliques]) %></td>
+                      <td class="text-end"><%= pct.(p[:conversao]) %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# ---------- Buscas mais feitas ---------- %>
+      <div class="col-xl-5">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white"><strong>Buscas mais feitas</strong></div>
+          <div class="table-responsive">
+            <% if r.buscas.empty? %>
+              <p class="text-muted p-3 mb-0">Nenhuma busca neste período.</p>
+            <% else %>
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col">Termo</th>
+                    <th scope="col" class="text-end">Buscas</th>
+                    <th scope="col" class="text-end">Pessoas</th>
+                    <th scope="col" class="text-end">No catálogo hoje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% r.buscas.each do |b| %>
+                    <tr>
+                      <td><%= b[:termo] %></td>
+                      <td class="text-end"><%= n.(b[:buscas]) %></td>
+                      <td class="text-end"><%= n.(b[:visitantes]) %></td>
+                      <td class="text-end">
+                        <% if b[:produtos].zero? %>
+                          <span class="badge text-bg-warning">sem produto</span>
+                        <% else %>
+                          <span class="badge text-bg-light border text-dark"><%= b[:produtos] %> <%= b[:produtos] == 1 ? "produto" : "produtos" %></span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+              <p class="small text-muted px-3 py-2 mb-0">
+                <span class="badge text-bg-warning">sem produto</span> = o cliente procurou e o
+                catálogo publicado não tem nada: possível demanda não atendida.
+              </p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# ---------- Horario e dia da semana ---------- %>
+    <div class="row g-3 mb-3">
+      <div class="col-xl-7">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white d-flex flex-wrap justify-content-between">
+            <strong>Horário de maior acesso</strong>
+            <span class="text-muted small">páginas vistas por hora (horário de Brasília)</span>
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:230px">
+              <canvas id="grafico-hora" class="sa-grafico" role="img"
+                      aria-label="Gráfico de páginas vistas por hora do dia"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-5">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white d-flex flex-wrap justify-content-between">
+            <strong>Dia da semana</strong>
+            <span class="text-muted small">páginas vistas</span>
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:230px">
+              <canvas id="grafico-semana" class="sa-grafico" role="img"
+                      aria-label="Gráfico de páginas vistas por dia da semana"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# ---------- Origem dos visitantes ---------- %>
+    <% total_origem = [r.origem.values.sum, 1].max %>
+    <div class="row g-3 mb-2">
+      <div class="col-xl-7">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white d-flex flex-wrap justify-content-between">
+            <strong>Cidades</strong>
+            <span class="text-muted small">visitantes únicos · % do total de visitantes</span>
+          </div>
+          <div class="card-body">
+            <% if r.cidades.empty? %>
+              <p class="text-muted mb-0">Sem localização no período. Verifique se o arquivo da base GeoIP está em <code>db/geoip/</code>.</p>
+            <% else %>
+              <% max_cid = [r.cidades.map { |c| c[:visitantes] }.max, 1].max %>
+              <ul class="list-unstyled mb-0">
+                <% r.cidades.each do |c| %>
+                  <li class="mb-2">
+                    <div class="d-flex justify-content-between small">
+                      <span><%= c[:cidade] %><%= " – #{c[:estado]}" if c[:estado].present? %></span>
+                      <span class="text-muted"><%= n.(c[:visitantes]) %> · <%= pct.(c[:visitantes] * 100.0 / total_origem) %></span>
+                    </div>
+                    <div class="progress" style="height:6px" aria-hidden="true">
+                      <div class="progress-bar bg-info" style="width: <%= (c[:visitantes] * 100.0 / max_cid).round %>%"></div>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-5">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white"><strong>Brasil × exterior</strong></div>
+          <div class="card-body">
+            <% [["Brasil", :brasil, "bg-success"], ["Exterior", :exterior, "bg-primary"],
+                ["Não identificado", :desconhecido, "bg-secondary"]].each do |rotulo, chave, cor| %>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between small">
+                  <span><%= rotulo %></span>
+                  <span class="text-muted"><%= n.(r.origem[chave]) %> · <%= pct.(r.origem[chave] * 100.0 / total_origem) %></span>
+                </div>
+                <div class="progress" style="height:6px" aria-hidden="true">
+                  <div class="progress-bar <%= cor %>" style="width: <%= (r.origem[chave] * 100.0 / total_origem).round %>%"></div>
+                </div>
+              </div>
+            <% end %>
+            <% if r.paises.any? %>
+              <hr>
+              <div class="small text-muted mb-1">Países do exterior</div>
+              <ul class="list-unstyled small mb-0">
+                <% r.paises.each do |p| %>
+                  <li class="d-flex justify-content-between">
+                    <span><%= p[:pais] %></span><span class="text-muted"><%= n.(p[:visitantes]) %></span>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-muted small mt-3 mb-0">
+      Localização estimada pelo IP (aproximada: pode indicar a cidade do provedor). O IP não é guardado.
+      Bots, cliques de colaboradores logados e prévias de link do WhatsApp não são contados.<br>
+      This product includes GeoLite Data created by MaxMind, available from
+      <a href="https://www.maxmind.com" target="_blank" rel="noopener">https://www.maxmind.com</a>.
+    </p>
+
+    <script type="application/json" id="sa-dados"><%= raw(json_escape({ diario: r.diario, hora: r.por_hora, semana: r.por_dia_semana }.to_json)) %></script>
+    <%= javascript_include_tag "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" %>
+    <script>
+      (function () {
+        var el = document.getElementById('sa-dados');
+        if (!el) return;
+        var dados = JSON.parse(el.textContent);
+
+        if (typeof Chart === 'undefined') {
+          document.querySelectorAll('.sa-grafico').forEach(function (c) {
+            c.insertAdjacentHTML('afterend',
+              '<p class="text-muted small mb-0">Gráfico indisponível (a biblioteca de gráficos não carregou). Os números continuam nas tabelas.</p>');
+            c.remove();
+          });
+          return;
+        }
+
+        var nf = new Intl.NumberFormat('pt-BR');
+        var azul = '#0d6efd', azulClaro = 'rgba(13,110,253,.35)', verde = '#198754';
+        var eixo = { beginAtZero: true, ticks: { precision: 0, callback: function (v) { return nf.format(v); } } };
+
+        // Destaca a barra de maior valor.
+        function cores(valores) {
+          var max = Math.max.apply(null, valores);
+          return valores.map(function (v) { return v === max && max > 0 ? azul : azulClaro; });
+        }
+
+        new Chart(document.getElementById('grafico-diario'), {
+          type: 'bar',
+          data: {
+            labels: dados.diario.labels,
+            datasets: [
+              { type: 'bar', label: 'Visitas ao portfólio', data: dados.diario.visitas,
+                backgroundColor: 'rgba(13,110,253,.55)', borderRadius: 3, yAxisID: 'y' },
+              { type: 'line', label: 'Cliques no WhatsApp', data: dados.diario.cliques,
+                borderColor: verde, backgroundColor: verde, cubicInterpolationMode: 'monotone',
+                borderWidth: 2, pointRadius: 2, yAxisID: 'y2' }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 14, autoSkip: true } },
+              y: Object.assign({}, eixo, { title: { display: true, text: 'Visitas' } }),
+              y2: Object.assign({}, eixo, { position: 'right', grid: { drawOnChartArea: false },
+                                            title: { display: true, text: 'Cliques' } })
+            }
+          }
+        });
+
+        new Chart(document.getElementById('grafico-hora'), {
+          type: 'bar',
+          data: {
+            labels: dados.hora.map(function (_, h) { return h + 'h'; }),
+            datasets: [{ label: 'Páginas vistas', data: dados.hora, backgroundColor: cores(dados.hora), borderRadius: 3 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: eixo, x: { ticks: { autoSkip: false, maxRotation: 0, font: { size: 10 } } } }
+          }
+        });
+
+        new Chart(document.getElementById('grafico-semana'), {
+          type: 'bar',
+          data: {
+            labels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+            datasets: [{ label: 'Páginas vistas', data: dados.semana, backgroundColor: cores(dados.semana), borderRadius: 3 }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: eixo }
+          }
+        });
+      })();
+    </script>
+  <% end %>
+</div>
