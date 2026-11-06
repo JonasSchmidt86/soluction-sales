@@ -10,7 +10,7 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         # 🔎 busca direta
         if params[:codigo_venda].present?
             @sales = vendas.where(cod_venda: params[:codigo_venda].to_i)
-                        .order(datavenda: :desc)
+                        .order(datavenda: :desc, cod_venda: :desc)
             # Monta @docs_por_venda tambem neste atalho (ex.: redirect do
             # atualizar_vendedor com ?codigo_venda=). Sem isso a view fiscal
             # quebrava com "undefined method [] for nil" em @docs_por_venda.
@@ -65,9 +65,9 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         # 🔥 paginação
         @sales =
             if params[:per_page].present? && params[:per_page].to_i.zero?
-            vendas.order(datavenda: :desc)
+            vendas.order(datavenda: :desc, cod_venda: :desc)
             else
-            vendas.order(datavenda: :desc).page(params[:page]).per(per_page)
+            vendas.order(datavenda: :desc, cod_venda: :desc).page(params[:page]).per(per_page)
             end
 
         # Pre-carrega o ULTIMO DocumentoFiscal (modelo 55) de cada venda da pagina
@@ -139,6 +139,6 @@ class CollaboratorsBackoffice::Report::RepSalesController < CollaboratorsBackoff
         #     end
         # end
         @sales = Venda.where(consulta, current_collaborator.cod_empresa )
-                                    .order(datavenda: :desc).page(params[:page])
+                                    .order(datavenda: :desc, cod_venda: :desc).page(params[:page])
     end
 end
