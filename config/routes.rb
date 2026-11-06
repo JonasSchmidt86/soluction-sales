@@ -148,6 +148,8 @@ Rails.application.routes.draw do
     
     resources :vendas, only: [:index, :edit, :new, :create, :update, :destroy] do
       patch :atualizar_vendedor, on: :member
+      patch :atualizar_cores, on: :member
+      get   :itens_cores, on: :member
       # Emissao fiscal a partir da venda (NF-e modelo 55). Reaproveita o
       # mesmo documento numa reemissao (ver Fiscal::EmissorFiscal).
       resources :documentos_fiscais, only: [:show], controller: "documentos_fiscais" do

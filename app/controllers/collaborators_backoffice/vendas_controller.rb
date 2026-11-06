@@ -1,6 +1,9 @@
 class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeController
 
     before_action :set_venda, only: [:destroy]
+    # Trocar cor exige o mesmo nivel da edicao de venda (1 ou 2). Trava no
+    # servidor para nao depender so do botao escondido na view.
+    before_action :exigir_nivel_edicao!, only: [:itens_cores, :atualizar_cores]
 
     def index
       # @sale = Venda.where("cod_empresa = ? an tipo = 'V'", current_collaborator.cod_empresa).order(:cod_venda)
@@ -141,13 +144,66 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
 
       aplicar_pessoa!(@sale)
 
-      if @sale.update(params_venda_update)
+      # Total ja pago (lancamentos no caixa) ANTES da edicao. Base de verdade
+      # financeira: a edicao do form nao altera o que ja entrou no caixa.
+      total_pago = @sale.valorRecebido.to_d.round(2)
+
+      # Atribui os dados do form e deixa o before_validation recalcular o
+      # valortotal a partir dos itens. Nao salva ainda: valida as regras de
+      # consistencia financeira primeiro.
+      @sale.assign_attributes(params_venda_update)
+      @sale.valid? # dispara recalculo do valortotal
+
+      unless venda_consistente_para_salvar?(@sale, total_pago)
+        render :edit, status: :unprocessable_entity
+        return
+      end
+
+      if @sale.save
         return if emitir_nfe_apos_salvar?(@sale)
 
         redirect_to collaborators_backoffice_report_sales_path, notice: "Venda atualizada com sucesso!"
       else
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    # Regras de consistencia financeira ao editar uma venda (alem das validacoes
+    # normais do model). Retorna false e adiciona erros em @sale quando:
+    #  - Caso 1: o novo total ficou MENOR que o valor ja pago no caixa
+    #    (ex.: removeu item de uma venda ja parcialmente paga);
+    #  - Caso 2: a soma das parcelas (contaspagrec ativas) nao bate com o novo
+    #    total (ex.: adicionou item e nao regerou/ajustou as parcelas).
+    # Transferencia e ignorada (contas geradas por outro fluxo).
+    def venda_consistente_para_salvar?(sale, total_pago)
+      return true if sale.transferencia?
+
+      total = (sale.valortotal || 0).to_d.round(2)
+      ok = true
+
+      # Caso 1: total nao pode ficar abaixo do que ja foi pago.
+      if total < total_pago
+        sale.errors.add(:base,
+          "O novo total da venda (R$ #{'%.2f' % total}) ficou menor que o valor ja pago " \
+          "(R$ #{'%.2f' % total_pago}). Estorne o pagamento no financeiro antes de reduzir a venda.")
+        ok = false
+      end
+
+      # Caso 2: soma das parcelas ativas (liquidadas + em aberto) deve bater com
+      # o total. As liquidadas nao sao editaveis pelo form (ja filtradas em
+      # params_venda_update), por isso usamos as contas atuais da venda.
+      parcelas = sale.contas.reject(&:marked_for_destruction?).select { |c| c.ativo != false }
+      unless parcelas.empty?
+        soma_parcelas = parcelas.sum { |c| (c.valorparcela || 0).to_d }.round(2)
+        if (soma_parcelas - total).abs > 0.01
+          sale.errors.add(:base,
+            "O total das parcelas (R$ #{'%.2f' % soma_parcelas}) nao confere com o total da venda " \
+            "(R$ #{'%.2f' % total}). Ajuste as parcelas em aberto antes de salvar.")
+          ok = false
+        end
+      end
+
+      ok
     end
 
     def destroy
@@ -222,6 +278,69 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
       else
         redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda), alert: "Erro ao atualizar vendedor."
       end
+    end
+
+    # Itens da venda (JSON) para o modal "Trocar Cor": codigo do item, nome do
+    # produto e a cor atual. O select de cores no modal usa as cores ativas.
+    def itens_cores
+      venda = Venda.find(params[:id])
+      itens = venda.itensvenda.where(cancelado: [false, nil]).map do |iv|
+        {
+          cod_item: iv.cod_item,
+          cod_produto: iv.cod_produto,
+          nome_produto: iv.nome_produto,
+          cod_cor: iv.cod_cor
+        }
+      end
+      render json: { cod_venda: venda.cod_venda, cod_vendaempresa: venda.cod_vendaempresa, itens: itens }
+    end
+
+    # Troca APENAS a cor (cod_cor) dos itens da venda. Edicao segura: nao altera
+    # valor, itens nem parcelas — por isso e permitida mesmo em venda ja quitada
+    # (onde a edicao normal esta bloqueada). O UPDATE em itemvenda dispara o
+    # trigger de estoque, que move a quantidade da cor antiga para a nova.
+    def atualizar_cores
+      @venda = Venda.find(params[:id])
+
+      # Nao faz sentido trocar cor de venda cancelada (itens ja estornados).
+      if @venda.cancelada?
+        redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda),
+                    alert: "Não é possível trocar a cor de uma venda cancelada."
+        return
+      end
+
+      # Autoria correta no log de estoque do trigger (le VENDA.cod_funcionario).
+      @venda.update_column(:cod_funcionario, current_collaborator.cod_funcionario)
+
+      cores = params[:cores] || {}
+      alterados = 0
+
+      ActiveRecord::Base.transaction do
+        cores.each do |cod_item, cod_cor|
+          next if cod_cor.blank?
+
+          item = @venda.itensvenda.find_by(cod_item: cod_item)
+          next if item.nil? || item.cod_cor.to_s == cod_cor.to_s
+
+          # So aceita cor existente e ativa (evita cod_cor invalido vindo do form).
+          next unless Core.exists?(cod_cor: cod_cor, ativo: true)
+
+          item.update_column(:cod_cor, cod_cor)
+          alterados += 1
+        end
+      end
+
+      if alterados.positive?
+        redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda),
+                    notice: "Cor atualizada com sucesso (#{alterados} #{'item'.pluralize(alterados)})."
+      else
+        redirect_to collaborators_backoffice_report_sales_path(codigo_venda: @venda.cod_venda),
+                    notice: "Nenhuma cor foi alterada."
+      end
+    rescue => e
+      Rails.logger.error("[atualizar_cores] venda #{params[:id]}: #{e.class} - #{e.message}")
+      redirect_to collaborators_backoffice_report_sales_path(codigo_venda: params[:id]),
+                  alert: "Erro ao atualizar a cor dos itens."
     end
 
     private
@@ -309,6 +428,21 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     end
     helper_method :pode_alterar_vendedor?
 
+    # Bloqueia quem nao e nivel 1/2 de acessar as actions de troca de cor
+    # (mesma regra do botao "Trocar Cor"/"Editar Venda" na listagem).
+    def exigir_nivel_edicao!
+      nivel = current_collaborator.funcionario&.permissao&.nivel
+      return if [1, 2].include?(nivel)
+
+      respond_to do |format|
+        format.json { render json: { erro: "Sem permissão." }, status: :forbidden }
+        format.html do
+          redirect_to collaborators_backoffice_report_sales_path,
+                      alert: "Você não tem permissão para trocar a cor da venda."
+        end
+      end
+    end
+
     def transferencia_sem_destino?(sale)
       sale.transferencia? && Empresa.find_by(cod_empresa: sale.cod_empresa_transferida).nil?
     end
@@ -316,8 +450,12 @@ class CollaboratorsBackoffice::VendasController < CollaboratorsBackofficeControl
     def motivo_bloqueio_edicao(sale)
       if sale.nfe_autorizada?
         "Não é possível editar: a venda já tem NF-e autorizada. Cancele a NF-e antes."
-      else
+      elsif sale.cancelada?
         "Não é possível editar uma venda cancelada."
+      elsif sale.totalmente_paga?
+        "Não é possível editar: a venda já está 100% paga. Estorne o pagamento no financeiro antes de alterar."
+      else
+        "Não é possível editar esta venda."
       end
     end
 

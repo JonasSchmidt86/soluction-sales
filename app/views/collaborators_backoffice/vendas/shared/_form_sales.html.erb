@@ -868,8 +868,20 @@
 
           // Percorra as linhas da tabela (comece de 1 para pular a primeira linha de cabeçalho)
           for (var i = 1; i < tabela.rows.length; i++) {
+              var linha = tabela.rows[i];
+
+              // Ignora itens marcados para remocao: o Cocoon, ao remover um item
+              // que ja existe no banco, nao apaga a linha — apenas a esconde e
+              // seta o hidden "_destroy" para "1". Sem pular aqui, o item removido
+              // continuaria somando no total.
+              var destroyField = linha.querySelector('input[name*="_destroy"]');
+              if (destroyField && (destroyField.value === "1" || destroyField.value === "true")) {
+                  continue;
+              }
+
               // Obtenha o valor unitário da célula de classe "valor-total"
-              var valorUnitarioCell = tabela.rows[i].querySelector(".valor-total");
+              var valorUnitarioCell = linha.querySelector(".valor-total");
+              if (!valorUnitarioCell) { continue; }
               // Use uma expressão condicional para verificar se o valor é válido
               var valorUnitario = valorUnitarioCell.value? parseFloat(valorUnitarioCell.value.replace(",",".")) : 0;
 
@@ -960,6 +972,13 @@
           setTimeout(function() {
               setTotalVenda();
           }, 100); // Aguarda 100ms para garantir que o item foi removido antes de recalcular o total
+      });
+
+      // Evento oficial do Cocoon: dispara depois que o item foi removido/marcado
+      // para remocao. Garante o recalculo do total mesmo quando o clique nao caiu
+      // exatamente no .btn-remove-item (ex.: no icone interno).
+      $(document).on('cocoon:after-remove', '#itensvenda_fields', function() {
+          setTotalVenda();
       });
 </script>
 

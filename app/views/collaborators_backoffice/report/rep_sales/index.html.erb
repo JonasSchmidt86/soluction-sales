@@ -163,11 +163,23 @@
                           <i class="fa fa-print" style="width: 35px;"></i> Recibo Entrega
                         <% end %>
                       </li>
-                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada && @docs_por_venda&.dig(sale.cod_venda).blank?   %>
+                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && sale.editavel? && @docs_por_venda&.dig(sale.cod_venda).blank?   %>
                         <li>
                           <%= link_to edit_collaborators_backoffice_venda_path(sale), class:"dropdown-item btn btn-warning btn-circle" do %>
                             <i class="fa fa-edit", style="width: 35px;"></i> Editar Venda
                           <% end %>
+                        </li>
+                      <% end %>
+                      <%# Trocar Cor: edicao segura (so cor), disponivel inclusive em
+                          venda quitada, onde "Editar Venda" fica indisponivel. %>
+                      <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) && !sale.cancelada %>
+                        <li>
+                          <button type="button" class="dropdown-item btn btn-warning btn-circle"
+                                  data-bs-toggle="modal" data-bs-target="#modalCor"
+                                  data-venda-id="<%= sale.id %>" data-venda-numero="<%= sale.cod_vendaempresa %>"
+                                  onclick="setCorVendaInfo(this)">
+                            <i class="fa fa-palette" style="width: 35px;"></i> Trocar Cor
+                          </button>
                         </li>
                       <% end %>
                       <% if empresa_tem_modulo_fiscal? && access_control.can_view?("notas_avulsas") %>
@@ -280,6 +292,7 @@
   <!-- Modal para alterar vendedor fica fora do loop para melhorar performance -->
   <% if [1, 2].include?(current_collaborator.funcionario.permissao.nivel) %>
     <%= render partial: 'vendedor_modal' %>
+    <%= render partial: 'cor_modal' %>
   <% end %>
   <script>
     function setVendaInfo(button) {
@@ -293,6 +306,61 @@
       // Update modal title
       const title = document.querySelector('#modalVendedor .modal-title');
       title.textContent = `Alterar Vendedor - Venda ${vendaNumero}`;
+    }
+
+    // Trocar Cor: carrega os itens da venda e monta um select de cor por item.
+    function setCorVendaInfo(button) {
+      const vendaId = button.getAttribute('data-venda-id');
+      const vendaNumero = button.getAttribute('data-venda-numero');
+
+      const form  = document.querySelector('#modalCor form');
+      form.action = `/collaborators_backoffice/vendas/${vendaId}/atualizar_cores`;
+
+      const title = document.querySelector('#modalCor .modal-title');
+      title.textContent = `Trocar Cor - Venda ${vendaNumero}`;
+
+      const tbody  = document.getElementById('cor-itens');
+      const vazio  = document.getElementById('cor-vazio');
+      const salvar = document.getElementById('cor-salvar');
+      tbody.innerHTML = '';
+      vazio.style.display = 'none';
+
+      fetch(`/collaborators_backoffice/vendas/${vendaId}/itens_cores`, {
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          const itens = (data && data.itens) || [];
+          if (itens.length === 0) {
+            vazio.style.display = 'block';
+            salvar.disabled = true;
+            return;
+          }
+          salvar.disabled = false;
+          const tpl = document.getElementById('cor-select-template');
+          itens.forEach(function (item) {
+            const tr = document.createElement('tr');
+
+            const tdNome = document.createElement('td');
+            tdNome.textContent = item.nome_produto || ('#' + item.cod_produto);
+
+            const tdCor = document.createElement('td');
+            const sel = tpl.content.firstElementChild.cloneNode(true);
+            // name = cores[<cod_item>] -> params[:cores] no controller
+            sel.name = 'cores[' + item.cod_item + ']';
+            if (item.cod_cor != null) { sel.value = String(item.cod_cor); }
+            tdCor.appendChild(sel);
+
+            tr.appendChild(tdNome);
+            tr.appendChild(tdCor);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(function () {
+          vazio.textContent = 'Erro ao carregar os itens.';
+          vazio.style.display = 'block';
+          salvar.disabled = true;
+        });
     }
 
 

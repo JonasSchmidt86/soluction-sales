@@ -1,0 +1,43 @@
+<%# Modal "Trocar Cor": edicao SEGURA (so cod_cor) disponivel mesmo em venda
+    ja quitada. Os itens sao carregados via fetch em /vendas/:id/itens_cores e
+    o form envia para /vendas/:id/atualizar_cores. %>
+<div class="modal fade" id="modalCor" tabindex="-1" aria-labelledby="modalCorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header text-center bg-primary text-white">
+        <h4 class="modal-title" id="modalCorLabel">Trocar Cor</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body ms-2 me-2">
+        <%= form_with url: "", method: :patch, local: true, id: "cor-form" do |form| %>
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th style="width: 45%;">Cor</th>
+              </tr>
+            </thead>
+            <tbody id="cor-itens">
+              <%# preenchido via JS %>
+            </tbody>
+          </table>
+          <div id="cor-vazio" class="text-muted" style="display:none;">Nenhum item para alterar.</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <%= form.submit "Salvar", class: "btn btn-success", id: "cor-salvar" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Template do select de cores (todas ativas): clonado por item no JS. %>
+<template id="cor-select-template">
+  <select class="form-select cor-select">
+    <option value="">Selecione uma Cor</option>
+    <% Core.where(ativo: true).order(:nmcor, :cod_cor).each do |c| %>
+      <option value="<%= c.cod_cor %>"><%= c.nmcor_cod %></option>
+    <% end %>
+  </select>
+</template>

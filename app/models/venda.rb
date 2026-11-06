@@ -7,7 +7,30 @@ class Venda < ApplicationRecord
     # Aceita valores em formato BR ("1.234,56") vindos do form/nested attributes.
     moeda_br :valortotal, :acrescimo, :desconto
 
+    # Recalcula o valortotal no SERVIDOR a partir dos itens (nao confia no campo
+    # do form, que depende de JS e pode ficar defasado — ex.: ao remover um item
+    # ja salvo). Roda antes da validacao, em create e update.
+    before_validation :recalcular_valortotal
+
     after_commit :gerar_transferencia, if: -> { tipo == 'T' }
+
+    # Soma dos itens que permanecem (ignora os marcados para remocao) ja com
+    # acrescimo/desconto POR ITEM, mais o acrescimo/desconto do CABECALHO.
+    def total_itens_calculado
+        itens = itensvenda.reject(&:marked_for_destruction?)
+        soma_itens = itens.sum { |i| i.valor_total || 0 }
+        (soma_itens + (acrescimo || 0) - (desconto || 0)).round(2)
+    end
+
+    private
+
+    def recalcular_valortotal
+        # Transferencia gera contas/valores por outro fluxo; nao mexe aqui.
+        return if transferencia?
+        self.valortotal = total_itens_calculado
+    end
+
+    public
 
     def gerar_transferencia
         if contas.any? || Contaspagrec.exists?(cod_venda: cod_venda)
@@ -67,9 +90,21 @@ class Venda < ApplicationRecord
         nfe_autorizada.present?
     end
 
-    # Venda pode ser editada? Nao, se cancelada ou com NF-e autorizada.
+    # Venda 100% concluida: tem parcelas e TODAS estao liquidadas no caixa
+    # (valor recebido cobre o total). Nesse caso a venda esta "fechada" e nao
+    # deve ser editada — para mudar o valor, estorne o pagamento antes.
+    def totalmente_paga?
+        return false if cancelada?
+        return false if contas.empty?
+        total = (valortotal || 0).round(2)
+        return false if total <= 0
+        valorRecebido.to_d.round(2) >= total
+    end
+
+    # Venda pode ser editada? Nao, se cancelada, com NF-e autorizada, ou se ja
+    # esta 100% paga (concluida).
     def editavel?
-        !cancelada? && !nfe_autorizada?
+        !cancelada? && !nfe_autorizada? && !totalmente_paga?
     end
 
     paginates_per 30

@@ -1,4 +1,10 @@
-<tr class="nested-fields">
+<%# Item marcado para remocao (ex.: usuario removeu e o save falhou por
+    validacao): re-renderiza a linha ESCONDIDA e com _destroy=1, para o item
+    nao "voltar" na tela nem ser somado no total. Mantem o estado de remocao
+    para que um novo salvar continue sem o item. %>
+<% removido = f.object.marked_for_destruction? %>
+<tr class="nested-fields" style="<%= 'display:none;' if removido %>">
+  <%= f.hidden_field :_destroy %>
   <%= f.hidden_field :cod_produto %>
   <td class="col-1">
     <%= f.text_field :produto, 
