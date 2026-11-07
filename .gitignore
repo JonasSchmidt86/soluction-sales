@@ -98,7 +98,7 @@ yarn-debug.log*
 # macOS
 .DS_Store
 # Base GeoIP (MaxMind GeoLite2): grande e com licenca propria — nao versionar
-/db/geoip/*.mmdb
+# /db/geoip/*.mmdb
 /db/geoip/*.tar.gz
 /db/geoip/*.zip
 /db/geoip/*.csv

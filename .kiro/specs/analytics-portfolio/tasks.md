@@ -200,3 +200,20 @@
 - Achado para o negócio: a busca do site compara a FRASE inteira ("mesa de jantar" não
   acha "Mesa Monaco"; "guarda roupa" não acha "guarda-roupa"). Melhorar a busca (casar por
   palavras/sinônimos) reduziria os "sem produto" que são, em parte, limitação da busca.
+- DEPLOY (achado em produção): o `GeoLite2-City.mmdb` está no `.gitignore` (licença +
+  50 MB), então o deploy por Capistrano NÃO o leva; num servidor novo, país/cidade/UF
+  saem em branco. Para sobreviver aos deploys, a base deve ficar em `shared/` e ser
+  ligada à release: em `config/deploy.rb`, `append :linked_dirs, "db/geoip"`, e o arquivo
+  em `/var/www/soluctionsales/shared/db/geoip/GeoLite2-City.mmdb`. Copiar direto para
+  `current/db/geoip/` se perde no próximo deploy. Alternativa sem mexer no deploy: variável
+  de ambiente `GEOIP_DB_PATH` apontando para um caminho fixo fora das releases.
+- A falta da base agora é visível: `GeoIpResolver` loga um aviso (uma vez) e o dashboard
+  mostra um alerta enquanto o arquivo não existir. O arquivo é reaberto sozinho assim que
+  aparece (sem reiniciar o Unicorn). Eventos gravados sem localização NÃO podem ser
+  recuperados depois (o IP não é guardado, por privacidade).
+- Se, com a base instalada, a localização continuar em branco em produção, a causa
+  provável é o proxy (nginx) não repassar o IP real (`X-Forwarded-For`): o Rails veria
+  127.0.0.1. Conferir antes de culpar a base.
+- A home (`/`) não é rastreada: um clique de WhatsApp vindo dos cards da home grava
+  `click_whatsapp` com o produto, mas sem `view_produto`/`view_portfolio` correspondente.
+  É esperado, não é perda de dados.

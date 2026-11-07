@@ -13,6 +13,7 @@ class CollaboratorsBackoffice::Report::RepSiteAnalyticsController < Collaborator
   def index
     @inicio, @fim = periodo
     @relatorio = SiteAnalyticsReport.new(@inicio, @fim).call
+    @geoip_disponivel = GeoIpResolver.disponivel?
   end
 
   private

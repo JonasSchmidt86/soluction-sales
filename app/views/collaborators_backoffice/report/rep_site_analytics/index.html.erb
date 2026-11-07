@@ -45,6 +45,16 @@
     </div>
   </div>
 
+  <%# ---------- Aviso: base de localizacao ausente neste servidor ---------- %>
+  <% unless @geoip_disponivel %>
+    <div class="alert alert-warning py-2 small" role="alert">
+      <i class="fa-solid fa-location-crosshairs me-1" aria-hidden="true"></i>
+      A base de localização <code>db/geoip/GeoLite2-City.mmdb</code> <strong>não foi encontrada neste servidor</strong>:
+      país e cidade dos novos acessos estão sendo gravados em branco. Copie o arquivo para o servidor
+      (não precisa reiniciar). Os acessos já gravados sem localização não podem ser recuperados, pois o IP não é guardado.
+    </div>
+  <% end %>
+
   <%# ---------- Aviso de dados de demonstracao ---------- %>
   <% if r.demo_total.positive? %>
     <div class="alert alert-warning py-2 small" role="alert">

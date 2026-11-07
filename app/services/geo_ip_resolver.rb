@@ -63,7 +63,7 @@ class GeoIpResolver
 
     # Descarta o leitor em cache (uso em testes).
     def reset!
-      LOCK.synchronize { @reader = nil; @mtime = nil }
+      LOCK.synchronize { @reader = nil; @mtime = nil; @avisou_ausente = false }
     end
 
     private
@@ -72,7 +72,11 @@ class GeoIpResolver
     # guardada por mtime para nao reler um arquivo grande/invalido a cada request.
     def reader
       path = db_path
-      return nil unless path.file?
+      unless path.file?
+        avisar_ausente(path)
+        return nil
+      end
+      @avisou_ausente = false
 
       mtime = path.mtime
       return @reader if @mtime == mtime
@@ -88,6 +92,17 @@ class GeoIpResolver
           nil
         end
       end
+    end
+
+    # Avisa UMA vez no log (e nao a cada evento) que a base nao existe. O arquivo nao
+    # vai no git, entao num servidor novo ele falta e, sem este aviso, o unico sintoma
+    # seria pais/cidade em branco.
+    def avisar_ausente(path)
+      return if @avisou_ausente
+
+      @avisou_ausente = true
+      Rails.logger.warn("[GeoIpResolver] base GeoIP nao encontrada em #{path}: pais/cidade serao " \
+                        "gravados em branco. Copie o GeoLite2-City.mmdb para la (sem reiniciar).")
     end
 
     def extrair(registro)
