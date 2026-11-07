@@ -320,6 +320,35 @@
   // ------------ para baixo da tabela contas  -----------------------
   // -----------------------------------------------------------------
 
+  // Divide um valor (em CENTAVOS) em n parcelas (em centavos).
+  // Regra: as parcelas 1..n-1 sobem SEMPRE para o proximo multiplo de R$ 5,00
+  // (terminam em 0 ou 5), a ULTIMA absorve a diferenca em reais (por isso nunca
+  // fica maior que as outras) e os CENTAVOS (se houver) vao na PRIMEIRA.
+  // A soma fecha exatamente no valor informado.
+  // Ex.: media 232,10 -> parcelas de 235,00; 1740 em 5x -> 4 x 350 + 340.
+  // Parcela unica ou valor pequeno demais (parcela zerada/negativa): divide
+  // exato em centavos, com o resto na primeira.
+  function distribuirParcelasCents(totalCents, n) {
+      const amounts = [];
+      if (n <= 0) { return amounts; }
+
+      const centavos     = totalCents % 100;          // centavos soltos (vao na primeira)
+      const inteiroCents = totalCents - centavos;     // parte em reais cheios
+      const baseCents    = Math.ceil(inteiroCents / n / 500) * 500;
+      const ultimaCents  = inteiroCents - baseCents * (n - 1);
+
+      if (n > 1 && baseCents > 0 && ultimaCents > 0) {
+          for (let i = 0; i < n - 1; i++) { amounts.push(baseCents); }
+          amounts.push(ultimaCents);
+          amounts[0] += centavos;
+      } else {
+          const parte = Math.floor(totalCents / n);
+          for (let i = 0; i < n; i++) { amounts.push(parte); }
+          amounts[0] += totalCents - parte * n;
+      }
+      return amounts;
+  }
+
   function createBills() {
       let data = []; // Array para armazenar os objetos de parcelas
 
@@ -358,7 +387,8 @@
       // Criar o objeto Date
       let billDate = new Date(ano, mes, dia);
 
-      const billAmount = totalSale / nBills;
+      // Valores das parcelas em centavos (evita erro de ponto flutuante).
+      const amountsCents = distribuirParcelasCents(Math.round(totalSale * 100), nBills);
 
       // Limpa a tabela antes de adicionar novas linhas
       $('#conta_fields').empty();
@@ -368,7 +398,7 @@
           const bill = {
               number: i + 1,
               dueDate: new Date(billDate), // Cria uma nova instância para evitar referências compartilhadas
-              amount: billAmount
+              amount: amountsCents[i] / 100
           };
 
           data.push(bill);
@@ -396,53 +426,8 @@
 
       setTimeout(function() { window._creatingBills = false; }, 500);
 
-      // Listener para atualizar parcelas automaticamente ao mudar qualquer valor
-      $('#conta_fields').on('change', 'input[id*=_valorparcela]', function () {
-          const total = totalSale;
-          let updatedIndex = $(this).closest('tr').index(); // índice da parcela alterada
-          let soma = 0;
-
-          const rows = $('#conta_fields tr');
-          const numParcelas = rows.length;
-
-          // Somar os valores das parcelas até a que foi alterada
-          for (let i = 0; i <= updatedIndex; i++) {
-              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
-              if (isNaN(val)) val = 0;
-              soma += val;
-          }
-
-          // Valor restante que precisa ser redistribuído
-          let restante = total - soma;
-          let parcelasRestantes = numParcelas - (updatedIndex + 1);
-
-          if (parcelasRestantes <= 0) return;
-
-          // Valor padrão das parcelas seguintes
-          let novoValor = parseFloat((restante / parcelasRestantes).toFixed(2));
-
-          // Atualiza as parcelas seguintes
-          for (let i = updatedIndex + 1; i < numParcelas; i++) {
-              rows.eq(i).find('input[id*=_valorparcela]').val(novoValor.toFixed(2).replace('.', ','));
-          }
-
-          // Corrigir diferença de centavos na última parcela
-          let totalAtual = 0;
-          for (let i = 0; i < numParcelas; i++) {
-              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
-              if (isNaN(val)) val = 0;
-              totalAtual += val;
-          }
-
-          let diff = parseFloat((total - totalAtual).toFixed(2));
-          if (Math.abs(diff) >= 0.01) {
-              let ultimaParcela = rows.eq(numParcelas - 1);
-              let val = parseFloat(ultimaParcela.find('input[id*=_valorparcela]').val().replace(',', '.'));
-              ultimaParcela.find('input[id*=_valorparcela]').val((val + diff).toFixed(2).replace('.', ','));
-          }
-      });
-
-
+      // A redistribuicao ao editar manualmente o valor de uma parcela e tratada
+      // pelo listener global (change em '#conta_fields input[id*=_valorparcela]').
   }
 
 
@@ -526,43 +511,52 @@
             }, 100);
           });
 
-          // Recalcular parcelas ao alterar valor de qualquer parcela
+          // Recalcular parcelas ao alterar manualmente o valor de uma parcela.
+          // A parcela editada e as ANTERIORES ficam como estao; o que sobra do
+          // total e redistribuido nas parcelas SEGUINTES com a mesma regra do
+          // "Calcular Parcelas" (distribuirParcelasCents: multiplos de R$ 5,
+          // ultima absorve a diferenca, centavos na primeira das redistribuidas).
+          // Parcelas ja liquidadas (data-travada) e removidas (_destroy) nao
+          // sao alteradas, mas contam no total.
           $(document).on('change', '#conta_fields input[id*=_valorparcela]', function() {
-            var totalvenda = parseFloat(document.getElementById("venda_valortotal")?.value.replace(",", ".") || "0") || 0;
-            const total = totalvenda;
-            let updatedIndex = $(this).closest('tr').index();
-            let soma = 0;
+            const paraCents = function (input) {
+              const v = parseFloat(String(input.val() || '').replace(',', '.'));
+              return isNaN(v) ? 0 : Math.round(v * 100);
+            };
+            const removida = function (tr) {
+              const d = tr.find('input[name*="_destroy"]').val();
+              return d === '1' || d === 'true';
+            };
 
-            const rows = $('#conta_fields tr');
-            const numParcelas = rows.length;
+            const totalCents = Math.round((parseFloat((document.getElementById("venda_valortotal")?.value || "0").replace(",", ".")) || 0) * 100);
 
-            for (let i = 0; i <= updatedIndex; i++) {
-              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
-              if (isNaN(val)) val = 0;
-              soma += val;
-            }
+            // Somente parcelas validas (nao removidas), na ordem da tela.
+            const linhas = $('#conta_fields tr').filter(function () { return !removida($(this)); });
+            const editada = $(this).closest('tr');
+            const idxEditada = linhas.index(editada);
+            if (idxEditada < 0) return;
 
-            let restante = total - soma;
-            let parcelasRestantes = numParcelas - (updatedIndex + 1);
-            if (parcelasRestantes <= 0) return;
+            let fixoCents = 0;     // editada + anteriores + liquidadas seguintes
+            const livres = [];     // seguintes que podem ser redistribuidas
+            linhas.each(function (i) {
+              const campo = $(this).find('input[id*=_valorparcela]');
+              const travada = campo.data('travada') === true || campo.data('travada') === 'true';
+              if (i <= idxEditada || travada) {
+                fixoCents += paraCents(campo);
+              } else {
+                livres.push(campo);
+              }
+            });
 
-            let novoValor = parseFloat((restante / parcelasRestantes).toFixed(2));
-            for (let i = updatedIndex + 1; i < numParcelas; i++) {
-              rows.eq(i).find('input[id*=_valorparcela]').val(novoValor.toFixed(2).replace('.', ','));
-            }
+            if (livres.length === 0) return;
 
-            let totalAtual = 0;
-            for (let i = 0; i < numParcelas; i++) {
-              let val = parseFloat(rows.eq(i).find('input[id*=_valorparcela]').val().replace(',', '.'));
-              if (isNaN(val)) val = 0;
-              totalAtual += val;
-            }
-            let diff = parseFloat((total - totalAtual).toFixed(2));
-            if (Math.abs(diff) >= 0.01) {
-              let ultimaParcela = rows.eq(numParcelas - 1);
-              let val = parseFloat(ultimaParcela.find('input[id*=_valorparcela]').val().replace(',', '.'));
-              ultimaParcela.find('input[id*=_valorparcela]').val((val + diff).toFixed(2).replace('.', ','));
-            }
+            const restanteCents = totalCents - fixoCents;
+            if (restanteCents < 0) return; // passou do total: nao redistribui (o servidor barra no salvar)
+
+            const novos = distribuirParcelasCents(restanteCents, livres.length);
+            livres.forEach(function (campo, i) {
+              campo.val((novos[i] / 100).toFixed(2).replace('.', ','));
+            });
           });
 
           var categorySearch = $('#venda_nome_pessoa'); //document.getElementById('venda_pessoa'); //
