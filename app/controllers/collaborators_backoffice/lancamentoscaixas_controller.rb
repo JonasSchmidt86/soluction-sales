@@ -128,13 +128,14 @@ class CollaboratorsBackoffice::LancamentoscaixasController < CollaboratorsBackof
 
             if the_params[:tipo] == "E"
                 @launch.tipo = 'E'
-                @launch.dataabertura = @caixa.dataabertura;
+                # Com conta bancária o caixa pode estar fechado; só vincula se existir.
+                @launch.dataabertura = @caixa.dataabertura if @caixa.present?
             else
                 @launch.tipo = 'S'
                 if the_params[:cod_bancoconta].present? && the_params[:cod_bancoconta].to_i > 0
                     @launch.caixa = nil;
                 else
-                    @launch.dataabertura = @caixa.dataabertura;
+                    @launch.dataabertura = @caixa.dataabertura if @caixa.present?
                 end
             end
 

@@ -5,7 +5,11 @@
         <h5 class="modal-title" id="modalLancamentoLabel">Novo Lançamento de Caixa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body ms-2 me-2 mt-3">
+      <% caixa_aberto = Caixa.where("cod_empresa = ? and datafechamento is null", current_collaborator.cod_empresa).exists? %>
+      <div class="modal-body ms-2 me-2 mt-3" data-caixa-aberto="<%= caixa_aberto %>">
+        <div id="avisoCaixaFechado" class="alert alert-warning d-none" role="alert">
+          Caixa não está aberto. Abra o caixa ou selecione uma conta bancária como destino.
+        </div>
         <%# novalidate: a validacao e feita pelo script abaixo, com mensagens no proprio modal. %>
         <%= form_with model: [ :collaborators_backoffice, Lancamentoscaixa.new ], local: true,
                       html: { id: "formLancamentoCaixa", novalidate: true } do |form| %>
@@ -62,7 +66,8 @@
           <!-- Botão de Submissão -->
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            <%= form.submit "Salvar", class: "btn btn-success" %>
+            <%# disable_with: false evita que o Rails (UJS) trave o botao quando a validacao bloqueia o envio. %>
+            <%= form.submit "Salvar", class: "btn btn-success", data: { disable_with: false } %>
           </div>
         <% end %>
       </div>
@@ -109,7 +114,26 @@
       if (historico.value) { marcar(historico, false); }
     });
 
+    // Caixa fechado: destino "CAIXA" (vazio) nao pode gerar lancamento.
+    var destino     = document.getElementById('lancamentoscaixa_cod_bancoconta');
+    var aviso       = document.getElementById('avisoCaixaFechado');
+    var caixaAberto = modal.querySelector('.modal-body').dataset.caixaAberto === 'true';
+
+    function caixaBloqueado() {
+      return !caixaAberto && destino && !destino.value;
+    }
+    function atualizarAviso() { aviso.classList.toggle('d-none', !caixaBloqueado()); }
+
+    if (destino) { destino.addEventListener('change', atualizarAviso); }
+    modal.addEventListener('show.bs.modal', atualizarAviso);
+
     form.addEventListener('submit', function (evento) {
+      if (caixaBloqueado()) {
+        evento.preventDefault();
+        atualizarAviso();
+        destino.focus();
+        return;
+      }
       var semDescricao = !descricao.value.trim();
       var semHistorico = !historico.value;
       var semValor     = valorNumerico() <= 0;
